@@ -21,6 +21,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-6">
             <Link href="/about" className="text-sm hover:text-accent transition">About</Link>
+            <Link href="/history" className="text-sm hover:text-accent transition">History</Link>
             <Link href="/mixes" className="text-sm hover:text-accent transition">Mixes</Link>
             <Link href="/events" className="text-sm hover:text-accent transition">Events</Link>
             <Link href="/live-studio" className="text-sm hover:text-accent transition">Live Studio</Link>
