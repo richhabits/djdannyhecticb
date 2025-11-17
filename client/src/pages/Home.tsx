@@ -128,6 +128,33 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
+      {/* Featured Mixes Section */}
+      <section className="py-16 md:py-24 border-t border-border">
+        <div className="container">
+          <h2 className="text-4xl font-bold mb-12">Featured Mixes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[
+              { title: "Garage Classics Mix", duration: "60 min", icon: "🎵", genre: "Garage" },
+              { title: "Soulful House Journey", duration: "75 min", icon: "💫", genre: "Soulful House" },
+              { title: "Amapiano Vibes", duration: "55 min", icon: "🎶", genre: "Amapiano" },
+            ].map((mix, idx) => (
+              <Card key={idx} className="p-6 hover:border-accent transition cursor-pointer">
+                <div className="text-6xl mb-4">{mix.icon}</div>
+                <h3 className="text-xl font-bold mb-2">{mix.title}</h3>
+                <p className="text-sm text-purple-400 font-semibold mb-3">{mix.genre}</p>
+                <p className="text-sm text-muted-foreground mb-4">Duration: {mix.duration}</p>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">Play Mix</Button>
+              </Card>
+            ))}
+          </div>
+          <div className="text-center">
+            <Link href="/mixes">
+              <Button variant="outline">Explore All Mixes</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 md:py-24 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-t border-border">
         <div className="container max-w-3xl text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">Ready to Book?</h2>
@@ -158,12 +185,15 @@ export default function Home() {
               <h4 className="font-semibold mb-4">DJ Danny Hectic B</h4>
               <p className="text-sm text-muted-foreground">Creating unforgettable musical experiences.</p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+            <div className="space-y-2">
+              <h4 className="font-bold">Quick Links</h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
                 <li><Link href="/mixes" className="hover:text-accent">Mixes</Link></li>
                 <li><Link href="/events" className="hover:text-accent">Events</Link></li>
                 <li><Link href="/podcasts" className="hover:text-accent">Podcast</Link></li>
+                <li><Link href="/testimonials" className="hover:text-accent">Reviews</Link></li>
+                <li><Link href="/gallery" className="hover:text-accent">Gallery</Link></li>
+                <li><Link href="/shop" className="hover:text-accent">Shop</Link></li>
               </ul>
             </div>
             <div>

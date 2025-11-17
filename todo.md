@@ -29,5 +29,12 @@
 - [x] Make booking interface fun, easy, and unique
 - [x] Add music genre selection (House, Garage, Soulful, Funky, Grime, Amapiano)
 - [x] Add DJ history and legacy section (pirate radio stations, UK promotions)
+- [x] Add client testimonials section
+- [x] Create newsletter signup feature
+- [x] Build merchandise shop
+- [x] Improve home page with featured mixes
+- [x] Add gallery/photo section
+- [x] Create FAQ section
+- [ ] Add social media feed integration
 
 ## Completed

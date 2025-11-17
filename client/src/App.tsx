@@ -7,6 +7,9 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import History from "./pages/History";
+import Testimonials from "./pages/Testimonials";
+import Shop from "./pages/Shop";
+import Gallery from "./pages/Gallery";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
@@ -20,6 +23,9 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
       <Route path={"/history"} component={History} />
+      <Route path={"/testimonials"} component={Testimonials} />
+      <Route path={"/shop"} component={Shop} />
+      <Route path={"/gallery"} component={Gallery} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={Events} />
