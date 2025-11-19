@@ -10,6 +10,9 @@ import History from "./pages/History";
 import Testimonials from "./pages/Testimonials";
 import Shop from "./pages/Shop";
 import Gallery from "./pages/Gallery";
+import Blog from "./pages/Blog";
+import Contact from "./pages/Contact";
+import Tutorials from "./pages/Tutorials";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
@@ -26,6 +29,9 @@ function Router() {
       <Route path={"/testimonials"} component={Testimonials} />
       <Route path={"/shop"} component={Shop} />
       <Route path={"/gallery"} component={Gallery} />
+      <Route path={"/blog"} component={Blog} />
+      <Route path={"/contact"} component={Contact} />
+      <Route path={"/tutorials"} component={Tutorials} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={Events} />

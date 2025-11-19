@@ -193,6 +193,8 @@ export default function Home() {
                 <li><Link href="/podcasts" className="hover:text-accent">Podcast</Link></li>
                 <li><Link href="/testimonials" className="hover:text-accent">Reviews</Link></li>
                 <li><Link href="/gallery" className="hover:text-accent">Gallery</Link></li>
+                <li><Link href="/blog" className="hover:text-accent">Blog</Link></li>
+                <li><Link href="/tutorials" className="hover:text-accent">Tutorials</Link></li>
                 <li><Link href="/shop" className="hover:text-accent">Shop</Link></li>
               </ul>
             </div>
@@ -206,10 +208,11 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
-              <p className="text-sm text-muted-foreground">
-                Email: contact@djdannyhectic.com<br/>
-                Phone: +1 (555) 123-4567
-              </p>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/contact" className="hover:text-accent">Contact Us</Link></li>
+                <li><a href="mailto:contact@djdannyhectic.com" className="hover:text-accent">Email</a></li>
+                <li><a href="tel:+15551234567" className="hover:text-accent">Phone</a></li>
+              </ul>
             </div>
           </div>
           <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
