@@ -195,6 +195,8 @@ export default function Home() {
                 <li><Link href="/gallery" className="hover:text-accent">Gallery</Link></li>
                 <li><Link href="/blog" className="hover:text-accent">Blog</Link></li>
                 <li><Link href="/tutorials" className="hover:text-accent">Tutorials</Link></li>
+                <li><Link href="/members" className="hover:text-accent">Members</Link></li>
+                <li><Link href="/affiliate" className="hover:text-accent">Affiliate</Link></li>
                 <li><Link href="/shop" className="hover:text-accent">Shop</Link></li>
               </ul>
             </div>

@@ -13,6 +13,9 @@ import Gallery from "./pages/Gallery";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Tutorials from "./pages/Tutorials";
+import Affiliate from "./pages/Affiliate";
+import Members from "./pages/Members";
+import Newsletter from "./pages/Newsletter";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
@@ -32,6 +35,9 @@ function Router() {
       <Route path={"/blog"} component={Blog} />
       <Route path={"/contact"} component={Contact} />
       <Route path={"/tutorials"} component={Tutorials} />
+      <Route path={"/affiliate"} component={Affiliate} />
+      <Route path={"/members"} component={Members} />
+      <Route path={"/newsletter"} component={Newsletter} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={Events} />
