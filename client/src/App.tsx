@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import LiveChat from "./components/LiveChat";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import History from "./pages/History";
@@ -16,6 +17,7 @@ import Tutorials from "./pages/Tutorials";
 import Affiliate from "./pages/Affiliate";
 import Members from "./pages/Members";
 import Newsletter from "./pages/Newsletter";
+import Analytics from "./pages/Analytics";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
@@ -38,6 +40,7 @@ function Router() {
       <Route path={"/affiliate"} component={Affiliate} />
       <Route path={"/members"} component={Members} />
       <Route path={"/newsletter"} component={Newsletter} />
+      <Route path={"/analytics"} component={Analytics} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={Events} />
@@ -54,11 +57,13 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider
-        defaultTheme="dark"
+        defaultTheme="light"
+        // switchable
       >
         <TooltipProvider>
           <Toaster />
           <Router />
+          <LiveChat />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
