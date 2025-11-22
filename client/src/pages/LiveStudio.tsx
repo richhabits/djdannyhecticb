@@ -8,10 +8,12 @@ export default function LiveStudio() {
   const [isLive, setIsLive] = useState(true);
   const [viewers, setViewers] = useState(342);
   const [currentTrack, setCurrentTrack] = useState("Hectic Beats Mix Vol. 5");
-  const [activeStream, setActiveStream] = useState<'youtube' | 'twitch' | 'instagram' | 'custom'>('youtube');
+  const [activeStream, setActiveStream] = useState<'youtube' | 'youtube-live' | 'twitch' | 'instagram' | 'tiktok'>('youtube');
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubeLiveUrl, setYoutubeLiveUrl] = useState('');
   const [twitchUrl, setTwitchUrl] = useState('');
   const [instagramUrl, setInstagramUrl] = useState('');
+  const [tiktokUrl, setTiktokUrl] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,7 +72,15 @@ export default function LiveStudio() {
                   className={activeStream === 'youtube' ? 'bg-red-600 hover:bg-red-700' : ''}
                 >
                   <Youtube className="w-4 h-4 mr-2" />
-                  YouTube
+                  YouTube Video
+                </Button>
+                <Button
+                  onClick={() => setActiveStream('youtube-live')}
+                  variant={activeStream === 'youtube-live' ? 'default' : 'outline'}
+                  className={activeStream === 'youtube-live' ? 'bg-red-600 hover:bg-red-700' : ''}
+                >
+                  <Radio className="w-4 h-4 mr-2" />
+                  YouTube Live
                 </Button>
                 <Button
                   onClick={() => setActiveStream('twitch')}
@@ -88,6 +98,14 @@ export default function LiveStudio() {
                   <Instagram className="w-4 h-4 mr-2" />
                   Instagram
                 </Button>
+                <Button
+                  onClick={() => setActiveStream('tiktok')}
+                  variant={activeStream === 'tiktok' ? 'default' : 'outline'}
+                  className={activeStream === 'tiktok' ? 'bg-black hover:bg-gray-900' : ''}
+                >
+                  <Music className="w-4 h-4 mr-2" />
+                  TikTok Live
+                </Button>
               </div>
 
               {/* Stream Input Form */}
@@ -104,7 +122,20 @@ export default function LiveStudio() {
                         placeholder="https://www.youtube.com/watch?v=..."
                         className="w-full px-4 py-2 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
-                      <p className="text-xs text-muted-foreground mt-2">Paste your YouTube video URL or live stream link</p>
+                      <p className="text-xs text-muted-foreground mt-2">Paste your YouTube video URL</p>
+                    </div>
+                  )}
+                  {activeStream === 'youtube-live' && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">YouTube Live Stream URL</label>
+                      <input
+                        type="text"
+                        value={youtubeLiveUrl}
+                        onChange={(e) => setYoutubeLiveUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or your channel URL"
+                        className="w-full px-4 py-2 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">Paste your YouTube Live stream URL or channel URL</p>
                     </div>
                   )}
                   {activeStream === 'twitch' && (
@@ -133,6 +164,19 @@ export default function LiveStudio() {
                       <p className="text-xs text-muted-foreground mt-2">Paste your Instagram profile URL</p>
                     </div>
                   )}
+                  {activeStream === 'tiktok' && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">TikTok Live URL</label>
+                      <input
+                        type="text"
+                        value={tiktokUrl}
+                        onChange={(e) => setTiktokUrl(e.target.value)}
+                        placeholder="https://www.tiktok.com/@yourprofile"
+                        className="w-full px-4 py-2 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">Paste your TikTok profile URL for live streaming</p>
+                    </div>
+                  )}
                 </div>
               </Card>
 
@@ -144,6 +188,16 @@ export default function LiveStudio() {
                     height="100%"
                     src={getEmbedUrl(youtubeUrl, 'youtube')}
                     title="YouTube Stream"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : activeStream === 'youtube-live' && youtubeLiveUrl ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={getEmbedUrl(youtubeLiveUrl, 'youtube')}
+                    title="YouTube Live Stream"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -162,6 +216,14 @@ export default function LiveStudio() {
                     <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-center">
                       <Instagram className="w-16 h-16 text-pink-400 mx-auto mb-4" />
                       <p className="text-white font-semibold">Open Instagram Live</p>
+                      <p className="text-gray-400 text-sm mt-2">Click to open in new window</p>
+                    </a>
+                  </div>
+                ) : activeStream === 'tiktok' && tiktokUrl ? (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black">
+                    <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="text-center">
+                      <Music className="w-16 h-16 text-white mx-auto mb-4" />
+                      <p className="text-white font-semibold">Open TikTok Live</p>
                       <p className="text-gray-400 text-sm mt-2">Click to open in new window</p>
                     </a>
                   </div>
@@ -215,7 +277,7 @@ export default function LiveStudio() {
                 )}
 
                 {/* Live Badge */}
-                {(youtubeUrl || twitchUrl || instagramUrl) && (
+                {(youtubeUrl || youtubeLiveUrl || twitchUrl || instagramUrl || tiktokUrl) && (
                   <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500/90 px-3 py-2 rounded-lg">
                     <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                     <span className="text-white font-semibold text-sm">LIVE</span>
