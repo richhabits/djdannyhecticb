@@ -18,6 +18,9 @@ import Affiliate from "./pages/Affiliate";
 import Members from "./pages/Members";
 import Newsletter from "./pages/Newsletter";
 import Analytics from "./pages/Analytics";
+import Integrations from "./pages/Integrations";
+import EPK from "./pages/EPK";
+import Login from "./pages/Login";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
@@ -41,6 +44,9 @@ function Router() {
       <Route path={"/members"} component={Members} />
       <Route path={"/newsletter"} component={Newsletter} />
       <Route path={"/analytics"} component={Analytics} />
+      <Route path={"/integrations"} component={Integrations} />
+      <Route path={"/epk"} component={EPK} />
+      <Route path={"/login"} component={Login} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={Events} />
