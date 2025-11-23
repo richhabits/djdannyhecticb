@@ -1,68 +1,106 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, Mic2, Calendar, Radio, Zap, Users } from "lucide-react";
+import { Music, Mic2, Calendar, Radio, Zap, Users, Menu, X } from "lucide-react";
+import { useState } from "react";
+import { APP_LOGO } from "@/const";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Music className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-xl">DJ Danny Hectic B</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link href="/about" className="text-sm hover:text-accent transition">About</Link>
-            <Link href="/history" className="text-sm hover:text-accent transition">History</Link>
-            <Link href="/mixes" className="text-sm hover:text-accent transition">Mixes</Link>
-            <Link href="/events" className="text-sm hover:text-accent transition">Events</Link>
-            <Link href="/live-studio" className="text-sm hover:text-accent transition">Live Studio</Link>
-            <Link href="/podcasts" className="text-sm hover:text-accent transition">Podcast</Link>
+      <nav className="sticky top-0 z-50 glass-dark backdrop-blur-xl border-b border-border">
+        <div className="container flex items-center justify-between h-16 md:h-20">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 smooth-transition">
+            <img src={APP_LOGO} alt="DJ Danny Hectic B" className="w-10 h-10 md:w-12 md:h-12 rounded-full" />
+            <span className="font-bold text-lg md:text-xl gradient-text">DJ Danny Hectic B</span>
+          </Link>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-6">
+            <Link href="/about" className="text-sm hover:text-accent smooth-transition">About</Link>
+            <Link href="/history" className="text-sm hover:text-accent smooth-transition">History</Link>
+            <Link href="/mixes" className="text-sm hover:text-accent smooth-transition">Mixes</Link>
+            <Link href="/events" className="text-sm hover:text-accent smooth-transition">Events</Link>
+            <Link href="/live-studio" className="text-sm hover:text-accent smooth-transition">Live Studio</Link>
+            <Link href="/podcasts" className="text-sm hover:text-accent smooth-transition">Podcast</Link>
             {isAuthenticated ? (
               <>
-                <Link href="/bookings" className="text-sm hover:text-accent transition">Bookings</Link>
-                <Link href="/dashboard" className="text-sm hover:text-accent transition">Dashboard</Link>
+                <Link href="/bookings" className="text-sm hover:text-accent smooth-transition">Bookings</Link>
+                <Link href="/dashboard">
+                  <Button size="sm" className="gradient-bg">Dashboard</Button>
+                </Link>
               </>
             ) : (
-              <a href={getLoginUrl()} className="text-sm hover:text-accent transition">Login</a>
+              <a href={getLoginUrl()}>
+                <Button size="sm" className="gradient-bg">Login</Button>
+              </a>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 hover:bg-accent/10 rounded-lg smooth-transition"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-border glass-dark">
+            <div className="container py-4 space-y-3">
+              <Link href="/about" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>About</Link>
+              <Link href="/history" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>History</Link>
+              <Link href="/mixes" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>Mixes</Link>
+              <Link href="/events" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>Events</Link>
+              <Link href="/live-studio" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>Live Studio</Link>
+              <Link href="/podcasts" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>Podcast</Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/bookings" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>Bookings</Link>
+                  <Link href="/dashboard" className="block py-2 hover:text-accent smooth-transition" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                </>
+              ) : (
+                <a href={getLoginUrl()} className="block py-2 hover:text-accent smooth-transition">Login</a>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-purple-900/20 via-background to-background py-20 md:py-32">
-        <div className="container max-w-4xl mx-auto px-4">
-          <div className="text-center space-y-6">
+      <section className="relative overflow-hidden bg-gradient-to-b from-orange-900/20 via-background to-background py-16 md:py-32">
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-orange-700/5" />
+        <div className="container relative z-10">
+          <div className="text-center space-y-6 md:space-y-8 px-4">
             <div className="inline-block">
-              <span className="px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/50 text-sm text-purple-300">
-                🎵 Welcome to the Beat
+              <span className="px-4 py-2 rounded-full glass border border-accent/50 text-sm text-accent font-semibold">
+                🎵 Cultural Fusion • Professional DJ
               </span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              DJ Danny Hectic B
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-tight">
+              <span className="gradient-text">DJ Danny Hectic B</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience electrifying beats, live studio sessions, and exclusive mixes. Book your next event or tune in to the latest podcast episodes.
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+              30+ years shaping UK Garage • House • Grime • Amapiano. From pirate radio to the biggest stages.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Link href="/live-studio">
-                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                  <Zap className="w-4 h-4 mr-2" />
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 px-4">
+              <Link href="/live-studio" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto gradient-bg hover-lift text-base md:text-lg py-6 px-8">
+                  <Zap className="w-5 h-5 mr-2" />
                   Watch Live Studio
                 </Button>
               </Link>
-              <Link href="/mixes">
-                <Button size="lg" variant="outline">
-                  <Music className="w-4 h-4 mr-2" />
+              <Link href="/mixes" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto hover-lift text-base md:text-lg py-6 px-8">
+                  <Music className="w-5 h-5 mr-2" />
                   Explore Mixes
                 </Button>
               </Link>
@@ -72,92 +110,91 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 md:py-24 border-t border-border">
-        <div className="container">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What's Inside</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="p-6 hover:border-accent transition">
-              <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
-                <Music className="w-6 h-6 text-purple-400" />
+      <section className="py-12 md:py-24 border-t border-border">
+        <div className="container px-4">
+          <h2 className="text-3xl md:text-5xl font-bold text-center mb-8 md:mb-12"><span className="gradient-text">What's Inside</span></h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <Card className="p-6 md:p-8 glass hover-lift">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center mb-4">
+                <Music className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Free Mixes</h3>
-              <p className="text-muted-foreground">Discover curated mixes and exclusive tracks from the studio.</p>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Free Mixes</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Discover curated mixes and exclusive tracks from the studio.</p>
             </Card>
 
-            <Card className="p-6 hover:border-accent transition">
-              <div className="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-pink-400" />
+            <Card className="p-6 md:p-8 glass hover-lift">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 flex items-center justify-center mb-4">
+                <Zap className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Live Studio</h3>
-              <p className="text-muted-foreground">Watch live studio sessions with real-time camera feeds.</p>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Live Studio</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Watch live studio sessions with real-time camera feeds.</p>
             </Card>
 
-            <Card className="p-6 hover:border-accent transition">
-              <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4">
-                <Mic2 className="w-6 h-6 text-blue-400" />
+            <Card className="p-6 md:p-8 glass hover-lift">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-600/20 to-amber-700/20 flex items-center justify-center mb-4">
+                <Mic2 className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Podcast</h3>
-              <p className="text-muted-foreground">Listen to episodes on all major streaming platforms.</p>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Podcast</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Listen to episodes on all major streaming platforms.</p>
             </Card>
 
-            <Card className="p-6 hover:border-accent transition">
-              <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
-                <Calendar className="w-6 h-6 text-green-400" />
+            <Card className="p-6 md:p-8 glass hover-lift">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-700/20 to-orange-500/20 flex items-center justify-center mb-4">
+                <Calendar className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Events</h3>
-              <p className="text-muted-foreground">Check out upcoming performances and special events.</p>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Events</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Check out upcoming performances and special events.</p>
             </Card>
 
-            <Card className="p-6 hover:border-accent transition">
-              <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mb-4">
-                <Radio className="w-6 h-6 text-orange-400" />
+            <Card className="p-6 md:p-8 glass hover-lift">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-600/20 flex items-center justify-center mb-4">
+                <Radio className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Book DJ Services</h3>
-              <p className="text-muted-foreground">Hire DJ Danny for your next event or celebration.</p>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Book DJ Services</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Hire DJ Danny for your next event or celebration.</p>
             </Card>
 
-            <Card className="p-6 hover:border-accent transition">
-              <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-red-400" />
+            <Card className="p-6 md:p-8 glass hover-lift">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-600/20 to-orange-700/20 flex items-center justify-center mb-4">
+                <Users className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Community</h3>
-              <p className="text-muted-foreground">Connect with fans and stay updated on all the latest.</p>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Community</h3>
+              <p className="text-sm md:text-base text-muted-foreground">Connect with fans and stay updated on all the latest.</p>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       {/* Featured Mixes Section */}
-      <section className="py-16 md:py-24 border-t border-border">
-        <div className="container">
-          <h2 className="text-4xl font-bold mb-12">Featured Mixes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <section className="py-12 md:py-24 border-t border-border">
+        <div className="container px-4">
+          <h2 className="text-3xl md:text-5xl font-bold mb-8 md:mb-12"><span className="gradient-text">Featured Mixes</span></h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
             {[
               { title: "Garage Classics Mix", duration: "60 min", icon: "🎵", genre: "Garage" },
               { title: "Soulful House Journey", duration: "75 min", icon: "💫", genre: "Soulful House" },
               { title: "Amapiano Vibes", duration: "55 min", icon: "🎶", genre: "Amapiano" },
             ].map((mix, idx) => (
-              <Card key={idx} className="p-6 hover:border-accent transition cursor-pointer">
-                <div className="text-6xl mb-4">{mix.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{mix.title}</h3>
-                <p className="text-sm text-purple-400 font-semibold mb-3">{mix.genre}</p>
+              <Card key={idx} className="p-6 md:p-8 glass hover-lift cursor-pointer">
+                <div className="text-5xl md:text-6xl mb-4">{mix.icon}</div>
+                <h3 className="text-xl md:text-2xl font-bold mb-2">{mix.title}</h3>
+                <p className="text-sm text-accent font-semibold mb-3">{mix.genre}</p>
                 <p className="text-sm text-muted-foreground mb-4">Duration: {mix.duration}</p>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">Play Mix</Button>
+                <Button className="w-full gradient-bg hover-lift">Play Mix</Button>
               </Card>
             ))}
           </div>
           <div className="text-center">
             <Link href="/mixes">
-              <Button variant="outline">Explore All Mixes</Button>
+              <Button variant="outline" size="lg" className="hover-lift">Explore All Mixes</Button>
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-t border-border">
-        <div className="container max-w-3xl text-center space-y-6">
-          <h2 className="text-3xl md:text-4xl font-bold">Ready to Book?</h2>
+      <section className="py-12 md:py-24 bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-t border-border">
+        <div className="container max-w-3xl text-center space-y-6 px-4">
+          <h2 className="text-3xl md:text-5xl font-bold"><span className="gradient-text">Ready to Book?</span></h2>
           <p className="text-lg text-muted-foreground">
             Get DJ Danny Hectic B for your next event. Professional, energetic, and unforgettable performances.
           </p>
