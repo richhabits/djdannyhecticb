@@ -5,12 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useState } from "react";
 import { Music, Calendar, Check, X, Trash, Plus, Loader2 } from "lucide-react";
 import { formatDate } from "date-fns";
+import { FileUpload } from "./ui/file-upload";
 
 export function AdminDashboard() {
   return (
@@ -136,7 +135,7 @@ function MixesManager() {
     onSuccess: () => {
       toast.success("Mix created successfully");
       refetch();
-      // form reset handled by key change or manual reset if using controlled inputs
+      reset();
     },
   });
   const deleteMixMutation = trpc.mixes.delete.useMutation({
@@ -146,7 +145,7 @@ function MixesManager() {
     },
   });
 
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
 
   const onSubmit = (data: any) => {
     createMixMutation.mutate({
@@ -154,7 +153,6 @@ function MixesManager() {
       duration: data.duration ? parseInt(data.duration) : undefined,
       isFree: true, // default for now
     });
-    reset();
   };
 
   return (
@@ -167,12 +165,22 @@ function MixesManager() {
             <Input {...register("title", { required: true })} placeholder="Summer Vibes 2024" />
           </div>
           <div>
-            <Label>Audio URL</Label>
-            <Input {...register("audioUrl", { required: true })} placeholder="https://..." />
+            <Label>Audio File</Label>
+            <FileUpload 
+              accept="audio/*"
+              label="Upload MP3"
+              onUploadComplete={(url) => setValue("audioUrl", url)}
+            />
+            <input type="hidden" {...register("audioUrl", { required: true })} />
           </div>
           <div>
-            <Label>Cover Image URL</Label>
-            <Input {...register("coverImageUrl")} placeholder="https://..." />
+            <Label>Cover Image</Label>
+            <FileUpload 
+              accept="image/*"
+              label="Upload Cover"
+              onUploadComplete={(url) => setValue("coverImageUrl", url)}
+            />
+            <input type="hidden" {...register("coverImageUrl")} />
           </div>
           <div>
             <Label>Genre</Label>
@@ -225,6 +233,7 @@ function EventsManager() {
     onSuccess: () => {
       toast.success("Event created");
       refetch();
+      reset();
     },
   });
   const deleteEventMutation = trpc.events.delete.useMutation({
@@ -234,14 +243,13 @@ function EventsManager() {
     },
   });
 
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
 
   const onSubmit = (data: any) => {
     createEventMutation.mutate({
       ...data,
       isFeatured: !!data.isFeatured,
     });
-    reset();
   };
 
   return (
@@ -262,8 +270,13 @@ function EventsManager() {
             <Input {...register("location", { required: true })} />
           </div>
           <div>
-            <Label>Image URL</Label>
-            <Input {...register("imageUrl")} />
+            <Label>Event Image</Label>
+            <FileUpload 
+              accept="image/*"
+              label="Upload Poster"
+              onUploadComplete={(url) => setValue("imageUrl", url)}
+            />
+            <input type="hidden" {...register("imageUrl")} />
           </div>
           <div>
             <Label>Ticket URL</Label>

@@ -1,4 +1,4 @@
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -24,6 +24,20 @@ export const users = mysqlTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+/**
+ * Analytics table for tracking user engagement and system events
+ */
+export const analytics = mysqlTable("analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // 'page_view', 'mix_play', 'booking_inquiry', 'file_download'
+  entityId: int("entityId"), // ID of the mix, event, etc. (optional)
+  metadata: json("metadata"), // Extra data like browser, location, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analytics.$inferSelect;
+export type InsertAnalyticsEvent = typeof analytics.$inferInsert;
 
 /**
  * Mixes table for storing DJ mixes

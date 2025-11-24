@@ -83,6 +83,15 @@ export const appRouter = router({
   streaming: router({
     links: publicProcedure.query(() => db.getStreamingLinks()),
   }),
+
+  analytics: router({
+    log: publicProcedure.input(z.object({
+      type: z.string(),
+      entityId: z.number().optional(),
+      metadata: z.any().optional(),
+    })).mutation(({ input }) => db.logAnalyticsEvent(input)),
+    summary: adminProcedure.query(() => db.getAnalyticsSummary()),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

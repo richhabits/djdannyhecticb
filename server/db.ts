@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertMix, InsertEvent, users, mixes, bookings, events, podcasts, streamingLinks } from "../drizzle/schema";
+import { InsertUser, InsertMix, InsertEvent, InsertAnalyticsEvent, users, mixes, bookings, events, podcasts, streamingLinks, analytics } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -184,3 +184,44 @@ export async function deleteEvent(id: number) {
   if (!db) throw new Error("Database not available");
   return await db.delete(events).where(eq(events.id, id));
 }
+
+// Analytics
+export async function logAnalyticsEvent(event: InsertAnalyticsEvent) {
+  const db = await getDb();
+  if (!db) return; // fail silently for analytics
+  try {
+    await db.insert(analytics).values(event);
+  } catch (e) {
+    console.error("Failed to log analytics:", e);
+  }
+}
+
+export async function getAnalyticsSummary() {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Simple counts
+  const totalBookings = (await db.select({ count: sql<number>`count(*)` }).from(bookings))[0].count;
+  const totalMixPlays = (await db.select({ count: sql<number>`count(*)` }).from(analytics).where(eq(analytics.type, 'mix_play')))[0].count;
+  const totalVisitors = (await db.select({ count: sql<number>`count(*)` }).from(analytics).where(eq(analytics.type, 'page_view')))[0].count;
+  
+  // Top mixes
+  const topMixes = await db.select({
+    name: mixes.title,
+    plays: sql<number>`count(${analytics.id})`
+  })
+  .from(analytics)
+  .innerJoin(mixes, eq(analytics.entityId, mixes.id))
+  .where(eq(analytics.type, 'mix_play'))
+  .groupBy(mixes.id)
+  .orderBy(desc(sql`count(${analytics.id})`))
+  .limit(5);
+
+  return {
+    totalBookings,
+    totalMixPlays,
+    totalVisitors,
+    topMixes
+  };
+}
+
