@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 
@@ -21,10 +21,26 @@ export const appRouter = router({
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    create: adminProcedure.input(z.object({
+      title: z.string(),
+      description: z.string().optional(),
+      audioUrl: z.string(),
+      coverImageUrl: z.string().optional(),
+      duration: z.number().optional(),
+      genre: z.string().optional(),
+      isFree: z.boolean().default(true),
+      downloadUrl: z.string().optional(),
+    })).mutation(({ input }) => db.createMix(input)),
+    delete: adminProcedure.input(z.number()).mutation(({ input }) => db.deleteMix(input)),
   }),
 
   bookings: router({
     list: protectedProcedure.query(({ ctx }) => db.getUserBookings(ctx.user.id)),
+    adminList: adminProcedure.query(() => db.getAllBookings()),
+    updateStatus: adminProcedure.input(z.object({
+      id: z.number(),
+      status: z.enum(['pending', 'confirmed', 'completed', 'cancelled']),
+    })).mutation(({ input }) => db.updateBookingStatus(input.id, input.status)),
     create: protectedProcedure
       .input(z.object({
         eventName: z.string(),
@@ -47,6 +63,17 @@ export const appRouter = router({
     upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
     featured: publicProcedure.query(() => db.getFeaturedEvents()),
     all: publicProcedure.query(() => db.getAllEvents()),
+    create: adminProcedure.input(z.object({
+      title: z.string(),
+      description: z.string().optional(),
+      eventDate: z.string().transform(str => new Date(str)), // Fix date parsing from client
+      location: z.string(),
+      imageUrl: z.string().optional(),
+      ticketUrl: z.string().optional(),
+      price: z.string().optional(),
+      isFeatured: z.boolean().default(false),
+    })).mutation(({ input }) => db.createEvent(input)),
+    delete: adminProcedure.input(z.number()).mutation(({ input }) => db.deleteEvent(input)),
   }),
 
   podcasts: router({

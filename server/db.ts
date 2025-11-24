@@ -1,6 +1,6 @@
 import { asc, desc, eq, gt, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks } from "../drizzle/schema";
+import { InsertUser, InsertMix, InsertEvent, users, mixes, bookings, events, podcasts, streamingLinks } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -152,4 +152,35 @@ export async function getStreamingLinks() {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+}
+
+// Admin mutations
+export async function createMix(mix: InsertMix) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(mixes).values(mix);
+}
+
+export async function deleteMix(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(mixes).where(eq(mixes.id, id));
+}
+
+export async function updateBookingStatus(id: number, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(bookings).set({ status }).where(eq(bookings.id, id));
+}
+
+export async function createEvent(event: InsertEvent) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(events).values(event);
+}
+
+export async function deleteEvent(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(events).where(eq(events.id, id));
 }
