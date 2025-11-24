@@ -158,6 +158,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTheme } from "@/contexts/ThemeContext";
+import { trpc } from "@/lib/trpc";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import {
@@ -172,6 +173,17 @@ import {
 import { useState } from "react";
 import { toast as sonnerToast } from "sonner";
 import { AIChatBox, type Message } from "@/components/AIChatBox";
+
+const filterMessagesForApi = (messages: Message[]) =>
+  messages
+    .filter(
+      (message): message is Message & { role: "user" | "assistant" } =>
+        message.role === "user" || message.role === "assistant"
+    )
+    .map(message => ({
+      role: message.role,
+      content: message.content,
+    }));
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -191,7 +203,26 @@ export default function ComponentsShowcase() {
   const [chatMessages, setChatMessages] = useState<Message[]>([
     { role: "system", content: "You are a helpful assistant." },
   ]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  const chatMutation = trpc.ai.chat.useMutation({
+    onSuccess: data => {
+      setChatMessages(prev => [...prev, data.message]);
+    },
+    onError: error => {
+      sonnerToast.error("AI chat failed", {
+        description: error.message ?? "Please try again.",
+      });
+      setChatMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "I hit a snag while reaching DJ Danny's knowledge base. Please try again in a moment.",
+        },
+      ]);
+    },
+  });
+  const isChatLoading = chatMutation.isPending;
 
   const handleDialogSubmit = () => {
     console.log("Dialog submitted with value:", dialogInput);
@@ -210,20 +241,20 @@ export default function ComponentsShowcase() {
   };
 
   const handleChatSend = (content: string) => {
-    // Add user message
-    const newMessages: Message[] = [...chatMessages, { role: "user", content }];
-    setChatMessages(newMessages);
+    const trimmed = content.trim();
+    if (!trimmed || chatMutation.isPending) {
+      return;
+    }
 
-    // Simulate AI response with delay
-    setIsChatLoading(true);
-    setTimeout(() => {
-      const aiResponse: Message = {
-        role: "assistant",
-        content: `This is a **demo response**. In a real app, you would call a tRPC mutation here:\n\n\`\`\`typescript\nconst chatMutation = trpc.ai.chat.useMutation({\n  onSuccess: (response) => {\n    setChatMessages(prev => [...prev, {\n      role: "assistant",\n      content: response.choices[0].message.content\n    }]);\n  }\n});\n\nchatMutation.mutate({ messages: newMessages });\n\`\`\`\n\nYour message was: "${content}"`,
-      };
-      setChatMessages([...newMessages, aiResponse]);
-      setIsChatLoading(false);
-    }, 1500);
+    const nextMessages: Message[] = [
+      ...chatMessages,
+      { role: "user", content: trimmed },
+    ];
+
+    setChatMessages(nextMessages);
+    chatMutation.mutate({
+      messages: filterMessagesForApi(nextMessages),
+    });
   };
 
   return (
