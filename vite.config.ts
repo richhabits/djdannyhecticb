@@ -26,6 +26,44 @@ const normalizeValue = (value: string | undefined, fallback: string) => {
   return trimmed ? trimmed : fallback;
 };
 
+const identifyManualChunk = (id: string) => {
+  if (!id.includes("node_modules")) return undefined;
+
+  if (/mermaid/i.test(id)) {
+    return "mermaid";
+  }
+
+  if (/cytoscape/i.test(id)) {
+    return "cytoscape";
+  }
+
+  if (/katex/i.test(id)) {
+    return "katex";
+  }
+
+  if (/recharts|embla-carousel/i.test(id)) {
+    return "charts-media";
+  }
+
+  if (/@tanstack\/react-query/i.test(id)) {
+    return "react-query";
+  }
+
+  if (/radix-ui|cmdk|framer-motion/i.test(id)) {
+    return "radix-motion";
+  }
+
+  if (/wouter/i.test(id)) {
+    return "routing";
+  }
+
+  if (/react-dom|react\/|scheduler/i.test(id)) {
+    return "react-core";
+  }
+
+  return undefined;
+};
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ENV_DIR, "");
 
@@ -50,6 +88,12 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: DIST_PUBLIC_DIR,
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: identifyManualChunk,
+        },
+      },
+      chunkSizeWarningLimit: 1200,
     },
     server: {
       host: true,
