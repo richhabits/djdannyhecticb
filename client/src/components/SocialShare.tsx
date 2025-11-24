@@ -112,7 +112,7 @@ export function SocialShare({
         >
           <Linkedin className="w-4 h-4" />
         </Button>
-        {navigator.share && (
+        {'share' in navigator && typeof navigator.share === 'function' && (
           <Button
             variant="ghost"
             size="icon"
@@ -201,7 +201,7 @@ export function SocialShare({
           <Linkedin className="w-4 h-4 mr-2" />
           LinkedIn
         </Button>
-        {navigator.share && (
+        {'share' in navigator && typeof navigator.share === 'function' && (
           <Button
             variant="outline"
             onClick={handleNativeShare}

@@ -109,7 +109,7 @@ export const appRouter = router({
         eventLabel: z.string().optional(),
         pagePath: z.string().optional(),
         referrer: z.string().optional(),
-        metadata: z.record(z.unknown()).optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const userAgent = ctx.req.headers['user-agent'] || undefined;
@@ -140,7 +140,7 @@ export const appRouter = router({
       .query(({ ctx, input }) => {
         // Only allow users to see their own stats, or admins to see all
         const userId = ctx.user.role === 'admin' ? input.userId : ctx.user.id;
-        return db.getAnalyticsStats(input.startDate, input.endDate, userId);
+        return db.getAnalyticsStats(input.startDate, input.endDate, userId ?? undefined);
       }),
   }),
 });
