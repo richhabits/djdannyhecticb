@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Music, Calendar, Check, X, Trash, Plus, Loader2 } from "lucide-react";
+import { Music, Calendar, Check, X, Trash, Plus, Loader2, ShoppingBag } from "lucide-react";
 import { formatDate } from "date-fns";
 import { FileUpload } from "./ui/file-upload";
 
@@ -19,10 +19,11 @@ export function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
           <TabsTrigger value="bookings">Bookings Management</TabsTrigger>
           <TabsTrigger value="mixes">Mixes Library</TabsTrigger>
           <TabsTrigger value="events">Events Calendar</TabsTrigger>
+          <TabsTrigger value="products">Store Products</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bookings">
@@ -35,6 +36,10 @@ export function AdminDashboard() {
 
         <TabsContent value="events">
           <EventsManager />
+        </TabsContent>
+
+        <TabsContent value="products">
+          <ProductsManager />
         </TabsContent>
       </Tabs>
     </div>
@@ -135,7 +140,7 @@ function MixesManager() {
     onSuccess: () => {
       toast.success("Mix created successfully");
       refetch();
-      reset();
+      // reset handled by key change or manual reset if using controlled inputs
     },
   });
   const deleteMixMutation = trpc.mixes.delete.useMutation({
@@ -153,6 +158,7 @@ function MixesManager() {
       duration: data.duration ? parseInt(data.duration) : undefined,
       isFree: true, // default for now
     });
+    reset();
   };
 
   return (
@@ -233,7 +239,7 @@ function EventsManager() {
     onSuccess: () => {
       toast.success("Event created");
       refetch();
-      reset();
+      // reset();
     },
   });
   const deleteEventMutation = trpc.events.delete.useMutation({
@@ -250,6 +256,7 @@ function EventsManager() {
       ...data,
       isFeatured: !!data.isFeatured,
     });
+    reset();
   };
 
   return (
@@ -311,6 +318,104 @@ function EventsManager() {
               onClick={() => {
                 if (confirm("Delete this event?")) {
                   deleteEventMutation.mutate(event.id);
+                }
+              }}
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductsManager() {
+  const { data: products, refetch } = trpc.products.list.useQuery();
+  const createProductMutation = trpc.products.create.useMutation({
+    onSuccess: () => {
+      toast.success("Product created");
+      refetch();
+      // reset();
+    },
+  });
+  const deleteProductMutation = trpc.products.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Product deleted");
+      refetch();
+    },
+  });
+
+  const { register, handleSubmit, reset, setValue } = useForm();
+
+  const onSubmit = (data: any) => {
+    createProductMutation.mutate({
+      ...data,
+      price: parseFloat(data.price) * 100, // Convert to cents
+      inStock: !!data.inStock,
+    });
+    reset();
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="p-6 md:col-span-1 h-fit">
+        <h3 className="font-bold text-lg mb-4">Add New Product</h3>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <Label>Name</Label>
+            <Input {...register("name", { required: true })} placeholder="Product Name" />
+          </div>
+          <div>
+            <Label>Price ($)</Label>
+            <Input type="number" step="0.01" {...register("price", { required: true })} placeholder="25.00" />
+          </div>
+          <div>
+            <Label>Category</Label>
+            <Input {...register("category", { required: true })} placeholder="Vinyl, Merch, Digital" />
+          </div>
+          <div>
+            <Label>Image</Label>
+            <FileUpload 
+              accept="image/*"
+              label="Upload Product Image"
+              onUploadComplete={(url) => setValue("imageUrl", url)}
+            />
+            <input type="hidden" {...register("imageUrl")} />
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea {...register("description")} placeholder="Product details..." />
+          </div>
+           <div className="flex items-center gap-2">
+            <Label>In Stock?</Label>
+            <Input type="checkbox" className="w-4 h-4" {...register("inStock")} defaultChecked />
+          </div>
+          <Button type="submit" className="w-full" disabled={createProductMutation.isPending}>
+            {createProductMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2 h-4 w-4" />}
+            Add Product
+          </Button>
+        </form>
+      </Card>
+
+      <div className="md:col-span-2 space-y-4">
+        {products?.map((product) => (
+          <Card key={product.id} className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center overflow-hidden">
+                {product.imageUrl ? <img src={product.imageUrl} className="w-full h-full object-cover" /> : <ShoppingBag className="w-6 h-6" />}
+              </div>
+              <div>
+                <div className="font-bold">{product.name}</div>
+                <div className="text-sm text-muted-foreground">${(product.price / 100).toFixed(2)} • {product.category}</div>
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (confirm("Delete this product?")) {
+                  deleteProductMutation.mutate(product.id);
                 }
               }}
             >

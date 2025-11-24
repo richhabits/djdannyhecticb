@@ -34,6 +34,35 @@ export const appRouter = router({
     delete: adminProcedure.input(z.number()).mutation(({ input }) => db.deleteMix(input)),
   }),
 
+  products: router({
+    list: publicProcedure.query(() => db.getAllProducts()),
+    create: adminProcedure.input(z.object({
+      name: z.string(),
+      description: z.string().optional(),
+      price: z.number(), // cents
+      category: z.string(),
+      imageUrl: z.string().optional(),
+      inStock: z.boolean().default(true),
+    })).mutation(({ input }) => db.createProduct(input)),
+    delete: adminProcedure.input(z.number()).mutation(({ input }) => db.deleteProduct(input)),
+  }),
+
+  orders: router({
+    create: protectedProcedure.input(z.object({
+      items: z.array(z.object({
+        productId: z.number(),
+        quantity: z.number(),
+        price: z.number(), // cents
+      })),
+      total: z.number(), // cents
+    })).mutation(({ ctx, input }) => db.createOrder({
+      userId: ctx.user.id,
+      total: input.total,
+      status: 'pending',
+    }, input.items)),
+    list: protectedProcedure.query(({ ctx }) => db.getUserOrders(ctx.user.id)),
+  }),
+
   bookings: router({
     list: protectedProcedure.query(({ ctx }) => db.getUserBookings(ctx.user.id)),
     adminList: adminProcedure.query(() => db.getAllBookings()),

@@ -139,3 +139,49 @@ export const streamingLinks = mysqlTable("streamingLinks", {
 
 export type StreamingLink = typeof streamingLinks.$inferSelect;
 export type InsertStreamingLink = typeof streamingLinks.$inferInsert;
+
+/**
+ * Products table for the Shop
+ */
+export const products = mysqlTable("products", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: int("price").notNull(), // Price in cents
+  category: varchar("category", { length: 100 }).notNull(),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  inStock: boolean("inStock").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+/**
+ * Orders table
+ */
+export const orders = mysqlTable("orders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Linked to users.id
+  total: int("total").notNull(), // Total in cents
+  status: mysqlEnum("status", ["pending", "completed", "cancelled"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+/**
+ * Order Items table (Join table)
+ */
+export const orderItems = mysqlTable("orderItems", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  price: int("price").notNull(), // Price per item in cents at time of purchase
+});
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;

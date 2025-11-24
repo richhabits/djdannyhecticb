@@ -1,6 +1,6 @@
 import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertMix, InsertEvent, InsertAnalyticsEvent, users, mixes, bookings, events, podcasts, streamingLinks, analytics } from "../drizzle/schema";
+import { InsertUser, InsertMix, InsertEvent, InsertAnalyticsEvent, InsertProduct, InsertOrder, InsertOrderItem, users, mixes, bookings, events, podcasts, streamingLinks, analytics, products, orders, orderItems } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -152,6 +152,47 @@ export async function getStreamingLinks() {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+}
+
+// Products queries
+export async function getAllProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(products).orderBy(desc(products.createdAt));
+}
+
+export async function createProduct(product: InsertProduct) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(products).values(product);
+}
+
+export async function deleteProduct(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(products).where(eq(products.id, id));
+}
+
+// Orders queries
+export async function createOrder(order: InsertOrder, items: InsertOrderItem[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Create order
+  const [result] = await db.insert(orders).values(order);
+  const orderId = result.insertId;
+
+  // Create items
+  const itemsWithOrderId = items.map(item => ({ ...item, orderId }));
+  await db.insert(orderItems).values(itemsWithOrderId);
+
+  return { orderId };
+}
+
+export async function getUserOrders(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
 }
 
 // Admin mutations
