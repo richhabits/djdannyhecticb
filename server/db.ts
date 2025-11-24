@@ -1,9 +1,63 @@
 import { asc, desc, eq, gt, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, socialPosts, type SocialPost } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+
+type FallbackSocialPostSeed = Omit<SocialPost, "id" | "createdAt" | "updatedAt" | "postedAt"> & {
+  postedAt: string;
+};
+
+const FALLBACK_SOCIAL_POSTS_SEED: FallbackSocialPostSeed[] = [
+  {
+    platform: "instagram",
+    platformPostId: "IG-001",
+    authorHandle: "@djdannyhecticb",
+    authorAvatarUrl: "https://placehold.co/80x80/1f1f1f/fff?text=IG",
+    content: "Studio session was pure 🔥 tonight. Amapiano meets UK Garage and the crowd went crazy.",
+    mediaUrl: "https://placehold.co/600x400/4c1d95/fff?text=Studio+Session",
+    permalink: "https://instagram.com/p/IG-001",
+    likeCount: 1340,
+    commentCount: 182,
+    postedAt: "2025-11-20T22:15:00Z",
+  },
+  {
+    platform: "tiktok",
+    platformPostId: "TT-4421",
+    authorHandle: "@djdannyhecticb",
+    authorAvatarUrl: "https://placehold.co/80x80/000/fff?text=TT",
+    content: "New mashup preview. Who wants the full drop on Friday?",
+    mediaUrl: "https://placehold.co/600x400/db2777/fff?text=Mashup+Preview",
+    permalink: "https://tiktok.com/@djdannyhecticb/video/TT-4421",
+    likeCount: 9820,
+    commentCount: 640,
+    postedAt: "2025-11-19T19:42:00Z",
+  },
+  {
+    platform: "threads",
+    platformPostId: "TH-303",
+    authorHandle: "@djdannyhecticb",
+    authorAvatarUrl: "https://placehold.co/80x80/111827/fff?text=TH",
+    content: "Been digging into soulful house vinyl this week. Drop your favorite deep cuts below 👇",
+    mediaUrl: undefined,
+    permalink: "https://www.threads.net/@djdannyhecticb/post/TH-303",
+    likeCount: 412,
+    commentCount: 76,
+    postedAt: "2025-11-17T15:05:00Z",
+  },
+];
+
+const FALLBACK_SOCIAL_POSTS: SocialPost[] = FALLBACK_SOCIAL_POSTS_SEED.map((seed, index) => {
+  const postedAt = new Date(seed.postedAt);
+  return {
+    id: index + 1,
+    ...seed,
+    postedAt,
+    createdAt: postedAt,
+    updatedAt: postedAt,
+  };
+});
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -152,4 +206,11 @@ export async function getStreamingLinks() {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+}
+
+// Social feed
+export async function getSocialFeed(limit = 9) {
+  const db = await getDb();
+  if (!db) return FALLBACK_SOCIAL_POSTS.slice(0, limit);
+  return await db.select().from(socialPosts).orderBy(desc(socialPosts.postedAt)).limit(limit);
 }

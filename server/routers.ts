@@ -56,6 +56,10 @@ export const appRouter = router({
   streaming: router({
     links: publicProcedure.query(() => db.getStreamingLinks()),
   }),
+
+  social: router({
+    feed: publicProcedure.query(() => db.getSocialFeed()),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
