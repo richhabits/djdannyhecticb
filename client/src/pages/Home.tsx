@@ -1,12 +1,14 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, Mic2, Calendar, Radio, Zap, Users } from "lucide-react";
+import { Music, Mic2, Calendar, Radio, Zap, Users, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
+import { trpc } from "@/lib/trpc";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
+  const { data: socialFeed, isLoading: isSocialLoading } = trpc.social.feed.useQuery();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -124,6 +126,70 @@ export default function Home() {
               <p className="text-muted-foreground">Connect with fans and stay updated on all the latest.</p>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Social Feed */}
+      <section className="py-16 border-t border-border bg-card/30">
+        <div className="container space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Social</p>
+              <h2 className="text-3xl md:text-4xl font-bold">Latest from the feed</h2>
+              <p className="text-muted-foreground mt-2 max-w-2xl">
+                Real clips, comments, and behind-the-scenes drops from Instagram, TikTok, Threads, and beyond.
+              </p>
+            </div>
+          </div>
+          {isSocialLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, idx) => (
+                <Card key={idx} className="p-6 animate-pulse space-y-4">
+                  <div className="h-4 w-24 bg-muted rounded" />
+                  <div className="h-6 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded" />
+                  <div className="h-32 bg-muted rounded" />
+                </Card>
+              ))}
+            </div>
+          ) : socialFeed && socialFeed.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {socialFeed.map(post => {
+                const postedAt = new Date(post.postedAt);
+                return (
+                  <Card key={`${post.platform}-${post.id}`} className="p-6 flex flex-col gap-4 bg-background/70 backdrop-blur">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/80 to-pink-600/80 flex items-center justify-center text-white text-sm font-semibold">
+                        {post.platform.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{post.authorHandle ?? "DJ Danny Hectic B"}</p>
+                        <p className="text-xs text-muted-foreground">{postedAt.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground whitespace-pre-line">{post.content}</p>
+                    {post.mediaUrl && (
+                      <div className="relative overflow-hidden rounded-xl border border-border">
+                        <img src={post.mediaUrl} alt={post.platformPostId ?? post.platform} className="w-full h-48 object-cover" loading="lazy" />
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>❤️ {post.likeCount.toLocaleString()} · 💬 {post.commentCount.toLocaleString()}</span>
+                      {post.permalink && (
+                        <a href={post.permalink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-accent hover:text-accent/80">
+                          View post <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="p-8 text-center border-dashed border-2 border-border/70">
+              <p className="text-muted-foreground">No social posts yet. Add some via the dashboard or seed the database.</p>
+            </Card>
+          )}
         </div>
       </section>
 

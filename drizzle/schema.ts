@@ -125,3 +125,25 @@ export const streamingLinks = mysqlTable("streamingLinks", {
 
 export type StreamingLink = typeof streamingLinks.$inferSelect;
 export type InsertStreamingLink = typeof streamingLinks.$inferInsert;
+
+/**
+ * Social media posts sourced from third-party platforms.
+ */
+export const socialPosts = mysqlTable("socialPosts", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: varchar("platform", { length: 64 }).notNull(), // instagram, twitter, threads, etc.
+  platformPostId: varchar("platformPostId", { length: 128 }),
+  authorHandle: varchar("authorHandle", { length: 255 }),
+  authorAvatarUrl: varchar("authorAvatarUrl", { length: 512 }),
+  content: text("content").notNull(),
+  mediaUrl: varchar("mediaUrl", { length: 512 }),
+  permalink: varchar("permalink", { length: 512 }),
+  likeCount: int("likeCount").default(0).notNull(),
+  commentCount: int("commentCount").default(0).notNull(),
+  postedAt: timestamp("postedAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialPost = typeof socialPosts.$inferSelect;
+export type InsertSocialPost = typeof socialPosts.$inferInsert;
