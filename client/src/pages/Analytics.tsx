@@ -1,42 +1,114 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, BarChart3, TrendingUp, Users, DollarSign, Calendar, Download, Filter } from "lucide-react";
+import { Music, BarChart3, TrendingUp, Users, DollarSign, Calendar, Download, Filter, Loader2 } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
 
 export default function Analytics() {
-  const [timeRange, setTimeRange] = useState("month");
+  const { isAuthenticated } = useAuth();
+  const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter" | "year">("month");
+  
+  // Calculate date range based on selection
+  const dateRange = useMemo(() => {
+    const endDate = new Date();
+    let startDate: Date;
+    
+    switch (timeRange) {
+      case "week":
+        startDate = subWeeks(endDate, 1);
+        break;
+      case "month":
+        startDate = subMonths(endDate, 1);
+        break;
+      case "quarter":
+        startDate = subMonths(endDate, 3);
+        break;
+      case "year":
+        startDate = subYears(endDate, 1);
+        break;
+      default:
+        startDate = subMonths(endDate, 1);
+    }
+    
+    return { startDate, endDate };
+  }, [timeRange]);
+  
+  const { data: stats, isLoading } = trpc.analytics.stats.useQuery(
+    {
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+    },
+    { enabled: isAuthenticated }
+  );
 
-  const stats = [
-    {
-      label: "Total Revenue",
-      value: "$12,450",
-      change: "+23%",
-      icon: DollarSign,
-      color: "text-green-400",
-    },
-    {
-      label: "Bookings",
-      value: "42",
-      change: "+12%",
-      icon: Calendar,
-      color: "text-blue-400",
-    },
-    {
-      label: "Website Visitors",
-      value: "8,234",
-      change: "+45%",
-      icon: Users,
-      color: "text-purple-400",
-    },
-    {
-      label: "Mixes Downloaded",
-      value: "1,823",
-      change: "+67%",
-      icon: Music,
-      color: "text-pink-400",
-    },
-  ];
+  const displayStats = useMemo(() => {
+    if (!stats) {
+      return [
+        {
+          label: "Total Events",
+          value: "0",
+          change: "",
+          icon: BarChart3,
+          color: "text-purple-400",
+        },
+        {
+          label: "Page Views",
+          value: "0",
+          change: "",
+          icon: Users,
+          color: "text-blue-400",
+        },
+        {
+          label: "Bookings",
+          value: "0",
+          change: "",
+          icon: Calendar,
+          color: "text-green-400",
+        },
+        {
+          label: "Searches",
+          value: "0",
+          change: "",
+          icon: Music,
+          color: "text-pink-400",
+        },
+      ];
+    }
+    
+    return [
+      {
+        label: "Total Events",
+        value: stats.totalEvents.toLocaleString(),
+        change: "",
+        icon: BarChart3,
+        color: "text-purple-400",
+      },
+      {
+        label: "Page Views",
+        value: stats.pageViews.toLocaleString(),
+        change: "",
+        icon: Users,
+        color: "text-blue-400",
+      },
+      {
+        label: "Bookings",
+        value: stats.bookings.toLocaleString(),
+        change: "",
+        icon: Calendar,
+        color: "text-green-400",
+      },
+      {
+        label: "Searches",
+        value: stats.searches.toLocaleString(),
+        change: "",
+        icon: Music,
+        color: "text-pink-400",
+      },
+    ];
+  }, [stats]);
 
   const revenueData = [
     { month: "Jan", bookings: 2400, merchandise: 1200, mixes: 800 },
@@ -102,7 +174,7 @@ export default function Analytics() {
 
           {/* Time Range Filter */}
           <div className="flex gap-2">
-            {["week", "month", "quarter", "year"].map((range) => (
+            {(["week", "month", "quarter", "year"] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
@@ -122,25 +194,85 @@ export default function Analytics() {
       {/* Key Metrics */}
       <section className="py-8">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, idx) => {
-              const Icon = stat.icon;
-              return (
-                <Card key={idx} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <Icon className={`w-8 h-8 ${stat.color}`} />
-                    <span className="text-green-400 text-sm font-semibold">{stat.change}</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
-                </Card>
-              );
-            })}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+          ) : !isAuthenticated ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Please sign in to view analytics.</p>
+              <Link href="/">
+                <Button className="mt-4 bg-gradient-to-r from-purple-600 to-pink-600">
+                  Go Home
+                </Button>
+              </Link>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {displayStats.map((stat, idx) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={idx} className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <Icon className={`w-8 h-8 ${stat.color}`} />
+                      {stat.change && (
+                        <span className="text-green-400 text-sm font-semibold">{stat.change}</span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-sm mb-1">{stat.label}</p>
+                    <p className="text-3xl font-bold">{stat.value}</p>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Revenue Chart */}
+      {/* Top Pages */}
+      {stats && Object.keys(stats.topPages).length > 0 && (
+        <section className="py-8 border-t border-border">
+          <div className="container">
+            <h2 className="text-2xl font-bold mb-6">Top Pages</h2>
+            <Card className="p-6">
+              <div className="space-y-4">
+                {Object.entries(stats.topPages)
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 10)
+                  .map(([page, count], idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-card/50">
+                      <span className="font-medium">{page || "/"}</span>
+                      <span className="text-purple-400 font-semibold">{count} views</span>
+                    </div>
+                  ))}
+              </div>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      {/* Top Events */}
+      {stats && Object.keys(stats.topEvents).length > 0 && (
+        <section className="py-8 border-t border-border">
+          <div className="container">
+            <h2 className="text-2xl font-bold mb-6">Event Types</h2>
+            <Card className="p-6">
+              <div className="space-y-4">
+                {Object.entries(stats.topEvents)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([eventType, count], idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-card/50">
+                      <span className="font-medium capitalize">{eventType.replace(/_/g, " ")}</span>
+                      <span className="text-purple-400 font-semibold">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      {/* Revenue Chart - Keep as placeholder for future revenue tracking */}
       <section className="py-8 border-t border-border">
         <div className="container">
           <h2 className="text-2xl font-bold mb-6">Revenue Breakdown</h2>

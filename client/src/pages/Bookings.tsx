@@ -7,6 +7,8 @@ import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { formatDate } from "date-fns";
 import { toast } from "sonner";
+import { BookingCalendar } from "@/components/BookingCalendar";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const GENRES = [
   { id: 'house', name: 'House', color: 'from-purple-500 to-blue-500', icon: '🎵' },
@@ -27,10 +29,12 @@ const BOOKING_METHODS = [
 export default function Bookings() {
   const { isAuthenticated, user } = useAuth();
   const [, navigate] = useLocation();
+  const analytics = useAnalytics();
   const [showForm, setShowForm] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'dj'; message: string; time: string }>>([
     { sender: 'dj', message: '👋 Hey! Welcome to DJ Danny Hectic B bookings! What event are you planning?', time: '2:30 PM' },
   ]);
@@ -81,9 +85,16 @@ export default function Bookings() {
       toast.error("Please select at least one music genre!");
       return;
     }
+    if (!selectedDate && !formData.eventDate) {
+      toast.error("Please select an event date!");
+      return;
+    }
+    
+    const eventDate = selectedDate || new Date(formData.eventDate);
+    
     createBookingMutation.mutate({
       eventName: formData.eventName,
-      eventDate: new Date(formData.eventDate),
+      eventDate: eventDate,
       eventLocation: formData.eventLocation,
       eventType: formData.eventType,
       guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
@@ -92,6 +103,18 @@ export default function Bookings() {
       contactEmail: formData.contactEmail,
       contactPhone: formData.contactPhone,
     });
+    
+    analytics.trackBooking(undefined, {
+      eventType: formData.eventType,
+      genres: selectedGenres,
+    });
+  };
+  
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    const dateStr = date.toISOString().slice(0, 16);
+    setFormData({ ...formData, eventDate: dateStr });
+    analytics.trackClick("calendar_date_selected", { date: dateStr });
   };
 
   const handleSendMessage = () => {
@@ -228,17 +251,24 @@ export default function Bookings() {
             </div>
           </div>
 
-          {/* Booking Form */}
+          {/* Booking Calendar */}
           {showForm && (
-            <Card className="p-8 border-purple-500/30 bg-card/50 backdrop-blur">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Your Event Details</h2>
-                <button onClick={() => setShowForm(false)} className="p-1 hover:bg-card rounded">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BookingCalendar
+                onDateSelect={handleDateSelect}
+                selectedDate={selectedDate}
+                minDate={new Date()}
+              />
+              
+              <Card className="p-8 border-purple-500/30 bg-card/50 backdrop-blur">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Your Event Details</h2>
+                  <button onClick={() => setShowForm(false)} className="p-1 hover:bg-card rounded">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Genre Selection */}
                 <div>
                   <label className="block text-sm font-bold mb-4">Select Your Vibe(s) 🎶</label>
@@ -303,9 +333,17 @@ export default function Bookings() {
                       type="datetime-local"
                       required
                       value={formData.eventDate}
-                      onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, eventDate: e.target.value });
+                        setSelectedDate(new Date(e.target.value));
+                      }}
                       className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
+                    {selectedDate && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Selected: {formatDate(selectedDate, 'EEEE, MMMM d, yyyy')}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Location *</label>
@@ -395,6 +433,7 @@ export default function Bookings() {
                 </div>
               </form>
             </Card>
+            </div>
           )}
 
           {/* Your Bookings */}
