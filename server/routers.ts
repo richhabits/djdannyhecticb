@@ -4,6 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { bookingCalendarRouter } from "./routers/bookingCalendar";
+import { socialRouter } from "./routers/social";
 
 export const appRouter = router({
   system: systemRouter,
@@ -17,6 +19,12 @@ export const appRouter = router({
       } as const;
     }),
   }),
+  
+  // Enterprise booking calendar with availability management
+  bookingCalendar: bookingCalendarRouter,
+  
+  // Social media feed integration
+  social: socialRouter,
 
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
