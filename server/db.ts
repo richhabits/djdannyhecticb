@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, gte, lte, and, or, like, between, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, calendarAvailability, analyticsEvents, InsertCalendarAvailability, InsertAnalyticsEvent } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -152,4 +152,221 @@ export async function getStreamingLinks() {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+}
+
+// Calendar availability queries
+export async function getCalendarAvailability(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(calendarAvailability)
+    .where(
+      and(
+        gte(calendarAvailability.date, startDate),
+        lte(calendarAvailability.date, endDate)
+      )
+    )
+    .orderBy(asc(calendarAvailability.date));
+}
+
+export async function checkDateAvailability(date: Date): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return true; // Default to available if DB unavailable
+  
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+  
+  // Check if date is explicitly blocked
+  const blocked = await db
+    .select()
+    .from(calendarAvailability)
+    .where(
+      and(
+        gte(calendarAvailability.date, startOfDay),
+        lte(calendarAvailability.date, endOfDay),
+        eq(calendarAvailability.isAvailable, false)
+      )
+    )
+    .limit(1);
+  
+  if (blocked.length > 0) return false;
+  
+  // Check if there's a confirmed booking on this date
+  const confirmedBookings = await db
+    .select()
+    .from(bookings)
+    .where(
+      and(
+        gte(bookings.eventDate, startOfDay),
+        lte(bookings.eventDate, endOfDay),
+        eq(bookings.status, 'confirmed')
+      )
+    )
+    .limit(1);
+  
+  return confirmedBookings.length === 0;
+}
+
+export async function getAvailableDates(startDate: Date, endDate: Date): Promise<Date[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all confirmed bookings in range
+  const confirmedBookings = await db
+    .select({ eventDate: bookings.eventDate })
+    .from(bookings)
+    .where(
+      and(
+        gte(bookings.eventDate, startDate),
+        lte(bookings.eventDate, endDate),
+        eq(bookings.status, 'confirmed')
+      )
+    );
+  
+  // Get all blocked dates
+  const blockedDates = await db
+    .select({ date: calendarAvailability.date })
+    .from(calendarAvailability)
+    .where(
+      and(
+        gte(calendarAvailability.date, startDate),
+        lte(calendarAvailability.date, endDate),
+        eq(calendarAvailability.isAvailable, false)
+      )
+    );
+  
+  const unavailableDates = new Set([
+    ...confirmedBookings.map(b => b.eventDate.toISOString().split('T')[0]),
+    ...blockedDates.map(b => b.date.toISOString().split('T')[0])
+  ]);
+  
+  // Generate all dates in range and filter unavailable ones
+  const availableDates: Date[] = [];
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    const dateStr = current.toISOString().split('T')[0];
+    if (!unavailableDates.has(dateStr)) {
+      availableDates.push(new Date(current));
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return availableDates;
+}
+
+export async function createCalendarBlock(block: InsertCalendarAvailability) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(calendarAvailability).values(block);
+}
+
+// Search queries
+export async function searchContent(query: string, limit: number = 20) {
+  const db = await getDb();
+  if (!db) return { mixes: [], events: [], podcasts: [] };
+  
+  const searchTerm = `%${query}%`;
+  
+  const [mixesResults, eventsResults, podcastsResults] = await Promise.all([
+    db
+      .select()
+      .from(mixes)
+      .where(
+        or(
+          like(mixes.title, searchTerm),
+          like(mixes.description, searchTerm),
+          like(mixes.genre, searchTerm)
+        )
+      )
+      .limit(limit),
+    db
+      .select()
+      .from(events)
+      .where(
+        or(
+          like(events.title, searchTerm),
+          like(events.description, searchTerm),
+          like(events.location, searchTerm)
+        )
+      )
+      .limit(limit),
+    db
+      .select()
+      .from(podcasts)
+      .where(
+        or(
+          like(podcasts.title, searchTerm),
+          like(podcasts.description, searchTerm)
+        )
+      )
+      .limit(limit),
+  ]);
+  
+  return {
+    mixes: mixesResults,
+    events: eventsResults,
+    podcasts: podcastsResults,
+  };
+}
+
+// Analytics queries
+export async function createAnalyticsEvent(event: InsertAnalyticsEvent) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Analytics] Database not available, skipping event tracking");
+    return;
+  }
+  
+  try {
+    await db.insert(analyticsEvents).values(event);
+  } catch (error) {
+    console.error("[Analytics] Failed to create event:", error);
+    // Don't throw - analytics failures shouldn't break the app
+  }
+}
+
+export async function getAnalyticsStats(startDate: Date, endDate: Date, userId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = [
+    gte(analyticsEvents.createdAt, startDate),
+    lte(analyticsEvents.createdAt, endDate),
+  ];
+  
+  if (userId !== undefined) {
+    conditions.push(eq(analyticsEvents.userId, userId));
+  }
+  
+  const events = await db
+    .select()
+    .from(analyticsEvents)
+    .where(and(...conditions))
+    .orderBy(desc(analyticsEvents.createdAt));
+  
+  // Aggregate stats
+  const stats = {
+    totalEvents: events.length,
+    pageViews: events.filter(e => e.eventType === 'page_view').length,
+    searches: events.filter(e => e.eventType === 'search').length,
+    bookings: events.filter(e => e.eventType === 'booking_created').length,
+    clicks: events.filter(e => e.eventType === 'click').length,
+    topPages: {} as Record<string, number>,
+    topEvents: {} as Record<string, number>,
+  };
+  
+  events.forEach(event => {
+    if (event.pagePath) {
+      stats.topPages[event.pagePath] = (stats.topPages[event.pagePath] || 0) + 1;
+    }
+    if (event.eventType) {
+      stats.topEvents[event.eventType] = (stats.topEvents[event.eventType] || 0) + 1;
+    }
+  });
+  
+  return stats;
 }

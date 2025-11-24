@@ -125,3 +125,40 @@ export const streamingLinks = mysqlTable("streamingLinks", {
 
 export type StreamingLink = typeof streamingLinks.$inferSelect;
 export type InsertStreamingLink = typeof streamingLinks.$inferInsert;
+
+/**
+ * Calendar availability table for managing DJ availability and blocked dates
+ */
+export const calendarAvailability = mysqlTable("calendarAvailability", {
+  id: int("id").autoincrement().primaryKey(),
+  date: timestamp("date").notNull(),
+  isAvailable: boolean("isAvailable").default(true).notNull(),
+  reason: varchar("reason", { length: 255 }), // "booking", "holiday", "maintenance", etc
+  bookingId: int("bookingId"), // Reference to booking if blocked by confirmed booking
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CalendarAvailability = typeof calendarAvailability.$inferSelect;
+export type InsertCalendarAvailability = typeof calendarAvailability.$inferInsert;
+
+/**
+ * Analytics events table for tracking user interactions and page views
+ */
+export const analyticsEvents = mysqlTable("analyticsEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Nullable for anonymous tracking
+  eventType: varchar("eventType", { length: 100 }).notNull(), // "page_view", "click", "search", "booking_created", etc
+  eventCategory: varchar("eventCategory", { length: 100 }), // "navigation", "engagement", "conversion", etc
+  eventLabel: varchar("eventLabel", { length: 255 }), // Additional context
+  pagePath: varchar("pagePath", { length: 512 }),
+  referrer: varchar("referrer", { length: 512 }),
+  userAgent: varchar("userAgent", { length: 512 }),
+  ipAddress: varchar("ipAddress", { length: 45 }), // IPv6 compatible
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;

@@ -4,20 +4,28 @@ import { Card } from "@/components/ui/card";
 import { Music, Mic2, Calendar, Radio, Zap, Users } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
+import { SearchBar } from "@/components/SearchBar";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
+  const analytics = useAnalytics();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container flex items-center justify-between h-16">
+        <div className="container flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
               <Music className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-xl">DJ Danny Hectic B</span>
+          </div>
+          <div className="flex-1 max-w-md hidden md:block">
+            <SearchBar 
+              onResultClick={() => analytics.trackClick("search_result_clicked")}
+            />
           </div>
           <div className="flex items-center gap-6">
             <Link href="/about" className="text-sm hover:text-accent transition">About</Link>

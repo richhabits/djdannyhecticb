@@ -6,11 +6,27 @@ import { Music, Play, Download } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState } from "react";
+import { SocialShare } from "@/components/SocialShare";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export default function Mixes() {
   const { isAuthenticated } = useAuth();
+  const analytics = useAnalytics();
   const [playing, setPlaying] = useState<number | null>(null);
   const { data: mixes, isLoading } = trpc.mixes.free.useQuery();
+  
+  const handlePlay = (mixId: number, mixTitle: string) => {
+    setPlaying(mixId);
+    analytics.trackClick("mix_play", { mixId, mixTitle });
+  };
+  
+  const handleDownload = (mixId: number, mixTitle: string) => {
+    analytics.trackDownload("mix", mixId);
+  };
+  
+  const handleShare = (platform: string, mixTitle: string) => {
+    analytics.trackShare(platform, "mix");
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -65,7 +81,7 @@ export default function Mixes() {
                       <Music className="w-16 h-16 text-white/50" />
                     )}
                     <button
-                      onClick={() => setPlaying(playing === mix.id ? null : mix.id)}
+                      onClick={() => handlePlay(mix.id, mix.title)}
                       className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition"
                     >
                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30">
@@ -87,16 +103,33 @@ export default function Mixes() {
                         <source src={mix.audioUrl} type="audio/mpeg" />
                       </audio>
                     )}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Play className="w-4 h-4 mr-2" />
-                        Play
-                      </Button>
-                      {mix.downloadUrl && (
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4" />
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => handlePlay(mix.id, mix.title)}
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Play
                         </Button>
-                      )}
+                        {mix.downloadUrl && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDownload(mix.id, mix.title)}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <SocialShare
+                        url={`${window.location.origin}/mixes#mix-${mix.id}`}
+                        title={mix.title}
+                        description={mix.description || `Check out ${mix.title} by DJ Danny Hectic B`}
+                        variant="icon-only"
+                      />
                     </div>
                   </div>
                 </Card>
