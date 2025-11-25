@@ -147,3 +147,21 @@ export const socialPosts = mysqlTable("socialPosts", {
 
 export type SocialPost = typeof socialPosts.$inferSelect;
 export type InsertSocialPost = typeof socialPosts.$inferInsert;
+
+/**
+ * Booking availability slots for the real-time calendar.
+ */
+export const bookingSlots = mysqlTable("bookingSlots", {
+  id: int("id").autoincrement().primaryKey(),
+  slotStart: timestamp("slotStart").notNull(),
+  slotEnd: timestamp("slotEnd").notNull(),
+  status: mysqlEnum("status", ["available", "held", "booked"]).default("available").notNull(),
+  holdExpiresAt: timestamp("holdExpiresAt"),
+  bookingId: int("bookingId"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BookingSlot = typeof bookingSlots.$inferSelect;
+export type InsertBookingSlot = typeof bookingSlots.$inferInsert;

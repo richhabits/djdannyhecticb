@@ -1,0 +1,178 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "id": "5dd93d64-2c9f-4e4f-9f72-1c2e59bfbf88",
+  "prevId": "f6f3f1e3-9c0a-4f16-9f2b-1a2b3c4d5e6f",
+  "tables": {
+    "bookings": {
+      "name": "bookings",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "userId": { "name": "userId", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "eventName": { "name": "eventName", "type": "varchar(255)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "eventDate": { "name": "eventDate", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "eventLocation": { "name": "eventLocation", "type": "varchar(255)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "eventType": { "name": "eventType", "type": "varchar(100)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "guestCount": { "name": "guestCount", "type": "int", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "budget": { "name": "budget", "type": "varchar(100)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "description": { "name": "description", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "contactEmail": { "name": "contactEmail", "type": "varchar(320)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "contactPhone": { "name": "contactPhone", "type": "varchar(20)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "status": { "name": "status", "type": "enum('pending','confirmed','completed','cancelled')", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'pending'" },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "bookings_id": { "name": "bookings_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "bookingSlots": {
+      "name": "bookingSlots",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "slotStart": { "name": "slotStart", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "slotEnd": { "name": "slotEnd", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "status": { "name": "status", "type": "enum('available','held','booked')", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'available'" },
+        "holdExpiresAt": { "name": "holdExpiresAt", "type": "timestamp", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "bookingId": { "name": "bookingId", "type": "int", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "notes": { "name": "notes", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "bookingSlots_id": { "name": "bookingSlots_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "events": {
+      "name": "events",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "title": { "name": "title", "type": "varchar(255)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "description": { "name": "description", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "eventDate": { "name": "eventDate", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "location": { "name": "location", "type": "varchar(255)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "imageUrl": { "name": "imageUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "ticketUrl": { "name": "ticketUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "price": { "name": "price", "type": "varchar(100)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "isFeatured": { "name": "isFeatured", "type": "boolean", "primaryKey": false, "notNull": true, "autoincrement": false, "default": false },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "events_id": { "name": "events_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "mixes": {
+      "name": "mixes",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "title": { "name": "title", "type": "varchar(255)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "description": { "name": "description", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "audioUrl": { "name": "audioUrl", "type": "varchar(512)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "coverImageUrl": { "name": "coverImageUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "duration": { "name": "duration", "type": "int", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "genre": { "name": "genre", "type": "varchar(100)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "isFree": { "name": "isFree", "type": "boolean", "primaryKey": false, "notNull": true, "autoincrement": false, "default": true },
+        "downloadUrl": { "name": "downloadUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "mixes_id": { "name": "mixes_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "podcasts": {
+      "name": "podcasts",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "title": { "name": "title", "type": "varchar(255)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "description": { "name": "description", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "episodeNumber": { "name": "episodeNumber", "type": "int", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "audioUrl": { "name": "audioUrl", "type": "varchar(512)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "coverImageUrl": { "name": "coverImageUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "duration": { "name": "duration", "type": "int", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "spotifyUrl": { "name": "spotifyUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "applePodcastsUrl": { "name": "applePodcastsUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "youtubeUrl": { "name": "youtubeUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "podcasts_id": { "name": "podcasts_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "socialPosts": {
+      "name": "socialPosts",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "platform": { "name": "platform", "type": "varchar(64)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "platformPostId": { "name": "platformPostId", "type": "varchar(128)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "authorHandle": { "name": "authorHandle", "type": "varchar(255)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "authorAvatarUrl": { "name": "authorAvatarUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "content": { "name": "content", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "mediaUrl": { "name": "mediaUrl", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "permalink": { "name": "permalink", "type": "varchar(512)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "likeCount": { "name": "likeCount", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": false, "default": 0 },
+        "commentCount": { "name": "commentCount", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": false, "default": 0 },
+        "postedAt": { "name": "postedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "socialPosts_id": { "name": "socialPosts_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "streamingLinks": {
+      "name": "streamingLinks",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "platform": { "name": "platform", "type": "varchar(100)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "url": { "name": "url", "type": "varchar(512)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "displayName": { "name": "displayName", "type": "varchar(255)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "icon": { "name": "icon", "type": "varchar(255)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "order": { "name": "order", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": false, "default": 0 },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "streamingLinks_id": { "name": "streamingLinks_id", "columns": ["id"] } },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": { "name": "id", "type": "int", "primaryKey": false, "notNull": true, "autoincrement": true },
+        "openId": { "name": "openId", "type": "varchar(64)", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "name": { "name": "name", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "email": { "name": "email", "type": "varchar(320)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "loginMethod": { "name": "loginMethod", "type": "varchar(64)", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "role": { "name": "role", "type": "enum('user','admin')", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'user'" },
+        "createdAt": { "name": "createdAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" },
+        "updatedAt": { "name": "updatedAt", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "onUpdate": true, "default": "(now())" },
+        "lastSignedIn": { "name": "lastSignedIn", "type": "timestamp", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "(now())" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": { "users_id": { "name": "users_id", "columns": ["id"] } },
+      "uniqueConstraints": { "users_openId_unique": { "name": "users_openId_unique", "columns": ["openId"] } },
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": { "schemas": {}, "tables": {}, "columns": {} },
+  "internal": { "tables": {}, "indexes": {} }
+}

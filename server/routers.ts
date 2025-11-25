@@ -60,6 +60,24 @@ export const appRouter = router({
   social: router({
     feed: publicProcedure.query(() => db.getSocialFeed()),
   }),
+
+  calendar: router({
+    list: publicProcedure
+      .input(
+        z
+          .object({
+            rangeStart: z.string().datetime().optional(),
+            rangeEnd: z.string().datetime().optional(),
+          })
+          .optional()
+      )
+      .query(({ input }) =>
+        db.getBookingCalendar({
+          from: input?.rangeStart ? new Date(input.rangeStart) : undefined,
+          to: input?.rangeEnd ? new Date(input.rangeEnd) : undefined,
+        })
+      ),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

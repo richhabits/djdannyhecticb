@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, socialPosts, type SocialPost } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, socialPosts, bookingSlots, type SocialPost, type BookingSlot } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -56,6 +56,65 @@ const FALLBACK_SOCIAL_POSTS: SocialPost[] = FALLBACK_SOCIAL_POSTS_SEED.map((seed
     postedAt,
     createdAt: postedAt,
     updatedAt: postedAt,
+  };
+});
+
+type FallbackBookingSlotSeed = {
+  slotStart: string;
+  durationMinutes: number;
+  status: BookingSlot["status"];
+  notes?: string | null;
+};
+
+const FALLBACK_BOOKING_SLOTS_SEED: FallbackBookingSlotSeed[] = [
+  {
+    slotStart: "2025-11-23T18:00:00Z",
+    durationMinutes: 120,
+    status: "booked",
+    notes: "Wedding reception – London",
+  },
+  {
+    slotStart: "2025-11-25T20:00:00Z",
+    durationMinutes: 180,
+    status: "held",
+    notes: "Club night hold (awaiting deposit)",
+  },
+  {
+    slotStart: "2025-11-27T19:00:00Z",
+    durationMinutes: 150,
+    status: "available",
+  },
+  {
+    slotStart: "2025-11-30T17:00:00Z",
+    durationMinutes: 120,
+    status: "available",
+  },
+  {
+    slotStart: "2025-12-02T21:00:00Z",
+    durationMinutes: 180,
+    status: "booked",
+    notes: "Private studio livestream",
+  },
+  {
+    slotStart: "2025-12-05T20:00:00Z",
+    durationMinutes: 240,
+    status: "available",
+  },
+];
+
+const FALLBACK_BOOKING_SLOTS: BookingSlot[] = FALLBACK_BOOKING_SLOTS_SEED.map((seed, index) => {
+  const start = new Date(seed.slotStart);
+  const end = new Date(start.getTime() + seed.durationMinutes * 60 * 1000);
+  return {
+    id: index + 1,
+    slotStart: start,
+    slotEnd: end,
+    status: seed.status,
+    holdExpiresAt: seed.status === "held" ? new Date(start.getTime() - 60 * 60 * 1000) : null,
+    bookingId: seed.status === "booked" ? index + 100 : null,
+    notes: seed.notes ?? null,
+    createdAt: start,
+    updatedAt: start,
   };
 });
 
@@ -213,4 +272,33 @@ export async function getSocialFeed(limit = 9) {
   const db = await getDb();
   if (!db) return FALLBACK_SOCIAL_POSTS.slice(0, limit);
   return await db.select().from(socialPosts).orderBy(desc(socialPosts.postedAt)).limit(limit);
+}
+
+// Booking calendar
+export async function getBookingCalendar(range?: { from?: Date; to?: Date }) {
+  const now = new Date();
+  const defaultFrom = range?.from ?? now;
+  const defaultTo =
+    range?.to ?? new Date(defaultFrom.getTime() + 1000 * 60 * 60 * 24 * 30);
+
+  const db = await getDb();
+  if (!db) {
+    return FALLBACK_BOOKING_SLOTS.filter(slot => {
+      return (
+        slot.slotStart >= defaultFrom &&
+        slot.slotStart < defaultTo
+      );
+    }).sort((a, b) => a.slotStart.getTime() - b.slotStart.getTime());
+  }
+
+  return await db
+    .select()
+    .from(bookingSlots)
+    .where(
+      and(
+        gte(bookingSlots.slotStart, defaultFrom),
+        lt(bookingSlots.slotStart, defaultTo)
+      )
+    )
+    .orderBy(asc(bookingSlots.slotStart));
 }

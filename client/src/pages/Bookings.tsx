@@ -2,11 +2,14 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Music, Calendar, MapPin, Users, Mail, Phone, Plus, Send, MessageCircle, Facebook, Instagram, Music2, Zap, Heart, Radio, X } from "lucide-react";
+import { Music, Calendar as CalendarIcon, MapPin, Users, Mail, Phone, Plus, Send, MessageCircle, Facebook, Instagram, Music2, Zap, Heart, Radio, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
-import { formatDate } from "date-fns";
+import { useMemo, useState } from "react";
+import { addDays, format, formatDate } from "date-fns";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import type { BookingSlot } from "@shared/types";
 
 const GENRES = [
   { id: 'house', name: 'House', color: 'from-purple-500 to-blue-500', icon: '🎵' },
@@ -52,6 +55,70 @@ export default function Bookings() {
     undefined,
     { enabled: isAuthenticated }
   );
+
+  const calendarRange = useMemo(() => {
+    const start = new Date();
+    const end = addDays(start, 30);
+    return {
+      rangeStart: start.toISOString(),
+      rangeEnd: end.toISOString(),
+    };
+  }, []);
+
+  const { data: calendarSlots, isLoading: isCalendarLoading } = trpc.calendar.list.useQuery(calendarRange);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
+  const slotsByDate = useMemo(() => {
+    if (!calendarSlots) return {} as Record<string, BookingSlot[]>;
+    return calendarSlots.reduce<Record<string, BookingSlot[]>>((acc, slot) => {
+      const key = new Date(slot.slotStart).toISOString().split("T")[0];
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(slot);
+      return acc;
+    }, {});
+  }, [calendarSlots]);
+
+  const bookedDates = useMemo(() => {
+    return new Set(
+      Object.entries(slotsByDate)
+        .filter(([, slots]) => slots.some(slot => slot.status === "booked"))
+        .map(([date]) => date)
+    );
+  }, [slotsByDate]);
+
+  const heldDates = useMemo(() => {
+    return new Set(
+      Object.entries(slotsByDate)
+        .filter(([, slots]) => slots.some(slot => slot.status === "held"))
+        .map(([date]) => date)
+    );
+  }, [slotsByDate]);
+
+  const availableDates = useMemo(() => {
+    return new Set(
+      Object.entries(slotsByDate)
+        .filter(([, slots]) => slots.some(slot => slot.status === "available"))
+        .map(([date]) => date)
+    );
+  }, [slotsByDate]);
+
+  const selectedDateKey = selectedDate ? selectedDate.toISOString().split("T")[0] : undefined;
+  const selectedSlots = selectedDateKey ? slotsByDate[selectedDateKey] ?? [] : [];
+
+  const slotStatusStyles: Record<BookingSlot["status"], { label: string; badgeClass: string }> = {
+    available: {
+      label: "Available",
+      badgeClass: "bg-emerald-500/15 text-emerald-500",
+    },
+    held: {
+      label: "Held",
+      badgeClass: "bg-amber-500/15 text-amber-500",
+    },
+    booked: {
+      label: "Booked",
+      badgeClass: "bg-rose-500/15 text-rose-500",
+    },
+  };
 
   const createBookingMutation = trpc.bookings.create.useMutation({
     onSuccess: () => {
@@ -200,6 +267,97 @@ export default function Bookings() {
               </div>
             </div>
           </div>
+
+      {/* Availability Calendar */}
+      <section className="p-6 md:p-8 max-w-7xl mx-auto w-full">
+        <div className="space-y-4 mb-6">
+          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Calendar</p>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-bold">Real-time availability</h2>
+              <p className="text-muted-foreground mt-2 max-w-2xl">
+                Pick a date to see open slots, held times, and confirmed bookings. Slots update in real time as new enquiries come in.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-xs font-medium">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-emerald-500" />
+                Available
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-amber-500" />
+                Held
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-rose-500" />
+                Booked
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-[360px,1fr]">
+          <Card className="p-4 bg-card/70 backdrop-blur border-border/60">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              modifiers={{
+                booked: (date) => bookedDates.has(date.toISOString().split("T")[0]),
+                held: (date) => heldDates.has(date.toISOString().split("T")[0]),
+                available: (date) => availableDates.has(date.toISOString().split("T")[0]),
+              }}
+              modifiersClassNames={{
+                booked: "rounded-full bg-rose-500/30 text-rose-50",
+                held: "rounded-full bg-amber-500/30 text-amber-50",
+                available: "rounded-full bg-emerald-500/20 text-emerald-900",
+              }}
+            />
+          </Card>
+          <Card className="p-6 space-y-4 bg-card/70 backdrop-blur border-border/60">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Selected date</p>
+                <p className="text-xl font-semibold">
+                  {selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a date"}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {isCalendarLoading ? "Loading..." : `${selectedSlots.length} slot${selectedSlots.length === 1 ? "" : "s"}`}
+              </Badge>
+            </div>
+            <div className="space-y-3">
+              {isCalendarLoading ? (
+                [...Array(3)].map((_, idx) => (
+                  <div key={idx} className="h-16 rounded-xl bg-muted animate-pulse" />
+                ))
+              ) : selectedSlots.length > 0 ? (
+                selectedSlots.map(slot => {
+                  const start = new Date(slot.slotStart);
+                  const end = new Date(slot.slotEnd);
+                  const style = slotStatusStyles[slot.status];
+                  return (
+                    <div key={slot.id} className="p-4 rounded-xl border border-border/70 bg-background/60 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-base font-semibold">{format(start, "h:mm a")} – {format(end, "h:mm a")}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {slot.notes ?? (slot.status === "available" ? "Open for booking" : slot.status === "held" ? "Tentative hold" : "Confirmed event")}
+                        </p>
+                      </div>
+                      <Badge className={`text-xs ${style.badgeClass}`}>
+                        {style.label}
+                      </Badge>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-6 border border-dashed border-border/70 rounded-xl text-center text-sm text-muted-foreground">
+                  {selectedDate ? "No slots on this date. Choose another day or send a request via the form below." : "Select a date to view availability."}
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </section>
 
           {/* Social Booking Methods */}
           <div>
@@ -409,7 +567,7 @@ export default function Bookings() {
                         <h3 className="text-xl font-bold mb-2">{booking.eventName}</h3>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-purple-400" />
+                            <CalendarIcon className="w-4 h-4 text-purple-400" />
                             {formatDate(new Date(booking.eventDate), 'EEEE, MMMM d, yyyy h:mm a')}
                           </div>
                           <div className="flex items-center gap-2">
