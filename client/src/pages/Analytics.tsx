@@ -1,74 +1,65 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, BarChart3, TrendingUp, Users, DollarSign, Calendar, Download, Filter } from "lucide-react";
+import { Music, BarChart3, TrendingUp, Users, DollarSign, Calendar, Download, Filter, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
 
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState("month");
+  const { data: summary, isLoading } = trpc.analytics.summary.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
 
   const stats = [
     {
-      label: "Total Revenue",
-      value: "$12,450",
-      change: "+23%",
-      icon: DollarSign,
-      color: "text-green-400",
-    },
-    {
-      label: "Bookings",
-      value: "42",
-      change: "+12%",
+      label: "Total Bookings",
+      value: summary?.totalBookings.toString() || "0",
+      change: "+12%", // Mock trend for now
       icon: Calendar,
       color: "text-blue-400",
     },
     {
       label: "Website Visitors",
-      value: "8,234",
+      value: summary?.totalVisitors.toString() || "0",
       change: "+45%",
       icon: Users,
       color: "text-purple-400",
     },
     {
-      label: "Mixes Downloaded",
-      value: "1,823",
+      label: "Mix Plays",
+      value: summary?.totalMixPlays.toString() || "0",
       change: "+67%",
       icon: Music,
       color: "text-pink-400",
     },
+    {
+      label: "Total Revenue (Est)", // Placeholder as we don't track revenue yet
+      value: "$0", 
+      change: "+0%",
+      icon: DollarSign,
+      color: "text-green-400",
+    },
   ];
 
+  // ... (keep revenueData, trafficSources, bookingMetrics static for now or hide)
   const revenueData = [
-    { month: "Jan", bookings: 2400, merchandise: 1200, mixes: 800 },
-    { month: "Feb", bookings: 2800, merchandise: 1400, mixes: 950 },
-    { month: "Mar", bookings: 3200, merchandise: 1600, mixes: 1100 },
-    { month: "Apr", bookings: 3800, merchandise: 1900, mixes: 1300 },
-    { month: "May", bookings: 4200, merchandise: 2100, mixes: 1500 },
-    { month: "Jun", bookings: 4800, merchandise: 2400, mixes: 1750 },
+     { month: "Jan", bookings: 2400, merchandise: 1200, mixes: 800 },
+     // ...
   ];
 
-  const topPerformers = [
-    { name: "Garage Classics Mix", downloads: 342, revenue: "$1,710" },
-    { name: "Soulful House Journey", downloads: 298, revenue: "$1,490" },
-    { name: "Amapiano Vibes", downloads: 267, revenue: "$1,335" },
-    { name: "Grime Essentials", downloads: 245, revenue: "$1,225" },
-    { name: "Funky House Hits", downloads: 198, revenue: "$990" },
-  ];
-
-  const trafficSources = [
-    { source: "Instagram", visitors: 3200, percentage: 39 },
-    { source: "Direct", visitors: 2100, percentage: 25 },
-    { source: "Spotify", visitors: 1500, percentage: 18 },
-    { source: "YouTube", visitors: 900, percentage: 11 },
-    { source: "Other", visitors: 534, percentage: 7 },
-  ];
-
-  const bookingMetrics = [
-    { metric: "Total Inquiries", value: "156", change: "+18%" },
-    { metric: "Conversion Rate", value: "26.9%", change: "+3.2%" },
-    { metric: "Avg. Booking Value", value: "$450", change: "+12%" },
-    { metric: "Repeat Clients", value: "34%", change: "+8%" },
-  ];
+  // Use real top mixes
+  const topPerformers = summary?.topMixes.map(m => ({
+    name: m.name,
+    downloads: m.plays, // using plays as downloads
+    revenue: "$0"
+  })) || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -100,7 +91,7 @@ export default function Analytics() {
             </Button>
           </div>
 
-          {/* Time Range Filter */}
+          {/* Time Range Filter (Visual Only for now) */}
           <div className="flex gap-2">
             {["week", "month", "quarter", "year"].map((range) => (
               <button
@@ -140,58 +131,6 @@ export default function Analytics() {
         </div>
       </section>
 
-      {/* Revenue Chart */}
-      <section className="py-8 border-t border-border">
-        <div className="container">
-          <h2 className="text-2xl font-bold mb-6">Revenue Breakdown</h2>
-          <Card className="p-6">
-            <div className="space-y-6">
-              {revenueData.map((data, idx) => (
-                <div key={idx} className="space-y-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">{data.month}</span>
-                    <span className="text-muted-foreground text-sm">
-                      ${data.bookings + data.merchandise + data.mixes}
-                    </span>
-                  </div>
-                  <div className="flex gap-2 h-8">
-                    <div
-                      className="bg-blue-500 rounded"
-                      style={{ width: `${(data.bookings / 5000) * 100}%` }}
-                      title={`Bookings: $${data.bookings}`}
-                    />
-                    <div
-                      className="bg-purple-500 rounded"
-                      style={{ width: `${(data.merchandise / 5000) * 100}%` }}
-                      title={`Merchandise: $${data.merchandise}`}
-                    />
-                    <div
-                      className="bg-pink-500 rounded"
-                      style={{ width: `${(data.mixes / 5000) * 100}%` }}
-                      title={`Mixes: $${data.mixes}`}
-                    />
-                  </div>
-                </div>
-              ))}
-              <div className="flex gap-4 pt-4 border-t border-border">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded" />
-                  <span className="text-sm">Bookings</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-purple-500 rounded" />
-                  <span className="text-sm">Merchandise</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-pink-500 rounded" />
-                  <span className="text-sm">Mixes</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
       {/* Top Performers */}
       <section className="py-8 border-t border-border">
         <div className="container">
@@ -201,12 +140,12 @@ export default function Analytics() {
               <thead>
                 <tr className="border-b border-border bg-card/50">
                   <th className="text-left p-4 font-semibold">Mix Name</th>
-                  <th className="text-right p-4 font-semibold">Downloads</th>
+                  <th className="text-right p-4 font-semibold">Plays/Downloads</th>
                   <th className="text-right p-4 font-semibold">Revenue</th>
                 </tr>
               </thead>
               <tbody>
-                {topPerformers.map((performer, idx) => (
+                {topPerformers.length > 0 ? topPerformers.map((performer, idx) => (
                   <tr key={idx} className="border-b border-border hover:bg-card/50 transition">
                     <td className="p-4">{performer.name}</td>
                     <td className="text-right p-4">
@@ -216,77 +155,17 @@ export default function Analytics() {
                       <span className="text-green-400 font-semibold">{performer.revenue}</span>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={3} className="p-4 text-center text-muted-foreground">No data available yet</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </Card>
         </div>
       </section>
 
-      {/* Traffic Sources */}
-      <section className="py-8 border-t border-border">
-        <div className="container">
-          <h2 className="text-2xl font-bold mb-6">Traffic Sources</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {trafficSources.map((source, idx) => (
-              <Card key={idx} className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold">{source.source}</h3>
-                  <span className="text-purple-400 font-bold">{source.percentage}%</span>
-                </div>
-                <div className="w-full bg-card border border-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 h-full"
-                    style={{ width: `${source.percentage}%` }}
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-3">{source.visitors} visitors</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Booking Metrics */}
-      <section className="py-8 border-t border-border">
-        <div className="container">
-          <h2 className="text-2xl font-bold mb-6">Booking Metrics</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {bookingMetrics.map((metric, idx) => (
-              <Card key={idx} className="p-6">
-                <p className="text-muted-foreground text-sm mb-2">{metric.metric}</p>
-                <div className="flex items-end justify-between">
-                  <p className="text-2xl font-bold">{metric.value}</p>
-                  <span className="text-green-400 text-sm font-semibold">{metric.change}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Export Section */}
-      <section className="py-8 border-t border-border bg-card/50">
-        <div className="container max-w-2xl">
-          <Card className="p-8 text-center space-y-4">
-            <BarChart3 className="w-12 h-12 text-purple-400 mx-auto" />
-            <h3 className="text-xl font-bold">Generate Custom Reports</h3>
-            <p className="text-muted-foreground">
-              Export detailed analytics reports in PDF or CSV format for your records.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
-                <Download className="w-4 h-4 mr-2" />
-                Export as PDF
-              </Button>
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Export as CSV
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }

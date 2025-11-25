@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { useState } from "react";
 import { AIChatBox } from "@/components/AIChatBox";
 import { trpc } from "@/lib/trpc";
+import { AdminDashboard } from "@/components/AdminDashboard";
 
 export default function Dashboard() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -39,6 +40,30 @@ export default function Dashboard() {
               Go Home
             </Button>
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin View
+  if (user?.role === 'admin') {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+          <div className="container flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80">
+              <Music className="w-6 h-6" />
+              <span className="font-bold">DJ Danny Hectic B</span>
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-xs font-bold border border-purple-500/30">ADMIN</span>
+            </Link>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </header>
+        <div className="container py-8">
+          <AdminDashboard />
         </div>
       </div>
     );

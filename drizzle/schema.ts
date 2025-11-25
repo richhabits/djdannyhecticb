@@ -1,4 +1,4 @@
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -24,6 +24,20 @@ export const users = mysqlTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+/**
+ * Analytics table for tracking user engagement and system events
+ */
+export const analytics = mysqlTable("analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // 'page_view', 'mix_play', 'booking_inquiry', 'file_download'
+  entityId: int("entityId"), // ID of the mix, event, etc. (optional)
+  metadata: json("metadata"), // Extra data like browser, location, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analytics.$inferSelect;
+export type InsertAnalyticsEvent = typeof analytics.$inferInsert;
 
 /**
  * Mixes table for storing DJ mixes
@@ -125,3 +139,70 @@ export const streamingLinks = mysqlTable("streamingLinks", {
 
 export type StreamingLink = typeof streamingLinks.$inferSelect;
 export type InsertStreamingLink = typeof streamingLinks.$inferInsert;
+
+/**
+ * Products table for the Shop
+ */
+export const products = mysqlTable("products", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: int("price").notNull(), // Price in cents
+  category: varchar("category", { length: 100 }).notNull(),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  inStock: boolean("inStock").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+/**
+ * Orders table
+ */
+export const orders = mysqlTable("orders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Linked to users.id
+  total: int("total").notNull(), // Total in cents
+  status: mysqlEnum("status", ["pending", "completed", "cancelled"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+/**
+ * Order Items table (Join table)
+ */
+export const orderItems = mysqlTable("orderItems", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  price: int("price").notNull(), // Price per item in cents at time of purchase
+});
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;
+
+/**
+ * Blog Posts table
+ */
+export const posts = mysqlTable("posts", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  category: varchar("category", { length: 100 }),
+  author: varchar("author", { length: 100 }),
+  published: boolean("published").default(true).notNull(),
+  isMembersOnly: boolean("isMembersOnly").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Post = typeof posts.$inferSelect;
+export type InsertPost = typeof posts.$inferInsert;
+

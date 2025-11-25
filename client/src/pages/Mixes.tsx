@@ -11,6 +11,16 @@ export default function Mixes() {
   const { isAuthenticated } = useAuth();
   const [playing, setPlaying] = useState<number | null>(null);
   const { data: mixes, isLoading } = trpc.mixes.free.useQuery();
+  const logPlayMutation = trpc.analytics.log.useMutation();
+
+  const handlePlay = (mixId: number) => {
+    if (playing !== mixId) {
+      setPlaying(mixId);
+      logPlayMutation.mutate({ type: 'mix_play', entityId: mixId });
+    } else {
+      setPlaying(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -65,11 +75,15 @@ export default function Mixes() {
                       <Music className="w-16 h-16 text-white/50" />
                     )}
                     <button
-                      onClick={() => setPlaying(playing === mix.id ? null : mix.id)}
+                      onClick={() => handlePlay(mix.id)}
                       className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition"
                     >
                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30">
-                        <Play className="w-6 h-6 text-white fill-white" />
+                        {playing === mix.id ? (
+                          <div className="w-6 h-6 bg-white rounded-sm" />
+                        ) : (
+                          <Play className="w-6 h-6 text-white fill-white" />
+                        )}
                       </div>
                     </button>
                   </div>

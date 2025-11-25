@@ -1,88 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, ShoppingCart, Heart, Mail, Check } from "lucide-react";
+import { Music, ShoppingCart, Heart, Mail, Check, Loader2, Minus, Plus, X } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
+import { useCart } from "@/contexts/CartContext";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Shop() {
   const [newsletter, setNewsletter] = useState("");
   const [subscribed, setSubscribed] = useState(false);
-
-  const products = [
-    {
-      id: 1,
-      name: "Hectic Beats Vol. 1 (Vinyl)",
-      category: "Vinyl",
-      price: "$25.99",
-      image: "🎵",
-      description: "Exclusive garage and house mix on 180g vinyl",
-      inStock: true,
-    },
-    {
-      id: 2,
-      name: "Hectic Beats Vol. 1 (Digital)",
-      category: "Digital Download",
-      price: "$9.99",
-      image: "💿",
-      description: "High-quality MP3 and FLAC download",
-      inStock: true,
-    },
-    {
-      id: 3,
-      name: "DJ Danny Hectic B T-Shirt",
-      category: "Merchandise",
-      price: "$19.99",
-      image: "👕",
-      description: "Premium cotton t-shirt with logo",
-      inStock: true,
-    },
-    {
-      id: 4,
-      name: "Garage Nation Hoodie",
-      category: "Merchandise",
-      price: "$49.99",
-      image: "🧥",
-      description: "Limited edition collaboration hoodie",
-      inStock: true,
-    },
-    {
-      id: 5,
-      name: "DJ Danny Mix Tape Collection",
-      category: "Digital Download",
-      price: "$29.99",
-      image: "📼",
-      description: "5 exclusive mixes (20+ hours of music)",
-      inStock: true,
-    },
-    {
-      id: 6,
-      name: "Hectic Beats Vol. 2 (Vinyl)",
-      category: "Vinyl",
-      price: "$25.99",
-      image: "🎶",
-      description: "Latest soulful house and amapiano mix",
-      inStock: false,
-    },
-    {
-      id: 7,
-      name: "DJ Danny Baseball Cap",
-      category: "Merchandise",
-      price: "$24.99",
-      image: "🧢",
-      description: "Embroidered logo cap",
-      inStock: true,
-    },
-    {
-      id: 8,
-      name: "Exclusive Studio Session (Video)",
-      category: "Digital Download",
-      price: "$14.99",
-      image: "🎬",
-      description: "Behind-the-scenes studio recording",
-      inStock: true,
-    },
-  ];
+  const { data: products, isLoading } = trpc.products.list.useQuery();
+  const { addItem, items, removeItem, total, itemCount, clearCart } = useCart();
+  const createOrderMutation = trpc.orders.create.useMutation();
+  const { isAuthenticated } = useAuth();
 
   const handleNewsletterSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,8 +30,24 @@ export default function Shop() {
     setTimeout(() => setSubscribed(false), 3000);
   };
 
-  const handleAddToCart = (productName: string) => {
-    toast.success(`${productName} added to cart! 🛒`);
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to checkout");
+      return;
+    }
+    
+    createOrderMutation.mutate({
+      items: items.map(i => ({ productId: i.id, quantity: i.quantity, price: i.price })),
+      total
+    }, {
+      onSuccess: () => {
+        toast.success("Order placed successfully! 🎉");
+        clearCart();
+      },
+      onError: (err) => {
+        toast.error("Failed to place order: " + err.message);
+      }
+    });
   };
 
   return (
@@ -112,12 +62,72 @@ export default function Shop() {
           <nav className="flex items-center gap-6">
             <Link href="/mixes" className="text-sm hover:text-accent">Mixes</Link>
             <Link href="/bookings" className="text-sm hover:text-accent">Bookings</Link>
-            <button className="relative">
-              <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
-              </span>
-            </button>
+            
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="relative p-2 hover:bg-accent/10 rounded-full transition">
+                  <ShoppingCart className="w-5 h-5" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-in zoom-in">
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:w-[400px] flex flex-col">
+                <SheetHeader>
+                  <SheetTitle>Shopping Cart ({itemCount})</SheetTitle>
+                </SheetHeader>
+                
+                <ScrollArea className="flex-1 my-4">
+                  {items.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-12">
+                      <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                      <p>Your cart is empty</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 pr-4">
+                      {items.map((item) => (
+                        <div key={item.id} className="flex gap-4 items-start bg-card/50 p-3 rounded-lg border border-border/50">
+                          <div className="w-16 h-16 bg-muted rounded flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-cover" /> : <Music className="w-6 h-6 opacity-50" />}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm line-clamp-1">{item.name}</h4>
+                            <p className="text-muted-foreground text-sm">${(item.price / 100).toFixed(2)}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs bg-accent/10 px-2 py-1 rounded">Qty: {item.quantity}</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => removeItem(item.id)}
+                            className="text-muted-foreground hover:text-destructive transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+
+                <SheetFooter className="border-t border-border pt-4">
+                  <div className="w-full space-y-4">
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span>${(total / 100).toFixed(2)}</span>
+                    </div>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600" 
+                      disabled={items.length === 0 || createOrderMutation.isPending}
+                      onClick={handleCheckout}
+                    >
+                      {createOrderMutation.isPending ? <Loader2 className="animate-spin" /> : "Checkout"}
+                    </Button>
+                  </div>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
           </nav>
         </div>
       </header>
@@ -132,161 +142,71 @@ export default function Shop() {
         </div>
       </section>
 
-      {/* Newsletter Signup */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-purple-600 to-pink-600">
-        <div className="container max-w-2xl">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold text-white">Get Exclusive Updates</h2>
-            <p className="text-white/90">
-              Subscribe to our newsletter for new releases, exclusive mixes, and special offers.
-            </p>
-            <form onSubmit={handleNewsletterSignup} className="flex gap-3">
-              <input
-                type="email"
-                value={newsletter}
-                onChange={(e) => setNewsletter(e.target.value)}
-                placeholder="Enter your email..."
-                className="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white"
-              />
-              <Button
-                type="submit"
-                className="bg-white text-purple-600 hover:bg-white/90"
-              >
-                {subscribed ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Subscribed!
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Subscribe
-                  </>
-                )}
-              </Button>
-            </form>
-          </div>
-        </div>
-      </section>
-
       {/* Products Grid */}
       <section className="py-16 md:py-24">
         <div className="container">
-          <div className="mb-12">
-            <h2 className="text-4xl font-bold mb-4">Featured Products</h2>
-            <div className="flex gap-3 flex-wrap">
-              {['All', 'Vinyl', 'Digital Download', 'Merchandise'].map((category) => (
-                <Button
-                  key={category}
-                  variant={category === 'All' ? 'default' : 'outline'}
-                  className={category === 'All' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}
-                >
-                  {category}
-                </Button>
-              ))}
+          {isLoading ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-12 h-12 animate-spin mx-auto text-purple-500" />
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products?.map((product) => (
+                <Card
+                  key={product.id}
+                  className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col"
+                >
+                  <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden relative group">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                    ) : (
+                      <div className="text-6xl">🎵</div>
+                    )}
+                    {!product.inStock && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                        <span className="font-bold text-white border-2 border-white px-4 py-2 rounded transform -rotate-12">SOLD OUT</span>
+                      </div>
+                    )}
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Card
-                key={product.id}
-                className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col"
-              >
-                {/* Product Image */}
-                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-8 text-6xl flex items-center justify-center h-48">
-                  {product.image}
-                </div>
+                  <div className="p-6 flex flex-col flex-1">
+                    <p className="text-xs text-purple-400 font-bold mb-2">{product.category}</p>
+                    <h3 className="text-lg font-bold mb-2 line-clamp-1" title={product.name}>{product.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-2">
+                      {product.description}
+                    </p>
 
-                {/* Product Info */}
-                <div className="p-6 flex flex-col flex-1">
-                  <p className="text-xs text-purple-400 font-bold mb-2">{product.category}</p>
-                  <h3 className="text-lg font-bold mb-2">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4 flex-1">
-                    {product.description}
-                  </p>
+                    <div className="space-y-3 pt-4 border-t border-border/50">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-pink-400">
+                          ${(product.price / 100).toFixed(2)}
+                        </span>
+                      </div>
 
-                  {/* Price & Status */}
-                  <div className="space-y-3 pt-4 border-t border-border/50">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-pink-400">
-                        {product.price}
-                      </span>
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${
-                        product.inStock
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {product.inStock ? 'In Stock' : 'Coming Soon'}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleAddToCart(product.name)}
-                        disabled={!product.inStock}
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Add
-                      </Button>
-                      <Button variant="outline" size="icon">
-                        <Heart className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => addItem({ 
+                            id: product.id, 
+                            name: product.name, 
+                            price: product.price, 
+                            imageUrl: product.imageUrl || undefined 
+                          })}
+                          disabled={!product.inStock}
+                          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Add
+                        </Button>
+                        <Button variant="outline" size="icon">
+                          <Heart className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Shop With Us */}
-      <section className="py-16 md:py-24 border-t border-border bg-card/50">
-        <div className="container">
-          <h2 className="text-4xl font-bold mb-12 text-center">Why Shop With Us</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: '🎵',
-                title: 'Exclusive Content',
-                description: 'Get access to exclusive mixes and studio sessions not available anywhere else.',
-              },
-              {
-                icon: '🚚',
-                title: 'Fast Shipping',
-                description: 'Orders ship within 24 hours. Vinyl arrives in protective packaging.',
-              },
-              {
-                icon: '💯',
-                title: 'Quality Guaranteed',
-                description: 'Premium materials and professional production on all physical products.',
-              },
-            ].map((item, idx) => (
-              <Card key={idx} className="p-8 text-center">
-                <div className="text-5xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
-        <div className="container max-w-3xl text-center space-y-6">
-          <h2 className="text-4xl font-bold">Support the Music</h2>
-          <p className="text-lg text-muted-foreground">
-            Every purchase supports the creation of new mixes and live performances. Thank you for your support!
-          </p>
-          <Link href="/bookings">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
-              Book DJ Danny
-            </Button>
-          </Link>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

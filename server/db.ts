@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks } from "../drizzle/schema";
+import { InsertUser, InsertMix, InsertEvent, InsertAnalyticsEvent, InsertProduct, InsertOrder, InsertOrderItem, InsertPost, users, mixes, bookings, events, podcasts, streamingLinks, analytics, products, orders, orderItems, posts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -153,3 +153,142 @@ export async function getStreamingLinks() {
   if (!db) return [];
   return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
 }
+
+// Products queries
+export async function getAllProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(products).orderBy(desc(products.createdAt));
+}
+
+export async function createProduct(product: InsertProduct) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(products).values(product);
+}
+
+export async function deleteProduct(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(products).where(eq(products.id, id));
+}
+
+// Orders queries
+export async function createOrder(order: InsertOrder, items: InsertOrderItem[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Create order
+  const [result] = await db.insert(orders).values(order);
+  const orderId = result.insertId;
+
+  // Create items
+  const itemsWithOrderId = items.map(item => ({ ...item, orderId }));
+  await db.insert(orderItems).values(itemsWithOrderId);
+
+  return { orderId };
+}
+
+export async function getUserOrders(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+}
+
+// Blog queries
+export async function getAllPosts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(posts).orderBy(desc(posts.createdAt));
+}
+
+export async function getPostById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(posts).where(eq(posts.id, id));
+  return result[0] || null;
+}
+
+export async function createPost(post: InsertPost) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(posts).values(post);
+}
+
+export async function deletePost(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(posts).where(eq(posts.id, id));
+}
+
+// Admin mutations
+export async function createMix(mix: InsertMix) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(mixes).values(mix);
+}
+
+export async function deleteMix(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(mixes).where(eq(mixes.id, id));
+}
+
+export async function updateBookingStatus(id: number, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.update(bookings).set({ status }).where(eq(bookings.id, id));
+}
+
+export async function createEvent(event: InsertEvent) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(events).values(event);
+}
+
+export async function deleteEvent(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(events).where(eq(events.id, id));
+}
+
+// Analytics
+export async function logAnalyticsEvent(event: InsertAnalyticsEvent) {
+  const db = await getDb();
+  if (!db) return; // fail silently for analytics
+  try {
+    await db.insert(analytics).values(event);
+  } catch (e) {
+    console.error("Failed to log analytics:", e);
+  }
+}
+
+export async function getAnalyticsSummary() {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Simple counts
+  const totalBookings = (await db.select({ count: sql<number>`count(*)` }).from(bookings))[0].count;
+  const totalMixPlays = (await db.select({ count: sql<number>`count(*)` }).from(analytics).where(eq(analytics.type, 'mix_play')))[0].count;
+  const totalVisitors = (await db.select({ count: sql<number>`count(*)` }).from(analytics).where(eq(analytics.type, 'page_view')))[0].count;
+  
+  // Top mixes
+  const topMixes = await db.select({
+    name: mixes.title,
+    plays: sql<number>`count(${analytics.id})`
+  })
+  .from(analytics)
+  .innerJoin(mixes, eq(analytics.entityId, mixes.id))
+  .where(eq(analytics.type, 'mix_play'))
+  .groupBy(mixes.id)
+  .orderBy(desc(sql`count(${analytics.id})`))
+  .limit(5);
+
+  return {
+    totalBookings,
+    totalMixPlays,
+    totalVisitors,
+    topMixes
+  };
+}
+
