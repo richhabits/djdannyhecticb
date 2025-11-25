@@ -1,56 +1,78 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { Suspense, lazy, type ComponentType } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import LiveChat from "./components/LiveChat";
-import Home from "./pages/Home";
-import About from "./pages/About";
-import History from "./pages/History";
-import Testimonials from "./pages/Testimonials";
-import Shop from "./pages/Shop";
-import Gallery from "./pages/Gallery";
-import Blog from "./pages/Blog";
-import Contact from "./pages/Contact";
-import Tutorials from "./pages/Tutorials";
-import Affiliate from "./pages/Affiliate";
-import Members from "./pages/Members";
-import Newsletter from "./pages/Newsletter";
-import Analytics from "./pages/Analytics";
-import Mixes from "./pages/Mixes";
-import Bookings from "./pages/Bookings";
-import Events from "./pages/Events";
-import Podcasts from "./pages/Podcasts";
-import LiveStudio from "./pages/LiveStudio";
-import Dashboard from "./pages/Dashboard";
+import { DashboardLayoutSkeleton } from "./components/DashboardLayoutSkeleton";
+
+const createLazyPage = (loader: () => Promise<{ default: ComponentType }>) =>
+  lazy(loader);
+
+const NotFound = createLazyPage(() => import("./pages/NotFound"));
+
+const routes = [
+  { path: "/", component: createLazyPage(() => import("./pages/Home")) },
+  { path: "/about", component: createLazyPage(() => import("./pages/About")) },
+  { path: "/history", component: createLazyPage(() => import("./pages/History")) },
+  {
+    path: "/testimonials",
+    component: createLazyPage(() => import("./pages/Testimonials")),
+  },
+  { path: "/shop", component: createLazyPage(() => import("./pages/Shop")) },
+  { path: "/gallery", component: createLazyPage(() => import("./pages/Gallery")) },
+  { path: "/blog", component: createLazyPage(() => import("./pages/Blog")) },
+  { path: "/contact", component: createLazyPage(() => import("./pages/Contact")) },
+  {
+    path: "/tutorials",
+    component: createLazyPage(() => import("./pages/Tutorials")),
+  },
+  {
+    path: "/affiliate",
+    component: createLazyPage(() => import("./pages/Affiliate")),
+  },
+  { path: "/members", component: createLazyPage(() => import("./pages/Members")) },
+  {
+    path: "/newsletter",
+    component: createLazyPage(() => import("./pages/Newsletter")),
+  },
+  {
+    path: "/analytics",
+    component: createLazyPage(() => import("./pages/Analytics")),
+  },
+  { path: "/mixes", component: createLazyPage(() => import("./pages/Mixes")) },
+  {
+    path: "/bookings",
+    component: createLazyPage(() => import("./pages/Bookings")),
+  },
+  { path: "/events", component: createLazyPage(() => import("./pages/Events")) },
+  {
+    path: "/podcasts",
+    component: createLazyPage(() => import("./pages/Podcasts")),
+  },
+  {
+    path: "/live-studio",
+    component: createLazyPage(() => import("./pages/LiveStudio")),
+  },
+  {
+    path: "/dashboard",
+    component: createLazyPage(() => import("./pages/Dashboard")),
+  },
+];
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/about"} component={About} />
-      <Route path={"/history"} component={History} />
-      <Route path={"/testimonials"} component={Testimonials} />
-      <Route path={"/shop"} component={Shop} />
-      <Route path={"/gallery"} component={Gallery} />
-      <Route path={"/blog"} component={Blog} />
-      <Route path={"/contact"} component={Contact} />
-      <Route path={"/tutorials"} component={Tutorials} />
-      <Route path={"/affiliate"} component={Affiliate} />
-      <Route path={"/members"} component={Members} />
-      <Route path={"/newsletter"} component={Newsletter} />
-      <Route path={"/analytics"} component={Analytics} />
-      <Route path={"/mixes"} component={Mixes} />
-      <Route path={"/bookings"} component={Bookings} />
-      <Route path={"/events"} component={Events} />
-      <Route path={"/podcasts"} component={Podcasts} />
-      <Route path={"/live-studio"} component={LiveStudio} />
-      <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/404"} component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<DashboardLayoutSkeleton />}>
+      <Switch>
+        {routes.map(route => (
+          <Route key={route.path} path={route.path} component={route.component} />
+        ))}
+        <Route path={"/404"} component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
