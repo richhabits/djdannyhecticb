@@ -1,6 +1,6 @@
 import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertMix, InsertEvent, InsertAnalyticsEvent, InsertProduct, InsertOrder, InsertOrderItem, users, mixes, bookings, events, podcasts, streamingLinks, analytics, products, orders, orderItems } from "../drizzle/schema";
+import { InsertUser, InsertMix, InsertEvent, InsertAnalyticsEvent, InsertProduct, InsertOrder, InsertOrderItem, InsertPost, users, mixes, bookings, events, podcasts, streamingLinks, analytics, products, orders, orderItems, posts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -193,6 +193,32 @@ export async function getUserOrders(userId: number) {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+}
+
+// Blog queries
+export async function getAllPosts() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(posts).orderBy(desc(posts.createdAt));
+}
+
+export async function getPostById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(posts).where(eq(posts.id, id));
+  return result[0] || null;
+}
+
+export async function createPost(post: InsertPost) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(posts).values(post);
+}
+
+export async function deletePost(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(posts).where(eq(posts.id, id));
 }
 
 // Admin mutations

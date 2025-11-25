@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Music, Calendar, Check, X, Trash, Plus, Loader2, ShoppingBag } from "lucide-react";
+import { Music, Calendar, Check, X, Trash, Plus, Loader2, ShoppingBag, FileText } from "lucide-react";
 import { formatDate } from "date-fns";
 import { FileUpload } from "./ui/file-upload";
 
@@ -19,11 +19,12 @@ export function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8">
-          <TabsTrigger value="bookings">Bookings Management</TabsTrigger>
-          <TabsTrigger value="mixes">Mixes Library</TabsTrigger>
-          <TabsTrigger value="events">Events Calendar</TabsTrigger>
-          <TabsTrigger value="products">Store Products</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          <TabsTrigger value="mixes">Mixes</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="blog">Blog</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bookings">
@@ -40,6 +41,10 @@ export function AdminDashboard() {
 
         <TabsContent value="products">
           <ProductsManager />
+        </TabsContent>
+
+        <TabsContent value="blog">
+          <BlogManager />
         </TabsContent>
       </Tabs>
     </div>
@@ -140,7 +145,7 @@ function MixesManager() {
     onSuccess: () => {
       toast.success("Mix created successfully");
       refetch();
-      // reset handled by key change or manual reset if using controlled inputs
+      // form reset handled by key change or manual reset if using controlled inputs
     },
   });
   const deleteMixMutation = trpc.mixes.delete.useMutation({
@@ -239,7 +244,7 @@ function EventsManager() {
     onSuccess: () => {
       toast.success("Event created");
       refetch();
-      // reset();
+      reset();
     },
   });
   const deleteEventMutation = trpc.events.delete.useMutation({
@@ -336,7 +341,7 @@ function ProductsManager() {
     onSuccess: () => {
       toast.success("Product created");
       refetch();
-      // reset();
+      reset();
     },
   });
   const deleteProductMutation = trpc.products.delete.useMutation({
@@ -416,6 +421,104 @@ function ProductsManager() {
               onClick={() => {
                 if (confirm("Delete this product?")) {
                   deleteProductMutation.mutate(product.id);
+                }
+              }}
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BlogManager() {
+  const { data: posts, refetch } = trpc.posts.list.useQuery();
+  const createPostMutation = trpc.posts.create.useMutation({
+    onSuccess: () => {
+      toast.success("Post created");
+      refetch();
+      reset();
+    },
+  });
+  const deletePostMutation = trpc.posts.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Post deleted");
+      refetch();
+    },
+  });
+
+  const { register, handleSubmit, reset, setValue } = useForm();
+
+  const onSubmit = (data: any) => {
+    createPostMutation.mutate({
+      ...data,
+      isMembersOnly: !!data.isMembersOnly,
+      published: true,
+    });
+    reset();
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="p-6 md:col-span-1 h-fit">
+        <h3 className="font-bold text-lg mb-4">Add New Post</h3>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <Label>Title</Label>
+            <Input {...register("title", { required: true })} placeholder="Post Title" />
+          </div>
+          <div>
+            <Label>Category</Label>
+            <Input {...register("category")} placeholder="DJ Tips, News..." />
+          </div>
+          <div>
+            <Label>Cover Image</Label>
+            <FileUpload 
+              accept="image/*"
+              label="Upload Blog Image"
+              onUploadComplete={(url) => setValue("imageUrl", url)}
+            />
+            <input type="hidden" {...register("imageUrl")} />
+          </div>
+          <div>
+            <Label>Excerpt</Label>
+            <Textarea {...register("excerpt")} placeholder="Short summary..." className="h-20" />
+          </div>
+          <div>
+            <Label>Content</Label>
+            <Textarea {...register("content", { required: true })} placeholder="Full article content..." className="h-40" />
+          </div>
+           <div className="flex items-center gap-2">
+            <Label>Members Only?</Label>
+            <Input type="checkbox" className="w-4 h-4" {...register("isMembersOnly")} />
+          </div>
+          <Button type="submit" className="w-full" disabled={createPostMutation.isPending}>
+            {createPostMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2 h-4 w-4" />}
+            Publish Post
+          </Button>
+        </form>
+      </Card>
+
+      <div className="md:col-span-2 space-y-4">
+        {posts?.map((post) => (
+          <Card key={post.id} className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-muted rounded flex items-center justify-center overflow-hidden">
+                {post.imageUrl ? <img src={post.imageUrl} className="w-full h-full object-cover" /> : <FileText className="w-6 h-6" />}
+              </div>
+              <div>
+                <div className="font-bold">{post.title}</div>
+                <div className="text-sm text-muted-foreground">{post.category} • {formatDate(new Date(post.createdAt), 'MMM d')}</div>
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (confirm("Delete this post?")) {
+                  deletePostMutation.mutate(post.id);
                 }
               }}
             >

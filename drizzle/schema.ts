@@ -185,3 +185,24 @@ export const orderItems = mysqlTable("orderItems", {
 
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = typeof orderItems.$inferInsert;
+
+/**
+ * Blog Posts table
+ */
+export const posts = mysqlTable("posts", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  category: varchar("category", { length: 100 }),
+  author: varchar("author", { length: 100 }),
+  published: boolean("published").default(true).notNull(),
+  isMembersOnly: boolean("isMembersOnly").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Post = typeof posts.$inferSelect;
+export type InsertPost = typeof posts.$inferInsert;
+

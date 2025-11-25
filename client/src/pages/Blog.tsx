@@ -1,112 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, Calendar, User, ArrowRight, Search } from "lucide-react";
+import { Music, Calendar, ArrowRight, Search, Lock, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { formatDate } from "date-fns";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Blog() {
   const [searchTerm, setSearchTerm] = useState("");
-
-  const blogPosts = [
-    {
-      id: 1,
-      title: "The Evolution of UK Garage: From Pirate Radio to Mainstream",
-      excerpt: "Explore how UK garage music evolved from underground pirate radio stations to becoming a global phenomenon.",
-      category: "Music History",
-      date: "Nov 15, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "8 min read",
-      image: "📻",
-      content: "UK garage has come a long way since its humble beginnings on pirate radio stations...",
-    },
-    {
-      id: 2,
-      title: "5 Essential DJ Mixing Techniques for House Music",
-      excerpt: "Master the fundamental mixing techniques that will elevate your house music sets to the next level.",
-      category: "DJ Tips",
-      date: "Nov 12, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "6 min read",
-      image: "🎧",
-      content: "Whether you're a beginner or experienced DJ, these mixing techniques will improve your sets...",
-    },
-    {
-      id: 3,
-      title: "How to Build Your DJ Brand in 2024",
-      excerpt: "Strategies for building a strong personal brand as a DJ in today's competitive music industry.",
-      category: "Business",
-      date: "Nov 10, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "10 min read",
-      image: "🎯",
-      content: "Building a successful DJ brand requires more than just technical skills...",
-    },
-    {
-      id: 4,
-      title: "Soulful House: The Art of Emotional Connection Through Music",
-      excerpt: "Discover how soulful house music creates deep emotional connections with audiences.",
-      category: "Music Production",
-      date: "Nov 8, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "7 min read",
-      image: "💫",
-      content: "Soulful house is more than just a genre; it's a feeling, an emotion...",
-    },
-    {
-      id: 5,
-      title: "Event Recap: Twice as Nice Festival 2024",
-      excerpt: "Highlights from the legendary Twice as Nice Festival featuring performances from top UK garage DJs.",
-      category: "Event Recap",
-      date: "Nov 5, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "5 min read",
-      image: "🎪",
-      content: "The 2024 Twice as Nice Festival was absolutely incredible...",
-    },
-    {
-      id: 6,
-      title: "Equipment Guide: Essential Gear for Professional DJs",
-      excerpt: "A comprehensive guide to the equipment you need to start your DJ journey professionally.",
-      category: "Equipment",
-      date: "Nov 1, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "12 min read",
-      image: "🎛️",
-      content: "Starting your DJ career requires the right equipment. Here's what you need...",
-    },
-    {
-      id: 7,
-      title: "Amapiano: The South African Sound Taking Over the World",
-      excerpt: "Explore the rise of Amapiano and how this South African genre is influencing global music.",
-      category: "Music Trends",
-      date: "Oct 28, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "9 min read",
-      image: "🌍",
-      content: "Amapiano has taken the world by storm, and for good reason...",
-    },
-    {
-      id: 8,
-      title: "The Art of Reading Your Crowd: A DJ's Guide",
-      excerpt: "Learn how to read your audience and adapt your music selection in real-time.",
-      category: "DJ Tips",
-      date: "Oct 25, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "6 min read",
-      image: "👥",
-      content: "One of the most important skills a DJ can develop is the ability to read the crowd...",
-    },
-  ];
+  const [activeCategory, setActiveCategory] = useState('All');
+  const { data: posts, isLoading } = trpc.posts.list.useQuery();
+  const { user } = useAuth();
 
   const categories = ['All', 'DJ Tips', 'Music History', 'Music Production', 'Business', 'Event Recap', 'Equipment', 'Music Trends'];
-  const [activeCategory, setActiveCategory] = useState('All');
 
-  const filteredPosts = blogPosts.filter(post => {
+  const filteredPosts = posts?.filter(post => {
     const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+                         (post.excerpt?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
-  });
+  }) || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -172,7 +86,11 @@ export default function Blog() {
       {/* Blog Posts Grid */}
       <section className="py-16 md:py-24">
         <div className="container">
-          {filteredPosts.length > 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
+            </div>
+          ) : filteredPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post) => (
                 <Card
@@ -180,17 +98,27 @@ export default function Blog() {
                   className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col cursor-pointer group"
                 >
                   {/* Image */}
-                  <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-8 text-6xl flex items-center justify-center h-40 group-hover:scale-105 transition-transform">
-                    {post.image}
+                  <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 h-48 flex items-center justify-center overflow-hidden relative">
+                    {post.imageUrl ? (
+                      <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                    ) : (
+                      <span className="text-6xl">📝</span>
+                    )}
+                    {post.isMembersOnly && (
+                      <div className="absolute top-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-xs font-bold text-yellow-400 border border-yellow-400/50 flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        MEMBERS ONLY
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
                   <div className="p-6 flex flex-col flex-1">
-                    <p className="text-xs text-purple-400 font-bold mb-2">{post.category}</p>
-                    <h3 className="text-lg font-bold mb-3 group-hover:text-accent transition">
+                    <p className="text-xs text-purple-400 font-bold mb-2">{post.category || "General"}</p>
+                    <h3 className="text-lg font-bold mb-3 group-hover:text-accent transition line-clamp-2">
                       {post.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4 flex-1">
+                    <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
                       {post.excerpt}
                     </p>
 
@@ -199,13 +127,26 @@ export default function Blog() {
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3" />
-                          {post.date}
+                          {formatDate(new Date(post.createdAt), 'MMM d, yyyy')}
                         </div>
-                        <span>{post.readTime}</span>
+                        <span>5 min read</span>
                       </div>
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-700 group-hover:to-pink-700">
-                        Read More
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                      
+                      <Button 
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-700 group-hover:to-pink-700"
+                        disabled={post.isMembersOnly && !user} // Simple gate for now
+                      >
+                        {post.isMembersOnly && !user ? (
+                          <>
+                            <Lock className="w-4 h-4 mr-2" />
+                            Login to Read
+                          </>
+                        ) : (
+                          <>
+                            Read More
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -236,27 +177,6 @@ export default function Blog() {
             <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
               Subscribe
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Related Resources */}
-      <section className="py-16 md:py-24 border-t border-border">
-        <div className="container">
-          <h2 className="text-4xl font-bold mb-12">More Resources</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: "Free DJ Guides", description: "Download comprehensive guides on mixing, production, and more.", icon: "📚" },
-              { title: "Video Tutorials", description: "Watch step-by-step tutorials on DJ techniques and equipment.", icon: "🎬" },
-              { title: "Community Forum", description: "Connect with other DJs and share your experiences.", icon: "💬" },
-            ].map((resource, idx) => (
-              <Card key={idx} className="p-8 text-center hover:border-accent transition">
-                <div className="text-5xl mb-4">{resource.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{resource.title}</h3>
-                <p className="text-muted-foreground mb-4">{resource.description}</p>
-                <Button variant="outline">Explore</Button>
-              </Card>
-            ))}
           </div>
         </div>
       </section>

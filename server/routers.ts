@@ -63,6 +63,22 @@ export const appRouter = router({
     list: protectedProcedure.query(({ ctx }) => db.getUserOrders(ctx.user.id)),
   }),
 
+  posts: router({
+    list: publicProcedure.query(() => db.getAllPosts()),
+    get: publicProcedure.input(z.number()).query(({ input }) => db.getPostById(input)),
+    create: adminProcedure.input(z.object({
+      title: z.string(),
+      content: z.string(),
+      excerpt: z.string().optional(),
+      imageUrl: z.string().optional(),
+      category: z.string().optional(),
+      author: z.string().optional(),
+      published: z.boolean().default(true),
+      isMembersOnly: z.boolean().default(false),
+    })).mutation(({ input }) => db.createPost(input)),
+    delete: adminProcedure.input(z.number()).mutation(({ input }) => db.deletePost(input)),
+  }),
+
   bookings: router({
     list: protectedProcedure.query(({ ctx }) => db.getUserBookings(ctx.user.id)),
     adminList: adminProcedure.query(() => db.getAllBookings()),
