@@ -106,5 +106,11 @@
 - [x] Create custom audio player component with waveform
 - [x] Add playlist management functionality
 - [x] Implement audio player controls (play, pause, skip, volume)
+- [ ] Add S3 download functionality for mixes
+- [ ] Improve overall website design and polish
+- [ ] Add animated backgrounds and visual effects
+- [ ] Enhance card designs with better shadows and gradients
+- [ ] Add loading states and skeleton screens
+- [ ] Improve button styles and hover effects
 
 ## Completed
