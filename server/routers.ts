@@ -1032,6 +1032,914 @@ export const appRouter = router({
       listOnline: publicProcedure.query(() => db.listOnlineWorldAvatars()),
     }),
   }),
+
+  // ============================================
+  // PHASE 7: GLOBAL CULT MODE
+  // ============================================
+  bookingsPhase7: router({
+    create: publicProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        org: z.string().max(255).optional(),
+        email: z.string().email().max(255),
+        phone: z.string().max(20).optional(),
+        type: z.enum(["club", "radio", "private", "corporate", "podcast", "other"]),
+        location: z.string().min(1).max(255),
+        date: z.string(),
+        time: z.string().optional(),
+        budgetMin: z.string().max(50).optional(),
+        budgetMax: z.string().max(50).optional(),
+        source: z.string().max(255).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const booking = await db.createBookingPhase7({ ...input, status: "new" });
+        await db.createAuditLog({
+          action: "create_booking_phase7",
+          entityType: "booking",
+          entityId: booking.id,
+          actorName: input.name,
+          afterSnapshot: { type: input.type, location: input.location },
+        });
+        return booking;
+      }),
+    list: adminProcedure
+      .input(z.object({
+        status: z.string().optional(),
+        type: z.string().optional(),
+      }))
+      .query(({ input }) => db.listBookingsPhase7(input)),
+    get: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(({ input }) => db.getBookingPhase7(input.id)),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        updates: z.object({
+          status: z.enum(["new", "reviewing", "accepted", "declined", "completed"]).optional(),
+          internalNotes: z.string().optional(),
+        }).partial(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const updated = await db.updateBookingPhase7(input.id, input.updates);
+        await db.createAuditLog({
+          action: "update_booking_phase7",
+          entityType: "booking",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+          afterSnapshot: input.updates,
+        });
+        return updated;
+      }),
+  }),
+
+  eventsPhase7: router({
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().min(1).max(255),
+        description: z.string().optional(),
+        type: z.enum(["stream", "club", "private", "online_collab", "festival", "takeover"]),
+        location: z.string().max(255).optional(),
+        dateTimeStart: z.string(), // ISO date string
+        dateTimeEnd: z.string().optional(),
+        isPublic: z.boolean().default(true),
+        ticketsUrl: z.string().max(512).optional(),
+        status: z.enum(["upcoming", "live", "completed", "cancelled"]).default("upcoming"),
+        brandId: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const event = await db.createEventPhase7({
+          ...input,
+          dateTimeStart: new Date(input.dateTimeStart),
+          dateTimeEnd: input.dateTimeEnd ? new Date(input.dateTimeEnd) : undefined,
+        });
+        await db.createAuditLog({
+          action: "create_event_phase7",
+          entityType: "event",
+          entityId: event.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+          afterSnapshot: { title: input.title, type: input.type },
+        });
+        return event;
+      }),
+    list: publicProcedure
+      .input(z.object({ upcomingOnly: z.boolean().default(true) }))
+      .query(({ input }) => db.listEventsPhase7(input.upcomingOnly)),
+    get: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(({ input }) => db.getEventPhase7(input.id)),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        updates: z.object({
+          title: z.string().max(255).optional(),
+          status: z.enum(["upcoming", "live", "completed", "cancelled"]).optional(),
+          ticketsUrl: z.string().max(512).optional(),
+        }).partial(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const updated = await db.updateEventPhase7(input.id, input.updates);
+        await db.createAuditLog({
+          action: "update_event_phase7",
+          entityType: "event",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return updated;
+      }),
+  }),
+
+  partners: router({
+    requests: router({
+      create: publicProcedure
+        .input(z.object({
+          name: z.string().min(1).max(255),
+          brandName: z.string().max(255).optional(),
+          email: z.string().email().max(255),
+          links: z.record(z.string()).optional(),
+          collabType: z.enum(["guest_mix", "co_host", "brand_drop", "takeover", "other"]),
+          pitch: z.string().min(1),
+        }))
+        .mutation(({ input }) => db.createPartnerRequest(input)),
+      list: adminProcedure
+        .input(z.object({ status: z.string().optional() }))
+        .query(({ input }) => db.listPartnerRequests(input)),
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            status: z.enum(["new", "reviewing", "accepted", "declined"]).optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updatePartnerRequest(input.id, input.updates);
+          if (input.updates.status === "accepted") {
+            // Auto-create partner from request
+            const request = await db.listPartnerRequests({ status: "new" });
+            const req = request.find((r) => r.id === input.id);
+            if (req) {
+              await db.createPartner({
+                name: req.name,
+                brandName: req.brandName || undefined,
+                email: req.email,
+                links: req.links || "{}",
+                type: "other", // Default, admin can update
+                isActive: true,
+              });
+            }
+          }
+          await db.createAuditLog({
+            action: "update_partner_request",
+            entityType: "partner_request",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+    list: publicProcedure
+      .input(z.object({ activeOnly: z.boolean().default(true) }))
+      .query(({ input }) => db.listPartners(input.activeOnly)),
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        brandName: z.string().max(255).optional(),
+        logoUrl: z.string().max(512).optional(),
+        links: z.record(z.string()).optional(),
+        type: z.enum(["venue", "clothing", "media", "dj", "creator", "other"]),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const partner = await db.createPartner(input);
+        await db.createAuditLog({
+          action: "create_partner",
+          entityType: "partner",
+          entityId: partner.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return partner;
+      }),
+  }),
+
+  social: router({
+    profiles: router({
+      create: adminProcedure
+        .input(z.object({
+          platform: z.enum(["instagram", "tiktok", "youtube", "spotify", "mixcloud", "snapchat", "telegram", "piing", "twitter", "facebook", "other"]),
+          url: z.string().url().max(512),
+          handle: z.string().max(255).optional(),
+          brandId: z.number().optional(),
+          isActive: z.boolean().default(true),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const profile = await db.createSocialProfile(input);
+          await db.createAuditLog({
+            action: "create_social_profile",
+            entityType: "social_profile",
+            entityId: profile.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return profile;
+        }),
+      list: publicProcedure
+        .input(z.object({
+          brandId: z.number().optional(),
+          activeOnly: z.boolean().default(true),
+        }))
+        .query(({ input }) => db.listSocialProfiles(input.brandId, input.activeOnly)),
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            url: z.string().url().max(512).optional(),
+            handle: z.string().max(255).optional(),
+            isActive: z.boolean().optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updateSocialProfile(input.id, input.updates);
+          await db.createAuditLog({
+            action: "update_social_profile",
+            entityType: "social_profile",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+    templates: router({
+      create: adminProcedure
+        .input(z.object({
+          name: z.string().min(1).max(255),
+          platform: z.enum(["instagram", "tiktok", "youtube", "spotify", "mixcloud", "snapchat", "telegram", "piing", "twitter", "facebook", "all"]),
+          templateType: z.enum(["nowPlaying", "eventAnnouncement", "newMix", "shoutHighlight", "quote", "clipDrop"]),
+          templateText: z.string().min(1),
+        }))
+        .mutation(({ input }) => db.createPostTemplate(input)),
+      list: publicProcedure
+        .input(z.object({
+          platform: z.string().optional(),
+          templateType: z.string().optional(),
+        }))
+        .query(({ input }) => db.listPostTemplates(input.platform, input.templateType)),
+      render: publicProcedure
+        .input(z.object({
+          templateId: z.number(),
+          data: z.record(z.string()),
+        }))
+        .query(async ({ input }) => {
+          const templates = await db.listPostTemplates();
+          const template = templates.find((t) => t.id === input.templateId);
+          if (!template) throw new Error("Template not found");
+          return db.renderPostTemplate(template.templateText, input.data);
+        }),
+    }),
+    promotions: router({
+      create: adminProcedure
+        .input(z.object({
+          entityType: z.enum(["event", "mix", "clip", "show", "achievement", "milestone"]),
+          entityId: z.number(),
+          platforms: z.array(z.string()),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const promotion = await db.createPromotion({
+            ...input,
+            status: "draft",
+          });
+          await db.createAuditLog({
+            action: "create_promotion",
+            entityType: "promotion",
+            entityId: promotion.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return promotion;
+        }),
+      list: adminProcedure
+        .input(z.object({ status: z.string().optional() }))
+        .query(({ input }) => db.listPromotions(input)),
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            status: z.enum(["draft", "ready", "scheduled", "sent"]).optional(),
+            platforms: z.array(z.string()).optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updatePromotion(input.id, input.updates);
+          await db.createAuditLog({
+            action: "update_promotion",
+            entityType: "promotion",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+  }),
+
+  analytics: router({
+    traffic: router({
+      log: publicProcedure
+        .input(z.object({
+          route: z.string().optional(),
+          utmSource: z.string().optional(),
+          utmMedium: z.string().optional(),
+          utmCampaign: z.string().optional(),
+          referrer: z.string().optional(),
+        }))
+        .mutation(({ input, ctx }) => {
+          return db.createTrafficEvent({
+            ...input,
+            userAgent: ctx.req.headers["user-agent"],
+            ipAddress: ctx.req.ip || ctx.req.socket.remoteAddress,
+          });
+        }),
+      stats: adminProcedure
+        .input(z.object({ days: z.number().default(7) }))
+        .query(({ input }) => db.getTrafficStats(input.days)),
+    }),
+  }),
+
+  innerCircle: router({
+    getStatus: publicProcedure
+      .input(z.object({ profileId: z.number() }))
+      .query(({ input }) => db.getInnerCircleStatus(input.profileId)),
+    createOrUpdate: adminProcedure
+      .input(z.object({
+        profileId: z.number(),
+        isEligible: z.boolean(),
+        eligibilityReason: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const result = await db.createOrUpdateInnerCircle(input);
+        await db.createAuditLog({
+          action: "update_inner_circle",
+          entityType: "inner_circle",
+          entityId: result.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return result;
+      }),
+    list: adminProcedure.query(() => db.listInnerCircleMembers()),
+  }),
+
+  // ============================================
+  // PHASE 8: HECTIC AI STUDIO
+  // ============================================
+  aiStudio: router({
+    scripts: router({
+      create: publicProcedure
+        .input(z.object({
+          type: z.enum(["intro", "outro", "mixStory", "tiktokClip", "promo", "fanShout", "generic"]),
+          context: z.record(z.any()),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+          if (input.type === "fanShout" && !(await areFanFacingAiToolsEnabled())) {
+            throw new Error("Fan-facing AI tools are currently disabled");
+          }
+          const { createAiScriptJob } = await import("./_core/aiScriptFactory");
+          const jobId = await createAiScriptJob(input.type, input.context, ctx.user?.id);
+          const job = await db.getAIScriptJob(jobId);
+          return job;
+        }),
+      processOne: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input, ctx }) => {
+          const { processAiScriptJob } = await import("./_core/aiScriptFactory");
+          const result = await processAiScriptJob(input.id);
+          await db.createAuditLog({
+            action: "process_ai_script_job",
+            entityType: "ai_script_job",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return { success: true, resultText: result };
+        }),
+      list: adminProcedure
+        .input(z.object({
+          status: z.string().optional(),
+          type: z.string().optional(),
+          userId: z.number().optional(),
+          limit: z.number().default(100),
+        }))
+        .query(({ input }) => db.listAIScriptJobs(input, input.limit)),
+      get: publicProcedure
+        .input(z.object({ id: z.number() }))
+        .query(({ input }) => db.getAIScriptJob(input.id)),
+    }),
+
+    voice: router({
+      create: publicProcedure
+        .input(z.object({
+          scriptJobId: z.number().optional(),
+          rawText: z.string().optional(),
+          voiceProfile: z.enum(["hectic_main", "hectic_soft", "hectic_shouty"]).default("hectic_main"),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+          if (!(await areFanFacingAiToolsEnabled()) && !ctx.user) {
+            throw new Error("Fan-facing AI tools are currently disabled");
+          }
+          const { createAiVoiceJob } = await import("./_core/aiVoiceFactory");
+          const jobId = await createAiVoiceJob({
+            scriptJobId: input.scriptJobId,
+            rawText: input.rawText,
+            voiceProfile: input.voiceProfile,
+            userId: ctx.user?.id,
+          });
+          const job = await db.getAIVoiceJob(jobId);
+          return job;
+        }),
+      processOne: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input, ctx }) => {
+          const { processAiVoiceJob } = await import("./_core/aiVoiceFactory");
+          const audioUrl = await processAiVoiceJob(input.id);
+          await db.createAuditLog({
+            action: "process_ai_voice_job",
+            entityType: "ai_voice_job",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return { success: true, audioUrl };
+        }),
+      list: adminProcedure
+        .input(z.object({
+          status: z.string().optional(),
+          userId: z.number().optional(),
+          limit: z.number().default(100),
+        }))
+        .query(({ input }) => db.listAIVoiceJobs(input, input.limit)),
+      get: publicProcedure
+        .input(z.object({ id: z.number() }))
+        .query(({ input }) => db.getAIVoiceJob(input.id)),
+    }),
+
+    video: router({
+      create: adminProcedure
+        .input(z.object({
+          scriptJobId: z.number(),
+          stylePreset: z.enum(["verticalShort", "squareClip", "horizontalHost"]),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const { createAiVideoJob } = await import("./_core/aiVideoFactory");
+          const jobId = await createAiVideoJob({
+            scriptJobId: input.scriptJobId,
+            stylePreset: input.stylePreset,
+            userId: ctx.user?.id,
+          });
+          const job = await db.getAIVideoJob(jobId);
+          await db.createAuditLog({
+            action: "create_ai_video_job",
+            entityType: "ai_video_job",
+            entityId: jobId,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return job;
+        }),
+      processOne: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input, ctx }) => {
+          const { processAiVideoJob } = await import("./_core/aiVideoFactory");
+          const result = await processAiVideoJob(input.id);
+          await db.createAuditLog({
+            action: "process_ai_video_job",
+            entityType: "ai_video_job",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return { success: true, ...result };
+        }),
+      list: adminProcedure
+        .input(z.object({
+          status: z.string().optional(),
+          userId: z.number().optional(),
+          limit: z.number().default(100),
+        }))
+        .query(({ input }) => db.listAIVideoJobs(input, input.limit)),
+      get: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .query(({ input }) => db.getAIVideoJob(input.id)),
+    }),
+
+    consents: router({
+      createOrUpdate: publicProcedure
+        .input(z.object({
+          profileId: z.number().optional(),
+          userId: z.number().optional(),
+          email: z.string().email().optional(),
+          aiContentConsent: z.boolean(),
+          marketingConsent: z.boolean(),
+          dataShareConsent: z.boolean(),
+        }))
+        .mutation(({ input }) => db.createOrUpdateUserConsent(input)),
+      get: publicProcedure
+        .input(z.object({
+          profileId: z.number().optional(),
+          userId: z.number().optional(),
+          email: z.string().email().optional(),
+        }))
+        .query(({ input }) => db.getUserConsent(input.profileId, input.userId, input.email)),
+      stats: adminProcedure.query(() => db.getConsentStats()),
+    }),
+  }),
+
+  // ============================================
+  // PHASE 9: HECTIC ECONOMY + THE HECTIC SHOW
+  // ============================================
+  economy: router({
+    wallet: router({
+      getMyWallet: protectedProcedure.query(async ({ ctx }) => {
+        return await db.getOrCreateWallet(ctx.user!.id);
+      }),
+      getTransactions: protectedProcedure
+        .input(z.object({ limit: z.number().default(50) }))
+        .query(({ input, ctx }) => db.getCoinTransactions(ctx.user!.id, input.limit)),
+      adminGetWalletByUser: adminProcedure
+        .input(z.object({ userId: z.number() }))
+        .query(({ input }) => db.getWalletByUserId(input.userId)),
+    }),
+
+    rewards: router({
+      listActive: publicProcedure.query(() => db.listRewards(true)),
+      adminList: adminProcedure.query(() => db.listRewards(false)),
+      adminCreate: adminProcedure
+        .input(z.object({
+          name: z.string(),
+          description: z.string().optional(),
+          costCoins: z.number(),
+          type: z.enum(["digital", "physical", "access", "aiAsset", "other"]),
+          fulfillmentType: z.enum(["manual", "autoEmail", "autoLink", "aiScript", "aiVoice", "aiVideo"]),
+          fulfillmentPayload: z.string().optional(),
+          isActive: z.boolean().default(true),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const reward = await db.createReward(input);
+          await db.createAuditLog({
+            action: "create_reward",
+            entityType: "reward",
+            entityId: reward.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return reward;
+        }),
+      adminUpdate: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            name: z.string().optional(),
+            description: z.string().optional(),
+            costCoins: z.number().optional(),
+            type: z.enum(["digital", "physical", "access", "aiAsset", "other"]).optional(),
+            fulfillmentType: z.enum(["manual", "autoEmail", "autoLink", "aiScript", "aiVoice", "aiVideo"]).optional(),
+            fulfillmentPayload: z.string().optional(),
+            isActive: z.boolean().optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updateReward(input.id, input.updates);
+          await db.createAuditLog({
+            action: "update_reward",
+            entityType: "reward",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+
+    redemptions: router({
+      create: protectedProcedure
+        .input(z.object({ rewardId: z.number() }))
+        .mutation(async ({ input, ctx }) => {
+          const redemption = await db.createRedemption(ctx.user!.id, input.rewardId);
+          await db.createAuditLog({
+            action: "create_redemption",
+            entityType: "redemption",
+            entityId: redemption.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "User",
+          });
+          return redemption;
+        }),
+      myRedemptions: protectedProcedure
+        .input(z.object({ limit: z.number().default(50) }))
+        .query(({ input, ctx }) => db.listRedemptions({ userId: ctx.user!.id }, input.limit)),
+      adminList: adminProcedure
+        .input(z.object({
+          userId: z.number().optional(),
+          status: z.string().optional(),
+          limit: z.number().default(100),
+        }))
+        .query(({ input }) => db.listRedemptions(input, input.limit)),
+      adminUpdateStatus: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          status: z.enum(["pending", "approved", "rejected", "fulfilled"]),
+          notesAdmin: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updateRedemptionStatus(input.id, input.status, input.notesAdmin);
+          await db.createAuditLog({
+            action: "update_redemption_status",
+            entityType: "redemption",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+
+    referrals: router({
+      createMyCode: protectedProcedure
+        .input(z.object({
+          code: z.string(),
+          maxUses: z.number().optional(),
+          expiresAt: z.date().optional(),
+        }))
+        .mutation(({ input, ctx }) => db.createReferralCode(ctx.user!.id, input.code, input.maxUses, input.expiresAt)),
+      applyCode: publicProcedure
+        .input(z.object({
+          code: z.string(),
+          userId: z.number(),
+          rewardCoins: z.number().default(100),
+        }))
+        .mutation(({ input }) => db.applyReferralCode(input.code, input.userId, input.rewardCoins)),
+      myReferralStats: protectedProcedure.query(({ ctx }) => db.getReferralStats(ctx.user!.id)),
+      adminListCodes: adminProcedure
+        .input(z.object({ ownerUserId: z.number().optional() }))
+        .query(({ input }) => db.listReferralCodes(input?.ownerUserId)),
+    }),
+  }),
+
+  showsPhase9: router({
+    listPublic: publicProcedure.query(() => db.listShowsPhase9(true)),
+    getBySlug: publicProcedure
+      .input(z.object({ slug: z.string() }))
+      .query(({ input }) => db.getShowPhase9BySlug(input.slug)),
+    adminList: adminProcedure.query(() => db.listShowsPhase9(false)),
+    adminCreate: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        slug: z.string(),
+        description: z.string().optional(),
+        hostName: z.string().optional(),
+        isPrimaryShow: z.boolean().default(false),
+        isActive: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const show = await db.createShowPhase9(input);
+        if (input.isPrimaryShow) {
+          await db.setPrimaryShowPhase9(show.id);
+        }
+        await db.createAuditLog({
+          action: "create_show",
+          entityType: "show",
+          entityId: show.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return show;
+      }),
+    adminUpdate: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        updates: z.object({
+          name: z.string().optional(),
+          slug: z.string().optional(),
+          description: z.string().optional(),
+          hostName: z.string().optional(),
+          isPrimaryShow: z.boolean().optional(),
+          isActive: z.boolean().optional(),
+        }).partial(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const updated = await db.updateShowPhase9(input.id, input.updates);
+        if (input.updates.isPrimaryShow) {
+          await db.setPrimaryShowPhase9(input.id);
+        }
+        await db.createAuditLog({
+          action: "update_show",
+          entityType: "show",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return updated;
+      }),
+    adminSetPrimary: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const show = await db.setPrimaryShowPhase9(input.id);
+        await db.createAuditLog({
+          action: "set_primary_show",
+          entityType: "show",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return show;
+      }),
+  }),
+
+  episodes: router({
+    listByShow: publicProcedure
+      .input(z.object({
+        showId: z.number().optional(),
+        limit: z.number().default(50),
+      }))
+      .query(({ input }) => db.listShowEpisodes(input.showId, true, input.limit)),
+    getBySlug: publicProcedure
+      .input(z.object({ slug: z.string() }))
+      .query(({ input }) => db.getShowEpisodeBySlug(input.slug)),
+    adminList: adminProcedure
+      .input(z.object({
+        showId: z.number().optional(),
+        limit: z.number().default(100),
+      }))
+      .query(({ input }) => db.listShowEpisodes(input.showId, false, input.limit)),
+    adminCreate: adminProcedure
+      .input(z.object({
+        showId: z.number(),
+        title: z.string(),
+        slug: z.string(),
+        description: z.string().optional(),
+        status: z.enum(["planned", "recorded", "live", "published", "archived"]).default("planned"),
+        scheduledAt: z.date().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const episode = await db.createShowEpisode(input);
+        await db.createAuditLog({
+          action: "create_episode",
+          entityType: "episode",
+          entityId: episode.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return episode;
+      }),
+    adminUpdate: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        updates: z.object({
+          title: z.string().optional(),
+          slug: z.string().optional(),
+          description: z.string().optional(),
+          status: z.enum(["planned", "recorded", "live", "published", "archived"]).optional(),
+          scheduledAt: z.date().optional(),
+          recordedAt: z.date().optional(),
+          publishedAt: z.date().optional(),
+          recordingUrl: z.string().optional(),
+          coverImageUrl: z.string().optional(),
+        }).partial(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const updated = await db.updateShowEpisode(input.id, input.updates);
+        await db.createAuditLog({
+          action: "update_episode",
+          entityType: "episode",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return updated;
+      }),
+    adminAttachRecording: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        recordingUrl: z.string(),
+        coverImageUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const updated = await db.updateShowEpisode(input.id, {
+          recordingUrl: input.recordingUrl,
+          coverImageUrl: input.coverImageUrl,
+          status: "published",
+          publishedAt: new Date(),
+        });
+        await db.createAuditLog({
+          action: "attach_recording",
+          entityType: "episode",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return updated;
+      }),
+  }),
+
+  live: router({
+    getCurrentLive: publicProcedure.query(() => db.getCurrentLiveSession()),
+    adminSchedule: adminProcedure
+      .input(z.object({
+        showId: z.number(),
+        episodeId: z.number().optional(),
+        scheduledAt: z.date().optional(),
+        livePlatform: z.enum(["site", "youtube", "tiktok", "twitch", "other"]).default("site"),
+        liveUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const session = await db.scheduleLiveSession(input);
+        await db.createAuditLog({
+          action: "schedule_live_session",
+          entityType: "live_session",
+          entityId: session.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return session;
+      }),
+    adminStart: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const session = await db.startLiveSession(input.id);
+        await db.createAuditLog({
+          action: "start_live_session",
+          entityType: "live_session",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return session;
+      }),
+    adminEnd: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const session = await db.endLiveSession(input.id);
+        await db.createAuditLog({
+          action: "end_live_session",
+          entityType: "live_session",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return session;
+      }),
+    adminListSessions: adminProcedure
+      .input(z.object({
+        showId: z.number().optional(),
+        limit: z.number().default(50),
+      }))
+      .query(({ input }) => db.listLiveSessions(input.showId, input.limit)),
+  }),
+
+  cues: router({
+    adminListForSession: adminProcedure
+      .input(z.object({ liveSessionId: z.number() }))
+      .query(({ input }) => db.listCuesForSession(input.liveSessionId)),
+    adminCreate: adminProcedure
+      .input(z.object({
+        liveSessionId: z.number(),
+        type: z.enum(["playTrack", "readShout", "playConfession", "askQuestion", "adBreak", "topicIntro", "callToAction", "custom"]),
+        payload: z.string().optional(),
+        orderIndex: z.number().default(0),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const cue = await db.createCue(input);
+        await db.createAuditLog({
+          action: "create_cue",
+          entityType: "cue",
+          entityId: cue.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return cue;
+      }),
+    adminUpdateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["pending", "done", "skipped"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const cue = await db.updateCueStatus(input.id, input.status);
+        await db.createAuditLog({
+          action: "update_cue_status",
+          entityType: "cue",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return cue;
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

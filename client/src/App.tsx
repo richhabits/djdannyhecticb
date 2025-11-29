@@ -39,6 +39,22 @@ import AIDanny from "./pages/AIDanny";
 import Profile from "./pages/Profile";
 import World from "./pages/World";
 import Vault from "./pages/Vault";
+import BookingsPage from "./pages/BookingsPage";
+import EventsPage from "./pages/EventsPage";
+import PartnersPage from "./pages/PartnersPage";
+import Backstage from "./pages/Backstage";
+import AIShout from "./pages/AIShout";
+import AdminAIStudio from "./pages/AdminAIStudio";
+import AdminAIScripts from "./pages/AdminAIScripts";
+import AdminAIVoice from "./pages/AdminAIVoice";
+import AdminAIVideo from "./pages/AdminAIVideo";
+import Wallet from "./pages/Wallet";
+import Rewards from "./pages/Rewards";
+import AdminEconomy from "./pages/AdminEconomy";
+import ShowPage from "./pages/ShowPage";
+import ShowEpisodes from "./pages/ShowEpisodes";
+import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
+import AdminShowLive from "./pages/AdminShowLive";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
@@ -87,6 +103,22 @@ function Router() {
       <Route path={"/profile/:username"} component={Profile} />
       <Route path={"/world"} component={World} />
       <Route path={"/vault"} component={Vault} />
+      <Route path={"/bookings"} component={BookingsPage} />
+      <Route path={"/events"} component={EventsPage} />
+      <Route path={"/partners"} component={PartnersPage} />
+      <Route path={"/backstage"} component={Backstage} />
+      <Route path={"/ai-shout"} component={AIShout} />
+      <Route path={"/admin/ai-studio"} component={AdminAIStudio} />
+      <Route path={"/admin/ai-scripts"} component={AdminAIScripts} />
+      <Route path={"/admin/ai-voice"} component={AdminAIVoice} />
+      <Route path={"/admin/ai-video"} component={AdminAIVideo} />
+      <Route path={"/wallet"} component={Wallet} />
+      <Route path={"/rewards"} component={Rewards} />
+      <Route path={"/admin/economy"} component={AdminEconomy} />
+      <Route path={"/show"} component={ShowPage} />
+      <Route path={"/show/episodes"} component={ShowEpisodes} />
+      <Route path={"/show/episode/:slug"} component={ShowEpisodeDetail} />
+      <Route path={"/admin/show-live"} component={AdminShowLive} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

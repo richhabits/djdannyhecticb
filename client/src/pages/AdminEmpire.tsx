@@ -18,7 +18,12 @@ import {
   XCircle,
   Settings,
   Power,
+  Sparkles,
+  Volume2,
+  Video,
+  FileText,
 } from "lucide-react";
+import { Link } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -244,6 +249,86 @@ export default function AdminEmpire() {
                   checked={getSettingValue("maintenance_mode", false)}
                   onCheckedChange={() => toggleKillSwitch("maintenance_mode", getSettingValue("maintenance_mode", false))}
                 />
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    AI Studio Controls
+                  </h3>
+                  <Link href="/admin/ai-studio">
+                    <Button variant="outline" size="sm">Go to AI Studio</Button>
+                  </Link>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="ai-studio">AI Studio Enabled</Label>
+                    <p className="text-sm text-muted-foreground">Enable all AI generation features</p>
+                  </div>
+                  <Switch
+                    id="ai-studio"
+                    checked={getSettingValue("ai_studio_enabled", true)}
+                    onCheckedChange={() => toggleKillSwitch("ai_studio_enabled", getSettingValue("ai_studio_enabled", true))}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between mt-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="fan-facing-ai">Fan-Facing AI Tools</Label>
+                    <p className="text-sm text-muted-foreground">Allow fans to use AI shout studio and other tools</p>
+                  </div>
+                  <Switch
+                    id="fan-facing-ai"
+                    checked={getSettingValue("fan_facing_ai_enabled", false)}
+                    onCheckedChange={() => toggleKillSwitch("fan_facing_ai_enabled", getSettingValue("fan_facing_ai_enabled", false))}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Studio KPIs */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                AI Studio Metrics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Script Jobs</p>
+                    <p className="text-xl font-bold">-</p>
+                    <Link href="/admin/ai-scripts">
+                      <Button variant="link" size="sm" className="p-0 h-auto">View All</Button>
+                    </Link>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Volume2 className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Voice Jobs</p>
+                    <p className="text-xl font-bold">-</p>
+                    <Link href="/admin/ai-voice">
+                      <Button variant="link" size="sm" className="p-0 h-auto">View All</Button>
+                    </Link>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Video className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Video Jobs</p>
+                    <p className="text-xl font-bold">-</p>
+                    <Link href="/admin/ai-video">
+                      <Button variant="link" size="sm" className="p-0 h-auto">View All</Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
