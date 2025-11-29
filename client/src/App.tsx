@@ -55,6 +55,9 @@ import ShowPage from "./pages/ShowPage";
 import ShowEpisodes from "./pages/ShowEpisodes";
 import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
+import AdminControlTower from "./pages/AdminControlTower";
+import AdminIntegrations from "./pages/AdminIntegrations";
+import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
@@ -119,6 +122,8 @@ function Router() {
       <Route path={"/show/episodes"} component={ShowEpisodes} />
       <Route path={"/show/episode/:slug"} component={ShowEpisodeDetail} />
       <Route path={"/admin/show-live"} component={AdminShowLive} />
+      <Route path={"/admin/control"} component={AdminControlTower} />
+      <Route path={"/admin/integrations"} component={AdminIntegrations} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -134,6 +139,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
+          <GlobalBanner />
           <Router />
           <LiveChat />
           <LiveAudioPlayer />

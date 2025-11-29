@@ -1,8 +1,44 @@
 # Empire Operations Guide
 
+## HecticOps Control Tower (`/admin/control`)
+
+**Start here for daily operations.**
+
+The Control Tower is your unified command center that surfaces:
+- Real-time KPIs (shouts, coins, episodes, AI jobs)
+- Quick links to all admin areas
+- System status and incident alerts
+- Quick action buttons for common tasks
+
+See `docs/CONTROL_TOWER.md` for detailed usage.
+
+## Integrations (`/admin/integrations`)
+
+Central hub for external integrations:
+
+### Social Accounts
+- Manage Instagram, TikTok, YouTube, Twitter, Facebook accounts
+- Set primary account per platform
+- Store API key references (env variable names)
+- Toggle active/inactive
+
+### Content Queue
+- Plan and schedule social media posts
+- Auto-populate from episodes (creates draft posts/clips)
+- Track status: draft → ready → scheduled → posted
+- Filter by platform and source
+
+### Webhooks
+- Configure webhooks for external services
+- Event types: newShout, newEpisodePublished, newRedemption, newFollower
+- Optional webhook secrets for security
+- Automatic dispatch when events occur
+
+See `docs/CONTROL_TOWER.md` for integration workflows.
+
 ## Empire Dashboard (`/admin/empire`)
 
-The Empire Dashboard is the central control room for managing the entire platform.
+The Empire Dashboard provides detailed metrics and system controls.
 
 ### High-Level KPIs
 - **Daily Active Listeners**: Unique listeners who sent shouts in last 24 hours
