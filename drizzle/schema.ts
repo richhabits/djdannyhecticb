@@ -317,7 +317,7 @@ export type InsertFanBadge = typeof fanBadges.$inferInsert;
  */
 export const aiMixes = mysqlTable("ai_mixes", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").optional(), // Optional: who requested it
+  userId: int("userId"), // Optional: who requested it (nullable by default)
   mood: varchar("mood", { length: 100 }).notNull(),
   bpm: int("bpm"),
   genres: text("genres").notNull(), // JSON array
@@ -335,7 +335,7 @@ export type InsertAIMix = typeof aiMixes.$inferInsert;
  */
 export const dannyReacts = mysqlTable("danny_reacts", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").optional(),
+  userId: int("userId"),
   name: varchar("name", { length: 255 }).notNull(),
   type: mysqlEnum("type", ["video", "meme", "track"]).notNull(),
   mediaUrl: varchar("mediaUrl", { length: 512 }).notNull(),
@@ -444,7 +444,7 @@ export type InsertIdentityQuiz = typeof identityQuizzes.$inferInsert;
  */
 export const superfans = mysqlTable("superfans", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").optional(),
+  userId: int("userId"),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   tier: mysqlEnum("tier", ["bronze", "silver", "gold", "platinum"]).notNull(),
@@ -486,7 +486,7 @@ export type InsertLoyaltyTracking = typeof loyaltyTracking.$inferInsert;
  */
 export const supportEvents = mysqlTable("support_events", {
   id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId").optional(), // Link to userProfiles or users
+  fanId: int("fanId"), // Link to userProfiles or users
   fanName: varchar("fanName", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   amount: varchar("amount", { length: 50 }).notNull(), // Store as string to support various currencies
@@ -525,7 +525,7 @@ export type InsertProduct = typeof products.$inferInsert;
  */
 export const purchases = mysqlTable("purchases", {
   id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId").optional(),
+  fanId: int("fanId"),
   fanName: varchar("fanName", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   productId: int("productId").notNull(),
@@ -544,7 +544,7 @@ export type InsertPurchase = typeof purchases.$inferInsert;
  */
 export const subscriptions = mysqlTable("subscriptions", {
   id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId").optional(),
+  fanId: int("fanId"),
   fanName: varchar("fanName", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   tier: mysqlEnum("tier", ["hectic_regular", "hectic_royalty", "inner_circle"]).notNull(),
@@ -574,7 +574,7 @@ export const brands = mysqlTable("brands", {
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   type: mysqlEnum("type", ["personality", "station", "clothing", "pets", "other"]).notNull(),
-  archetype: mysqlEnum("archetype", ["dj", "podcaster", "creator", "brand", "station"]).optional(), // Phase 7: Franchise mode
+  archetype: mysqlEnum("archetype", ["dj", "podcaster", "creator", "brand", "station"]), // Phase 7: Franchise mode
   primaryColor: varchar("primaryColor", { length: 20 }),
   secondaryColor: varchar("secondaryColor", { length: 20 }),
   logoUrl: varchar("logoUrl", { length: 512 }),
@@ -600,7 +600,7 @@ export type InsertBrand = typeof brands.$inferInsert;
  */
 export const auditLogs = mysqlTable("audit_logs", {
   id: int("id").autoincrement().primaryKey(),
-  actorId: int("actorId").optional(), // User ID who performed action
+  actorId: int("actorId"), // User ID who performed action
   actorName: varchar("actorName", { length: 255 }),
   action: varchar("action", { length: 100 }).notNull(), // e.g., "create_shout", "update_stream"
   entityType: varchar("entityType", { length: 100 }), // e.g., "shout", "stream"
@@ -624,7 +624,7 @@ export const empireSettings = mysqlTable("empire_settings", {
   value: text("value"), // JSON or string value
   description: text("description"),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  updatedBy: int("updatedBy").optional(),
+  updatedBy: int("updatedBy"),
 });
 
 export type EmpireSetting = typeof empireSettings.$inferSelect;
@@ -646,7 +646,7 @@ export const errorLogs = mysqlTable("error_logs", {
   stackSnippet: text("stackSnippet"),
   message: text("message"),
   severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).default("medium").notNull(),
-  userId: int("userId").optional(),
+  userId: int("userId"),
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: text("userAgent"),
   resolved: boolean("resolved").default(false).notNull(),
@@ -689,7 +689,7 @@ export const backups = mysqlTable("backups", {
   dataBlob: text("dataBlob"), // JSON serialized backup data
   checksum: varchar("checksum", { length: 64 }), // SHA-256 checksum
   sizeBytes: int("sizeBytes"),
-  createdBy: int("createdBy").optional(),
+  createdBy: int("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -707,7 +707,7 @@ export type InsertBackup = typeof backups.$inferInsert;
  */
 export const notifications = mysqlTable("notifications", {
   id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId").optional(),
+  fanId: int("fanId"),
   fanName: varchar("fanName", { length: 255 }),
   email: varchar("email", { length: 255 }),
   type: varchar("type", { length: 100 }).notNull(), // e.g., "danny_live", "track_request", "mission_available"
@@ -757,7 +757,7 @@ export type InsertApiKey = typeof apiKeys.$inferInsert;
  */
 export const genZProfiles = mysqlTable("genz_profiles", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").optional(),
+  userId: int("userId"),
   username: varchar("username", { length: 50 }).notNull().unique(),
   displayName: varchar("displayName", { length: 255 }),
   bio: text("bio"),
@@ -899,7 +899,7 @@ export type InsertUserAchievement = typeof userAchievements.$inferInsert;
  */
 export const aiDannyChats = mysqlTable("ai_danny_chats", {
   id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").optional(),
+  profileId: int("profileId"),
   sessionId: varchar("sessionId", { length: 64 }).notNull(), // For anonymous users
   message: text("message").notNull(),
   response: text("response"),
@@ -955,7 +955,7 @@ export const bookingsPhase7 = mysqlTable("bookings_phase7", {
   source: varchar("source", { length: 255 }), // How they found you
   status: mysqlEnum("status", ["new", "reviewing", "accepted", "declined", "completed"]).default("new").notNull(),
   internalNotes: text("internalNotes"),
-  brandId: int("brandId").optional(),
+  brandId: int("brandId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -978,7 +978,7 @@ export const eventsPhase7 = mysqlTable("events_phase7", {
   isPublic: boolean("isPublic").default(true).notNull(),
   ticketsUrl: varchar("ticketsUrl", { length: 512 }),
   status: mysqlEnum("status", ["upcoming", "live", "completed", "cancelled"]).default("upcoming").notNull(),
-  brandId: int("brandId").optional(),
+  brandId: int("brandId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1032,7 +1032,7 @@ export const socialProfiles = mysqlTable("social_profiles", {
   platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "spotify", "mixcloud", "snapchat", "telegram", "piing", "twitter", "facebook", "other"]).notNull(),
   url: varchar("url", { length: 512 }).notNull(),
   handle: varchar("handle", { length: 255 }),
-  brandId: int("brandId").optional(),
+  brandId: int("brandId"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -1121,7 +1121,7 @@ export const aiScriptJobs = mysqlTable("ai_script_jobs", {
   id: int("id").autoincrement().primaryKey(),
   type: mysqlEnum("type", ["intro", "outro", "mixStory", "tiktokClip", "promo", "fanShout", "generic"]).notNull(),
   inputContext: text("inputContext"), // JSON
-  requestedByUserId: int("requestedByUserId").optional(),
+  requestedByUserId: int("requestedByUserId"),
   status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
   resultText: text("resultText"),
   errorMessage: text("errorMessage"),
@@ -1137,10 +1137,10 @@ export type InsertAIScriptJob = typeof aiScriptJobs.$inferInsert;
  */
 export const aiVoiceJobs = mysqlTable("ai_voice_jobs", {
   id: int("id").autoincrement().primaryKey(),
-  scriptJobId: int("scriptJobId").optional(), // FK to aiScriptJobs
+  scriptJobId: int("scriptJobId"), // FK to aiScriptJobs
   rawText: text("rawText"),
   voiceProfile: varchar("voiceProfile", { length: 100 }).default("hectic_main").notNull(), // hectic_main, hectic_soft, hectic_shouty
-  requestedByUserId: int("requestedByUserId").optional(),
+  requestedByUserId: int("requestedByUserId"),
   status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
   audioUrl: varchar("audioUrl", { length: 512 }),
   errorMessage: text("errorMessage"),
@@ -1156,9 +1156,9 @@ export type InsertAIVoiceJob = typeof aiVoiceJobs.$inferInsert;
  */
 export const aiVideoJobs = mysqlTable("ai_video_jobs", {
   id: int("id").autoincrement().primaryKey(),
-  scriptJobId: int("scriptJobId").optional(), // FK to aiScriptJobs
+  scriptJobId: int("scriptJobId"), // FK to aiScriptJobs
   stylePreset: mysqlEnum("stylePreset", ["verticalShort", "squareClip", "horizontalHost"]).notNull(),
-  requestedByUserId: int("requestedByUserId").optional(),
+  requestedByUserId: int("requestedByUserId"),
   status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
   videoUrl: varchar("videoUrl", { length: 512 }),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
@@ -1175,8 +1175,8 @@ export type InsertAIVideoJob = typeof aiVideoJobs.$inferInsert;
  */
 export const userConsents = mysqlTable("user_consents", {
   id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").optional(),
-  userId: int("userId").optional(),
+  profileId: int("profileId"),
+  userId: int("userId"),
   email: varchar("email", { length: 255 }), // For anonymous users
   aiContentConsent: boolean("aiContentConsent").default(false).notNull(),
   marketingConsent: boolean("marketingConsent").default(false).notNull(),
@@ -1226,7 +1226,7 @@ export const coinTransactions = mysqlTable("coin_transactions", {
   amount: int("amount").notNull(), // Positive for earn, negative for spend
   type: mysqlEnum("type", ["earn", "spend", "adjust"]).notNull(),
   source: mysqlEnum("source", ["mission", "loginStreak", "shout", "trackVote", "confession", "eventAttend", "referral", "adminAdjust", "rewardRedeem"]).notNull(),
-  referenceId: int("referenceId").optional(), // FK to missionId, eventId, referralId, rewardId
+  referenceId: int("referenceId"), // FK to missionId, eventId, referralId, rewardId
   description: text("description"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -1277,8 +1277,8 @@ export const referralCodes = mysqlTable("referral_codes", {
   id: int("id").autoincrement().primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   ownerUserId: int("ownerUserId").notNull(),
-  maxUses: int("maxUses").optional(),
-  expiresAt: timestamp("expiresAt").optional(),
+  maxUses: int("maxUses"),
+  expiresAt: timestamp("expiresAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -1334,9 +1334,9 @@ export const showEpisodes = mysqlTable("show_episodes", {
   slug: varchar("slug", { length: 100 }).notNull().unique(),
   description: text("description"),
   status: mysqlEnum("status", ["planned", "recorded", "live", "published", "archived"]).default("planned").notNull(),
-  scheduledAt: timestamp("scheduledAt").optional(),
-  recordedAt: timestamp("recordedAt").optional(),
-  publishedAt: timestamp("publishedAt").optional(),
+  scheduledAt: timestamp("scheduledAt"),
+  recordedAt: timestamp("recordedAt"),
+  publishedAt: timestamp("publishedAt"),
   recordingUrl: varchar("recordingUrl", { length: 512 }),
   coverImageUrl: varchar("coverImageUrl", { length: 512 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -1356,7 +1356,7 @@ export const showSegments = mysqlTable("show_segments", {
   type: mysqlEnum("type", ["intro", "topic", "interview", "confession", "dilemma", "shoutBlock", "musicBlock", "freestyle", "rant", "outro", "other"]).notNull(),
   orderIndex: int("orderIndex").default(0).notNull(),
   notes: text("notes"),
-  aiScriptJobId: int("aiScriptJobId").optional(), // Link to AI Studio
+  aiScriptJobId: int("aiScriptJobId"), // Link to AI Studio
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1370,13 +1370,13 @@ export type InsertShowSegment = typeof showSegments.$inferInsert;
 export const showLiveSessions = mysqlTable("show_live_sessions", {
   id: int("id").autoincrement().primaryKey(),
   showId: int("showId").notNull(),
-  episodeId: int("episodeId").optional(), // May become an episode later
+  episodeId: int("episodeId"), // May become an episode later
   startedAt: timestamp("startedAt").defaultNow().notNull(),
-  endedAt: timestamp("endedAt").optional(),
+  endedAt: timestamp("endedAt"),
   status: mysqlEnum("status", ["upcoming", "live", "ended"]).default("upcoming").notNull(),
-  concurrentListenersEstimate: int("concurrentListenersEstimate").optional(),
+  concurrentListenersEstimate: int("concurrentListenersEstimate"),
   livePlatform: mysqlEnum("livePlatform", ["site", "youtube", "tiktok", "twitch", "other"]).default("site").notNull(),
-  liveUrl: varchar("liveUrl", { length: 512 }).optional(),
+  liveUrl: varchar("liveUrl", { length: 512 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1408,10 +1408,10 @@ export const showAssets = mysqlTable("show_assets", {
   id: int("id").autoincrement().primaryKey(),
   episodeId: int("episodeId").notNull(),
   type: mysqlEnum("type", ["script", "voiceDrop", "clip", "socialPack"]).notNull(),
-  aiScriptJobId: int("aiScriptJobId").optional(),
-  aiVoiceJobId: int("aiVoiceJobId").optional(),
-  aiVideoJobId: int("aiVideoJobId").optional(),
-  externalUrl: varchar("externalUrl", { length: 512 }).optional(),
+  aiScriptJobId: int("aiScriptJobId"),
+  aiVoiceJobId: int("aiVoiceJobId"),
+  aiVideoJobId: int("aiVideoJobId"),
+  externalUrl: varchar("externalUrl", { length: 512 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
