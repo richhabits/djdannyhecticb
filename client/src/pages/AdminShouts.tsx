@@ -96,12 +96,24 @@ export default function AdminShouts() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="container py-8 px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 gradient-text">
-            Shout Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage fan shouts, approve messages, and track what's been read on air.
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 gradient-text">
+                Shout Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage fan shouts, approve messages, and track what's been read on air.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/admin/control">
+                <Button variant="outline" size="sm">Control Tower</Button>
+              </Link>
+              <Link href="/live">
+                <Button variant="outline" size="sm">Open Live</Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}

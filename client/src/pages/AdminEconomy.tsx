@@ -42,7 +42,15 @@ export default function AdminEconomy() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Economy Control</h1>
-        <Badge variant="outline">Admin Dashboard</Badge>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/control">
+            <Button variant="outline" size="sm">Control Tower</Button>
+          </Link>
+          <Link href="/wallet">
+            <Button variant="outline" size="sm">View Wallet Page</Button>
+          </Link>
+          <Badge variant="outline">Admin Dashboard</Badge>
+        </div>
       </div>
 
       {/* Summary Cards */}

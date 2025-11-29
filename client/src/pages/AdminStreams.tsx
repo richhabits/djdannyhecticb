@@ -123,13 +123,21 @@ export default function AdminStreams() {
       <div className="container py-8 px-4">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div>
+            <div className="flex-1">
               <h1 className="text-4xl font-bold mb-2 gradient-text">
                 Stream Operations
               </h1>
               <p className="text-muted-foreground">
                 Manage Shoutcast/Icecast stream configurations and monitor status.
               </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/admin/control">
+                <Button variant="outline" size="sm">Control Tower</Button>
+              </Link>
+              <Link href="/live">
+                <Button variant="outline" size="sm">Open Live</Button>
+              </Link>
             </div>
           </div>
           
