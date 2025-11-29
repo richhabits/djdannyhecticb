@@ -1,5 +1,6 @@
 export const ENV = {
-  appId: process.env.VITE_APP_ID ?? "",
+  // Backend can read either APP_ID or VITE_APP_ID (for compatibility)
+  appId: process.env.APP_ID ?? process.env.VITE_APP_ID ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",

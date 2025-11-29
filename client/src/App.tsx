@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import LiveChat from "./components/LiveChat";
@@ -27,6 +27,21 @@ import Events from "./pages/Events";
 import Podcasts from "./pages/Podcasts";
 import LiveStudio from "./pages/LiveStudio";
 import Dashboard from "./pages/Dashboard";
+import AdminShouts from "./pages/AdminShouts";
+import AdminStreams from "./pages/AdminStreams";
+import AdminNowPlaying from "./pages/AdminNowPlaying";
+import AdminShows from "./pages/AdminShows";
+import AdminEmpire from "./pages/AdminEmpire";
+import ListenerLeaderboard from "./pages/ListenerLeaderboard";
+import Live from "./pages/Live";
+import BookDanny from "./pages/BookDanny";
+import AIDanny from "./pages/AIDanny";
+import Profile from "./pages/Profile";
+import World from "./pages/World";
+import Vault from "./pages/Vault";
+import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
+import { AIDannyFloating } from "./components/AIDannyFloating";
+import { HecticOnboarding } from "./components/HecticOnboarding";
 
 function Router() {
   return (
@@ -53,6 +68,25 @@ function Router() {
       <Route path={"/podcasts"} component={Podcasts} />
       <Route path={"/live-studio"} component={LiveStudio} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/hectic"}>
+        <Redirect to="/live" />
+      </Route>
+      <Route path={"/go-live"}>
+        <Redirect to="/live" />
+      </Route>
+      <Route path={"/live"} component={Live} />
+      <Route path={"/listeners"} component={ListenerLeaderboard} />
+      <Route path={"/book-danny"} component={BookDanny} />
+      <Route path={"/admin/shouts"} component={AdminShouts} />
+      <Route path={"/admin/streams"} component={AdminStreams} />
+      <Route path={"/admin/now-playing"} component={AdminNowPlaying} />
+      <Route path={"/admin/shows"} component={AdminShows} />
+      <Route path={"/admin/empire"} component={AdminEmpire} />
+      <Route path={"/support"} component={() => <div className="container mx-auto p-6"><h1>Support Danny</h1><p>Support page coming soon...</p></div>} />
+      <Route path={"/ai-danny"} component={AIDanny} />
+      <Route path={"/profile/:username"} component={Profile} />
+      <Route path={"/world"} component={World} />
+      <Route path={"/vault"} component={Vault} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -70,6 +104,9 @@ function App() {
           <Toaster />
           <Router />
           <LiveChat />
+          <LiveAudioPlayer />
+          <AIDannyFloating />
+          <HecticOnboarding />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

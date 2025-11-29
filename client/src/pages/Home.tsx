@@ -1,18 +1,60 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, Mic2, Calendar, Radio, Zap, Users, Menu, X } from "lucide-react";
+import { Music, Mic2, Calendar, Radio, Zap, Users, Menu, X, Download } from "lucide-react";
 import { useState } from "react";
 import { APP_LOGO } from "@/const";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
+import { ShoutForm } from "@/components/ShoutForm";
+import { ShoutList } from "@/components/ShoutList";
+import { HecticHotline } from "@/components/HecticHotline";
+import { LockedInCounter } from "@/components/LockedInCounter";
+import { TrackRequests } from "@/components/TrackRequests";
+import { NowPlaying } from "@/components/NowPlaying";
+import { ShowSchedule } from "@/components/ShowSchedule";
+import { SocialLinks } from "@/components/SocialLinks";
+import { SocialShareBar } from "@/components/SocialShareBar";
+import { MetaTagsComponent } from "@/components/MetaTags";
+import { DannyStatus } from "@/components/DannyStatus";
+import { HeroVideo } from "@/components/HeroVideo";
+import { HecticFeed } from "@/components/HecticFeed";
+import { trpc } from "@/lib/trpc";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: activeStream } = trpc.streams.active.useQuery(undefined, { retry: false });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <>
+      <MetaTagsComponent
+        title="DJ Danny Hectic B | Hectic Radio"
+        description="Lock in with DJ Danny Hectic B on Hectic Radio. Listen live, request tracks, send shouts, and connect with the crew."
+        url="/"
+        type="website"
+      />
+      <div className="min-h-screen bg-background text-foreground">
+      {/* Hero Video Section */}
+      <section className="relative h-[60vh] min-h-[400px] overflow-hidden">
+        <HeroVideo
+          videoUrl={import.meta.env.VITE_HERO_VIDEO_URL}
+          className="absolute inset-0"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-background" />
+        <div className="container relative z-10 h-full flex flex-col justify-end pb-12">
+          <div className="max-w-3xl">
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">
+              <span className="gradient-text">DJ Danny Hectic B</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 mb-6">
+              Building the biggest radio community in the UK. Lock in and vibe with the crew.
+            </p>
+            <DannyStatus />
+          </div>
+        </div>
+      </section>
+
       {/* Navigation */}
       <nav className="sticky top-0 z-50 glass-dark backdrop-blur-xl border-b border-border">
         <div className="container flex items-center justify-between h-16 md:h-20">
@@ -105,6 +147,11 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
+            
+            {/* Hectic Hotline */}
+            <div className="mt-8 md:mt-12 px-4">
+              <HecticHotline />
+            </div>
           </div>
         </div>
       </section>
@@ -192,6 +239,58 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Shoutbox Section */}
+      <section className="py-12 md:py-24 border-t border-border bg-gradient-to-b from-background to-card/30">
+        <div className="container px-4">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                <span className="gradient-text">Send a Shout</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-4">
+                Connect with Danny and the Hectic Radio crew. Send your message, request a track, and get locked in!
+              </p>
+              <div className="flex justify-center mb-4">
+                <LockedInCounter />
+              </div>
+              {activeStream && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Currently streaming: <span className="font-semibold text-accent">{activeStream.name}</span>
+                </p>
+              )}
+              {!activeStream && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Stream not configured.
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <ShoutForm />
+              <ShoutList />
+            </div>
+            
+            {/* Track Requests */}
+            <div className="mb-8">
+              <TrackRequests />
+              <div className="mt-4">
+                <SocialShareBar
+                  url="/live"
+                  title="Hectic Radio - Track Requests"
+                  description="Vote for your favorite tracks and see what's trending on Hectic Radio!"
+                  className="justify-center"
+                />
+              </div>
+            </div>
+            
+            {/* Now Playing & Schedule */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <NowPlaying />
+              <ShowSchedule />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="py-12 md:py-24 bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-t border-border">
         <div className="container max-w-3xl text-center space-y-6 px-4">
           <h2 className="text-3xl md:text-5xl font-bold"><span className="gradient-text">Ready to Book?</span></h2>
@@ -220,7 +319,15 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <h4 className="font-semibold mb-4">DJ Danny Hectic B</h4>
-              <p className="text-sm text-muted-foreground">Creating unforgettable musical experiences.</p>
+              <p className="text-sm text-muted-foreground mb-3">Creating unforgettable musical experiences.</p>
+              <a
+                href="/hectic-contact.vcf"
+                download="DJ Danny Hectic B.vcf"
+                className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Save HECTIC as a contact
+              </a>
             </div>
             <div className="space-y-2">
               <h4 className="font-bold">Quick Links</h4>
@@ -247,11 +354,7 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/contact" className="hover:text-accent">Contact Us</Link></li>
-                <li><a href="mailto:contact@djdannyhectic.com" className="hover:text-accent">Email</a></li>
-                <li><a href="tel:+15551234567" className="hover:text-accent">Phone</a></li>
-              </ul>
+              <HecticHotline variant="compact" className="text-sm" />
             </div>
           </div>
           <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
@@ -260,5 +363,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
