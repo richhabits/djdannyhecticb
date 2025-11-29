@@ -1940,6 +1940,255 @@ export const appRouter = router({
         return cue;
       }),
   }),
+
+  // ============================================
+  // PHASE 10: HECTICOPS CONTROL TOWER
+  // ============================================
+  controlTower: router({
+    stats: adminProcedure.query(async () => {
+      // Aggregate stats for the control tower dashboard
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      
+      // Shouts (last 7 days)
+      const allShouts = await db.getAllShouts();
+      const shoutsLast7Days = allShouts.filter((s) => new Date(s.createdAt) >= sevenDaysAgo).length;
+      
+      // Track votes (approximate from track requests)
+      const trackRequests = await db.getTrackRequests();
+      const totalVotes = trackRequests.reduce((sum, tr) => sum + (tr.votes || 0), 0);
+      
+      // Wallets
+      const allWallets = await db.listWallets(1000);
+      const totalCoins = allWallets.reduce((sum, w) => sum + (w.balanceCoins || 0), 0);
+      
+      // Episodes
+      const episodes = await db.listShowEpisodes(undefined, false);
+      const publishedEpisodes = episodes.filter((e) => e.status === "published").length;
+      
+      // AI Jobs
+      const scriptJobs = await db.listAIScriptJobs({}, 1000);
+      const voiceJobs = await db.listAIVoiceJobs({}, 1000);
+      const videoJobs = await db.listAIVideoJobs({}, 1000);
+      const totalAIJobs = scriptJobs.length + voiceJobs.length + videoJobs.length;
+      
+      // Active incident
+      const activeIncident = await db.getActiveIncidentBanner();
+      
+      return {
+        shoutsLast7Days,
+        trackVotesTotal: totalVotes,
+        activeWallets: allWallets.length,
+        totalCoinsInCirculation: totalCoins,
+        publishedEpisodes,
+        totalAIJobs,
+        activeIncident: activeIncident ? {
+          message: activeIncident.message,
+          severity: activeIncident.severity,
+        } : null,
+      };
+    }),
+  }),
+
+  integrations: router({
+    social: router({
+      list: publicProcedure.query(() => db.listSocialIntegrations(true)),
+      adminList: adminProcedure.query(() => db.listSocialIntegrations(false)),
+      adminCreate: adminProcedure
+        .input(z.object({
+          platform: z.enum(["instagram", "tiktok", "youtube", "twitch", "twitter", "facebook", "other"]),
+          handle: z.string().optional(),
+          url: z.string(),
+          apiKeyName: z.string().optional(),
+          isPrimary: z.boolean().default(false),
+          isActive: z.boolean().default(true),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const integration = await db.createSocialIntegration(input);
+          await db.createAuditLog({
+            action: "create_social_integration",
+            entityType: "social_integration",
+            entityId: integration.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return integration;
+        }),
+      adminUpdate: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            handle: z.string().optional(),
+            url: z.string().optional(),
+            apiKeyName: z.string().optional(),
+            isPrimary: z.boolean().optional(),
+            isActive: z.boolean().optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updateSocialIntegration(input.id, input.updates);
+          await db.createAuditLog({
+            action: "update_social_integration",
+            entityType: "social_integration",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+      adminSetPrimary: adminProcedure
+        .input(z.object({ platform: z.string() }))
+        .mutation(async ({ input, ctx }) => {
+          const result = await db.setPrimarySocial(input.platform);
+          await db.createAuditLog({
+            action: "set_primary_social",
+            entityType: "social_integration",
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return result;
+        }),
+    }),
+
+    content: router({
+      adminList: adminProcedure
+        .input(z.object({
+          status: z.string().optional(),
+          platform: z.string().optional(),
+          source: z.string().optional(),
+          limit: z.number().default(100),
+        }))
+        .query(({ input }) => db.listContentQueue(input, input.limit)),
+      adminCreate: adminProcedure
+        .input(z.object({
+          type: z.enum(["clip", "post", "story", "short", "liveAnnouncement", "other"]),
+          title: z.string(),
+          description: z.string().optional(),
+          targetPlatform: z.enum(["instagram", "tiktok", "youtube", "whatsapp", "telegram", "multi"]),
+          source: z.enum(["episode", "liveSession", "aiJob", "manual"]),
+          sourceId: z.number().optional(),
+          status: z.enum(["draft", "ready", "scheduled", "posted", "failed"]).default("draft"),
+          scheduledAt: z.date().optional(),
+          payload: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const item = await db.createContentItem(input);
+          await db.createAuditLog({
+            action: "create_content_item",
+            entityType: "content_queue",
+            entityId: item.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return item;
+        }),
+      adminUpdateStatus: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          status: z.enum(["draft", "ready", "scheduled", "posted", "failed"]),
+          externalUrl: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updateContentItemStatus(input.id, input.status, input.externalUrl);
+          await db.createAuditLog({
+            action: "update_content_status",
+            entityType: "content_queue",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+      adminAutoPopulateFromEpisode: adminProcedure
+        .input(z.object({ episodeId: z.number() }))
+        .mutation(async ({ input, ctx }) => {
+          const episode = await db.getShowEpisode(input.episodeId);
+          if (!episode) throw new Error("Episode not found");
+          
+          const items = [];
+          
+          // Create "New episode" post
+          items.push(await db.createContentItem({
+            type: "post",
+            title: `New episode: ${episode.title}`,
+            description: episode.description || "",
+            targetPlatform: "multi",
+            source: "episode",
+            sourceId: episode.id,
+            status: "draft",
+            payload: JSON.stringify({
+              caption: `New episode out now: ${episode.title}`,
+              hashtags: ["hecticradio", "djdannyhecticb"],
+            }),
+          }));
+          
+          // Create clip item
+          items.push(await db.createContentItem({
+            type: "clip",
+            title: `Best clip from: ${episode.title}`,
+            targetPlatform: "tiktok",
+            source: "episode",
+            sourceId: episode.id,
+            status: "draft",
+          }));
+          
+          await db.createAuditLog({
+            action: "auto_populate_content_from_episode",
+            entityType: "content_queue",
+            entityId: input.episodeId,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          
+          return items;
+        }),
+    }),
+
+    webhooks: router({
+      adminList: adminProcedure
+        .input(z.object({ activeOnly: z.boolean().default(false) }))
+        .query(({ input }) => db.listWebhooks(input.activeOnly)),
+      adminCreate: adminProcedure
+        .input(z.object({
+          name: z.string(),
+          url: z.string(),
+          secret: z.string().optional(),
+          eventType: z.enum(["newShout", "newEpisodePublished", "newRedemption", "newFollower", "other"]),
+          isActive: z.boolean().default(true),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const webhook = await db.createWebhook(input);
+          await db.createAuditLog({
+            action: "create_webhook",
+            entityType: "webhook",
+            entityId: webhook.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return webhook;
+        }),
+      adminUpdate: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            name: z.string().optional(),
+            url: z.string().optional(),
+            secret: z.string().optional(),
+            isActive: z.boolean().optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await db.updateWebhook(input.id, input.updates);
+          await db.createAuditLog({
+            action: "update_webhook",
+            entityType: "webhook",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

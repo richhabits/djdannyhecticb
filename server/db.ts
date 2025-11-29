@@ -1,12 +1,16 @@
 import { asc, desc, eq, gt, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
+  if (!hasDatabaseConfig()) {
+    return null;
+  }
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
@@ -16,6 +20,15 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+/**
+ * Helper to throw a user-friendly error if DB is not available
+ */
+export function requireDatabase(feature?: string) {
+  if (!hasDatabaseConfig()) {
+    throw new Error(getDatabaseErrorMessage(feature));
+  }
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -2400,6 +2413,12 @@ export async function getWalletByUserId(userId: number) {
   return result[0];
 }
 
+export async function listWallets(limit: number = 1000) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(wallets).orderBy(desc(wallets.balanceCoins)).limit(limit);
+}
+
 export async function adjustCoins(options: {
   userId: number;
   amount: number;
@@ -2878,4 +2897,159 @@ export async function updateCueStatus(id: number, status: InsertShowCue["status"
   await db.update(showCues).set({ status, updatedAt: new Date() }).where(eq(showCues.id, id));
   const updated = await db.select().from(showCues).where(eq(showCues.id, id)).limit(1);
   return updated[0];
+}
+
+// ============================================
+// PHASE 10: HECTICOPS CONTROL TOWER - INTEGRATIONS
+// ============================================
+
+// Social Integrations
+export async function listSocialIntegrations(activeOnly: boolean = false) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(socialIntegrations);
+  if (activeOnly) {
+    query = query.where(eq(socialIntegrations.isActive, true)) as any;
+  }
+  return await query.orderBy(desc(socialIntegrations.createdAt));
+}
+
+export async function createSocialIntegration(integration: InsertSocialIntegration) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(socialIntegrations).values(integration);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(socialIntegrations).where(eq(socialIntegrations.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateSocialIntegration(id: number, updates: Partial<InsertSocialIntegration>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(socialIntegrations).set({ ...updates, updatedAt: new Date() }).where(eq(socialIntegrations.id, id));
+  const updated = await db.select().from(socialIntegrations).where(eq(socialIntegrations.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function setPrimarySocial(platform: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Unset all others for this platform
+  await db.update(socialIntegrations).set({ isPrimary: false }).where(eq(socialIntegrations.platform, platform as any));
+  // Set this one
+  const result = await db.select().from(socialIntegrations).where(eq(socialIntegrations.platform, platform as any)).limit(1);
+  if (result[0]) {
+    await db.update(socialIntegrations).set({ isPrimary: true, updatedAt: new Date() }).where(eq(socialIntegrations.id, result[0].id));
+    return result[0];
+  }
+  return undefined;
+}
+
+// Content Queue
+export async function createContentItem(item: InsertContentQueueItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(contentQueue).values(item);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(contentQueue).where(eq(contentQueue.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateContentItemStatus(id: number, status: InsertContentQueueItem["status"], externalUrl?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updates: any = { status, updatedAt: new Date() };
+  if (status === "posted" && externalUrl) {
+    updates.externalUrl = externalUrl;
+    updates.postedAt = new Date();
+  }
+  await db.update(contentQueue).set(updates).where(eq(contentQueue.id, id));
+  const updated = await db.select().from(contentQueue).where(eq(contentQueue.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function listContentQueue(filters?: { status?: string; platform?: string; source?: string }, limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(contentQueue);
+  const conditions = [];
+  if (filters?.status) {
+    conditions.push(eq(contentQueue.status, filters.status as any));
+  }
+  if (filters?.platform) {
+    conditions.push(eq(contentQueue.targetPlatform, filters.platform as any));
+  }
+  if (filters?.source) {
+    conditions.push(eq(contentQueue.source, filters.source as any));
+  }
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  return await query.orderBy(desc(contentQueue.createdAt)).limit(limit);
+}
+
+export async function listContentForPlatform(platform: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(contentQueue)
+    .where(eq(contentQueue.targetPlatform, platform as any))
+    .orderBy(desc(contentQueue.createdAt))
+    .limit(limit);
+}
+
+// Webhooks
+export async function listWebhooks(activeOnly: boolean = false) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(webhooks);
+  if (activeOnly) {
+    query = query.where(eq(webhooks.isActive, true)) as any;
+  }
+  return await query.orderBy(desc(webhooks.createdAt));
+}
+
+export async function createWebhook(webhook: InsertWebhook) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(webhooks).values(webhook);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(webhooks).where(eq(webhooks.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateWebhook(id: number, updates: Partial<InsertWebhook>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(webhooks).set({ ...updates, updatedAt: new Date() }).where(eq(webhooks.id, id));
+  const updated = await db.select().from(webhooks).where(eq(webhooks.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], payload: any) {
+  const db = await getDb();
+  if (!db) return { dispatched: 0, errors: [] };
+  
+  const activeWebhooks = await db
+    .select()
+    .from(webhooks)
+    .where(and(eq(webhooks.isActive, true), eq(webhooks.eventType, eventType)));
+  
+  const errors: string[] = [];
+  let dispatched = 0;
+  
+  for (const webhook of activeWebhooks) {
+    try {
+      // In a real implementation, this would make HTTP POST requests
+      // For now, we just log it
+      console.log(`[Webhook] Dispatching to ${webhook.url} for event ${eventType}`, payload);
+      dispatched++;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      errors.push(`${webhook.name}: ${errorMsg}`);
+    }
+  }
+  
+  return { dispatched, errors };
 }

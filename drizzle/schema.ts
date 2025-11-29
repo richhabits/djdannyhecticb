@@ -1417,3 +1417,67 @@ export const showAssets = mysqlTable("show_assets", {
 
 export type ShowAsset = typeof showAssets.$inferSelect;
 export type InsertShowAsset = typeof showAssets.$inferInsert;
+
+/**
+ * ============================================
+ * PHASE 10: HECTICOPS CONTROL TOWER
+ * ============================================
+ */
+
+/**
+ * Social Integrations
+ */
+export const socialIntegrations = mysqlTable("social_integrations", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "twitch", "twitter", "facebook", "other"]).notNull(),
+  handle: varchar("handle", { length: 255 }),
+  url: varchar("url", { length: 512 }).notNull(),
+  apiKeyName: varchar("apiKeyName", { length: 255 }), // Reference to env variable name
+  isPrimary: boolean("isPrimary").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialIntegration = typeof socialIntegrations.$inferSelect;
+export type InsertSocialIntegration = typeof socialIntegrations.$inferInsert;
+
+/**
+ * Content Queue
+ */
+export const contentQueue = mysqlTable("content_queue", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["clip", "post", "story", "short", "liveAnnouncement", "other"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  targetPlatform: mysqlEnum("targetPlatform", ["instagram", "tiktok", "youtube", "whatsapp", "telegram", "multi"]).notNull(),
+  source: mysqlEnum("source", ["episode", "liveSession", "aiJob", "manual"]).notNull(),
+  sourceId: int("sourceId"), // FK to episode, liveSession, aiJob, etc.
+  status: mysqlEnum("status", ["draft", "ready", "scheduled", "posted", "failed"]).default("draft").notNull(),
+  scheduledAt: timestamp("scheduledAt"),
+  postedAt: timestamp("postedAt"),
+  externalUrl: varchar("externalUrl", { length: 512 }), // Link to final post
+  payload: text("payload"), // JSON: caption, hashtags, notes
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContentQueueItem = typeof contentQueue.$inferSelect;
+export type InsertContentQueueItem = typeof contentQueue.$inferInsert;
+
+/**
+ * Webhooks
+ */
+export const webhooks = mysqlTable("webhooks", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: varchar("url", { length: 512 }).notNull(),
+  secret: varchar("secret", { length: 255 }), // Optional webhook secret
+  eventType: mysqlEnum("eventType", ["newShout", "newEpisodePublished", "newRedemption", "newFollower", "other"]).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Webhook = typeof webhooks.$inferSelect;
+export type InsertWebhook = typeof webhooks.$inferInsert;
