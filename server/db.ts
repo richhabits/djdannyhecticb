@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, trackShares, InsertTrackShare, shareAnalytics, InsertShareAnalytic } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 
@@ -438,6 +438,141 @@ export async function getTrackHistory(limit: number = 10) {
     .select().from(tracks)
     .orderBy(desc(tracks.playedAt))
     .limit(limit);
+}
+
+export async function getTrackById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
+  return result[0];
+}
+
+// Track Shares / Social Sharing
+export async function createTrackShare(share: InsertTrackShare) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(trackShares).values(share);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(trackShares).where(eq(trackShares.id, insertedId)).limit(1);
+  
+  // Log analytics event
+  if (created[0]) {
+    await db.insert(shareAnalytics).values({
+      shareId: created[0].id,
+      eventType: "share",
+      platform: share.platform,
+      metadata: JSON.stringify({ loginMethod: share.loginMethod }),
+    });
+  }
+  
+  return created[0];
+}
+
+export async function getTrackShares(trackId?: number, userId?: number, platform?: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [];
+  if (trackId) conditions.push(eq(trackShares.trackId, trackId));
+  if (userId) conditions.push(eq(trackShares.userId, userId));
+  if (platform) conditions.push(eq(trackShares.platform, platform as any));
+  
+  let query = db.select().from(trackShares);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  return await query.orderBy(desc(trackShares.createdAt)).limit(limit);
+}
+
+export async function incrementShareClicks(shareId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db.select().from(trackShares).where(eq(trackShares.id, shareId)).limit(1);
+  if (!existing[0]) throw new Error("Share not found");
+  
+  await db.update(trackShares)
+    .set({ clicks: (existing[0].clicks || 0) + 1 })
+    .where(eq(trackShares.id, shareId));
+  
+  // Log click analytics
+  await db.insert(shareAnalytics).values({
+    shareId,
+    eventType: "click",
+    metadata: JSON.stringify({ timestamp: new Date().toISOString() }),
+  });
+  
+  const updated = await db.select().from(trackShares).where(eq(trackShares.id, shareId)).limit(1);
+  return updated[0];
+}
+
+export async function getShareStats(trackId?: number, platform?: string) {
+  const db = await getDb();
+  if (!db) return { totalShares: 0, totalClicks: 0, byPlatform: {} };
+  
+  const conditions = [];
+  if (trackId) conditions.push(eq(trackShares.trackId, trackId));
+  if (platform) conditions.push(eq(trackShares.platform, platform as any));
+  
+  let query = db.select().from(trackShares);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  const shares = await query;
+  
+  const stats = {
+    totalShares: shares.length,
+    totalClicks: shares.reduce((sum, s) => sum + (s.clicks || 0), 0),
+    byPlatform: {} as Record<string, { shares: number; clicks: number }>,
+  };
+  
+  shares.forEach((share) => {
+    const platform = share.platform;
+    if (!stats.byPlatform[platform]) {
+      stats.byPlatform[platform] = { shares: 0, clicks: 0 };
+    }
+    stats.byPlatform[platform].shares++;
+    stats.byPlatform[platform].clicks += share.clicks || 0;
+  });
+  
+  return stats;
+}
+
+export async function getTopSharedTracks(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all shares
+  const allShares = await db.select({
+    trackId: trackShares.trackId,
+  }).from(trackShares);
+  
+  // Count shares per track
+  const trackCounts = new Map<number, number>();
+  allShares.forEach((share) => {
+    trackCounts.set(share.trackId, (trackCounts.get(share.trackId) || 0) + 1);
+  });
+  
+  // Get top tracks
+  const sortedTracks = Array.from(trackCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit);
+  
+  // Fetch track details
+  const trackIds = sortedTracks.map(([trackId]) => trackId);
+  if (trackIds.length === 0) return [];
+  
+  const tracksData = await db.select()
+    .from(tracks)
+    .where(inArray(tracks.id, trackIds));
+  
+  // Map tracks with share counts
+  return sortedTracks.map(([trackId, count]) => {
+    const track = tracksData.find((t) => t.id === trackId);
+    return track ? { ...track, shareCount: count } : null;
+  }).filter(Boolean) as any[];
 }
 
 // Shows / Schedule

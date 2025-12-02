@@ -179,6 +179,76 @@ export const appRouter = router({
         note: z.string().optional(),
       }))
       .mutation(({ input }) => db.createTrack(input)),
+    
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(({ input }) => db.getTrackById(input.id)),
+  }),
+
+  trackShares: router({
+    create: publicProcedure
+      .input(z.object({
+        trackId: z.number(),
+        platform: z.enum(["twitter", "facebook", "instagram", "tiktok", "whatsapp", "telegram", "spotify", "youtube", "other"]),
+        shareUrl: z.string().max(512).optional(),
+        shareText: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const share = await db.createTrackShare({
+          userId: ctx.user?.id,
+          trackId: input.trackId,
+          platform: input.platform,
+          shareUrl: input.shareUrl || null,
+          shareText: input.shareText || null,
+          loginMethod: ctx.user?.loginMethod || null,
+        });
+        
+        // Award coins for sharing (if economy is enabled)
+        if (ctx.user?.id) {
+          try {
+            await db.adjustCoins({
+              userId: ctx.user.id,
+              amount: 10, // 10 coins per share
+              type: "earn",
+              source: "trackShare",
+              referenceId: share.id,
+              description: `Shared track to ${input.platform}`,
+            });
+          } catch (err) {
+            // Economy might not be set up, ignore
+            console.warn("[TrackShare] Failed to award coins:", err);
+          }
+        }
+        
+        return share;
+      }),
+    
+    list: publicProcedure
+      .input(z.object({
+        trackId: z.number().optional(),
+        userId: z.number().optional(),
+        platform: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+      }).optional())
+      .query(({ input, ctx }) => {
+        const userId = input?.userId || ctx.user?.id;
+        return db.getTrackShares(input?.trackId, userId, input?.platform, input?.limit ?? 50);
+      }),
+    
+    stats: publicProcedure
+      .input(z.object({
+        trackId: z.number().optional(),
+        platform: z.string().optional(),
+      }).optional())
+      .query(({ input }) => db.getShareStats(input?.trackId, input?.platform)),
+    
+    incrementClicks: publicProcedure
+      .input(z.object({ shareId: z.number() }))
+      .mutation(({ input }) => db.incrementShareClicks(input.shareId)),
+    
+    topShared: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).default(10) }).optional())
+      .query(({ input }) => db.getTopSharedTracks(input?.limit ?? 10)),
   }),
 
   shows: router({
