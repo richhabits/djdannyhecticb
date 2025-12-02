@@ -192,6 +192,25 @@ export type Track = typeof tracks.$inferSelect;
 export type InsertTrack = typeof tracks.$inferInsert;
 
 /**
+ * Track Shares table for tracking user shares of tracks on social media
+ */
+export const trackShares = mysqlTable("track_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  trackId: int("trackId").notNull(), // FK to tracks table
+  userId: int("userId"), // FK to users table (optional - can share without account)
+  userName: varchar("userName", { length: 255 }), // Name if not logged in
+  platform: mysqlEnum("platform", ["twitter", "facebook", "instagram", "tiktok", "whatsapp", "telegram", "spotify", "mixcloud", "other"]).notNull(),
+  shareUrl: varchar("shareUrl", { length: 512 }), // URL where it was shared (if available)
+  shareText: text("shareText"), // The text that was shared
+  isVerified: boolean("isVerified").default(false).notNull(), // Whether share was verified (e.g., via API)
+  coinsEarned: int("coinsEarned").default(0).notNull(), // Coins earned for sharing
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TrackShare = typeof trackShares.$inferSelect;
+export type InsertTrackShare = typeof trackShares.$inferInsert;
+
+/**
  * Shows table for weekly schedule
  */
 export const shows = mysqlTable("shows", {
