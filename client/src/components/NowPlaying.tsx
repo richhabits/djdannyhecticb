@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Music, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { EnhancedSocialShare } from "./EnhancedSocialShare";
 
 export function NowPlaying() {
   const { data: nowPlaying, isLoading } = trpc.tracks.nowPlaying.useQuery(undefined, {
@@ -25,22 +26,31 @@ export function NowPlaying() {
     <div className="space-y-4">
       {/* Current Track */}
       <Card className="glass">
-        <CardContent className="py-4">
+        <CardContent className="py-4 space-y-3">
           {nowPlaying ? (
-            <div className="flex items-center gap-3">
-              <Music className="w-5 h-5 text-accent shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">
-                  {nowPlaying.title}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {nowPlaying.artist}
-                </p>
-                {nowPlaying.note && (
-                  <p className="text-xs text-muted-foreground mt-1">{nowPlaying.note}</p>
-                )}
+            <>
+              <div className="flex items-center gap-3">
+                <Music className="w-5 h-5 text-accent shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">
+                    {nowPlaying.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {nowPlaying.artist}
+                  </p>
+                  {nowPlaying.note && (
+                    <p className="text-xs text-muted-foreground mt-1">{nowPlaying.note}</p>
+                  )}
+                </div>
               </div>
-            </div>
+              <EnhancedSocialShare
+                trackTitle={nowPlaying.title}
+                trackArtist={nowPlaying.artist}
+                trackId={nowPlaying.id}
+                shareType="nowPlaying"
+                variant="compact"
+              />
+            </>
           ) : (
             <div className="flex items-center gap-3 text-muted-foreground">
               <Music className="w-5 h-5 shrink-0" />
