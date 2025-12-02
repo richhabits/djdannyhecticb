@@ -1420,6 +1420,45 @@ export type InsertShowAsset = typeof showAssets.$inferInsert;
 
 /**
  * ============================================
+ * TRACK SHARING & SOCIAL ENGAGEMENT
+ * ============================================
+ */
+
+/**
+ * Track Shares - Users sharing tracks to social media
+ */
+export const trackShares = mysqlTable("track_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Optional - can be anonymous
+  trackId: int("trackId").notNull(), // FK to tracks table
+  platform: mysqlEnum("platform", ["twitter", "facebook", "instagram", "tiktok", "whatsapp", "telegram", "spotify", "youtube", "other"]).notNull(),
+  shareUrl: varchar("shareUrl", { length: 512 }), // URL where it was shared (if available)
+  shareText: text("shareText"), // The text/message that was shared
+  loginMethod: varchar("loginMethod", { length: 64 }), // How user logged in (e.g., "twitter", "google", "facebook")
+  clicks: int("clicks").default(0).notNull(), // Track clicks on shared link
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TrackShare = typeof trackShares.$inferSelect;
+export type InsertTrackShare = typeof trackShares.$inferInsert;
+
+/**
+ * Social Share Analytics
+ */
+export const shareAnalytics = mysqlTable("share_analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  shareId: int("shareId").notNull(), // FK to trackShares
+  eventType: mysqlEnum("eventType", ["share", "click", "view", "engagement"]).notNull(),
+  platform: varchar("platform", { length: 64 }),
+  metadata: text("metadata"), // JSON for additional data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ShareAnalytic = typeof shareAnalytics.$inferSelect;
+export type InsertShareAnalytic = typeof shareAnalytics.$inferInsert;
+
+/**
+ * ============================================
  * PHASE 10: HECTICOPS CONTROL TOWER
  * ============================================
  */

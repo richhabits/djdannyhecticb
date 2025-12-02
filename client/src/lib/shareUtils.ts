@@ -85,3 +85,88 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+/**
+ * Track-specific sharing utilities
+ */
+export interface TrackShareOptions {
+  trackTitle: string;
+  trackArtist: string;
+  stationName?: string;
+  streamUrl?: string;
+  platform?: string;
+}
+
+/**
+ * Generate share text for a track
+ */
+export function generateTrackShareText(options: TrackShareOptions): string {
+  const { trackTitle, trackArtist, stationName = "Hectic Radio" } = options;
+  return `🎵 Now playing on ${stationName}: "${trackTitle}" by ${trackArtist} 🔥\n\nListen live: ${typeof window !== "undefined" ? window.location.origin : ""}`;
+}
+
+/**
+ * Get share URL for a specific platform and track
+ */
+export function getTrackShareUrl(platform: string, options: TrackShareOptions): string {
+  const shareText = generateTrackShareText(options);
+  const shareUrl = typeof window !== "undefined" ? window.location.origin : "";
+  
+  switch (platform.toLowerCase()) {
+    case "twitter":
+    case "x":
+      return getTwitterShareUrl({
+        url: shareUrl,
+        title: shareText,
+        source: "twitter",
+      });
+    
+    case "facebook":
+      return getFacebookShareUrl({
+        url: shareUrl,
+        title: shareText,
+        source: "facebook",
+      });
+    
+    case "whatsapp":
+      return getWhatsAppShareUrl({
+        url: shareUrl,
+        title: shareText,
+        source: "whatsapp",
+      });
+    
+    case "telegram":
+      return getTelegramShareUrl({
+        url: shareUrl,
+        title: shareText,
+        source: "telegram",
+      });
+    
+    case "instagram":
+      // Instagram doesn't support direct URL sharing, return text for copy
+      return shareText;
+    
+    case "tiktok":
+      // TikTok doesn't support direct URL sharing, return text for copy
+      return shareText;
+    
+    default:
+      return shareText;
+  }
+}
+
+/**
+ * Detect user's login method/platform from OAuth
+ */
+export function detectUserPlatform(loginMethod?: string | null): string | null {
+  if (!loginMethod) return null;
+  
+  const method = loginMethod.toLowerCase();
+  if (method.includes("twitter") || method.includes("x")) return "twitter";
+  if (method.includes("facebook")) return "facebook";
+  if (method.includes("google")) return "youtube"; // Google login might indicate YouTube
+  if (method.includes("instagram")) return "instagram";
+  if (method.includes("tiktok")) return "tiktok";
+  
+  return null;
+}
+

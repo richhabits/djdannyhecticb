@@ -57,6 +57,7 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import ShareLeaderboard from "./pages/ShareLeaderboard";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -95,6 +96,7 @@ function Router() {
       </Route>
       <Route path={"/live"} component={Live} />
       <Route path={"/listeners"} component={ListenerLeaderboard} />
+      <Route path={"/shares"} component={ShareLeaderboard} />
       <Route path={"/book-danny"} component={BookDanny} />
       <Route path={"/admin/shouts"} component={AdminShouts} />
       <Route path={"/admin/streams"} component={AdminStreams} />

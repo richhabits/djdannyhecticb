@@ -4,6 +4,12 @@ import { Play, Pause, Volume2, VolumeX, AlertCircle } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
+import { TrackShare } from "./TrackShare";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const FALLBACK_STREAM_URL = import.meta.env.VITE_HECTIC_RADIO_STREAM_URL || "";
 
@@ -16,6 +22,10 @@ export function LiveAudioPlayer() {
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, {
     retry: false,
     refetchInterval: 30000, // Refetch every 30 seconds
+  });
+  
+  const { data: nowPlaying } = trpc.tracks.nowPlaying.useQuery(undefined, {
+    refetchInterval: 30000,
   });
   
   const streamUrl = activeStream?.publicUrl || FALLBACK_STREAM_URL;
@@ -191,6 +201,50 @@ export function LiveAudioPlayer() {
               {Math.round((isMuted ? 0 : volume) * 100)}%
             </span>
           </div>
+
+          {/* Track Share - Show if track is playing */}
+          {nowPlaying && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  title="Share this track"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="end">
+                <div className="mb-2">
+                  <p className="text-sm font-semibold truncate">{nowPlaying.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{nowPlaying.artist}</p>
+                </div>
+                <TrackShare
+                  trackId={nowPlaying.id}
+                  trackTitle={nowPlaying.title}
+                  trackArtist={nowPlaying.artist}
+                  variant="default"
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
     </div>
