@@ -8,6 +8,7 @@ import { SocialShareBar } from "@/components/SocialShareBar";
 import { SocialLinks } from "@/components/SocialLinks";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { LiveChatDanny } from "@/components/LiveChatDanny";
+import { LiveShareFeed } from "@/components/LiveShareFeed";
 import { trpc } from "@/lib/trpc";
 import { Music, Radio } from "lucide-react";
 
@@ -76,12 +77,19 @@ export default function Live() {
           </div>
         </div>
 
-        {/* Shout Form + Hotline */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <ShoutForm />
-          <div className="flex items-center justify-center">
+        {/* Shout Form + Hotline + Live Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <ShoutForm />
+          </div>
+          <div className="flex flex-col items-center justify-start gap-6">
             <HecticHotline />
           </div>
+        </div>
+
+        {/* Live Share Feed */}
+        <div className="mb-8">
+          <LiveShareFeed />
         </div>
 
         {/* Social Share */}

@@ -1481,3 +1481,140 @@ export const webhooks = mysqlTable("webhooks", {
 
 export type Webhook = typeof webhooks.$inferSelect;
 export type InsertWebhook = typeof webhooks.$inferInsert;
+
+/**
+ * ============================================
+ * SOCIAL MEDIA INTEGRATION SYSTEM
+ * ============================================
+ */
+
+/**
+ * User Social Connections - OAuth-linked social media accounts
+ */
+export const userSocialConnections = mysqlTable("user_social_connections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // FK to users
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram"]).notNull(),
+  platformUserId: varchar("platformUserId", { length: 255 }).notNull(), // OAuth user ID from platform
+  platformUsername: varchar("platformUsername", { length: 255 }),
+  accessToken: text("accessToken"), // Encrypted OAuth token
+  refreshToken: text("refreshToken"), // Encrypted refresh token
+  tokenExpiresAt: timestamp("tokenExpiresAt"),
+  scopes: text("scopes"), // JSON array of granted permissions
+  profileData: text("profileData"), // JSON blob of profile info
+  isActive: boolean("isActive").default(true).notNull(),
+  autoShareEnabled: boolean("autoShareEnabled").default(false).notNull(), // Auto-share now playing
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserSocialConnection = typeof userSocialConnections.$inferSelect;
+export type InsertUserSocialConnection = typeof userSocialConnections.$inferInsert;
+
+/**
+ * Track Shares - When users share tracks to social media
+ */
+export const trackShares = mysqlTable("track_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  trackId: int("trackId"), // FK to tracks (nullable if track deleted)
+  trackTitle: varchar("trackTitle", { length: 255 }).notNull(),
+  trackArtist: varchar("trackArtist", { length: 255 }).notNull(),
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "other"]).notNull(),
+  shareType: mysqlEnum("shareType", ["nowPlaying", "trackRequest", "mix", "episode", "manual"]).notNull(),
+  postId: varchar("postId", { length: 255 }), // Social platform post ID
+  postUrl: varchar("postUrl", { length: 512 }), // Link to social post
+  content: text("content"), // Actual content posted
+  mediaUrl: varchar("mediaUrl", { length: 512 }), // If image/video was shared
+  engagementData: text("engagementData"), // JSON: likes, comments, shares, views
+  coinsEarned: int("coinsEarned").default(0).notNull(), // HecticCoins earned for sharing
+  wasAutoShared: boolean("wasAutoShared").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TrackShare = typeof trackShares.$inferSelect;
+export type InsertTrackShare = typeof trackShares.$inferInsert;
+
+/**
+ * Social Share Templates - Pre-defined templates for different platforms
+ */
+export const socialShareTemplates = mysqlTable("social_share_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "all"]).notNull(),
+  shareType: mysqlEnum("shareType", ["nowPlaying", "trackRequest", "mix", "episode", "event", "generic"]).notNull(),
+  templateText: text("templateText").notNull(), // Template with placeholders: {track}, {artist}, {station}, {url}
+  hashtags: text("hashtags"), // JSON array of hashtags
+  emojiPattern: varchar("emojiPattern", { length: 255 }), // Pattern of emojis to use
+  includeStationBranding: boolean("includeStationBranding").default(true).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  priority: int("priority").default(0).notNull(), // Higher priority templates used first
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialShareTemplate = typeof socialShareTemplates.$inferSelect;
+export type InsertSocialShareTemplate = typeof socialShareTemplates.$inferInsert;
+
+/**
+ * Share Rewards Config - Coin rewards for social sharing
+ */
+export const shareRewardsConfig = mysqlTable("share_rewards_config", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "other"]).notNull(),
+  shareType: mysqlEnum("shareType", ["nowPlaying", "trackRequest", "mix", "episode", "manual"]).notNull(),
+  coinsPerShare: int("coinsPerShare").default(10).notNull(),
+  maxSharesPerDay: int("maxSharesPerDay").default(10).notNull(), // Prevent spam
+  cooldownMinutes: int("cooldownMinutes").default(30).notNull(), // Min time between shares
+  bonusForEngagement: boolean("bonusForEngagement").default(true).notNull(), // Extra coins for likes/comments
+  engagementMultiplier: varchar("engagementMultiplier", { length: 50 }).default("0.1").notNull(), // Coins per like/comment
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ShareRewardsConfig = typeof shareRewardsConfig.$inferSelect;
+export type InsertShareRewardsConfig = typeof shareRewardsConfig.$inferInsert;
+
+/**
+ * Social Engagement Sync - Track engagement metrics from social platforms
+ */
+export const socialEngagementSync = mysqlTable("social_engagement_sync", {
+  id: int("id").autoincrement().primaryKey(),
+  trackShareId: int("trackShareId").notNull(), // FK to trackShares
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram"]).notNull(),
+  likes: int("likes").default(0).notNull(),
+  comments: int("comments").default(0).notNull(),
+  shares: int("shares").default(0).notNull(),
+  views: int("views").default(0).notNull(),
+  clicks: int("clicks").default(0).notNull(),
+  bonusCoinsAwarded: int("bonusCoinsAwarded").default(0).notNull(),
+  lastSyncedAt: timestamp("lastSyncedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SocialEngagementSync = typeof socialEngagementSync.$inferSelect;
+export type InsertSocialEngagementSync = typeof socialEngagementSync.$inferInsert;
+
+/**
+ * Share Analytics - Aggregated sharing statistics
+ */
+export const shareAnalytics = mysqlTable("share_analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Nullable for platform-wide stats
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "other"]),
+  date: varchar("date", { length: 20 }).notNull(), // YYYY-MM-DD
+  totalShares: int("totalShares").default(0).notNull(),
+  totalEngagement: int("totalEngagement").default(0).notNull(), // Sum of likes + comments + shares
+  totalCoinsEarned: int("totalCoinsEarned").default(0).notNull(),
+  uniqueTracksShared: int("uniqueTracksShared").default(0).notNull(),
+  topTrackId: int("topTrackId"), // Most shared track
+  topTrackTitle: varchar("topTrackTitle", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ShareAnalytics = typeof shareAnalytics.$inferSelect;
+export type InsertShareAnalytics = typeof shareAnalytics.$inferInsert;

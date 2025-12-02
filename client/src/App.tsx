@@ -57,6 +57,7 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import SocialHub from "./pages/SocialHub";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -106,6 +107,7 @@ function Router() {
       <Route path={"/profile/:username"} component={Profile} />
       <Route path={"/world"} component={World} />
       <Route path={"/vault"} component={Vault} />
+      <Route path={"/social"} component={SocialHub} />
       <Route path={"/bookings"} component={BookingsPage} />
       <Route path={"/events"} component={EventsPage} />
       <Route path={"/partners"} component={PartnersPage} />

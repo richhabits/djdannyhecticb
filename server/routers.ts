@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import * as socialDb from "./socialDb";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2187,6 +2188,286 @@ export const appRouter = router({
           });
           return updated;
         }),
+    }),
+  }),
+
+  // ============================================
+  // SOCIAL MEDIA INTEGRATION & SHARING SYSTEM
+  // ============================================
+  socialMedia: router({
+    // User Social Connections
+    connections: router({
+      myConnections: protectedProcedure.query(({ ctx }) =>
+        socialDb.getUserSocialConnections(ctx.user!.id)
+      ),
+      getAuthUrl: protectedProcedure
+        .input(z.object({
+          platform: z.enum(["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram"]),
+        }))
+        .query(async ({ input, ctx }) => {
+          const { getAuthorizationUrl } = await import("./_core/socialAuth");
+          const state = `${ctx.user!.id}:${Date.now()}:${Math.random().toString(36).substring(7)}`;
+          const url = getAuthorizationUrl(input.platform, state);
+          return { url, state };
+        }),
+      disconnect: protectedProcedure
+        .input(z.object({ connectionId: z.number() }))
+        .mutation(async ({ input, ctx }) => {
+          // Verify ownership
+          const connections = await socialDb.getUserSocialConnections(ctx.user!.id);
+          const connection = connections.find((c) => c.id === input.connectionId);
+          if (!connection) throw new Error("Connection not found");
+          
+          await socialDb.deleteSocialConnection(input.connectionId);
+          await db.createAuditLog({
+            action: "disconnect_social",
+            entityType: "social_connection",
+            entityId: input.connectionId,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "User",
+          });
+          return { success: true };
+        }),
+      toggleAutoShare: protectedProcedure
+        .input(z.object({
+          platform: z.enum(["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram"]),
+          enabled: z.boolean(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await socialDb.toggleAutoShare(
+            ctx.user!.id,
+            input.platform,
+            input.enabled
+          );
+          return updated;
+        }),
+    }),
+
+    // Track Sharing
+    sharing: router({
+      shareTrack: protectedProcedure
+        .input(z.object({
+          trackId: z.number().optional(),
+          trackTitle: z.string(),
+          trackArtist: z.string(),
+          platform: z.enum(["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "other"]),
+          shareType: z.enum(["nowPlaying", "trackRequest", "mix", "episode", "manual"]).default("manual"),
+          customMessage: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          // Check if user can share (rate limits, etc.)
+          const canShare = await socialDb.canUserShare(ctx.user!.id, input.platform);
+          if (!canShare.canShare) {
+            throw new Error(canShare.reason || "Cannot share at this time");
+          }
+
+          // Get user's connection for this platform
+          const connection = await socialDb.getUserSocialConnection(
+            ctx.user!.id,
+            input.platform
+          );
+          
+          let postResult = null;
+          let wasAutoShared = false;
+
+          // If connected and has valid token, post to social media
+          if (connection && connection.isActive && connection.accessToken) {
+            const { postToSocial, generateTrackShareContent } = await import(
+              "./_core/socialSharing"
+            );
+
+            // Get template and generate content
+            const template = await socialDb.getBestTemplate(input.platform, input.shareType);
+            const content = generateTrackShareContent(
+              input.trackTitle,
+              input.trackArtist,
+              input.platform,
+              input.customMessage || template?.templateText,
+              process.env.APP_URL ? `${process.env.APP_URL}/live` : undefined
+            );
+
+            postResult = await postToSocial(
+              input.platform,
+              connection.accessToken,
+              content
+            );
+            wasAutoShared = !!connection.autoShareEnabled;
+          }
+
+          // Get reward config
+          const rewardConfig = await socialDb.getShareRewardConfig(
+            input.platform,
+            input.shareType
+          );
+          const coinsEarned = postResult?.success ? rewardConfig?.coinsPerShare || 0 : 0;
+
+          // Create share record
+          const share = await socialDb.createTrackShare({
+            userId: ctx.user!.id,
+            trackId: input.trackId,
+            trackTitle: input.trackTitle,
+            trackArtist: input.trackArtist,
+            platform: input.platform,
+            shareType: input.shareType,
+            postId: postResult?.postId,
+            postUrl: postResult?.postUrl,
+            content: input.customMessage || "",
+            coinsEarned,
+            wasAutoShared,
+          });
+
+          // Award coins if earned
+          if (coinsEarned > 0) {
+            const { adjustCoins } = await import("./db");
+            await adjustCoins({
+              userId: ctx.user!.id,
+              amount: coinsEarned,
+              type: "earn",
+              source: "shout",
+              referenceId: share.id,
+              description: `Shared "${input.trackTitle}" on ${input.platform}`,
+            });
+          }
+
+          await db.createAuditLog({
+            action: "share_track",
+            entityType: "track_share",
+            entityId: share.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "User",
+            afterSnapshot: { platform: input.platform, track: input.trackTitle },
+          });
+
+          return { share, posted: postResult?.success || false, coinsEarned };
+        }),
+
+      myShares: protectedProcedure
+        .input(z.object({ limit: z.number().default(50) }))
+        .query(({ input, ctx }) => socialDb.getUserTrackShares(ctx.user!.id, input.limit)),
+
+      recentShares: publicProcedure
+        .input(z.object({ limit: z.number().default(20) }))
+        .query(({ input }) => socialDb.getRecentTrackShares(input.limit)),
+
+      topSharedTracks: publicProcedure
+        .input(z.object({
+          days: z.number().default(7),
+          limit: z.number().default(10),
+        }))
+        .query(({ input }) => socialDb.getTopSharedTracks(input.days, input.limit)),
+
+      myShareStats: protectedProcedure.query(({ ctx }) =>
+        socialDb.getUserShareStats(ctx.user!.id)
+      ),
+    }),
+
+    // Share Templates (Admin)
+    templates: router({
+      list: publicProcedure
+        .input(z.object({
+          platform: z.string().optional(),
+          shareType: z.string().optional(),
+        }))
+        .query(({ input }) => socialDb.getShareTemplates(input.platform, input.shareType)),
+
+      adminCreate: adminProcedure
+        .input(z.object({
+          name: z.string(),
+          platform: z.enum(["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "all"]),
+          shareType: z.enum(["nowPlaying", "trackRequest", "mix", "episode", "event", "generic"]),
+          templateText: z.string(),
+          hashtags: z.array(z.string()).optional(),
+          emojiPattern: z.string().optional(),
+          includeStationBranding: z.boolean().default(true),
+          priority: z.number().default(0),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const template = await socialDb.createShareTemplate({
+            ...input,
+            hashtags: input.hashtags ? JSON.stringify(input.hashtags) : undefined,
+            isActive: true,
+          });
+          await db.createAuditLog({
+            action: "create_share_template",
+            entityType: "share_template",
+            entityId: template.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return template;
+        }),
+    }),
+
+    // Share Rewards Config (Admin)
+    rewardConfig: router({
+      list: adminProcedure.query(() => socialDb.listShareRewardConfigs()),
+      
+      create: adminProcedure
+        .input(z.object({
+          platform: z.enum(["instagram", "tiktok", "twitter", "facebook", "spotify", "youtube", "snapchat", "telegram", "whatsapp", "other"]),
+          shareType: z.enum(["nowPlaying", "trackRequest", "mix", "episode", "manual"]),
+          coinsPerShare: z.number().default(10),
+          maxSharesPerDay: z.number().default(10),
+          cooldownMinutes: z.number().default(30),
+          bonusForEngagement: z.boolean().default(true),
+          engagementMultiplier: z.string().default("0.1"),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const config = await socialDb.createShareRewardConfig({
+            ...input,
+            isActive: true,
+          });
+          await db.createAuditLog({
+            action: "create_share_reward_config",
+            entityType: "share_reward_config",
+            entityId: config.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return config;
+        }),
+
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          updates: z.object({
+            coinsPerShare: z.number().optional(),
+            maxSharesPerDay: z.number().optional(),
+            cooldownMinutes: z.number().optional(),
+            bonusForEngagement: z.boolean().optional(),
+            engagementMultiplier: z.string().optional(),
+            isActive: z.boolean().optional(),
+          }).partial(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const updated = await socialDb.updateShareRewardConfig(input.id, input.updates);
+          await db.createAuditLog({
+            action: "update_share_reward_config",
+            entityType: "share_reward_config",
+            entityId: input.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "Admin",
+          });
+          return updated;
+        }),
+    }),
+
+    // Analytics
+    analytics: router({
+      myAnalytics: protectedProcedure
+        .input(z.object({ days: z.number().default(30) }))
+        .query(({ input, ctx }) =>
+          socialDb.getShareAnalyticsByUser(ctx.user!.id, input.days)
+        ),
+
+      platformAnalytics: adminProcedure
+        .input(z.object({
+          platform: z.string(),
+          days: z.number().default(30),
+        }))
+        .query(({ input }) =>
+          socialDb.getShareAnalyticsByPlatform(input.platform, input.days)
+        ),
     }),
   }),
 });
