@@ -2189,6 +2189,218 @@ export const appRouter = router({
         }),
     }),
   }),
+
+  // ============================================
+  // PHASE 11: INTERACTIVE SOCIAL SHARING SYSTEM
+  // ============================================
+  socialSharing: router({
+    // Track when user shares content to a social platform
+    trackShare: publicProcedure
+      .input(z.object({
+        platform: z.enum(["twitter", "facebook", "whatsapp", "telegram", "instagram", "tiktok", "snapchat", "copy_link", "native", "other"]),
+        contentType: z.enum(["now_playing", "track_request", "shout", "mix", "episode", "event", "profile", "station"]),
+        contentId: z.number().optional(),
+        contentTitle: z.string().optional(),
+        contentArtist: z.string().optional(),
+        shareMessage: z.string().optional(),
+        guestName: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        let coinsEarned = 0;
+        const userId = ctx.user?.id;
+        
+        // Award coins for sharing (logged in users only)
+        if (userId) {
+          // Base coins for sharing
+          coinsEarned = 10;
+          
+          // Bonus coins based on content type
+          if (input.contentType === "now_playing") coinsEarned += 5;
+          if (input.contentType === "episode") coinsEarned += 10;
+          
+          // Update share streak and get bonus
+          const streak = await db.incrementShareStreak(userId, coinsEarned);
+          
+          // Streak bonuses
+          if (streak.streakBonusLevel === "bronze") coinsEarned += 2;
+          if (streak.streakBonusLevel === "silver") coinsEarned += 5;
+          if (streak.streakBonusLevel === "gold") coinsEarned += 10;
+          if (streak.streakBonusLevel === "platinum") coinsEarned += 20;
+          
+          // Credit coins to wallet
+          const wallet = await db.getOrCreateWallet(userId);
+          await db.createCoinTransaction({
+            userId,
+            walletId: wallet.id,
+            amount: coinsEarned,
+            type: "earn",
+            source: "mission",
+            description: `Shared ${input.contentType} on ${input.platform}`,
+          });
+        }
+        
+        // Track the share
+        const share = await db.createSocialShare({
+          userId,
+          guestName: input.guestName,
+          platform: input.platform,
+          contentType: input.contentType,
+          contentId: input.contentId,
+          contentTitle: input.contentTitle,
+          contentArtist: input.contentArtist,
+          shareMessage: input.shareMessage,
+          earnedCoins: coinsEarned,
+          userLoginPlatform: ctx.user?.loginMethod || undefined,
+        });
+        
+        // Create live activity entry
+        const displayName = ctx.user?.name || input.guestName || "Someone";
+        await db.createLiveActivity({
+          userId,
+          displayName,
+          activityType: "shared",
+          message: `shared ${input.contentType === "now_playing" ? "what they're listening to" : `a ${input.contentType}`} on ${input.platform}`,
+          platform: input.platform,
+          referenceId: input.contentId,
+          referenceType: input.contentType,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000), // Expire in 30 min
+        });
+        
+        return {
+          share,
+          coinsEarned,
+          streak: userId ? await db.getOrCreateShareStreak(userId) : null,
+        };
+      }),
+    
+    // Get recent shares for activity feed
+    getRecentShares: publicProcedure
+      .input(z.object({ limit: z.number().default(20) }))
+      .query(({ input }) => db.getRecentSocialShares(input.limit)),
+    
+    // Get share stats
+    getStats: publicProcedure.query(() => db.getSocialShareStats()),
+    
+    // Get user's share streak
+    getMyStreak: protectedProcedure.query(({ ctx }) => 
+      db.getOrCreateShareStreak(ctx.user!.id)
+    ),
+    
+    // Get top sharers (leaderboard)
+    getTopSharers: publicProcedure
+      .input(z.object({ limit: z.number().default(10) }))
+      .query(({ input }) => db.getTopSharers(input.limit)),
+    
+    // User Social Connections
+    connections: router({
+      // Get my connected platforms
+      getMyConnections: protectedProcedure.query(({ ctx }) => 
+        db.getUserSocialConnections(ctx.user!.id)
+      ),
+      
+      // Connect/update a social platform
+      connect: protectedProcedure
+        .input(z.object({
+          platform: z.enum(["twitter", "facebook", "instagram", "tiktok", "spotify", "apple_music", "discord", "snapchat", "whatsapp"]),
+          platformUsername: z.string().optional(),
+          platformDisplayName: z.string().optional(),
+          autoShareNowPlaying: z.boolean().default(false),
+          autoShareShouts: z.boolean().default(false),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const connection = await db.createOrUpdateUserSocialConnection({
+            userId: ctx.user!.id,
+            platform: input.platform,
+            platformUsername: input.platformUsername,
+            platformDisplayName: input.platformDisplayName,
+            autoShareNowPlaying: input.autoShareNowPlaying,
+            autoShareShouts: input.autoShareShouts,
+            isConnected: true,
+            lastUsedAt: new Date(),
+          });
+          await db.createAuditLog({
+            action: "connect_social_platform",
+            entityType: "social_connection",
+            entityId: connection.id,
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "User",
+          });
+          return connection;
+        }),
+      
+      // Disconnect a platform
+      disconnect: protectedProcedure
+        .input(z.object({
+          platform: z.enum(["twitter", "facebook", "instagram", "tiktok", "spotify", "apple_music", "discord", "snapchat", "whatsapp"]),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          await db.disconnectUserSocialPlatform(ctx.user!.id, input.platform);
+          await db.createAuditLog({
+            action: "disconnect_social_platform",
+            entityType: "social_connection",
+            actorId: ctx.user?.id,
+            actorName: ctx.user?.name || "User",
+          });
+          return { success: true };
+        }),
+      
+      // Update auto-share settings
+      updateAutoShare: protectedProcedure
+        .input(z.object({
+          platform: z.enum(["twitter", "facebook", "instagram", "tiktok", "spotify", "apple_music", "discord", "snapchat", "whatsapp"]),
+          autoShareNowPlaying: z.boolean(),
+          autoShareShouts: z.boolean(),
+        }))
+        .mutation(({ input, ctx }) => 
+          db.updateUserSocialAutoShare(
+            ctx.user!.id,
+            input.platform,
+            input.autoShareNowPlaying,
+            input.autoShareShouts
+          )
+        ),
+    }),
+  }),
+
+  // Live Activity Feed
+  liveActivity: router({
+    // Get recent activity
+    getRecent: publicProcedure
+      .input(z.object({ limit: z.number().default(30) }))
+      .query(({ input }) => db.getRecentLiveActivity(input.limit)),
+    
+    // Get highlighted activity
+    getHighlighted: publicProcedure
+      .input(z.object({ limit: z.number().default(5) }))
+      .query(({ input }) => db.getHighlightedLiveActivity(input.limit)),
+    
+    // Log activity (tune in, react, etc.)
+    logActivity: publicProcedure
+      .input(z.object({
+        activityType: z.enum(["tuned_in", "shared", "requested_track", "shout", "upvoted", "reacted", "first_time"]),
+        displayName: z.string(),
+        message: z.string().optional(),
+        platform: z.string().optional(),
+        referenceId: z.number().optional(),
+        referenceType: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const activity = await db.createLiveActivity({
+          userId: ctx.user?.id,
+          displayName: input.displayName,
+          activityType: input.activityType,
+          message: input.message,
+          platform: input.platform,
+          referenceId: input.referenceId,
+          referenceType: input.referenceType,
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min
+        });
+        return activity;
+      }),
+    
+    // Admin: cleanup expired activity
+    adminCleanup: adminProcedure.mutation(() => db.cleanupExpiredLiveActivity()),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
