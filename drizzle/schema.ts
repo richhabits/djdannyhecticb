@@ -1481,3 +1481,96 @@ export const webhooks = mysqlTable("webhooks", {
 
 export type Webhook = typeof webhooks.$inferSelect;
 export type InsertWebhook = typeof webhooks.$inferInsert;
+
+/**
+ * ============================================
+ * PHASE 11: INTERACTIVE SOCIAL SHARING SYSTEM
+ * ============================================
+ */
+
+/**
+ * Social shares tracking - tracks when users share content to social platforms
+ */
+export const socialShares = mysqlTable("social_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Optional - logged in user
+  guestName: varchar("guestName", { length: 255 }), // For anonymous shares
+  platform: mysqlEnum("platform", ["twitter", "facebook", "whatsapp", "telegram", "instagram", "tiktok", "snapchat", "copy_link", "native", "other"]).notNull(),
+  contentType: mysqlEnum("contentType", ["now_playing", "track_request", "shout", "mix", "episode", "event", "profile", "station"]).notNull(),
+  contentId: int("contentId"), // FK to track, mix, episode, etc.
+  contentTitle: varchar("contentTitle", { length: 255 }),
+  contentArtist: varchar("contentArtist", { length: 255 }),
+  shareMessage: text("shareMessage"), // Custom message if any
+  earnedCoins: int("earnedCoins").default(0).notNull(), // Coins earned for sharing
+  shareUrl: varchar("shareUrl", { length: 512 }),
+  userLoginPlatform: varchar("userLoginPlatform", { length: 50 }), // Which platform user logged in with
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SocialShare = typeof socialShares.$inferSelect;
+export type InsertSocialShare = typeof socialShares.$inferInsert;
+
+/**
+ * Live activity feed - real-time social activity from listeners
+ */
+export const liveActivity = mysqlTable("live_activity", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  displayName: varchar("displayName", { length: 255 }).notNull(),
+  avatarUrl: varchar("avatarUrl", { length: 512 }),
+  activityType: mysqlEnum("activityType", ["tuned_in", "shared", "requested_track", "shout", "upvoted", "reacted", "first_time"]).notNull(),
+  message: varchar("message", { length: 500 }),
+  platform: varchar("platform", { length: 50 }), // Social platform if relevant
+  referenceId: int("referenceId"), // ID of track, shout, etc.
+  referenceType: varchar("referenceType", { length: 50 }), // "track", "shout", etc.
+  isHighlighted: boolean("isHighlighted").default(false).notNull(), // Featured activity
+  expiresAt: timestamp("expiresAt"), // Auto-expire old activity
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LiveActivityItem = typeof liveActivity.$inferSelect;
+export type InsertLiveActivityItem = typeof liveActivity.$inferInsert;
+
+/**
+ * User social connections - tracks which social platforms user has connected
+ */
+export const userSocialConnections = mysqlTable("user_social_connections", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  platform: mysqlEnum("platform", ["twitter", "facebook", "instagram", "tiktok", "spotify", "apple_music", "discord", "snapchat", "whatsapp"]).notNull(),
+  platformUserId: varchar("platformUserId", { length: 255 }),
+  platformUsername: varchar("platformUsername", { length: 255 }),
+  platformDisplayName: varchar("platformDisplayName", { length: 255 }),
+  platformAvatarUrl: varchar("platformAvatarUrl", { length: 512 }),
+  accessToken: text("accessToken"), // Encrypted - for auto-posting
+  refreshToken: text("refreshToken"), // Encrypted
+  tokenExpiresAt: timestamp("tokenExpiresAt"),
+  autoShareNowPlaying: boolean("autoShareNowPlaying").default(false).notNull(),
+  autoShareShouts: boolean("autoShareShouts").default(false).notNull(),
+  isConnected: boolean("isConnected").default(true).notNull(),
+  lastUsedAt: timestamp("lastUsedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserSocialConnection = typeof userSocialConnections.$inferSelect;
+export type InsertUserSocialConnection = typeof userSocialConnections.$inferInsert;
+
+/**
+ * Share streaks - gamification for consistent sharers
+ */
+export const shareStreaks = mysqlTable("share_streaks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  currentStreak: int("currentStreak").default(0).notNull(),
+  longestStreak: int("longestStreak").default(0).notNull(),
+  totalShares: int("totalShares").default(0).notNull(),
+  totalCoinsEarned: int("totalCoinsEarned").default(0).notNull(),
+  lastShareDate: timestamp("lastShareDate"),
+  streakBonusLevel: mysqlEnum("streakBonusLevel", ["none", "bronze", "silver", "gold", "platinum"]).default("none").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ShareStreak = typeof shareStreaks.$inferSelect;
+export type InsertShareStreak = typeof shareStreaks.$inferInsert;

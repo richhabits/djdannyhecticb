@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, or, isNull, isNotNull, gte, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, socialShares, InsertSocialShare, liveActivity, InsertLiveActivityItem, userSocialConnections, InsertUserSocialConnection, shareStreaks, InsertShareStreak } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 
@@ -3052,4 +3052,267 @@ export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], pa
   }
   
   return { dispatched, errors };
+}
+
+// ============================================
+// PHASE 11: INTERACTIVE SOCIAL SHARING SYSTEM
+// ============================================
+
+// Social Shares
+export async function createSocialShare(share: InsertSocialShare) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(socialShares).values(share);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(socialShares).where(eq(socialShares.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function listSocialShares(filters?: { 
+  userId?: number; 
+  platform?: string; 
+  contentType?: string;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(socialShares);
+  const conditions = [];
+  if (filters?.userId) {
+    conditions.push(eq(socialShares.userId, filters.userId));
+  }
+  if (filters?.platform) {
+    conditions.push(eq(socialShares.platform, filters.platform as any));
+  }
+  if (filters?.contentType) {
+    conditions.push(eq(socialShares.contentType, filters.contentType as any));
+  }
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  return await query.orderBy(desc(socialShares.createdAt)).limit(filters?.limit ?? 100);
+}
+
+export async function getSocialShareStats() {
+  const db = await getDb();
+  if (!db) return { totalShares: 0, todayShares: 0, platforms: {} };
+  
+  const all = await db.select().from(socialShares);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const todayShares = all.filter(s => new Date(s.createdAt) >= today).length;
+  
+  const platforms: Record<string, number> = {};
+  for (const share of all) {
+    platforms[share.platform] = (platforms[share.platform] || 0) + 1;
+  }
+  
+  return { totalShares: all.length, todayShares, platforms };
+}
+
+export async function getRecentSocialShares(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(socialShares).orderBy(desc(socialShares.createdAt)).limit(limit);
+}
+
+// Live Activity Feed
+export async function createLiveActivity(activity: InsertLiveActivityItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(liveActivity).values(activity);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(liveActivity).where(eq(liveActivity.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function getRecentLiveActivity(limit: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  // Get activities that haven't expired
+  return await db
+    .select()
+    .from(liveActivity)
+    .where(
+      or(
+        isNull(liveActivity.expiresAt),
+        gte(liveActivity.expiresAt, now)
+      )
+    )
+    .orderBy(desc(liveActivity.createdAt))
+    .limit(limit);
+}
+
+export async function getHighlightedLiveActivity(limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(liveActivity)
+    .where(eq(liveActivity.isHighlighted, true))
+    .orderBy(desc(liveActivity.createdAt))
+    .limit(limit);
+}
+
+export async function cleanupExpiredLiveActivity() {
+  const db = await getDb();
+  if (!db) return { deleted: 0 };
+  const now = new Date();
+  const result = await db.delete(liveActivity).where(
+    and(
+      isNotNull(liveActivity.expiresAt),
+      lt(liveActivity.expiresAt, now)
+    )
+  );
+  return { deleted: result[0]?.affectedRows || 0 };
+}
+
+// User Social Connections
+export async function getUserSocialConnections(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(userSocialConnections)
+    .where(eq(userSocialConnections.userId, userId))
+    .orderBy(desc(userSocialConnections.lastUsedAt));
+}
+
+export async function createOrUpdateUserSocialConnection(connection: InsertUserSocialConnection) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if connection exists
+  const existing = await db
+    .select()
+    .from(userSocialConnections)
+    .where(and(
+      eq(userSocialConnections.userId, connection.userId),
+      eq(userSocialConnections.platform, connection.platform)
+    ))
+    .limit(1);
+  
+  if (existing[0]) {
+    await db.update(userSocialConnections)
+      .set({ ...connection, updatedAt: new Date() })
+      .where(eq(userSocialConnections.id, existing[0].id));
+    const updated = await db.select().from(userSocialConnections).where(eq(userSocialConnections.id, existing[0].id)).limit(1);
+    return updated[0];
+  }
+  
+  const result = await db.insert(userSocialConnections).values(connection);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(userSocialConnections).where(eq(userSocialConnections.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function disconnectUserSocialPlatform(userId: number, platform: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(userSocialConnections)
+    .set({ isConnected: false, updatedAt: new Date() })
+    .where(and(
+      eq(userSocialConnections.userId, userId),
+      eq(userSocialConnections.platform, platform as any)
+    ));
+  return { success: true };
+}
+
+export async function updateUserSocialAutoShare(userId: number, platform: string, autoShareNowPlaying: boolean, autoShareShouts: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(userSocialConnections)
+    .set({ autoShareNowPlaying, autoShareShouts, updatedAt: new Date() })
+    .where(and(
+      eq(userSocialConnections.userId, userId),
+      eq(userSocialConnections.platform, platform as any)
+    ));
+  return { success: true };
+}
+
+// Share Streaks
+export async function getOrCreateShareStreak(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db
+    .select()
+    .from(shareStreaks)
+    .where(eq(shareStreaks.userId, userId))
+    .limit(1);
+  
+  if (existing[0]) return existing[0];
+  
+  const result = await db.insert(shareStreaks).values({ userId });
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(shareStreaks).where(eq(shareStreaks.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function incrementShareStreak(userId: number, coinsEarned: number = 10) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  let streak = await getOrCreateShareStreak(userId);
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  let newStreak = streak.currentStreak;
+  
+  if (streak.lastShareDate) {
+    const lastShare = new Date(streak.lastShareDate);
+    lastShare.setHours(0, 0, 0, 0);
+    
+    if (lastShare.getTime() === yesterday.getTime()) {
+      // Consecutive day - increment streak
+      newStreak = streak.currentStreak + 1;
+    } else if (lastShare.getTime() < yesterday.getTime()) {
+      // Streak broken - reset
+      newStreak = 1;
+    }
+    // Same day - keep current streak
+  } else {
+    // First share ever
+    newStreak = 1;
+  }
+  
+  const longestStreak = Math.max(newStreak, streak.longestStreak);
+  
+  // Calculate streak bonus level
+  let streakBonusLevel: "none" | "bronze" | "silver" | "gold" | "platinum" = "none";
+  if (newStreak >= 30) streakBonusLevel = "platinum";
+  else if (newStreak >= 14) streakBonusLevel = "gold";
+  else if (newStreak >= 7) streakBonusLevel = "silver";
+  else if (newStreak >= 3) streakBonusLevel = "bronze";
+  
+  await db.update(shareStreaks)
+    .set({
+      currentStreak: newStreak,
+      longestStreak,
+      totalShares: streak.totalShares + 1,
+      totalCoinsEarned: streak.totalCoinsEarned + coinsEarned,
+      lastShareDate: new Date(),
+      streakBonusLevel,
+      updatedAt: new Date(),
+    })
+    .where(eq(shareStreaks.userId, userId));
+  
+  const updated = await db.select().from(shareStreaks).where(eq(shareStreaks.userId, userId)).limit(1);
+  return updated[0];
+}
+
+export async function getTopSharers(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(shareStreaks)
+    .orderBy(desc(shareStreaks.totalShares))
+    .limit(limit);
 }
