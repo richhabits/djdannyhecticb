@@ -181,6 +181,44 @@ export const appRouter = router({
       .mutation(({ input }) => db.createTrack(input)),
   }),
 
+  trackShares: router({
+    create: publicProcedure
+      .input(z.object({
+        trackId: z.number(),
+        userId: z.number().optional(),
+        userName: z.string().max(255).optional(),
+        platform: z.enum(["twitter", "facebook", "instagram", "tiktok", "whatsapp", "telegram", "spotify", "mixcloud", "other"]),
+        shareUrl: z.string().url().max(512).optional(),
+        shareText: z.string().optional(),
+        isVerified: z.boolean().default(false),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const share = await db.createTrackShare({
+          ...input,
+          userId: input.userId || ctx.user?.id,
+          userName: input.userName || ctx.user?.name || undefined,
+        });
+        return share;
+      }),
+    
+    list: publicProcedure
+      .input(z.object({
+        trackId: z.number().optional(),
+        userId: z.number().optional(),
+        limit: z.number().min(1).max(100).default(50),
+      }).optional())
+      .query(({ input }) => db.getTrackShares(input?.trackId, input?.userId, input?.limit ?? 50)),
+    
+    stats: publicProcedure
+      .input(z.object({ trackId: z.number().optional() }).optional())
+      .query(({ input }) => db.getTrackShareStats(input?.trackId)),
+    
+    myStats: protectedProcedure.query(({ ctx }) => {
+      if (!ctx.user?.id) throw new Error("User not authenticated");
+      return db.getUserShareStats(ctx.user.id);
+    }),
+  }),
+
   shows: router({
     list: publicProcedure.query(() => db.listShows()),
     all: adminProcedure.query(() => db.getAllShows()),

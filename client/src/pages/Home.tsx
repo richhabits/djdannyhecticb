@@ -15,6 +15,7 @@ import { NowPlaying } from "@/components/NowPlaying";
 import { ShowSchedule } from "@/components/ShowSchedule";
 import { SocialLinks } from "@/components/SocialLinks";
 import { SocialShareBar } from "@/components/SocialShareBar";
+import { TrackShareButton } from "@/components/TrackShareButton";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { DannyStatus } from "@/components/DannyStatus";
 import { HeroVideo } from "@/components/HeroVideo";
@@ -25,6 +26,9 @@ export default function Home() {
   const { isAuthenticated, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, { retry: false });
+  const { data: nowPlaying } = trpc.tracks.nowPlaying.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
 
   return (
     <>
@@ -284,7 +288,18 @@ export default function Home() {
             
             {/* Now Playing & Schedule */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <NowPlaying />
+              <div className="space-y-4">
+                <NowPlaying />
+                {/* Expanded Share Component for Current Track */}
+                {nowPlaying && (
+                  <TrackShareButton
+                    trackId={nowPlaying.id}
+                    title={nowPlaying.title}
+                    artist={nowPlaying.artist}
+                    variant="expanded"
+                  />
+                )}
+              </div>
               <ShowSchedule />
             </div>
           </div>
