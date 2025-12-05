@@ -1,8 +1,9 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
+import { TOP_STREAMING_PLATFORMS } from "@shared/streamingPlatforms";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -161,10 +162,138 @@ export async function getAllPodcasts() {
 }
 
 // Streaming links queries
+function normalizeStreamingLinkPayload(link: Partial<InsertStreamingLink>) {
+  const payload: Partial<InsertStreamingLink> = { ...link };
+
+  if (payload.icon === undefined && typeof payload.platform === "string") {
+    payload.icon = payload.platform;
+  }
+
+  if ("description" in link) {
+    payload.description = link.description ?? null;
+  }
+
+  if ("embedUrl" in link) {
+    payload.embedUrl = link.embedUrl ?? null;
+  }
+
+  return payload;
+}
+
 export async function getStreamingLinks() {
   const db = await getDb();
   if (!db) return [];
+  return await db
+    .select()
+    .from(streamingLinks)
+    .where(eq(streamingLinks.isActive, true))
+    .orderBy(asc(streamingLinks.order));
+}
+
+export async function getAllStreamingLinks() {
+  const db = await getDb();
+  if (!db) return [];
   return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+}
+
+export async function createStreamingLink(link: InsertStreamingLink) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [maxOrderResult] = await db
+    .select({ maxOrder: sql<number>`COALESCE(MAX(${streamingLinks.order}), 0)` })
+    .from(streamingLinks);
+
+  const nextOrder = link.order ?? (maxOrderResult?.maxOrder ?? 0) + 1;
+
+  const payload = normalizeStreamingLinkPayload({
+    ...link,
+    order: nextOrder,
+  });
+
+  const result = await db.insert(streamingLinks).values(payload);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(streamingLinks).where(eq(streamingLinks.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateStreamingLink(id: number, updates: Partial<InsertStreamingLink>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const payload = normalizeStreamingLinkPayload(updates);
+
+  await db
+    .update(streamingLinks)
+    .set({
+      ...payload,
+      updatedAt: new Date(),
+    })
+    .where(eq(streamingLinks.id, id));
+
+  const updated = await db.select().from(streamingLinks).where(eq(streamingLinks.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteStreamingLink(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(streamingLinks).where(eq(streamingLinks.id, id));
+  return { success: true as const };
+}
+
+export async function reorderStreamingLinks(
+  ordering: Array<{
+    id: number;
+    order: number;
+  }>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await Promise.all(
+    ordering.map((item) =>
+      db
+        .update(streamingLinks)
+        .set({
+          order: item.order,
+          updatedAt: new Date(),
+        })
+        .where(eq(streamingLinks.id, item.id))
+    )
+  );
+
+  return await getAllStreamingLinks();
+}
+
+export async function bootstrapTopStreamingPlatforms() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db.select().from(streamingLinks);
+  let highestOrder = existing.reduce((max, link) => Math.max(max, link.order ?? 0), 0);
+
+  const missing = TOP_STREAMING_PLATFORMS.filter(
+    (platform) => !existing.some((link) => link.platform === platform.slug)
+  );
+
+  for (const platform of missing) {
+    highestOrder += 1;
+    await db.insert(streamingLinks).values(
+      normalizeStreamingLinkPayload({
+        platform: platform.slug,
+        url: platform.defaultUrl,
+        displayName: platform.label,
+        description: platform.description,
+        embedUrl: platform.defaultEmbedUrl,
+        icon: platform.slug,
+        isActive: true,
+        order: highestOrder,
+      }) as InsertStreamingLink
+    );
+  }
+
+  return await getAllStreamingLinks();
 }
 
 // Shouts queries

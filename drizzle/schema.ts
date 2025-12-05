@@ -118,6 +118,9 @@ export const streamingLinks = mysqlTable("streamingLinks", {
   url: varchar("url", { length: 512 }).notNull(),
   displayName: varchar("displayName", { length: 255 }),
   icon: varchar("icon", { length: 255 }), // icon name or url
+  description: text("description"),
+  embedUrl: varchar("embedUrl", { length: 512 }),
+  isActive: boolean("isActive").default(true).notNull(),
   order: int("order").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

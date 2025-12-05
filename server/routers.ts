@@ -1,9 +1,13 @@
 import { COOKIE_NAME } from "@shared/const";
+import { STREAMING_PLATFORM_SLUGS } from "@shared/streamingPlatforms";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+
+const streamingPlatformEnum = z.enum(STREAMING_PLATFORM_SLUGS);
+const streamingEmbedUrlSchema = z.union([z.string().url().max(512), z.literal("")]);
 
 export const appRouter = router({
   system: systemRouter,
@@ -37,6 +41,60 @@ export const appRouter = router({
 
   streaming: router({
     links: publicProcedure.query(() => db.getStreamingLinks()),
+    adminList: adminProcedure.query(() => db.getAllStreamingLinks()),
+    create: adminProcedure
+      .input(
+        z.object({
+          platform: streamingPlatformEnum,
+          displayName: z.string().min(2).max(255),
+          url: z.string().url().max(512),
+          embedUrl: streamingEmbedUrlSchema.optional(),
+          description: z.string().max(1000).optional(),
+          isActive: z.boolean().optional(),
+        })
+      )
+      .mutation(({ input }) =>
+        db.createStreamingLink({
+          platform: input.platform,
+          displayName: input.displayName,
+          url: input.url,
+          embedUrl: input.embedUrl ? input.embedUrl : null,
+          description: input.description ?? null,
+          isActive: input.isActive ?? true,
+        })
+      ),
+    update: adminProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          data: z.object({
+            platform: streamingPlatformEnum.optional(),
+            displayName: z.string().min(2).max(255).optional(),
+            url: z.string().url().max(512).optional(),
+            embedUrl: streamingEmbedUrlSchema.optional(),
+            description: z.string().max(1000).optional(),
+            isActive: z.boolean().optional(),
+          }),
+        })
+      )
+      .mutation(({ input }) =>
+        db.updateStreamingLink(input.id, {
+          ...input.data,
+          embedUrl:
+            input.data.embedUrl === undefined
+              ? undefined
+              : input.data.embedUrl === ""
+                ? null
+                : input.data.embedUrl,
+        })
+      ),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(({ input }) => db.deleteStreamingLink(input.id)),
+    reorder: adminProcedure
+      .input(z.array(z.object({ id: z.number(), order: z.number() })).min(1))
+      .mutation(({ input }) => db.reorderStreamingLinks(input)),
+    bootstrapTopPlatforms: adminProcedure.mutation(() => db.bootstrapTopStreamingPlatforms()),
   }),
 
   shouts: router({

@@ -3,13 +3,12 @@ import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Music, Play, Headphones, Music as SpotifyIcon } from "lucide-react";
 import { Link } from "wouter";
-import { formatDate } from "date-fns";
 import { useState } from "react";
+import { StreamingPlatformGrid } from "@/components/StreamingPlatformGrid";
 
 export default function Podcasts() {
   const [playing, setPlaying] = useState<number | null>(null);
   const { data: podcasts, isLoading } = trpc.podcasts.list.useQuery();
-  const { data: streamingLinks } = trpc.streaming.links.useQuery();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -40,24 +39,12 @@ export default function Podcasts() {
       </section>
 
       {/* Streaming Platforms */}
-      {streamingLinks && streamingLinks.length > 0 && (
-        <section className="py-8 border-b border-border bg-card/50">
-          <div className="container">
-            <p className="text-sm text-muted-foreground mb-4">Listen on:</p>
-            <div className="flex flex-wrap gap-3">
-              {streamingLinks.map((link) => (
-                <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm">
-                    {link.platform === 'spotify' && <SpotifyIcon className="w-4 h-4 mr-2" />}
-                    {link.platform === 'apple-music' && <Music className="w-4 h-4 mr-2" />}
-                    {link.displayName || link.platform}
-                  </Button>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <section className="py-8 border-b border-border bg-card/50">
+        <div className="container space-y-3">
+          <p className="text-sm text-muted-foreground">Listen on:</p>
+          <StreamingPlatformGrid variant="buttons" />
+        </div>
+      </section>
 
       {/* Episodes */}
       <section className="py-16 md:py-24">

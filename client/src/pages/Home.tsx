@@ -20,6 +20,7 @@ import { DannyStatus } from "@/components/DannyStatus";
 import { HeroVideo } from "@/components/HeroVideo";
 import { HecticFeed } from "@/components/HecticFeed";
 import { trpc } from "@/lib/trpc";
+import { StreamingPlatformGrid } from "@/components/StreamingPlatformGrid";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -209,6 +210,25 @@ export default function Home() {
               <p className="text-sm md:text-base text-muted-foreground">Connect with fans and stay updated on all the latest.</p>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Streaming Platforms */}
+      <section className="py-12 md:py-20 border-t border-border bg-card/30">
+        <div className="container px-4 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">Listen Everywhere</p>
+              <h2 className="text-3xl md:text-4xl font-bold">Top Streaming Platforms</h2>
+              <p className="text-sm md:text-base text-muted-foreground mt-2">
+                Spotify, Apple Music, SoundCloud, YouTube, Mixcloud, and TIDAL — all synced for the Hectic Radio fam.
+              </p>
+            </div>
+            <Link href="/podcasts">
+              <Button variant="outline" size="sm" className="w-full md:w-auto">Open Podcast Hub</Button>
+            </Link>
+          </div>
+          <StreamingPlatformGrid limit={6} />
         </div>
       </section>
 
