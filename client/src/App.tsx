@@ -57,10 +57,17 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import RiderPage from "./pages/RiderPage";
+import SetlistPage from "./pages/SetlistPage";
+import MediaKitPage from "./pages/MediaKitPage";
+import SocialPage from "./pages/SocialPage";
+import VideoTestimonialsPage from "./pages/VideoTestimonialsPage";
+import CalendarPage from "./pages/CalendarPage";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
+import { AnalyticsTracker, HeatmapTracker } from "./components/AnalyticsTracker";
 
 function Router() {
   return (
@@ -124,6 +131,12 @@ function Router() {
       <Route path={"/admin/show-live"} component={AdminShowLive} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
+      <Route path={"/rider"} component={RiderPage} />
+      <Route path={"/setlist"} component={SetlistPage} />
+      <Route path={"/media-kit"} component={MediaKitPage} />
+      <Route path={"/social"} component={SocialPage} />
+      <Route path={"/video-testimonials"} component={VideoTestimonialsPage} />
+      <Route path={"/calendar"} component={CalendarPage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -145,6 +158,8 @@ function App() {
           <LiveAudioPlayer />
           <AIDannyFloating />
           <HecticOnboarding />
+          <AnalyticsTracker />
+          <HeatmapTracker />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

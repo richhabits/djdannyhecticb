@@ -21,6 +21,17 @@ export const appRouter = router({
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    getDownloadUrl: publicProcedure
+      .input(z.object({
+        mixId: z.string(),
+        format: z.enum(["mp3", "wav", "flac"]).default("mp3"),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDownloadUrl } = await import("./_core/s3");
+        const key = `mixes/${input.mixId}/mix.${input.format}`;
+        const url = await getDownloadUrl(key);
+        return { url };
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system
