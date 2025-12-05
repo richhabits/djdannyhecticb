@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import * as analytics from "./_core/analytics";
 
 export const appRouter = router({
   system: systemRouter,
@@ -18,6 +19,56 @@ export const appRouter = router({
     }),
   }),
 
+  analytics: router({
+    track: publicProcedure
+      .input(z.object({
+        eventType: z.string(),
+        eventName: z.string(),
+        properties: z.record(z.any()).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await analytics.trackEvent({
+          userId: ctx.user?.id,
+          eventType: input.eventType,
+          eventName: input.eventName,
+          properties: input.properties,
+        });
+        return { success: true };
+      }),
+    trackPageView: publicProcedure
+      .input(z.object({
+        path: z.string(),
+        referrer: z.string().optional(),
+        userAgent: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await analytics.trackPageView({
+          userId: ctx.user?.id,
+          ...input,
+        });
+        return { success: true };
+      }),
+    trackClick: publicProcedure
+      .input(z.object({
+        element: z.string(),
+        elementId: z.string().optional(),
+        elementText: z.string().optional(),
+        path: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await analytics.trackClick({
+          userId: ctx.user?.id,
+          ...input,
+        });
+        return { success: true };
+      }),
+    summary: publicProcedure
+      .input(z.object({ days: z.number().default(30) }).optional())
+      .query(async ({ input }) => {
+        return await analytics.getAnalyticsSummary(input?.days || 30);
+      }),
+  }),
+
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
@@ -29,6 +80,44 @@ export const appRouter = router({
     upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
     featured: publicProcedure.query(() => db.getFeaturedEvents()),
     all: publicProcedure.query(() => db.getAllEvents()),
+    bookings: router({
+      list: publicProcedure
+        .input(z.object({
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+        }).optional())
+        .query(async ({ input }) => {
+          const bookings = await db.listEventBookings();
+          if (input?.startDate && input?.endDate) {
+            const start = new Date(input.startDate);
+            const end = new Date(input.endDate);
+            return bookings.filter((b) => {
+              const bookingStart = new Date(b.startTime);
+              return bookingStart >= start && bookingStart <= end;
+            });
+          }
+          return bookings;
+        }),
+      create: protectedProcedure
+        .input(z.object({
+          eventId: z.number().optional(),
+          startTime: z.string(),
+          endTime: z.string(),
+          name: z.string(),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          message: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          return await db.createEventBooking({
+            ...input,
+            userId: ctx.user?.id,
+            startTime: new Date(input.startTime),
+            endTime: new Date(input.endTime),
+            status: "pending",
+          });
+        }),
+    }),
   }),
 
   podcasts: router({
@@ -731,8 +820,36 @@ export const appRouter = router({
         description: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        // TODO: Serialize actual data from database
-        const dataBlob = JSON.stringify({ timestamp: new Date().toISOString(), label: input.label });
+        // Serialize actual data from database
+        const dbInstance = await db.getDb();
+        const backupData = {
+          timestamp: new Date().toISOString(),
+          label: input.label,
+          description: input.description,
+          data: {
+            shouts: await db.getAllShouts().catch(() => []),
+            events: await db.getAllEvents().catch(() => []),
+            bookings: await db.listEventBookings().catch(() => []),
+            wallets: await db.listWallets(1000).catch(() => []),
+            rewards: await db.listRewards().catch(() => []),
+            redemptions: await db.listRedemptions({}, 1000).catch(() => []),
+            streams: await db.listStreams().catch(() => []),
+            shows: await db.getAllShows().catch(() => []),
+            tracks: await db.getTrackHistory(100).catch(() => []),
+            mixes: await db.getAllMixes().catch(() => []),
+            podcasts: await db.getAllPodcasts().catch(() => []),
+          },
+        };
+        // Add users if database is available
+        if (dbInstance) {
+          try {
+            const { users } = await import("../drizzle/schema");
+            backupData.data.users = await dbInstance.select().from(users).limit(1000).catch(() => []);
+          } catch {
+            backupData.data.users = [];
+          }
+        }
+        const dataBlob = JSON.stringify(backupData);
         const crypto = await import("crypto");
         const checksum = crypto.createHash("sha256").update(dataBlob).digest("hex");
         const backup = await db.createBackup({

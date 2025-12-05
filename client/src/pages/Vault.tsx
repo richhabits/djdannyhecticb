@@ -5,17 +5,19 @@ import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { Trophy, Sparkles, Star } from "lucide-react";
 import { useState } from "react";
-
-const currentProfileId = 1; // TODO: Get from auth
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Vault() {
+  const { user } = useAuth();
+  const currentProfileId = user?.id;
+
   const { data: collectibles } = trpc.genz.collectibles.getUserCollectibles.useQuery(
-    { profileId: currentProfileId },
+    { profileId: currentProfileId || 0 },
     { enabled: !!currentProfileId }
   );
 
   const { data: achievements } = trpc.genz.achievements.getUserAchievements.useQuery(
-    { profileId: currentProfileId },
+    { profileId: currentProfileId || 0 },
     { enabled: !!currentProfileId }
   );
 
