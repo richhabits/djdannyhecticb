@@ -70,4 +70,11 @@ export const ENV = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: parseInt(process.env.PORT ?? "3000", 10),
   debug: process.env.DEBUG === "true",
+  
+  // Real-Time & Caching (Redis)
+  REDIS_URL: process.env.REDIS_URL ?? '',
+  
+  // AI Recommendations (Pinecone)
+  PINECONE_API_KEY: process.env.PINECONE_API_KEY ?? '',
+  PINECONE_INDEX_NAME: process.env.PINECONE_INDEX_NAME ?? 'hectic-mixes',
 };
