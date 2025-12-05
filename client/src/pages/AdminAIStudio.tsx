@@ -14,6 +14,12 @@ export default function AdminAIStudio() {
   const { data: scriptJobs } = trpc.aiStudio.scripts.list.useQuery({ limit: 10 });
   const { data: voiceJobs } = trpc.aiStudio.voice.list.useQuery({ limit: 10 });
   const { data: videoJobs } = trpc.aiStudio.video.list.useQuery({ limit: 10 });
+  const { data: consentStats } = trpc.aiStudio.consents.stats.useQuery(undefined, {
+    enabled: !!user && user.role === "admin",
+  });
+  const { data: studioStatus } = trpc.aiStudio.status.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   if (!isAuthenticated || user?.role !== "admin") {
     return (
@@ -41,13 +47,21 @@ export default function AdminAIStudio() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">AI Studio</h1>
-        <Badge variant="outline">Control Room</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">Control Room</Badge>
+          <Badge variant={studioStatus?.aiStudioEnabled !== false ? "default" : "destructive"}>
+            AI Studio {studioStatus?.aiStudioEnabled === false ? "Disabled" : "Enabled"}
+          </Badge>
+          <Badge variant={studioStatus?.fanFacingEnabled ? "default" : "secondary"}>
+            Fan Tools {studioStatus?.fanFacingEnabled ? "On" : "Off"}
+          </Badge>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today's Scripts</CardTitle>
@@ -93,6 +107,21 @@ export default function AdminAIStudio() {
           <CardContent>
             <div className="text-2xl font-bold">{errors24h}</div>
             <p className="text-xs text-muted-foreground">Failed jobs in last 24h</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Consent Opt-ins</CardTitle>
+            <Badge variant="outline" className="text-[0.65rem] px-2">
+              Live
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{consentStats?.total ?? 0}</div>
+            <p className="text-xs text-muted-foreground">
+              AI: {consentStats?.aiContent ?? 0} · Marketing: {consentStats?.marketing ?? 0} · Data: {consentStats?.dataShare ?? 0}
+            </p>
           </CardContent>
         </Card>
       </div>

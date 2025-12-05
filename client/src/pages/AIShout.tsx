@@ -15,63 +15,37 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { MetaTagsComponent } from "@/components/MetaTags";
-import { Sparkles, Volume2 } from "lucide-react";
+import { AlertTriangle, Sparkles, Volume2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function AIShout() {
   const [formData, setFormData] = useState({
     name: "",
     location: "",
+    email: "",
     recipient: "",
     vibe: "Fun" as "Fun" | "Savage" | "Romantic" | "Motivational",
     message: "",
     includeVoice: false,
     aiContentConsent: false,
+    marketingConsent: false,
+    dataShareConsent: false,
   });
 
-  const createScript = trpc.aiStudio.scripts.create.useMutation({
-    onSuccess: async (job) => {
-      toast.success("Your Hectic AI Shout is being cooked! Check back soon.");
-      
-      // If includeVoice is checked, create voice job
-      if (formData.includeVoice && job.id) {
-        createVoice.mutate({
-          scriptJobId: job.id,
-          voiceProfile: "hectic_main",
-        });
-      }
-      
-      setFormData({
-        name: "",
-        location: "",
-        recipient: "",
-        vibe: "Fun",
-        message: "",
-        includeVoice: false,
-        aiContentConsent: false,
-      });
-    },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Failed to create shout";
-      toast.error(message);
-    },
-  });
-
-  const createVoice = trpc.aiStudio.voice.create.useMutation({
-    onSuccess: () => {
-      toast.success("Voice generation started!");
-    },
-    onError: (error: unknown) => {
-      console.error("Voice creation error:", error);
-    },
-  });
+  const createScript = trpc.aiStudio.scripts.create.useMutation();
+  const createVoice = trpc.aiStudio.voice.create.useMutation();
+  const createConsent = trpc.aiStudio.consents.createOrUpdate.useMutation();
+  const { data: studioStatus } = trpc.aiStudio.status.useQuery();
 
   const { data: completedShouts } = trpc.aiStudio.scripts.list.useQuery({
     type: "fanShout",
     limit: 20,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const studioDisabled = !!studioStatus && (!studioStatus.aiStudioEnabled || !studioStatus.fanFacingEnabled);
+  const isSubmitting = createScript.isPending || createVoice.isPending || createConsent.isPending;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.aiContentConsent) {
@@ -79,20 +53,65 @@ export default function AIShout() {
       return;
     }
 
-    createScript.mutate({
-      type: "fanShout",
-      context: {
-        shoutData: {
-          name: formData.name,
-          location: formData.location,
-          message: formData.message,
-          vibe: formData.vibe,
+    if (studioDisabled) {
+      toast.error("AI Shout Studio is currently disabled.");
+      return;
+    }
+
+    try {
+      await createConsent.mutateAsync({
+        email: formData.email || undefined,
+        aiContentConsent: formData.aiContentConsent,
+        marketingConsent: formData.marketingConsent,
+        dataShareConsent: formData.dataShareConsent,
+      });
+
+      const job = await createScript.mutateAsync({
+        type: "fanShout",
+        context: {
+          shoutData: {
+            name: formData.name,
+            location: formData.location,
+            message: formData.message,
+            vibe: formData.vibe,
+          },
+          userInfo: {
+            name: formData.recipient || formData.name,
+          },
         },
-        userInfo: {
-          name: formData.recipient || formData.name,
-        },
-      },
-    });
+      });
+
+      toast.success("Your Hectic AI Shout is being cooked! Check back soon.");
+
+      if (formData.includeVoice && job?.id) {
+        try {
+          await createVoice.mutateAsync({
+            scriptJobId: job.id,
+            voiceProfile: "hectic_main",
+          });
+          toast.success("Voice generation started!");
+        } catch (voiceError) {
+          const voiceMessage = voiceError instanceof Error ? voiceError.message : "Failed to start voice job";
+          toast.error(voiceMessage);
+        }
+      }
+
+      setFormData({
+        name: "",
+        location: "",
+        email: "",
+        recipient: "",
+        vibe: "Fun",
+        message: "",
+        includeVoice: false,
+        aiContentConsent: false,
+        marketingConsent: false,
+        dataShareConsent: false,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create shout";
+      toast.error(message);
+    }
   };
 
   const completed = completedShouts?.filter((s) => s.status === "completed") || [];
@@ -114,6 +133,20 @@ export default function AIShout() {
             Get a personalized shout from AI Danny! Fill out the form and we'll generate a custom message just for you.
           </p>
         </div>
+
+        {studioDisabled && (
+          <Card className="mb-8 border-destructive/40 bg-destructive/5">
+            <CardContent className="flex items-center gap-3 p-4">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <div className="text-left">
+                <p className="font-semibold">AI Shout Studio is paused</p>
+                <p className="text-sm text-muted-foreground">
+                  Fan-facing AI tools are currently disabled. You can still browse previous shouts below.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-8">
           <CardHeader>
@@ -139,6 +172,17 @@ export default function AIShout() {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="email">Email (optional)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="We’ll send your AI shout here"
+                />
               </div>
 
               <div>
@@ -195,6 +239,28 @@ export default function AIShout() {
 
               <div className="flex items-start space-x-2">
                 <Checkbox
+                  id="marketingConsent"
+                  checked={formData.marketingConsent}
+                  onCheckedChange={(checked) => setFormData({ ...formData, marketingConsent: checked === true })}
+                />
+                <Label htmlFor="marketingConsent" className="text-sm">
+                  I’d like occasional drops, missions, and updates from Danny.
+                </Label>
+              </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="dataShareConsent"
+                  checked={formData.dataShareConsent}
+                  onCheckedChange={(checked) => setFormData({ ...formData, dataShareConsent: checked === true })}
+                />
+                <Label htmlFor="dataShareConsent" className="text-sm">
+                  Allow anonymised usage to improve the AI experience.
+                </Label>
+              </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
                   id="aiContentConsent"
                   checked={formData.aiContentConsent}
                   onCheckedChange={(checked) => setFormData({ ...formData, aiContentConsent: checked === true })}
@@ -205,8 +271,8 @@ export default function AIShout() {
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={createScript.isPending}>
-                {createScript.isPending ? "Creating..." : "Create AI Shout"}
+              <Button type="submit" className="w-full" disabled={isSubmitting || studioDisabled}>
+                {isSubmitting ? "Submitting..." : studioDisabled ? "AI Studio Disabled" : "Create AI Shout"}
               </Button>
             </form>
           </CardContent>

@@ -1404,7 +1404,10 @@ export const appRouter = router({
           context: z.record(z.any()),
         }))
         .mutation(async ({ input, ctx }) => {
-          const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+          const { areFanFacingAiToolsEnabled, isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           if (input.type === "fanShout" && !(await areFanFacingAiToolsEnabled())) {
             throw new Error("Fan-facing AI tools are currently disabled");
           }
@@ -1417,6 +1420,10 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input, ctx }) => {
           const { processAiScriptJob } = await import("./_core/aiScriptFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const result = await processAiScriptJob(input.id);
           await db.createAuditLog({
             action: "process_ai_script_job",
@@ -1448,7 +1455,10 @@ export const appRouter = router({
           voiceProfile: z.enum(["hectic_main", "hectic_soft", "hectic_shouty"]).default("hectic_main"),
         }))
         .mutation(async ({ input, ctx }) => {
-          const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+          const { areFanFacingAiToolsEnabled, isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           if (!(await areFanFacingAiToolsEnabled()) && !ctx.user) {
             throw new Error("Fan-facing AI tools are currently disabled");
           }
@@ -1466,6 +1476,10 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input, ctx }) => {
           const { processAiVoiceJob } = await import("./_core/aiVoiceFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const audioUrl = await processAiVoiceJob(input.id);
           await db.createAuditLog({
             action: "process_ai_voice_job",
@@ -1496,6 +1510,10 @@ export const appRouter = router({
         }))
         .mutation(async ({ input, ctx }) => {
           const { createAiVideoJob } = await import("./_core/aiVideoFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const jobId = await createAiVideoJob({
             scriptJobId: input.scriptJobId,
             stylePreset: input.stylePreset,
@@ -1515,6 +1533,10 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input, ctx }) => {
           const { processAiVideoJob } = await import("./_core/aiVideoFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const result = await processAiVideoJob(input.id);
           await db.createAuditLog({
             action: "process_ai_video_job",
@@ -1556,6 +1578,14 @@ export const appRouter = router({
         }))
         .query(({ input }) => db.getUserConsent(input.profileId, input.userId, input.email)),
       stats: adminProcedure.query(() => db.getConsentStats()),
+    }),
+
+    status: publicProcedure.query(async () => {
+      const { isAiStudioEnabled, areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+      return {
+        aiStudioEnabled: await isAiStudioEnabled(),
+        fanFacingEnabled: await areFanFacingAiToolsEnabled(),
+      };
     }),
   }),
 

@@ -70,6 +70,7 @@ export async function processAiVoiceJob(jobId: number): Promise<string> {
       voiceId,
       language: "en",
       speed: 1.0,
+      jobId,
     };
 
     const response = await textToSpeech(request);
