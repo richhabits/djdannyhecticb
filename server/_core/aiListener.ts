@@ -1,13 +1,5 @@
-/**
- * AI Listener Assistant - Stubbed implementation
- * 
- * TODO: Replace with real AI provider call when ready
- * 
- * Environment variables to add:
- * - AI_PROVIDER (e.g., "openai", "anthropic", "custom")
- * - AI_API_KEY
- * - AI_MODEL (e.g., "gpt-4", "claude-3")
- */
+import { generateText } from './aiProviders';
+import { trackAIUsage } from './analytics';
 
 export interface ListenerContext {
   nowPlaying?: {
@@ -21,48 +13,69 @@ export interface ListenerContext {
     startTime: string;
   };
   hotlineNumber: string;
-  dannyPersona?: string; // Danny's persona context
+  dannyPersona?: string;
 }
 
 /**
- * Stubbed AI call - replace with real implementation
+ * Call AI to respond to listener query with real OpenAI integration
  */
 export async function callListenerAI(
   message: string,
   context: ListenerContext
-): Promise<string> {
-  // TODO: Replace this with actual AI provider call
-  // Example structure:
-  // const response = await fetch(AI_API_URL, {
-  //   method: "POST",
-  //   headers: {
-  //     "Authorization": `Bearer ${process.env.AI_API_KEY}`,
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify({
-  //     model: process.env.AI_MODEL,
-  //     messages: [
-  //       {
-  //         role: "system",
-  //         content: buildSystemPrompt(context),
-  //       },
-  //       {
-  //         role: "user",
-  //         content: message,
-  //       },
-  //     ],
-  //   }),
-  // });
-  
-  // Use Danny's persona if provided
-  if (context.dannyPersona) {
-    // TODO: When real AI is connected, use context.dannyPersona as system prompt
+): Promise<{ response: string }> {
+  try {
+    const systemPrompt = context.dannyPersona || buildSystemPrompt(context);
+
+    const response = await generateText({
+      prompt: message,
+      systemPrompt,
+      temperature: 0.8,
+      maxTokens: 150,
+    });
+
+    // Track usage
+    trackAIUsage({
+      feature: 'listener_assistant',
+      type: 'chat',
+      tokensUsed: response.length,
+    });
+
+    return { response };
+  } catch (error) {
+    console.error('[AI Listener] Error:', error);
+    
+    // Fallback to rule-based responses if AI fails
+    const fallback = getFallbackResponse(message, context);
+    return { response: fallback };
   }
-  
-  // For now, return a stubbed response that references context
+}
+
+function buildSystemPrompt(context: ListenerContext): string {
+  return `You are DJ Danny Hectic B, a legendary UK Garage pioneer with Italian and West Indian heritage. You're energetic, passionate about music, and always keep it real with your fans. You speak with authenticity and hype but stay professional.
+
+Current context:
+${context.nowPlaying ? `- Now Playing: ${context.nowPlaying.artist} - ${context.nowPlaying.title}` : ''}
+${context.nextShow ? `- Next Show: ${context.nextShow.name}${context.nextShow.host ? ` with ${context.nextShow.host}` : ''} on ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][context.nextShow.dayOfWeek]} at ${context.nextShow.startTime}` : ''}
+- Hotline: ${context.hotlineNumber}
+
+Help listeners with:
+- What's currently playing
+- Upcoming shows and schedule
+- How to send shouts
+- How to request tracks
+- Contact information
+- General questions about Hectic Radio
+
+Keep responses concise (2-3 sentences max), hype, and use UK slang when appropriate. End with emoji.`;
+}
+
+/**
+ * Fallback responses if AI is not configured or fails
+ */
+function getFallbackResponse(message: string, context: ListenerContext): string {
   const lowerMessage = message.toLowerCase();
   
-  if (lowerMessage.includes("playing") || lowerMessage.includes("track") || lowerMessage.includes("song")) {
+  if (lowerMessage.includes("playing") || lowerMessage.includes("current")) {
     if (context.nowPlaying) {
       return `Yo! Right now we're playing "${context.nowPlaying.title}" by ${context.nowPlaying.artist}. Lock in and vibe with it! 🎵`;
     }
@@ -72,16 +85,16 @@ export async function callListenerAI(
   if (lowerMessage.includes("show") || lowerMessage.includes("next") || lowerMessage.includes("schedule")) {
     if (context.nextShow) {
       const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      return `Next up is "${context.nextShow.name}"${context.nextShow.host ? ` with ${context.nextShow.host}` : ""} on ${days[context.nextShow.dayOfWeek]} at ${context.nextShow.startTime}. Don't miss it!`;
+      return `Next up is "${context.nextShow.name}"${context.nextShow.host ? ` with ${context.nextShow.host}` : ""} on ${days[context.nextShow.dayOfWeek]} at ${context.nextShow.startTime}. Don't miss it! 🔥`;
     }
-    return "Check the schedule on the page for upcoming shows. We've got heat coming every week!";
+    return "Check the schedule on the page for upcoming shows. We've got heat coming every week! 📅";
   }
   
   if (lowerMessage.includes("shout") || lowerMessage.includes("message")) {
     return `To send a shout, just fill out the form on the page with your name and message. If you want it read on air, tick the box! We'll approve it and get it on the radio. Big up! 📻`;
   }
   
-  if (lowerMessage.includes("request") || lowerMessage.includes("track")) {
+  if (lowerMessage.includes("request")) {
     return `Want to request a track? Use the shout form and check "This is a track request", then add the title and artist. Other listeners can vote for it too! The most voted tracks get priority. 🔥`;
   }
   
@@ -90,28 +103,9 @@ export async function callListenerAI(
   }
   
   if (lowerMessage.includes("hello") || lowerMessage.includes("hi") || lowerMessage.includes("hey")) {
-    return `Yo! What's good? I'm Danny's AI assistant. I can tell you what's playing, when the next show is, or help you send a shout. What do you need?`;
+    return `Yo! What's good? I'm Danny's AI assistant. I can tell you what's playing, when the next show is, or help you send a shout. What do you need? 🎧`;
   }
   
   // Default response
-  return `Yo, I'm here to help! I can tell you what's playing right now, when the next show is, how to send a shout, or how to request a track. What do you want to know?`;
+  return `Yo, I'm here to help! I can tell you what's playing right now, when the next show is, how to send a shout, or how to request a track. What do you want to know? 💥`;
 }
-
-function buildSystemPrompt(context: ListenerContext): string {
-  return `You are DJ Danny Hectic B's AI assistant on Hectic Radio. You're friendly, street-smart, and helpful. 
-
-Current context:
-${context.nowPlaying ? `- Now playing: "${context.nowPlaying.title}" by ${context.nowPlaying.artist}` : "- No track info available"}
-${context.nextShow ? `- Next show: "${context.nextShow.name}" on ${context.nextShow.startTime}` : "- No upcoming show scheduled"}
-- Hotline: ${context.hotlineNumber}
-
-Help listeners with:
-- What's currently playing
-- Upcoming shows and schedule
-- How to send shouts
-- How to request tracks
-- Contact information
-
-Keep responses short, friendly, and in Danny's voice.`;
-}
-
