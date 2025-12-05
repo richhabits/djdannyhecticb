@@ -97,6 +97,32 @@ export const appRouter = router({
     bootstrapTopPlatforms: adminProcedure.mutation(() => db.bootstrapTopStreamingPlatforms()),
   }),
 
+  music: router({
+    spotify: router({
+      list: publicProcedure
+        .input(z.object({ limit: z.number().min(1).max(20).default(6) }).optional())
+        .query(({ input }) => db.listSpotifyPlaylists(input?.limit ?? 6)),
+      episodes: publicProcedure
+        .input(z.object({ limit: z.number().min(1).max(20).default(6) }).optional())
+        .query(({ input }) => db.listSpotifyEpisodes(input?.limit ?? 6)),
+      adminList: adminProcedure.query(() => db.listSpotifyPlaylists(50)),
+      sync: adminProcedure.mutation(async () => {
+        const { syncSpotifyContent } = await import("./_core/musicSync");
+        return syncSpotifyContent();
+      }),
+    }),
+    youtube: router({
+      list: publicProcedure
+        .input(z.object({ limit: z.number().min(1).max(12).default(6) }).optional())
+        .query(({ input }) => db.listYouTubeVideos(input?.limit ?? 6)),
+      adminList: adminProcedure.query(() => db.listYouTubeVideos(50)),
+      sync: adminProcedure.mutation(async () => {
+        const { syncYouTubeContent } = await import("./_core/musicSync");
+        return syncYouTubeContent();
+      }),
+    }),
+  }),
+
   shouts: router({
     create: publicProcedure
       .input(z.object({

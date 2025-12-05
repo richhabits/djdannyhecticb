@@ -196,6 +196,7 @@ Set all required env vars in production:
 - `DATABASE_URL`
 - `OAUTH_SERVER_URL`
 - `VITE_*` variables for frontend
+- `SPOTIFY_*` / `YOUTUBE_*` variables for music integrations (see README)
 
 ## Common Patterns
 

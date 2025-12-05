@@ -1,6 +1,6 @@
 import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, InsertStreamingLink, spotifyPlaylists, InsertSpotifyPlaylist, spotifyEpisodes, InsertSpotifyEpisode, youtubeVideos, InsertYouTubeVideo, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 import { TOP_STREAMING_PLATFORMS } from "@shared/streamingPlatforms";
@@ -294,6 +294,68 @@ export async function bootstrapTopStreamingPlatforms() {
   }
 
   return await getAllStreamingLinks();
+}
+
+// Spotify playlists & episodes
+export async function replaceSpotifyPlaylists(playlists: InsertSpotifyPlaylist[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(spotifyPlaylists);
+  if (playlists.length > 0) {
+    await db.insert(spotifyPlaylists).values(playlists);
+  }
+  return listSpotifyPlaylists();
+}
+
+export async function listSpotifyPlaylists(limit?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(spotifyPlaylists).orderBy(desc(spotifyPlaylists.lastSyncedAt));
+  if (typeof limit === "number") {
+    query = query.limit(limit);
+  }
+  return await query;
+}
+
+export async function replaceSpotifyEpisodes(episodes: InsertSpotifyEpisode[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(spotifyEpisodes);
+  if (episodes.length > 0) {
+    await db.insert(spotifyEpisodes).values(episodes);
+  }
+  return listSpotifyEpisodes();
+}
+
+export async function listSpotifyEpisodes(limit?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(spotifyEpisodes).orderBy(desc(spotifyEpisodes.releaseDate));
+  if (typeof limit === "number") {
+    query = query.limit(limit);
+  }
+  return await query;
+}
+
+// YouTube videos
+export async function replaceYouTubeVideos(videos: InsertYouTubeVideo[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(youtubeVideos);
+  if (videos.length > 0) {
+    await db.insert(youtubeVideos).values(videos);
+  }
+  return listYouTubeVideos();
+}
+
+export async function listYouTubeVideos(limit?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(youtubeVideos).orderBy(desc(youtubeVideos.publishedAt));
+  if (typeof limit === "number") {
+    query = query.limit(limit);
+  }
+  return await query;
 }
 
 // Shouts queries

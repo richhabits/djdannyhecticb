@@ -33,13 +33,15 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { FormEvent, useEffect, useState } from "react";
-import { Plus, Edit, CheckCircle, XCircle, Sparkles, ArrowUp, ArrowDown, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Edit, CheckCircle, XCircle, Sparkles, ArrowUp, ArrowDown, Trash2, ExternalLink, PlayCircle } from "lucide-react";
 import { format } from "date-fns";
 import { STREAMING_PLATFORM_META, STREAMING_PLATFORM_SLUGS, StreamingPlatformSlug } from "@shared/streamingPlatforms";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../../../server/routers";
 
 type AdminStreamingLink = inferRouterOutputs<AppRouter>["streaming"]["adminList"][number];
+type SpotifyPlaylistAdmin = inferRouterOutputs<AppRouter>["music"]["spotify"]["adminList"][number];
+type YouTubeVideoAdmin = inferRouterOutputs<AppRouter>["music"]["youtube"]["adminList"][number];
 
 export default function AdminIntegrations() {
   const { user, isAuthenticated } = useAuth();
@@ -51,6 +53,8 @@ export default function AdminIntegrations() {
   const { data: contentQueue, refetch: refetchContent } = trpc.integrations.content.adminList.useQuery({ limit: 100 });
   const { data: webhooks, refetch: refetchWebhooks } = trpc.integrations.webhooks.adminList.useQuery({ activeOnly: false });
   const { data: musicPlatforms, isLoading: isMusicLoading } = trpc.streaming.adminList.useQuery();
+  const { data: spotifyAdmin, isLoading: spotifyLoading } = trpc.music.spotify.adminList.useQuery();
+  const { data: youtubeAdmin, isLoading: youtubeLoading } = trpc.music.youtube.adminList.useQuery();
 
   const createSocial = trpc.integrations.social.adminCreate.useMutation({
     onSuccess: () => {
@@ -77,6 +81,7 @@ export default function AdminIntegrations() {
     onSuccess: () => {
       toast.success("Music platform added");
       utils.streaming.adminList.invalidate();
+      utils.streaming.links.invalidate();
       setPlatformDialog(null);
     },
     onError: (error: unknown) => {
@@ -89,6 +94,7 @@ export default function AdminIntegrations() {
     onSuccess: () => {
       toast.success("Music platform updated");
       utils.streaming.adminList.invalidate();
+      utils.streaming.links.invalidate();
       setPlatformDialog(null);
     },
     onError: (error: unknown) => {
@@ -101,6 +107,7 @@ export default function AdminIntegrations() {
     onSuccess: () => {
       toast.success("Music platform removed");
       utils.streaming.adminList.invalidate();
+      utils.streaming.links.invalidate();
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Failed to delete platform";
@@ -111,6 +118,7 @@ export default function AdminIntegrations() {
   const reorderPlatforms = trpc.streaming.reorder.useMutation({
     onSuccess: () => {
       utils.streaming.adminList.invalidate();
+      utils.streaming.links.invalidate();
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Failed to reorder platforms";
@@ -122,9 +130,35 @@ export default function AdminIntegrations() {
     onSuccess: () => {
       toast.success("Top platforms synced");
       utils.streaming.adminList.invalidate();
+      utils.streaming.links.invalidate();
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Failed to sync platforms";
+      toast.error(message);
+    },
+  });
+
+  const syncSpotify = trpc.music.spotify.sync.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Synced Spotify content (${result.playlistsSynced} playlists, ${result.episodesSynced} episodes)`);
+      utils.music.spotify.adminList.invalidate();
+      utils.music.spotify.list.invalidate();
+      utils.music.spotify.episodes.invalidate();
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to sync Spotify";
+      toast.error(message);
+    },
+  });
+
+  const syncYouTube = trpc.music.youtube.sync.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Synced ${result.videosSynced} YouTube videos`);
+      utils.music.youtube.adminList.invalidate();
+      utils.music.youtube.list.invalidate();
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to sync YouTube";
       toast.error(message);
     },
   });
@@ -432,6 +466,94 @@ export default function AdminIntegrations() {
               )}
             </CardContent>
           </Card>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="flex flex-col">
+              <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>Spotify Sync</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Fetch curated playlists and latest show episodes directly from Spotify.
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => syncSpotify.mutate()} disabled={syncSpotify.isLoading}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {syncSpotify.isLoading ? "Syncing..." : "Sync Spotify"}
+                </Button>
+              </CardHeader>
+              <CardContent className="flex-1">
+                {spotifyLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading Spotify data…</p>
+                ) : spotifyAdmin && spotifyAdmin.length > 0 ? (
+                  <div className="space-y-3 max-h-[360px] overflow-auto pr-2">
+                    {spotifyAdmin.map((playlist) => (
+                      <div key={playlist.spotifyId} className="flex items-center gap-3 border rounded-lg p-3 glass">
+                        {playlist.imageUrl ? (
+                          <img src={playlist.imageUrl} alt={playlist.name} className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center font-semibold">🎧</div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-semibold">{playlist.name}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{playlist.description || "No description"}</p>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                          {playlist.tracksCount ? <p>{playlist.tracksCount} tracks</p> : null}
+                          {playlist.followers ? <p>{playlist.followers.toLocaleString()} followers</p> : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No Spotify data yet. Run a sync to populate.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="flex flex-col">
+              <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>YouTube Sync</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Pull the latest uploads and stats from your YouTube channel.
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => syncYouTube.mutate()} disabled={syncYouTube.isLoading}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {syncYouTube.isLoading ? "Syncing..." : "Sync YouTube"}
+                </Button>
+              </CardHeader>
+              <CardContent className="flex-1">
+                {youtubeLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading YouTube data…</p>
+                ) : youtubeAdmin && youtubeAdmin.length > 0 ? (
+                  <div className="space-y-3 max-h-[360px] overflow-auto pr-2">
+                    {youtubeAdmin.map((video) => (
+                      <div key={video.youtubeId} className="flex gap-3 border rounded-lg p-3 glass">
+                        {video.thumbnailUrl ? (
+                          <img src={video.thumbnailUrl} alt={video.title} className="w-20 h-12 rounded object-cover" />
+                        ) : (
+                          <div className="w-20 h-12 rounded bg-muted flex items-center justify-center">
+                            <PlayCircle className="w-5 h-5" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">{video.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                          {video.viewCount !== null && <p>{video.viewCount.toLocaleString()} views</p>}
+                          {video.publishedAt && <p>{new Date(video.publishedAt).toLocaleDateString()}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No YouTube data yet. Run a sync to populate.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="webhooks" className="space-y-4">

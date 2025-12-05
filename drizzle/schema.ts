@@ -1,4 +1,5 @@
 import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { uniqueIndex } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -128,6 +129,72 @@ export const streamingLinks = mysqlTable("streamingLinks", {
 
 export type StreamingLink = typeof streamingLinks.$inferSelect;
 export type InsertStreamingLink = typeof streamingLinks.$inferInsert;
+
+export const spotifyPlaylists = mysqlTable(
+  "spotify_playlists",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    spotifyId: varchar("spotifyId", { length: 128 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    url: varchar("url", { length: 512 }).notNull(),
+    imageUrl: varchar("imageUrl", { length: 512 }),
+    followers: int("followers"),
+    tracksCount: int("tracksCount"),
+    lastSyncedAt: timestamp("lastSyncedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    spotifyPlaylistIdIdx: uniqueIndex("spotify_playlists_spotifyId").on(table.spotifyId),
+  })
+);
+
+export type SpotifyPlaylist = typeof spotifyPlaylists.$inferSelect;
+export type InsertSpotifyPlaylist = typeof spotifyPlaylists.$inferInsert;
+
+export const spotifyEpisodes = mysqlTable(
+  "spotify_episodes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    spotifyId: varchar("spotifyId", { length: 128 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    url: varchar("url", { length: 512 }).notNull(),
+    audioUrl: varchar("audioUrl", { length: 512 }),
+    imageUrl: varchar("imageUrl", { length: 512 }),
+    durationMs: int("durationMs"),
+    releaseDate: timestamp("releaseDate").defaultNow().notNull(),
+    plays: int("plays"),
+    lastSyncedAt: timestamp("lastSyncedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    spotifyEpisodeIdIdx: uniqueIndex("spotify_episodes_spotifyId").on(table.spotifyId),
+  })
+);
+
+export type SpotifyEpisode = typeof spotifyEpisodes.$inferSelect;
+export type InsertSpotifyEpisode = typeof spotifyEpisodes.$inferInsert;
+
+export const youtubeVideos = mysqlTable(
+  "youtube_videos",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    youtubeId: varchar("youtubeId", { length: 128 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    url: varchar("url", { length: 512 }).notNull(),
+    thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+    publishedAt: timestamp("publishedAt").defaultNow().notNull(),
+    viewCount: int("viewCount"),
+    likeCount: int("likeCount"),
+    lastSyncedAt: timestamp("lastSyncedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    youtubeVideoIdIdx: uniqueIndex("youtube_videos_youtubeId").on(table.youtubeId),
+  })
+);
+
+export type YouTubeVideo = typeof youtubeVideos.$inferSelect;
+export type InsertYouTubeVideo = typeof youtubeVideos.$inferInsert;
 
 /**
  * Shouts table for fan messages and track requests

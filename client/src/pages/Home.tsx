@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, Mic2, Calendar, Radio, Zap, Users, Menu, X, Download } from "lucide-react";
+import { Music, Mic2, Calendar, Radio, Zap, Users, Menu, X, Download, PlayCircle } from "lucide-react";
 import { useState } from "react";
 import { APP_LOGO } from "@/const";
 import { Link } from "wouter";
@@ -26,6 +26,8 @@ export default function Home() {
   const { isAuthenticated, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, { retry: false });
+  const { data: featuredPlaylists } = trpc.music.spotify.list.useQuery({ limit: 3 });
+  const { data: latestYouTube } = trpc.music.youtube.list.useQuery({ limit: 1 });
 
   return (
     <>
@@ -231,6 +233,93 @@ export default function Home() {
           <StreamingPlatformGrid limit={6} />
         </div>
       </section>
+
+      {featuredPlaylists && featuredPlaylists.length > 0 && (
+        <section className="py-12 md:py-20 border-t border-border">
+          <div className="container px-4 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-2">Spotify Spotlight</p>
+                <h2 className="text-3xl font-bold">Featured Playlists</h2>
+                <p className="text-sm text-muted-foreground">Curated sets the crew is locking into this week.</p>
+              </div>
+              <Link href="/mixes">
+                <Button variant="outline" size="sm" className="w-full md:w-auto">View All Mixes</Button>
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {featuredPlaylists.map((playlist) => (
+                <Card key={playlist.spotifyId} className="p-4 glass hover-lift flex flex-col gap-3">
+                  {playlist.imageUrl ? (
+                    <img src={playlist.imageUrl} alt={playlist.name} className="w-full h-40 object-cover rounded-lg" />
+                  ) : (
+                    <div className="w-full h-40 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl">
+                      🎧
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <p className="font-semibold text-lg">{playlist.name}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {playlist.description || "Fresh vibes from the Hectic Radio universe."}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    {playlist.tracksCount && <span>{playlist.tracksCount} tracks</span>}
+                    {playlist.followers && <span>{playlist.followers.toLocaleString()} followers</span>}
+                  </div>
+                  <Button variant="outline" size="sm" className="mt-auto" asChild>
+                    <a href={playlist.url} target="_blank" rel="noopener noreferrer">
+                      Listen on Spotify
+                    </a>
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {latestYouTube && latestYouTube.length > 0 && (
+        <section className="py-12 md:py-20 border-t border-border bg-card/20">
+          <div className="container px-4 space-y-6">
+            <div className="flex items-center gap-3">
+              <PlayCircle className="w-8 h-8 text-accent" />
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">YouTube Premier</p>
+                <h2 className="text-3xl font-bold">Latest Drop</h2>
+              </div>
+            </div>
+            {latestYouTube.slice(0, 1).map((video) => (
+              <div key={video.youtubeId} className="grid gap-6 lg:grid-cols-2 items-center">
+                <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl border border-border">
+                  <iframe
+                    title={video.title}
+                    src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Hectic Visuals</p>
+                  <h3 className="text-3xl font-bold">{video.title}</h3>
+                  <p className="text-muted-foreground">{video.description}</p>
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    {video.viewCount !== null && <span>{video.viewCount.toLocaleString()} views</span>}
+                    {video.likeCount !== null && <span>{video.likeCount.toLocaleString()} likes</span>}
+                    {video.publishedAt && <span>{new Date(video.publishedAt).toLocaleDateString()}</span>}
+                  </div>
+                  <Button asChild>
+                    <a href={video.url} target="_blank" rel="noopener noreferrer">
+                      Watch on YouTube
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Featured Mixes Section */}
       <section className="py-12 md:py-24 border-t border-border">
