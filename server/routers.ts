@@ -5,6 +5,9 @@ import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_
 import { z } from "zod";
 import * as db from "./db";
 import * as analytics from "./_core/analytics";
+import * as spotify from "./_core/spotify";
+import * as youtube from "./_core/youtube";
+import * as payments from "./_core/payments";
 
 export const appRouter = router({
   system: systemRouter,
@@ -72,6 +75,34 @@ export const appRouter = router({
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    download: publicProcedure
+      .input(z.object({ mixId: z.number() }))
+      .mutation(async ({ input }) => {
+        const mixes = await db.getAllMixes();
+        const mix = mixes.find((m) => m.id === input.mixId);
+        if (!mix || !mix.audioUrl) {
+          throw new Error("Mix not found or no audio URL");
+        }
+
+        // Generate presigned download URL if using S3
+        try {
+          const { storageGet } = await import("./storage");
+          // Extract key from URL if it's an S3 path
+          const url = new URL(mix.audioUrl);
+          const key = url.pathname.replace(/^\//, "");
+          const downloadInfo = await storageGet(key);
+          return {
+            downloadUrl: downloadInfo.url,
+            expiresIn: 3600, // 1 hour
+          };
+        } catch {
+          // If not S3, return original URL
+          return {
+            downloadUrl: mix.audioUrl,
+            expiresIn: null,
+          };
+        }
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system
@@ -2303,6 +2334,92 @@ export const appRouter = router({
             actorName: ctx.user?.name || "Admin",
           });
           return updated;
+        }),
+    }),
+
+    spotify: router({
+      search: publicProcedure
+        .input(z.object({
+          query: z.string().min(1),
+          limit: z.number().min(1).max(50).default(20),
+        }))
+        .query(async ({ input }) => {
+          return await spotify.searchSpotifyTracks(input.query, input.limit);
+        }),
+      track: publicProcedure
+        .input(z.object({ trackId: z.string() }))
+        .query(async ({ input }) => {
+          return await spotify.getSpotifyTrack(input.trackId);
+        }),
+      playlist: publicProcedure
+        .input(z.object({ playlistId: z.string() }))
+        .query(async ({ input }) => {
+          return await spotify.getSpotifyPlaylist(input.playlistId);
+        }),
+    }),
+
+    youtube: router({
+      search: publicProcedure
+        .input(z.object({
+          query: z.string().min(1),
+          maxResults: z.number().min(1).max(50).default(20),
+        }))
+        .query(async ({ input }) => {
+          return await youtube.searchYouTubeVideos(input.query, input.maxResults);
+        }),
+      video: publicProcedure
+        .input(z.object({ videoId: z.string() }))
+        .query(async ({ input }) => {
+          return await youtube.getYouTubeVideo(input.videoId);
+        }),
+      playlist: publicProcedure
+        .input(z.object({ playlistId: z.string() }))
+        .query(async ({ input }) => {
+          return await youtube.getYouTubePlaylist(input.playlistId);
+        }),
+    }),
+
+    payments: router({
+      createIntent: protectedProcedure
+        .input(z.object({
+          amount: z.number().min(1),
+          currency: z.string().default("gbp"),
+          description: z.string().optional(),
+          metadata: z.record(z.string()).optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          return await payments.createPaymentIntent({
+            amount: input.amount,
+            currency: input.currency,
+            description: input.description,
+            metadata: {
+              ...input.metadata,
+              userId: ctx.user?.id?.toString() || "",
+            },
+          });
+        }),
+      createCheckout: protectedProcedure
+        .input(z.object({
+          amount: z.number().min(1),
+          currency: z.string().default("gbp"),
+          successUrl: z.string(),
+          cancelUrl: z.string(),
+          description: z.string().optional(),
+          metadata: z.record(z.string()).optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          return await payments.createCheckoutSession({
+            ...input,
+            metadata: {
+              ...input.metadata,
+              userId: ctx.user?.id?.toString() || "",
+            },
+          });
+        }),
+      verify: publicProcedure
+        .input(z.object({ paymentIntentId: z.string() }))
+        .query(async ({ input }) => {
+          return await payments.verifyPaymentIntent(input.paymentIntentId);
         }),
     }),
   }),

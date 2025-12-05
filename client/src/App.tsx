@@ -57,6 +57,8 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import Rider from "./pages/Rider";
+import MediaKit from "./pages/MediaKit";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -80,6 +82,8 @@ function Router() {
       <Route path={"/analytics"} component={Analytics} />
       <Route path={"/integrations"} component={Integrations} />
       <Route path={"/epk"} component={EPK} />
+      <Route path={"/rider"} component={Rider} />
+      <Route path={"/media-kit"} component={MediaKit} />
       <Route path={"/login"} component={Login} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />

@@ -1,8 +1,10 @@
 /**
  * Hectic Identity Quiz - Determines fan type and generates playlist
- * 
- * TODO: Replace with real AI provider call when ready
+ * Uses real AI providers when available
  */
+
+import { chatCompletion } from "./aiProviders";
+import { dannyPersona } from "./dannyPersona";
 
 export interface QuizAnswers {
   favoriteGenres: string[];
@@ -56,16 +58,59 @@ const IDENTITY_TYPES = [
 
 /**
  * Process quiz and generate identity
- * TODO: Replace with real AI call
+ * Uses AI to generate personalized identity results
  */
 export async function processIdentityQuiz(
   name: string,
   answers: QuizAnswers
 ): Promise<IdentityResult> {
-  // TODO: Replace with actual AI provider call
-  // Would analyze answers and generate personalized identity
-  
-  // Simple logic for now
+  const prompt = `Based on these quiz answers, determine the fan's identity type and generate a personalized welcome:
+Name: ${name}
+Favorite Genres: ${answers.favoriteGenres.join(", ")}
+Vibe: ${answers.vibe}
+Listening Time: ${answers.listeningTime}
+Interaction Style: ${answers.interaction}
+Goals: ${answers.goals.join(", ")}
+
+Generate:
+1. An identity type name (creative, like "Vibe Master", "Day One", "Chill Seeker", "Track Hunter")
+2. A description (1-2 sentences)
+3. A welcome message (2-3 paragraphs, in Danny's voice)
+4. Suggest 2-3 track titles that match their vibe
+
+Format as JSON with: identityType, description, welcomeMessage, playlist (array of {title, artist}).`;
+
+  try {
+    const aiResponse = await chatCompletion({
+      messages: [
+        {
+          role: "system",
+          content: dannyPersona.systemPrompt + "\n\nYou are analyzing quiz answers to determine a fan's identity type and generate a personalized welcome message.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      persona: "Danny Hectic B",
+    });
+
+    try {
+      const parsed = JSON.parse(aiResponse.text);
+      return {
+        identityType: parsed.identityType || "Vibe Master",
+        description: parsed.description || "You're all about the energy!",
+        playlist: parsed.playlist || IDENTITY_TYPES[0].playlist,
+        welcomeMessage: parsed.welcomeMessage || `Yo ${name}! Welcome to Hectic Radio! 🔥`,
+      };
+    } catch {
+      // If not JSON, use template
+    }
+  } catch (error) {
+    console.error("[AI Identity Quiz] Failed to process quiz:", error);
+  }
+
+  // Fallback to template-based logic
   let identityType = "Vibe Master";
   if (answers.vibe === "chill") {
     identityType = "Chill Seeker";

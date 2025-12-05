@@ -1,8 +1,10 @@
 /**
- * AI Show Summary Generator - Stubbed implementation
- * 
- * TODO: Replace with real AI provider call when ready
+ * AI Show Summary Generator
+ * Uses real AI providers when available
  */
+
+import { chatCompletion } from "./aiProviders";
+import { dannyPersona } from "./dannyPersona";
 
 export interface ShowSummaryData {
   date: string;
@@ -13,32 +15,30 @@ export interface ShowSummaryData {
 
 /**
  * Generate a show summary in "Danny style"
- * TODO: Replace with real AI call
+ * Uses AI to generate engaging show summaries
  */
 export async function generateShowSummary(data: ShowSummaryData): Promise<string> {
-  // TODO: Replace with actual AI provider call
-  // Example:
-  // const response = await fetch(AI_API_URL, {
-  //   method: "POST",
-  //   headers: {
-  //     "Authorization": `Bearer ${process.env.AI_API_KEY}`,
-  //   },
-  //   body: JSON.stringify({
-  //     model: process.env.AI_MODEL,
-  //     messages: [
-  //       {
-  //         role: "system",
-  //         content: "You are DJ Danny Hectic B. Generate a short, engaging show summary in Danny's voice.",
-  //       },
-  //       {
-  //         role: "user",
-  //         content: buildShowSummaryPrompt(data),
-  //       },
-  //     ],
-  //   }),
-  // });
-  
-  // Stubbed response
+  const prompt = buildShowSummaryPrompt(data);
+
+  try {
+    const aiResponse = await chatCompletion({
+      messages: [
+        {
+          role: "system",
+          content: dannyPersona.systemPrompt + "\n\nYou are generating show summaries for social media. Be engaging, energetic, and authentic to Danny's voice.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      persona: "Danny Hectic B",
+    });
+
+    return aiResponse.text;
+  } catch (error) {
+    console.error("[AI Show Summary] Failed to generate summary:", error);
+    // Fallback to template-based response
   const trackCount = data.tracks.length;
   const shoutCount = data.shouts.length;
   const topTracks = data.tracks.slice(0, 3);
