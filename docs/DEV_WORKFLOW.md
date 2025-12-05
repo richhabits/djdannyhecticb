@@ -6,6 +6,7 @@
 - Node.js 18+
 - pnpm
 - MySQL database (or PlanetScale)
+- Redis (local or hosted) for background job queues
 
 ### Environment Variables
 
@@ -30,6 +31,9 @@ pnpm db:push
 
 # Start dev server
 pnpm dev
+
+# In another terminal, start the worker for background jobs
+pnpm worker
 ```
 
 Server runs on `http://localhost:3000`
@@ -194,6 +198,7 @@ pnpm drizzle-kit migrate
 
 Set all required env vars in production:
 - `DATABASE_URL`
+- `REDIS_URL`
 - `OAUTH_SERVER_URL`
 - `VITE_*` variables for frontend
 - `SPOTIFY_*` / `YOUTUBE_*` variables for music integrations (see README)

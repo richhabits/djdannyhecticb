@@ -1,5 +1,6 @@
 import { COOKIE_NAME } from "@shared/const";
 import { STREAMING_PLATFORM_SLUGS } from "@shared/streamingPlatforms";
+import { enqueueMusicSync } from "./_core/musicJobs";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
@@ -101,24 +102,24 @@ export const appRouter = router({
     spotify: router({
       list: publicProcedure
         .input(z.object({ limit: z.number().min(1).max(20).default(6) }).optional())
-        .query(({ input }) => db.listSpotifyPlaylists(input?.limit ?? 6)),
+        .query(({ input }) => db.listSpotifyPlaylists(input?.limit)),
       episodes: publicProcedure
         .input(z.object({ limit: z.number().min(1).max(20).default(6) }).optional())
-        .query(({ input }) => db.listSpotifyEpisodes(input?.limit ?? 6)),
+        .query(({ input }) => db.listSpotifyEpisodes(input?.limit)),
       adminList: adminProcedure.query(() => db.listSpotifyPlaylists(50)),
       sync: adminProcedure.mutation(async () => {
-        const { syncSpotifyContent } = await import("./_core/musicSync");
-        return syncSpotifyContent();
+        const job = await enqueueMusicSync("spotify");
+        return { status: "queued", jobId: job.id };
       }),
     }),
     youtube: router({
       list: publicProcedure
         .input(z.object({ limit: z.number().min(1).max(12).default(6) }).optional())
-        .query(({ input }) => db.listYouTubeVideos(input?.limit ?? 6)),
+        .query(({ input }) => db.listYouTubeVideos(input?.limit)),
       adminList: adminProcedure.query(() => db.listYouTubeVideos(50)),
       sync: adminProcedure.mutation(async () => {
-        const { syncYouTubeContent } = await import("./_core/musicSync");
-        return syncYouTubeContent();
+        const job = await enqueueMusicSync("youtube");
+        return { status: "queued", jobId: job.id };
       }),
     }),
   }),

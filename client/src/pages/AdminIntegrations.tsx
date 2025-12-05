@@ -140,7 +140,7 @@ export default function AdminIntegrations() {
 
   const syncSpotify = trpc.music.spotify.sync.useMutation({
     onSuccess: (result) => {
-      toast.success(`Synced Spotify content (${result.playlistsSynced} playlists, ${result.episodesSynced} episodes)`);
+      toast.success("Spotify sync job queued");
       utils.music.spotify.adminList.invalidate();
       utils.music.spotify.list.invalidate();
       utils.music.spotify.episodes.invalidate();
@@ -153,7 +153,7 @@ export default function AdminIntegrations() {
 
   const syncYouTube = trpc.music.youtube.sync.useMutation({
     onSuccess: (result) => {
-      toast.success(`Synced ${result.videosSynced} YouTube videos`);
+      toast.success("YouTube sync job queued");
       utils.music.youtube.adminList.invalidate();
       utils.music.youtube.list.invalidate();
     },

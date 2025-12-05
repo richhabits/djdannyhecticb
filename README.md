@@ -180,6 +180,7 @@ djdannyhecticb/
 | `APP_ID` | Yes | OAuth application/client ID (or use `VITE_APP_ID`) |
 | `JWT_SECRET` | Yes | Secret key for signing session tokens |
 | `DATABASE_URL` | Optional | Database connection string |
+| `REDIS_URL` | Optional | Redis connection string for BullMQ queues (default `redis://127.0.0.1:6379`) |
 | `OWNER_OPEN_ID` | Optional | OpenID of app owner/admin |
 | `BUILT_IN_FORGE_API_URL` | Optional | Forge API URL |
 | `BUILT_IN_FORGE_API_KEY` | Optional | Forge API key |
@@ -217,6 +218,9 @@ All synced data is cached in MySQL, so public pages render instantly even if the
 # Start development server
 pnpm dev
 
+# Run background worker (processes queues like music sync)
+pnpm worker
+
 # Build for production
 pnpm build
 
@@ -235,6 +239,13 @@ pnpm test
 # Database migrations
 pnpm db:push
 ```
+
+## Background Workers & Queues
+
+- The app now uses **BullMQ + Redis** for long-running jobs (Spotify/YouTube sync today, more soon).
+- Make sure Redis is running locally (`redis-server`) or provide `REDIS_URL` in `.env`.
+- Start the worker alongside the API: `pnpm worker`.
+- Admin-triggered syncs enqueue jobs, so the API remains responsive even if external APIs are slow.
 
 ## How Environment Variables Are Loaded
 
