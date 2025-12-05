@@ -5,6 +5,7 @@ import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: any = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -13,13 +14,38 @@ export async function getDb() {
   }
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // Use connection pooling for better performance
+      const mysql = await import("mysql2/promise");
+      _pool = mysql.createPool({
+        uri: process.env.DATABASE_URL,
+        connectionLimit: parseInt(process.env.DB_POOL_SIZE || "10"),
+        queueLimit: parseInt(process.env.DB_QUEUE_LIMIT || "0"),
+        waitForConnections: true,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 0,
+      });
+
+      _db = drizzle(_pool);
+      console.log("[Database] Connection pool initialized");
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
     }
   }
   return _db;
+}
+
+/**
+ * Get connection pool stats
+ */
+export async function getPoolStats() {
+  if (!_pool) return null;
+  
+  return {
+    totalConnections: _pool.pool?._allConnections?.length || 0,
+    freeConnections: _pool.pool?._freeConnections?.length || 0,
+    queuedRequests: _pool.pool?._connectionQueue?.length || 0,
+  };
 }
 
 /**
@@ -102,11 +128,20 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// Mixes queries
+// Mixes queries with caching
 export async function getAllMixes() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
+  const { cache, CacheKeys, CacheTTL } = await import("./_core/cache");
+  
+  return await cache.getOrSet(
+    CacheKeys.mixes(),
+    async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
+    },
+    CacheTTL.MEDIUM,
+    "mixes"
+  );
 }
 
 export async function getFreeMixes() {
@@ -136,9 +171,18 @@ export async function createBooking(booking: any) {
 
 // Events queries
 export async function getUpcomingEvents() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
+  const { cache, CacheKeys, CacheTTL } = await import("./_core/cache");
+  
+  return await cache.getOrSet(
+    "events:upcoming",
+    async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
+    },
+    CacheTTL.SHORT,
+    "events"
+  );
 }
 
 export async function getFeaturedEvents() {

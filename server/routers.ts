@@ -8,6 +8,10 @@ import * as analytics from "./_core/analytics";
 import * as spotify from "./_core/spotify";
 import * as youtube from "./_core/youtube";
 import * as payments from "./_core/payments";
+import { monitoring } from "./_core/monitoring";
+import { jobQueue } from "./_core/queue";
+import { getPoolStats } from "./db";
+import { cache } from "./_core/cache";
 
 export const appRouter = router({
   system: systemRouter,
@@ -2420,6 +2424,40 @@ export const appRouter = router({
         .input(z.object({ paymentIntentId: z.string() }))
         .query(async ({ input }) => {
           return await payments.verifyPaymentIntent(input.paymentIntentId);
+        }),
+    }),
+
+    performance: router({
+      stats: adminProcedure.query(async () => {
+        const stats = monitoring.getSummary(3600000); // Last hour
+        const poolStats = await getPoolStats();
+        const queueStats = jobQueue.getStats();
+        
+        return {
+          ...stats,
+          database: poolStats,
+          queue: queueStats,
+          cache: {
+            enabled: !!process.env.REDIS_URL,
+          },
+        };
+      }),
+      endpointStats: adminProcedure
+        .input(z.object({
+          endpoint: z.string(),
+          method: z.string().default("GET"),
+        }))
+        .query(({ input }) => {
+          return monitoring.getEndpointStats(input.endpoint, input.method);
+        }),
+      clearCache: adminProcedure
+        .input(z.object({ pattern: z.string().optional() }).optional())
+        .mutation(async ({ input }) => {
+          if (input?.pattern) {
+            const count = await cache.invalidatePattern(input.pattern);
+            return { cleared: count };
+          }
+          return { cleared: 0 };
         }),
     }),
   }),
