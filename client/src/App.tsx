@@ -57,10 +57,15 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import MediaKit from "./pages/MediaKit";
+import Rider from "./pages/Rider";
+import SetlistBuilder from "./pages/SetlistBuilder";
+import Achievements from "./pages/Achievements";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
+import { SocialProofNotifications } from "./components/SocialProofNotifications";
 
 function Router() {
   return (
@@ -124,6 +129,10 @@ function Router() {
       <Route path={"/admin/show-live"} component={AdminShowLive} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
+      <Route path={"/media-kit"} component={MediaKit} />
+      <Route path={"/rider"} component={Rider} />
+      <Route path={"/setlist-builder"} component={SetlistBuilder} />
+      <Route path={"/achievements"} component={Achievements} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -140,6 +149,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <GlobalBanner />
+          <SocialProofNotifications />
           <Router />
           <LiveChat />
           <LiveAudioPlayer />

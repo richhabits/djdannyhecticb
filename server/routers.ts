@@ -21,6 +21,24 @@ export const appRouter = router({
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    download: publicProcedure
+      .input(z.object({ mixId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        // In production, generate presigned S3 URL
+        const mix = await db.getMixById(input.mixId);
+        if (!mix) throw new Error("Mix not found");
+        // Track download event
+        await db.trackAnalyticsEvent({
+          userId: ctx.user?.id,
+          sessionId: ctx.req.headers["x-session-id"] as string || "",
+          eventType: "download",
+          eventName: "Mix Download",
+          properties: JSON.stringify({ mixId: input.mixId, mixTitle: mix.title }),
+          page: ctx.req.url,
+        });
+        // Return download URL (would be presigned S3 URL in production)
+        return { url: mix.downloadUrl || mix.audioUrl };
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system
@@ -2187,6 +2205,277 @@ export const appRouter = router({
           });
           return updated;
         }),
+    }),
+
+    // ============================================
+    // MISSING FEATURES - NEW ROUTES
+    // ============================================
+
+    socialFeeds: router({
+      list: publicProcedure.query(() => db.getAllSocialFeeds()),
+      posts: publicProcedure
+        .input(z.object({ limit: z.number().default(20) }).optional())
+        .query(({ input }) => db.getSocialMediaPosts(input?.limit ?? 20)),
+      adminSync: adminProcedure
+        .input(z.object({ feedId: z.number() }))
+        .mutation(({ input }) => db.syncSocialFeed(input.feedId)),
+    }),
+
+    bookingCalendar: router({
+      availability: publicProcedure
+        .input(z.object({
+          startDate: z.date(),
+          endDate: z.date(),
+        }))
+        .query(({ input }) => db.getBookingAvailability(input.startDate, input.endDate)),
+      adminBlock: adminProcedure
+        .input(z.object({
+          date: z.date(),
+          startTime: z.string(),
+          endTime: z.string(),
+          reason: z.string().optional(),
+        }))
+        .mutation(({ input }) => db.createBookingAvailability({
+          date: input.date,
+          startTime: input.startTime,
+          endTime: input.endTime,
+          isAvailable: false,
+          isBlocked: true,
+          reason: input.reason,
+        })),
+    }),
+
+    testimonials: router({
+      list: publicProcedure
+        .input(z.object({ featuredOnly: z.boolean().default(false) }).optional())
+        .query(({ input }) => db.getVideoTestimonials(input?.featuredOnly ?? false)),
+      create: publicProcedure
+        .input(z.object({
+          name: z.string(),
+          title: z.string().optional(),
+          videoUrl: z.string(),
+          thumbnailUrl: z.string().optional(),
+          transcript: z.string().optional(),
+          rating: z.number().min(1).max(5).optional(),
+        }))
+        .mutation(({ input }) => db.createVideoTestimonial({
+          ...input,
+          isApproved: false,
+        })),
+    }),
+
+    analytics: router({
+      track: publicProcedure
+        .input(z.object({
+          eventType: z.string(),
+          eventName: z.string(),
+          properties: z.record(z.any()).optional(),
+          page: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          await db.trackAnalyticsEvent({
+            userId: ctx.user?.id,
+            sessionId: ctx.req.headers["x-session-id"] as string || "",
+            eventType: input.eventType,
+            eventName: input.eventName,
+            properties: input.properties ? JSON.stringify(input.properties) : undefined,
+            page: input.page,
+            referrer: ctx.req.headers.referer,
+            userAgent: ctx.req.headers["user-agent"],
+            ipAddress: ctx.req.ip,
+          });
+          return { success: true };
+        }),
+      events: adminProcedure
+        .input(z.object({
+          eventType: z.string().optional(),
+          startDate: z.date().optional(),
+          endDate: z.date().optional(),
+        }).optional())
+        .query(({ input }) => db.getAnalyticsEvents(input)),
+    }),
+
+    search: router({
+      query: publicProcedure
+        .input(z.object({
+          q: z.string(),
+          types: z.array(z.string()).optional(),
+        }))
+        .query(({ input }) => db.searchContent(input.q, input.types)),
+    }),
+
+    setlists: router({
+      list: publicProcedure.query(() => db.getAllSetlists()),
+      create: protectedProcedure
+        .input(z.object({
+          name: z.string(),
+          description: z.string().optional(),
+          eventId: z.number().optional(),
+          tracks: z.array(z.object({
+            title: z.string(),
+            artist: z.string(),
+            duration: z.number().optional(),
+            notes: z.string().optional(),
+          })),
+        }))
+        .mutation(({ input, ctx }) => db.createSetlist({
+          ...input,
+          tracks: JSON.stringify(input.tracks),
+          userId: ctx.user?.id,
+        })),
+      tracks: publicProcedure
+        .input(z.object({ setlistId: z.number() }))
+        .query(({ input }) => db.getSetlistTracks(input.setlistId)),
+    }),
+
+    mediaKit: router({
+      list: publicProcedure
+        .input(z.object({ category: z.string().optional() }).optional())
+        .query(({ input }) => db.getMediaKitItems(input?.category)),
+      download: publicProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.incrementMediaKitDownload(input.id);
+          return { success: true };
+        }),
+    }),
+
+    rider: router({
+      list: publicProcedure.query(() => db.getRiderItems()),
+    }),
+
+    payments: router({
+      create: protectedProcedure
+        .input(z.object({
+          type: z.enum(["booking", "product", "subscription", "donation"]),
+          entityId: z.number(),
+          amount: z.string(),
+          currency: z.string().default("GBP"),
+          provider: z.enum(["stripe", "paypal", "other"]),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          // In production, integrate with Stripe/PayPal
+          const transaction = await db.createPaymentTransaction({
+            ...input,
+            userId: ctx.user?.id,
+            status: "pending",
+          });
+          return transaction;
+        }),
+      transactions: protectedProcedure
+        .query(({ ctx }) => db.getPaymentTransactions(ctx.user?.id)),
+    }),
+
+    calendar: router({
+      syncs: protectedProcedure
+        .query(({ ctx }) => db.getCalendarSyncs(ctx.user?.id || 0)),
+      connect: protectedProcedure
+        .input(z.object({
+          provider: z.enum(["google", "apple", "outlook"]),
+          calendarId: z.string(),
+          accessToken: z.string(),
+          refreshToken: z.string().optional(),
+        }))
+        .mutation(({ input, ctx }) => db.createCalendarSync({
+          ...input,
+          userId: ctx.user?.id || 0,
+        })),
+    }),
+
+    email: router({
+      trackEngagement: publicProcedure
+        .input(z.object({
+          email: z.string(),
+          campaignId: z.string().optional(),
+          eventType: z.enum(["sent", "opened", "clicked", "bounced", "unsubscribed"]),
+          metadata: z.record(z.any()).optional(),
+        }))
+        .mutation(({ input }) => db.trackEmailEngagement({
+          ...input,
+          metadata: input.metadata ? JSON.stringify(input.metadata) : undefined,
+        })),
+    }),
+
+    preferences: router({
+      get: protectedProcedure
+        .query(({ ctx }) => db.getUserPreferences(ctx.user?.id || 0)),
+      update: protectedProcedure
+        .input(z.object({
+          musicTaste: z.array(z.string()).optional(),
+          favoriteArtists: z.array(z.string()).optional(),
+          listeningHabits: z.record(z.any()).optional(),
+          deviceType: z.string().optional(),
+        }))
+        .mutation(({ input, ctx }) => db.upsertUserPreferences(ctx.user?.id || 0, {
+          musicTaste: input.musicTaste ? JSON.stringify(input.musicTaste) : undefined,
+          favoriteArtists: input.favoriteArtists ? JSON.stringify(input.favoriteArtists) : undefined,
+          listeningHabits: input.listeningHabits ? JSON.stringify(input.listeningHabits) : undefined,
+          deviceType: input.deviceType,
+        })),
+    }),
+
+    social: router({
+      share: publicProcedure
+        .input(z.object({
+          entityType: z.string(),
+          entityId: z.number(),
+          platform: z.string(),
+        }))
+        .mutation(({ input, ctx }) => db.trackSocialShare({
+          ...input,
+          userId: ctx.user?.id,
+        })),
+    }),
+
+    contests: router({
+      active: publicProcedure.query(() => db.getActiveContests()),
+      enter: publicProcedure
+        .input(z.object({
+          contestId: z.number(),
+          name: z.string(),
+          email: z.string().email(),
+          entryData: z.record(z.any()).optional(),
+        }))
+        .mutation(({ input, ctx }) => db.createContestEntry({
+          ...input,
+          userId: ctx.user?.id,
+          entryData: input.entryData ? JSON.stringify(input.entryData) : undefined,
+        })),
+    }),
+
+    socialProof: router({
+      events: publicProcedure.query(() => db.getActiveSocialProofEvents()),
+    }),
+
+    abTests: router({
+      assign: publicProcedure
+        .input(z.object({
+          testId: z.number(),
+        }))
+        .mutation(({ input, ctx }) => {
+          const sessionId = ctx.req.headers["x-session-id"] as string || Math.random().toString(36);
+          return db.assignABTest(input.testId, ctx.user?.id || null, sessionId);
+        }),
+    }),
+
+    segments: router({
+      list: adminProcedure.query(() => db.getAllUserSegments()),
+      create: adminProcedure
+        .input(z.object({
+          name: z.string(),
+          description: z.string().optional(),
+          criteria: z.record(z.any()),
+        }))
+        .mutation(({ input }) => db.createUserSegment({
+          ...input,
+          criteria: JSON.stringify(input.criteria),
+        })),
+    }),
+
+    achievements: router({
+      showcase: publicProcedure
+        .input(z.object({ featuredOnly: z.boolean().default(false) }).optional())
+        .query(({ input }) => db.getAchievementsShowcase(input?.featuredOnly ?? false)),
     }),
   }),
 });

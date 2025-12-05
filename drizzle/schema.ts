@@ -1481,3 +1481,454 @@ export const webhooks = mysqlTable("webhooks", {
 
 export type Webhook = typeof webhooks.$inferSelect;
 export type InsertWebhook = typeof webhooks.$inferInsert;
+
+/**
+ * ============================================
+ * MISSING FEATURES - NEW TABLES
+ * ============================================
+ */
+
+/**
+ * Social Media Feed Integration
+ */
+export const socialMediaFeeds = mysqlTable("social_media_feeds", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: mysqlEnum("platform", ["instagram", "twitter", "facebook", "tiktok", "youtube"]).notNull(),
+  feedUrl: varchar("feedUrl", { length: 512 }).notNull(),
+  apiKey: varchar("apiKey", { length: 255 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  lastSyncAt: timestamp("lastSyncAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialMediaFeed = typeof socialMediaFeeds.$inferSelect;
+export type InsertSocialMediaFeed = typeof socialMediaFeeds.$inferInsert;
+
+/**
+ * Social Media Posts (cached from feeds)
+ */
+export const socialMediaPosts = mysqlTable("social_media_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  feedId: int("feedId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  externalId: varchar("externalId", { length: 255 }).notNull(),
+  content: text("content"),
+  mediaUrl: varchar("mediaUrl", { length: 512 }),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  author: varchar("author", { length: 255 }),
+  likes: int("likes").default(0).notNull(),
+  shares: int("shares").default(0).notNull(),
+  comments: int("comments").default(0).notNull(),
+  postedAt: timestamp("postedAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SocialMediaPost = typeof socialMediaPosts.$inferSelect;
+export type InsertSocialMediaPost = typeof socialMediaPosts.$inferInsert;
+
+/**
+ * Booking Calendar Availability
+ */
+export const bookingAvailability = mysqlTable("booking_availability", {
+  id: int("id").autoincrement().primaryKey(),
+  date: timestamp("date").notNull(),
+  startTime: varchar("startTime", { length: 10 }).notNull(), // HH:MM
+  endTime: varchar("endTime", { length: 10 }).notNull(), // HH:MM
+  isAvailable: boolean("isAvailable").default(true).notNull(),
+  isBlocked: boolean("isBlocked").default(false).notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BookingAvailability = typeof bookingAvailability.$inferSelect;
+export type InsertBookingAvailability = typeof bookingAvailability.$inferInsert;
+
+/**
+ * Video Testimonials
+ */
+export const videoTestimonials = mysqlTable("video_testimonials", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }),
+  videoUrl: varchar("videoUrl", { length: 512 }).notNull(),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  transcript: text("transcript"),
+  rating: int("rating"), // 1-5
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  isApproved: boolean("isApproved").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type VideoTestimonial = typeof videoTestimonials.$inferSelect;
+export type InsertVideoTestimonial = typeof videoTestimonials.$inferInsert;
+
+/**
+ * Analytics Events
+ */
+export const analyticsEvents = mysqlTable("analytics_events", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  sessionId: varchar("sessionId", { length: 64 }),
+  eventType: varchar("eventType", { length: 100 }).notNull(), // page_view, click, play, download, share, etc.
+  eventName: varchar("eventName", { length: 255 }).notNull(),
+  properties: text("properties"), // JSON
+  page: varchar("page", { length: 255 }),
+  referrer: varchar("referrer", { length: 512 }),
+  userAgent: text("userAgent"),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
+/**
+ * User Behavior Tracking
+ */
+export const userBehavior = mysqlTable("user_behavior", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  page: varchar("page", { length: 255 }).notNull(),
+  timeSpent: int("timeSpent").default(0).notNull(), // seconds
+  scrollDepth: int("scrollDepth").default(0).notNull(), // percentage
+  clicks: int("clicks").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserBehavior = typeof userBehavior.$inferSelect;
+export type InsertUserBehavior = typeof userBehavior.$inferInsert;
+
+/**
+ * Search Index
+ */
+export const searchIndex = mysqlTable("search_index", {
+  id: int("id").autoincrement().primaryKey(),
+  entityType: varchar("entityType", { length: 50 }).notNull(), // mix, event, podcast, etc.
+  entityId: int("entityId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content"),
+  tags: text("tags"), // JSON array
+  searchableText: text("searchableText"), // Full text for searching
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SearchIndex = typeof searchIndex.$inferSelect;
+export type InsertSearchIndex = typeof searchIndex.$inferInsert;
+
+/**
+ * Setlists
+ */
+export const setlists = mysqlTable("setlists", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  eventId: int("eventId"),
+  tracks: text("tracks").notNull(), // JSON array of track objects
+  duration: int("duration"), // total duration in seconds
+  isPublic: boolean("isPublic").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Setlist = typeof setlists.$inferSelect;
+export type InsertSetlist = typeof setlists.$inferInsert;
+
+/**
+ * Setlist Tracks
+ */
+export const setlistTracks = mysqlTable("setlist_tracks", {
+  id: int("id").autoincrement().primaryKey(),
+  setlistId: int("setlistId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  artist: varchar("artist", { length: 255 }).notNull(),
+  duration: int("duration"), // seconds
+  order: int("order").default(0).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SetlistTrack = typeof setlistTracks.$inferSelect;
+export type InsertSetlistTrack = typeof setlistTracks.$inferInsert;
+
+/**
+ * Media Kit
+ */
+export const mediaKit = mysqlTable("media_kit", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["photo", "logo", "banner", "pressRelease", "bio"]).notNull(),
+  fileUrl: varchar("fileUrl", { length: 512 }).notNull(),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  description: text("description"),
+  category: varchar("category", { length: 100 }),
+  isHighRes: boolean("isHighRes").default(false).notNull(),
+  downloadCount: int("downloadCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MediaKitItem = typeof mediaKit.$inferSelect;
+export type InsertMediaKitItem = typeof mediaKit.$inferInsert;
+
+/**
+ * Rider / Technical Requirements
+ */
+export const rider = mysqlTable("rider", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  category: mysqlEnum("category", ["audio", "lighting", "stage", "hospitality", "other"]).notNull(),
+  description: text("description").notNull(),
+  isRequired: boolean("isRequired").default(true).notNull(),
+  order: int("order").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RiderItem = typeof rider.$inferSelect;
+export type InsertRiderItem = typeof rider.$inferInsert;
+
+/**
+ * Payment Transactions
+ */
+export const paymentTransactions = mysqlTable("payment_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  type: mysqlEnum("type", ["booking", "product", "subscription", "donation"]).notNull(),
+  entityId: int("entityId"), // bookingId, productId, etc.
+  amount: varchar("amount", { length: 50 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
+  provider: mysqlEnum("provider", ["stripe", "paypal", "other"]).notNull(),
+  providerTransactionId: varchar("providerTransactionId", { length: 255 }),
+  status: mysqlEnum("status", ["pending", "completed", "failed", "refunded"]).default("pending").notNull(),
+  metadata: text("metadata"), // JSON
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = typeof paymentTransactions.$inferInsert;
+
+/**
+ * Calendar Sync
+ */
+export const calendarSync = mysqlTable("calendar_sync", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  provider: mysqlEnum("provider", ["google", "apple", "outlook"]).notNull(),
+  calendarId: varchar("calendarId", { length: 255 }).notNull(),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  isActive: boolean("isActive").default(true).notNull(),
+  lastSyncAt: timestamp("lastSyncAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CalendarSync = typeof calendarSync.$inferSelect;
+export type InsertCalendarSync = typeof calendarSync.$inferInsert;
+
+/**
+ * Email Service Integration
+ */
+export const emailServiceConfig = mysqlTable("email_service_config", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: mysqlEnum("provider", ["mailchimp", "sendgrid", "other"]).notNull(),
+  apiKey: varchar("apiKey", { length: 255 }).notNull(),
+  listId: varchar("listId", { length: 255 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailServiceConfig = typeof emailServiceConfig.$inferSelect;
+export type InsertEmailServiceConfig = typeof emailServiceConfig.$inferInsert;
+
+/**
+ * Email Engagement Tracking
+ */
+export const emailEngagement = mysqlTable("email_engagement", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  campaignId: varchar("campaignId", { length: 255 }),
+  eventType: mysqlEnum("eventType", ["sent", "opened", "clicked", "bounced", "unsubscribed"]).notNull(),
+  metadata: text("metadata"), // JSON
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export type EmailEngagement = typeof emailEngagement.$inferSelect;
+export type InsertEmailEngagement = typeof emailEngagement.$inferInsert;
+
+/**
+ * User Preferences
+ */
+export const userPreferences = mysqlTable("user_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  musicTaste: text("musicTaste"), // JSON array of genres
+  favoriteArtists: text("favoriteArtists"), // JSON array
+  listeningHabits: text("listeningHabits"), // JSON
+  deviceType: varchar("deviceType", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserPreference = typeof userPreferences.$inferSelect;
+export type InsertUserPreference = typeof userPreferences.$inferInsert;
+
+/**
+ * Social Sharing Tracking
+ */
+export const socialShares = mysqlTable("social_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  entityType: varchar("entityType", { length: 50 }).notNull(), // mix, event, etc.
+  entityId: int("entityId").notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(), // facebook, twitter, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SocialShare = typeof socialShares.$inferSelect;
+export type InsertSocialShare = typeof socialShares.$inferInsert;
+
+/**
+ * Contests and Giveaways
+ */
+export const contests = mysqlTable("contests", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  prize: text("prize").notNull(),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  rules: text("rules"),
+  entryMethod: mysqlEnum("entryMethod", ["form", "share", "referral", "purchase"]).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  winnerId: int("winnerId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Contest = typeof contests.$inferSelect;
+export type InsertContest = typeof contests.$inferInsert;
+
+/**
+ * Contest Entries
+ */
+export const contestEntries = mysqlTable("contest_entries", {
+  id: int("id").autoincrement().primaryKey(),
+  contestId: int("contestId").notNull(),
+  userId: int("userId"),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  entryData: text("entryData"), // JSON
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ContestEntry = typeof contestEntries.$inferSelect;
+export type InsertContestEntry = typeof contestEntries.$inferInsert;
+
+/**
+ * Social Proof Notifications
+ */
+export const socialProofEvents = mysqlTable("social_proof_events", {
+  id: int("id").autoincrement().primaryKey(),
+  eventType: varchar("eventType", { length: 100 }).notNull(), // user_joined, mix_played, etc.
+  message: varchar("message", { length: 255 }).notNull(),
+  count: int("count").default(1).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SocialProofEvent = typeof socialProofEvents.$inferSelect;
+export type InsertSocialProofEvent = typeof socialProofEvents.$inferInsert;
+
+/**
+ * A/B Tests
+ */
+export const abTests = mysqlTable("ab_tests", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  variantA: text("variantA"), // JSON
+  variantB: text("variantB"), // JSON
+  isActive: boolean("isActive").default(true).notNull(),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ABTest = typeof abTests.$inferSelect;
+export type InsertABTest = typeof abTests.$inferInsert;
+
+/**
+ * A/B Test Assignments
+ */
+export const abTestAssignments = mysqlTable("ab_test_assignments", {
+  id: int("id").autoincrement().primaryKey(),
+  testId: int("testId").notNull(),
+  userId: int("userId"),
+  sessionId: varchar("sessionId", { length: 64 }),
+  variant: mysqlEnum("variant", ["A", "B"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ABTestAssignment = typeof abTestAssignments.$inferSelect;
+export type InsertABTestAssignment = typeof abTestAssignments.$inferInsert;
+
+/**
+ * User Segments
+ */
+export const userSegments = mysqlTable("user_segments", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  criteria: text("criteria").notNull(), // JSON - segment criteria
+  userCount: int("userCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserSegment = typeof userSegments.$inferSelect;
+export type InsertUserSegment = typeof userSegments.$inferInsert;
+
+/**
+ * User Segment Memberships
+ */
+export const userSegmentMemberships = mysqlTable("user_segment_memberships", {
+  id: int("id").autoincrement().primaryKey(),
+  segmentId: int("segmentId").notNull(),
+  userId: int("userId").notNull(),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type UserSegmentMembership = typeof userSegmentMemberships.$inferSelect;
+export type InsertUserSegmentMembership = typeof userSegmentMemberships.$inferInsert;
+
+/**
+ * Professional Bio and Achievements
+ */
+export const achievementsShowcase = mysqlTable("achievements_showcase", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  category: mysqlEnum("category", ["award", "milestone", "collaboration", "recognition", "other"]).notNull(),
+  year: int("year"),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  linkUrl: varchar("linkUrl", { length: 512 }),
+  order: int("order").default(0).notNull(),
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AchievementShowcase = typeof achievementsShowcase.$inferSelect;
+export type InsertAchievementShowcase = typeof achievementsShowcase.$inferInsert;
