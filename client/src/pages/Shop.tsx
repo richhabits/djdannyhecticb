@@ -123,17 +123,17 @@ export default function Shop() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-r from-primary to-accent border-b border-border">
         <div className="container">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">DJ Danny Shop</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl">
-            Exclusive mixes, merchandise, and digital content from DJ Danny Hectic B.
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-black">SHOP</h1>
+          <p className="text-xl text-black/90 max-w-3xl font-semibold">
+            Premium gear and exclusive content from DJ Danny Hectic B.
           </p>
         </div>
       </section>
 
       {/* Newsletter Signup */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-purple-600 to-pink-600">
+      <section className="py-12 md:py-16 bg-gradient-to-r from-primary via-secondary to-destructive">
         <div className="container max-w-2xl">
           <div className="space-y-4">
             <h2 className="text-3xl font-bold text-white">Get Exclusive Updates</h2>
@@ -150,7 +150,7 @@ export default function Shop() {
               />
               <Button
                 type="submit"
-                className="bg-white text-purple-600 hover:bg-white/90"
+                className="bg-accent text-black hover:bg-yellow-400 font-bold"
               >
                 {subscribed ? (
                   <>
@@ -179,7 +179,7 @@ export default function Shop() {
                 <Button
                   key={category}
                   variant={category === 'All' ? 'default' : 'outline'}
-                  className={category === 'All' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : ''}
+                  className={category === 'All' ? 'bg-primary text-white hover:bg-orange-600' : 'border-primary text-primary hover:bg-primary hover:text-white'}
                 >
                   {category}
                 </Button>
@@ -194,13 +194,13 @@ export default function Shop() {
                 className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col"
               >
                 {/* Product Image */}
-                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-8 text-6xl flex items-center justify-center h-48">
+                <div className="bg-gradient-to-br from-primary/20 to-accent/20 p-8 text-6xl flex items-center justify-center h-48 hover:from-primary/30 hover:to-accent/30 transition-all">
                   {product.image}
                 </div>
 
                 {/* Product Info */}
                 <div className="p-6 flex flex-col flex-1">
-                  <p className="text-xs text-purple-400 font-bold mb-2">{product.category}</p>
+                  <p className="text-xs text-primary font-bold mb-2">{product.category}</p>
                   <h3 className="text-lg font-bold mb-2">{product.name}</h3>
                   <p className="text-sm text-muted-foreground mb-4 flex-1">
                     {product.description}
@@ -209,7 +209,7 @@ export default function Shop() {
                   {/* Price & Status */}
                   <div className="space-y-3 pt-4 border-t border-border/50">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-pink-400">
+                      <span className="text-2xl font-bold text-primary">
                         {product.price}
                       </span>
                       <span className={`text-xs font-bold px-2 py-1 rounded ${
@@ -226,7 +226,7 @@ export default function Shop() {
                       <Button
                         onClick={() => handleAddToCart(product.name)}
                         disabled={!product.inStock}
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        className="flex-1 bg-primary hover:bg-orange-600 text-white font-bold"
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
                         Add
@@ -276,14 +276,14 @@ export default function Shop() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-primary to-accent">
         <div className="container max-w-3xl text-center space-y-6">
-          <h2 className="text-4xl font-bold">Support the Music</h2>
-          <p className="text-lg text-muted-foreground">
+          <h2 className="text-4xl font-bold text-black">Support the Music</h2>
+          <p className="text-lg text-black/90 font-semibold">
             Every purchase supports the creation of new mixes and live performances. Thank you for your support!
           </p>
           <Link href="/bookings">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+            <Button className="bg-secondary hover:bg-blue-900 text-white px-8 py-6 text-lg font-bold">
               Book DJ Danny
             </Button>
           </Link>
