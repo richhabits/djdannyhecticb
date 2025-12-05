@@ -61,6 +61,7 @@ import MediaKit from "./pages/MediaKit";
 import Rider from "./pages/Rider";
 import SetlistBuilder from "./pages/SetlistBuilder";
 import Achievements from "./pages/Achievements";
+import TwitterThreads from "./pages/TwitterThreads";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -133,6 +134,7 @@ function Router() {
       <Route path={"/rider"} component={Rider} />
       <Route path={"/setlist-builder"} component={SetlistBuilder} />
       <Route path={"/achievements"} component={Achievements} />
+      <Route path={"/twitter-threads"} component={TwitterThreads} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
