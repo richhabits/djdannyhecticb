@@ -16,6 +16,7 @@ import {
   Gift,
   Play,
   Settings,
+  RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -24,6 +25,11 @@ export default function AdminControlTower() {
   const { data: stats, isLoading } = trpc.controlTower.stats.useQuery(undefined, {
     enabled: isAuthenticated && user?.role === "admin",
   });
+  const { data: jobHealth } = trpc.operations.jobs.useQuery(undefined, {
+    enabled: isAuthenticated && user?.role === "admin",
+    refetchInterval: 60000,
+  });
+  const musicQueueStats = jobHealth?.queues?.find((queue) => queue.name === "music-sync");
 
   if (!isAuthenticated || user?.role !== "admin") {
     return (
@@ -120,6 +126,22 @@ export default function AdminControlTower() {
               <div className="text-sm text-red-500">{stats.activeIncident.message}</div>
             ) : (
               <div className="text-sm text-muted-foreground">All systems operational</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Job Queue</CardTitle>
+            <RefreshCw className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{musicQueueStats?.counts?.waiting ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Waiting jobs</p>
+            {musicQueueStats?.counts?.failed ? (
+              <p className="text-xs text-red-500 mt-1">{musicQueueStats.counts.failed} failing</p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">Operational</p>
             )}
           </CardContent>
         </Card>

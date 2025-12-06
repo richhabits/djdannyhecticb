@@ -3,13 +3,14 @@ import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Music, Play, Headphones, Music as SpotifyIcon } from "lucide-react";
 import { Link } from "wouter";
-import { formatDate } from "date-fns";
 import { useState } from "react";
+import { StreamingPlatformGrid } from "@/components/StreamingPlatformGrid";
 
 export default function Podcasts() {
   const [playing, setPlaying] = useState<number | null>(null);
   const { data: podcasts, isLoading } = trpc.podcasts.list.useQuery();
-  const { data: streamingLinks } = trpc.streaming.links.useQuery();
+  const { data: spotifyEpisodes } = trpc.music.spotify.episodes.useQuery({ limit: 6 });
+  const { data: youtubeVideos } = trpc.music.youtube.list.useQuery({ limit: 3 });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -40,19 +41,83 @@ export default function Podcasts() {
       </section>
 
       {/* Streaming Platforms */}
-      {streamingLinks && streamingLinks.length > 0 && (
-        <section className="py-8 border-b border-border bg-card/50">
-          <div className="container">
-            <p className="text-sm text-muted-foreground mb-4">Listen on:</p>
-            <div className="flex flex-wrap gap-3">
-              {streamingLinks.map((link) => (
-                <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm">
-                    {link.platform === 'spotify' && <SpotifyIcon className="w-4 h-4 mr-2" />}
-                    {link.platform === 'apple-music' && <Music className="w-4 h-4 mr-2" />}
-                    {link.displayName || link.platform}
+      <section className="py-8 border-b border-border bg-card/50">
+        <div className="container space-y-3">
+          <p className="text-sm text-muted-foreground">Listen on:</p>
+          <StreamingPlatformGrid variant="buttons" />
+        </div>
+      </section>
+
+      {spotifyEpisodes && spotifyEpisodes.length > 0 && (
+        <section className="py-12 border-b border-border bg-card/30">
+          <div className="container space-y-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <SpotifyIcon className="w-5 h-5" />
+              Latest Spotify Episodes
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              {spotifyEpisodes.map((episode) => (
+                <Card key={episode.spotifyId} className="p-4 glass flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    {episode.imageUrl ? (
+                      <img src={episode.imageUrl} alt={episode.title} className="w-16 h-16 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+                        <Headphones className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-semibold">{episode.title}</p>
+                      {episode.releaseDate && (
+                        <p className="text-xs text-muted-foreground">{new Date(episode.releaseDate).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-3">{episode.description}</p>
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    {episode.durationMs && (
+                      <span>{Math.round(episode.durationMs / 60000)} min</span>
+                    )}
+                  </div>
+                  <Button variant="outline" size="sm" className="mt-auto" asChild>
+                    <a href={episode.url} target="_blank" rel="noopener noreferrer">
+                      Play on Spotify
+                    </a>
                   </Button>
-                </a>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {youtubeVideos && youtubeVideos.length > 0 && (
+        <section className="py-12 border-b border-border">
+          <div className="container space-y-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Play className="w-5 h-5" />
+              YouTube Extras
+            </h2>
+            <div className="grid gap-4 md:grid-cols-3">
+              {youtubeVideos.map((video) => (
+                <Card key={video.youtubeId} className="overflow-hidden glass">
+                  {video.thumbnailUrl && (
+                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-40 object-cover" />
+                  )}
+                  <div className="p-4 space-y-2 flex flex-col">
+                    <p className="font-semibold">{video.title}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{video.description}</p>
+                    <div className="text-xs text-muted-foreground flex gap-3">
+                      {video.viewCount !== null && <span>{video.viewCount.toLocaleString()} views</span>}
+                      {video.publishedAt && <span>{new Date(video.publishedAt).toLocaleDateString()}</span>}
+                    </div>
+                    <Button asChild size="sm" variant="outline" className="mt-auto">
+                      <a href={video.url} target="_blank" rel="noopener noreferrer">
+                        Watch
+                      </a>
+                    </Button>
+                  </div>
+                </Card>
               ))}
             </div>
           </div>

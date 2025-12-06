@@ -180,9 +180,18 @@ djdannyhecticb/
 | `APP_ID` | Yes | OAuth application/client ID (or use `VITE_APP_ID`) |
 | `JWT_SECRET` | Yes | Secret key for signing session tokens |
 | `DATABASE_URL` | Optional | Database connection string |
+| `REDIS_URL` | Optional | Redis connection string for BullMQ queues (default `redis://127.0.0.1:6379`) |
 | `OWNER_OPEN_ID` | Optional | OpenID of app owner/admin |
 | `BUILT_IN_FORGE_API_URL` | Optional | Forge API URL |
 | `BUILT_IN_FORGE_API_KEY` | Optional | Forge API key |
+| `SPOTIFY_CLIENT_ID` | Optional | Spotify API client ID for playlist/episode sync |
+| `SPOTIFY_CLIENT_SECRET` | Optional | Spotify API client secret |
+| `SPOTIFY_PLAYLIST_IDS` | Optional | Comma-separated playlist IDs to sync |
+| `SPOTIFY_SHOW_ID` | Optional | Spotify show ID to pull podcast episodes |
+| `MUSIC_SYNC_CRON` | Optional | Cron expression for automatic music sync (default `0 * * * *`) |
+| `JOB_CRON_TZ` | Optional | Timezone for cron schedules (default `UTC`) |
+| `YOUTUBE_API_KEY` | Optional | YouTube Data API key |
+| `YOUTUBE_CHANNEL_ID` | Optional | Channel ID to fetch latest uploads |
 
 ### Frontend Variables (Client-side, must be prefixed with `VITE_`)
 
@@ -196,11 +205,24 @@ djdannyhecticb/
 | `VITE_ANALYTICS_WEBSITE_ID` | No | Analytics website ID (optional, safe defaults for dev) |
 | `VITE_HECTIC_RADIO_STREAM_URL` | No | Live radio stream URL for the audio player (optional, placeholder used if not set) |
 
+### Music Integrations (Phase 2)
+
+Spotify and YouTube data can now be synced directly into the app:
+
+- **Spotify**: set `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_PLAYLIST_IDS` (comma separated list), and optionally `SPOTIFY_SHOW_ID`. Use the admin Integrations page → Music tab to trigger a sync or auto-fill the top 6 streaming cards.
+- **Automation**: `MUSIC_SYNC_CRON` configures the automatic queue-based sync cadence (defaults to hourly). Set to `off` to disable, and adjust `JOB_CRON_TZ` if you need non-UTC scheduling.
+- **YouTube**: set `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID`, then sync to capture the latest uploads + stats.
+
+All synced data is cached in MySQL, so public pages render instantly even if the third-party APIs are rate-limited.
+
 ## Development Scripts
 
 ```bash
 # Start development server
 pnpm dev
+
+# Run background worker (processes queues like music sync)
+pnpm worker
 
 # Build for production
 pnpm build
@@ -220,6 +242,13 @@ pnpm test
 # Database migrations
 pnpm db:push
 ```
+
+## Background Workers & Queues
+
+- The app now uses **BullMQ + Redis** for long-running jobs (Spotify/YouTube sync today, more soon).
+- Make sure Redis is running locally (`redis-server`) or provide `REDIS_URL` in `.env`.
+- Start the worker alongside the API: `pnpm worker`.
+- Admin-triggered syncs enqueue jobs, so the API remains responsive even if external APIs are slow.
 
 ## How Environment Variables Are Loaded
 
