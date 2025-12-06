@@ -10,6 +10,7 @@ import {
   copyToClipboard,
   ShareOptions,
 } from "@/lib/shareUtils";
+import { trpc } from "@/lib/trpc";
 
 interface SocialShareBarProps {
   url: string;
@@ -17,6 +18,8 @@ interface SocialShareBarProps {
   description?: string;
   className?: string;
   showCopy?: boolean;
+  entityType?: string;
+  entityId?: number;
 }
 
 export function SocialShareBar({
@@ -25,8 +28,11 @@ export function SocialShareBar({
   description,
   className = "",
   showCopy = true,
+  entityType,
+  entityId,
 }: SocialShareBarProps) {
   const [copied, setCopied] = useState(false);
+  const trackShare = trpc.social.share.useMutation();
 
   const shareOptions: ShareOptions = {
     url,
@@ -61,6 +67,11 @@ export function SocialShareBar({
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Share on WhatsApp"
+          onClick={() => {
+            if (entityType && entityId) {
+              trackShare.mutate({ entityType, entityId, platform: "whatsapp" });
+            }
+          }}
         >
           <MessageCircle className="w-4 h-4 mr-1" />
           WhatsApp
@@ -78,6 +89,11 @@ export function SocialShareBar({
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Share on X (Twitter)"
+          onClick={() => {
+            if (entityType && entityId) {
+              trackShare.mutate({ entityType, entityId, platform: "twitter" });
+            }
+          }}
         >
           <Twitter className="w-4 h-4 mr-1" />
           X
@@ -95,6 +111,11 @@ export function SocialShareBar({
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Share on Facebook"
+          onClick={() => {
+            if (entityType && entityId) {
+              trackShare.mutate({ entityType, entityId, platform: "facebook" });
+            }
+          }}
         >
           <Facebook className="w-4 h-4 mr-1" />
           Facebook

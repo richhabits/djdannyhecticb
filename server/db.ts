@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
+import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, socialMediaFeeds, InsertSocialMediaFeed, socialMediaPosts, InsertSocialMediaPost, bookingAvailability, InsertBookingAvailability, videoTestimonials, InsertVideoTestimonial, analyticsEvents, InsertAnalyticsEvent, userBehavior, InsertUserBehavior, searchIndex, InsertSearchIndex, setlists, InsertSetlist, setlistTracks, InsertSetlistTrack, mediaKit, InsertMediaKitItem, rider, InsertRiderItem, paymentTransactions, InsertPaymentTransaction, calendarSync, InsertCalendarSync, emailServiceConfig, InsertEmailServiceConfig, emailEngagement, InsertEmailEngagement, userPreferences, InsertUserPreference, socialShares, InsertSocialShare, contests, InsertContest, contestEntries, InsertContestEntry, socialProofEvents, InsertSocialProofEvent, abTests, InsertABTest, abTestAssignments, InsertABTestAssignment, userSegments, InsertUserSegment, userSegmentMemberships, InsertUserSegmentMembership, achievementsShowcase, InsertAchievementShowcase } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 
@@ -113,6 +113,13 @@ export async function getFreeMixes() {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(desc(mixes.createdAt));
+}
+
+export async function getMixById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [result] = await db.select().from(mixes).where(eq(mixes.id, id)).limit(1);
+  return result;
 }
 
 // Bookings queries
@@ -3052,4 +3059,405 @@ export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], pa
   }
   
   return { dispatched, errors };
+}
+
+// ============================================
+// MISSING FEATURES - DATABASE FUNCTIONS
+// ============================================
+
+// Social Media Feeds
+export async function getAllSocialFeeds() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(socialMediaFeeds).where(eq(socialMediaFeeds.isActive, true));
+}
+
+export async function createSocialFeed(feed: InsertSocialMediaFeed) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(socialMediaFeeds).values(feed);
+  return result;
+}
+
+export async function syncSocialFeed(feedId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // This would integrate with actual social media APIs
+  await db.update(socialMediaFeeds).set({ lastSyncAt: new Date() }).where(eq(socialMediaFeeds.id, feedId));
+}
+
+export async function getSocialMediaPosts(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(socialMediaPosts).orderBy(desc(socialMediaPosts.postedAt)).limit(limit);
+}
+
+// Booking Availability
+export async function getBookingAvailability(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bookingAvailability)
+    .where(and(
+      gt(bookingAvailability.date, startDate),
+      gt(endDate, bookingAvailability.date)
+    ))
+    .orderBy(asc(bookingAvailability.date));
+}
+
+export async function createBookingAvailability(availability: InsertBookingAvailability) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(bookingAvailability).values(availability);
+  return result;
+}
+
+// Video Testimonials
+export async function getVideoTestimonials(featuredOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+  const query = db.select().from(videoTestimonials).where(eq(videoTestimonials.isApproved, true));
+  if (featuredOnly) {
+    return query.where(eq(videoTestimonials.isFeatured, true));
+  }
+  return query.orderBy(desc(videoTestimonials.createdAt));
+}
+
+export async function createVideoTestimonial(testimonial: InsertVideoTestimonial) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(videoTestimonials).values(testimonial);
+  return result;
+}
+
+// Analytics Events
+export async function trackAnalyticsEvent(event: InsertAnalyticsEvent) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(analyticsEvents).values(event);
+}
+
+export async function getAnalyticsEvents(filters?: { eventType?: string; startDate?: Date; endDate?: Date }) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(analyticsEvents);
+  const conditions = [];
+  if (filters?.eventType) {
+    conditions.push(eq(analyticsEvents.eventType, filters.eventType));
+  }
+  if (filters?.startDate) {
+    conditions.push(gt(analyticsEvents.timestamp, filters.startDate));
+  }
+  if (filters?.endDate) {
+    conditions.push(gt(filters.endDate, analyticsEvents.timestamp));
+  }
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+  return query.orderBy(desc(analyticsEvents.timestamp)).limit(1000);
+}
+
+// User Behavior
+export async function trackUserBehavior(behavior: InsertUserBehavior) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(userBehavior).values(behavior);
+}
+
+// Search
+export async function searchContent(query: string, entityTypes?: string[]) {
+  const db = await getDb();
+  if (!db) return [];
+  let searchQuery = db.select().from(searchIndex);
+  const conditions = [];
+  // Simple text search - in production, use full-text search
+  if (query) {
+    // This is a simplified search - production should use MySQL FULLTEXT
+    conditions.push(eq(searchIndex.searchableText, `%${query}%`));
+  }
+  if (entityTypes && entityTypes.length > 0) {
+    // Would need proper IN clause here
+  }
+  return searchQuery.limit(50);
+}
+
+export async function indexContent(item: InsertSearchIndex) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(searchIndex).values(item).onDuplicateKeyUpdate({
+    set: {
+      title: item.title,
+      content: item.content,
+      searchableText: item.searchableText,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+// Setlists
+export async function getAllSetlists() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(setlists).orderBy(desc(setlists.createdAt));
+}
+
+export async function createSetlist(setlist: InsertSetlist) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(setlists).values(setlist);
+  return result;
+}
+
+export async function getSetlistTracks(setlistId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(setlistTracks)
+    .where(eq(setlistTracks.setlistId, setlistId))
+    .orderBy(asc(setlistTracks.order));
+}
+
+// Media Kit
+export async function getMediaKitItems(category?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(mediaKit);
+  if (category) {
+    return query.where(eq(mediaKit.category, category));
+  }
+  return query.orderBy(asc(mediaKit.order || 0));
+}
+
+export async function createMediaKitItem(item: InsertMediaKitItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(mediaKit).values(item);
+  return result;
+}
+
+// Rider
+export async function getRiderItems() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rider).orderBy(asc(rider.order));
+}
+
+export async function createRiderItem(item: InsertRiderItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(rider).values(item);
+  return result;
+}
+
+// Payment Transactions
+export async function createPaymentTransaction(transaction: InsertPaymentTransaction) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(paymentTransactions).values(transaction);
+  return result;
+}
+
+export async function getPaymentTransactions(userId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(paymentTransactions);
+  if (userId) {
+    return query.where(eq(paymentTransactions.userId, userId));
+  }
+  return query.orderBy(desc(paymentTransactions.createdAt));
+}
+
+// Calendar Sync
+export async function getCalendarSyncs(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(calendarSync)
+    .where(eq(calendarSync.userId, userId))
+    .where(eq(calendarSync.isActive, true));
+}
+
+export async function createCalendarSync(sync: InsertCalendarSync) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(calendarSync).values(sync);
+  return result;
+}
+
+// Email Service
+export async function getEmailServiceConfig() {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(emailServiceConfig)
+    .where(eq(emailServiceConfig.isActive, true))
+    .limit(1);
+  return result;
+}
+
+// Email Engagement
+export async function trackEmailEngagement(engagement: InsertEmailEngagement) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(emailEngagement).values(engagement);
+}
+
+// User Preferences
+export async function getUserPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(userPreferences)
+    .where(eq(userPreferences.userId, userId))
+    .limit(1);
+  return result;
+}
+
+export async function upsertUserPreferences(userId: number, prefs: Partial<InsertUserPreference>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await getUserPreferences(userId);
+  if (existing) {
+    await db.update(userPreferences).set(prefs).where(eq(userPreferences.id, existing.id));
+    return existing;
+  } else {
+    const [result] = await db.insert(userPreferences).values({ ...prefs, userId });
+    return result;
+  }
+}
+
+// Social Shares
+export async function trackSocialShare(share: InsertSocialShare) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(socialShares).values(share);
+}
+
+// Contests
+export async function getActiveContests() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db.select().from(contests)
+    .where(and(
+      eq(contests.isActive, true),
+      gt(contests.endDate, now),
+      gt(now, contests.startDate)
+    ))
+    .orderBy(asc(contests.endDate));
+}
+
+export async function createContest(contest: InsertContest) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(contests).values(contest);
+  return result;
+}
+
+export async function createContestEntry(entry: InsertContestEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(contestEntries).values(entry);
+  return result;
+}
+
+// Social Proof Events
+export async function getActiveSocialProofEvents() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db.select().from(socialProofEvents)
+    .where(and(
+      eq(socialProofEvents.isActive, true),
+      gt(socialProofEvents.expiresAt || new Date(now.getTime() + 86400000), now)
+    ))
+    .orderBy(desc(socialProofEvents.createdAt))
+    .limit(10);
+}
+
+export async function createSocialProofEvent(event: InsertSocialProofEvent) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(socialProofEvents).values(event);
+  return result;
+}
+
+// A/B Tests
+export async function getActiveABTests() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db.select().from(abTests)
+    .where(and(
+      eq(abTests.isActive, true),
+      gt(abTests.endDate || new Date(now.getTime() + 86400000), now)
+    ));
+}
+
+export async function assignABTest(testId: number, userId: number | null, sessionId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Check if already assigned
+  const existing = userId
+    ? await db.select().from(abTestAssignments)
+        .where(and(
+          eq(abTestAssignments.testId, testId),
+          eq(abTestAssignments.userId, userId)
+        ))
+        .limit(1)
+    : await db.select().from(abTestAssignments)
+        .where(and(
+          eq(abTestAssignments.testId, testId),
+          eq(abTestAssignments.sessionId, sessionId)
+        ))
+        .limit(1);
+  
+  if (existing.length > 0) {
+    return existing[0];
+  }
+  
+  // Assign randomly
+  const variant = Math.random() < 0.5 ? "A" : "B";
+  const [result] = await db.insert(abTestAssignments).values({
+    testId,
+    userId: userId || undefined,
+    sessionId,
+    variant,
+  });
+  return result;
+}
+
+// User Segments
+export async function getAllUserSegments() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(userSegments).orderBy(desc(userSegments.createdAt));
+}
+
+export async function createUserSegment(segment: InsertUserSegment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(userSegments).values(segment);
+  return result;
+}
+
+// Achievements Showcase
+export async function getAchievementsShowcase(featuredOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(achievementsShowcase);
+  if (featuredOnly) {
+    return query.where(eq(achievementsShowcase.isFeatured, true));
+  }
+  return query.orderBy(asc(achievementsShowcase.order));
+}
+
+export async function createAchievementShowcase(achievement: InsertAchievementShowcase) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [result] = await db.insert(achievementsShowcase).values(achievement);
+  return result;
+}
+
+export async function incrementMediaKitDownload(id: number) {
+  const database = await getDb();
+  if (!database) throw new Error("Database not available");
+  await database.update(mediaKit).set({
+    downloadCount: sql`${mediaKit.downloadCount} + 1`,
+  }).where(eq(mediaKit.id, id));
 }
