@@ -1,4 +1,4 @@
-import { asc, desc, eq, gt, and, count } from "drizzle-orm";
+import { asc, desc, eq, gt, and, count, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -2336,6 +2336,24 @@ function defaultAiStudioMetrics() {
   };
 }
 
+export async function listAutoPostableContent(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return await db
+    .select()
+    .from(contentQueue)
+    .where(
+      and(
+        eq(contentQueue.source, "aiJob"),
+        eq(contentQueue.status, "scheduled"),
+        lte(contentQueue.scheduledAt, now)
+      )
+    )
+    .orderBy(asc(contentQueue.scheduledAt))
+    .limit(limit);
+}
+
 // AI Voice Jobs
 export async function createAIVoiceJob(job: InsertAIVoiceJob) {
   const db = await getDb();
@@ -3106,6 +3124,14 @@ export async function getContentItemBySource(
     .where(and(eq(contentQueue.source, source as any), eq(contentQueue.sourceId, sourceId)))
     .limit(1);
   return result[0];
+}
+
+export async function updateContentItem(id: number, updates: Partial<InsertContentQueueItem>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contentQueue).set({ ...updates, updatedAt: new Date() }).where(eq(contentQueue.id, id));
+  const updated = await db.select().from(contentQueue).where(eq(contentQueue.id, id)).limit(1);
+  return updated[0];
 }
 
 export async function updateContentItemStatus(id: number, status: InsertContentQueueItem["status"], externalUrl?: string) {
