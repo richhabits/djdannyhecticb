@@ -1,274 +1,259 @@
+import OpenAI from 'openai';
+import { Replicate } from 'replicate';
+import { ENV } from './env';
+
+let openai: OpenAI | null = null;
+let replicate: Replicate | null = null;
+
 /**
- * AI Provider Abstraction Layer
- * 
- * Provider-agnostic interface for AI operations (LLM, TTS, Video Host)
- * Supports multiple providers with fallback to mock
+ * Initialize OpenAI client
  */
+export function getOpenAI(): OpenAI | null {
+  if (!ENV.openaiApiKey) {
+    console.warn('[OpenAI] Not configured - OPENAI_API_KEY missing');
+    return null;
+  }
 
-export type AiModelType = "chat" | "tts" | "videoHost";
-export type AiProvider = "openai" | "elevenlabs" | "d-id" | "custom" | "mock" | "none";
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: ENV.openaiApiKey,
+    });
+  }
 
-export interface ChatCompletionRequest {
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
-  persona?: string; // Danny's persona context
+  return openai;
+}
+
+/**
+ * Initialize Replicate client
+ */
+export function getReplicate(): Replicate | null {
+  if (!ENV.replicateApiKey) {
+    console.warn('[Replicate] Not configured - REPLICATE_API_KEY missing');
+    return null;
+  }
+
+  if (!replicate) {
+    replicate = new Replicate({
+      auth: ENV.replicateApiKey,
+    });
+  }
+
+  return replicate;
+}
+
+/**
+ * Generate text using OpenAI
+ */
+export async function generateText(params: {
+  prompt: string;
+  systemPrompt?: string;
+  model?: string;
   temperature?: number;
   maxTokens?: number;
+}): Promise<string> {
+  const client = getOpenAI();
+  if (!client) {
+    throw new Error('OpenAI is not configured');
+  }
+
+  const completion = await client.chat.completions.create({
+    model: params.model || ENV.openaiModel || 'gpt-4o',
+    messages: [
+      ...(params.systemPrompt ? [{ role: 'system' as const, content: params.systemPrompt }] : []),
+      { role: 'user' as const, content: params.prompt },
+    ],
+    temperature: params.temperature ?? 0.7,
+    max_tokens: params.maxTokens ?? 1000,
+  });
+
+  return completion.choices[0]?.message?.content || '';
 }
 
-export interface ChatCompletionResponse {
+/**
+ * Generate voice using ElevenLabs API
+ */
+export async function generateVoice(params: {
   text: string;
-  provider: AiProvider;
-  model?: string;
+  voiceId?: string;
+}): Promise<string> {
+  if (!ENV.elevenlabsApiKey) {
+    throw new Error('ElevenLabs is not configured');
+  }
+
+  const voiceId = params.voiceId || ENV.elevenlabsVoiceId || '21m00Tcm4TlvDq8ikWAM';
+  
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'audio/mpeg',
+      'Content-Type': 'application/json',
+      'xi-api-key': ENV.elevenlabsApiKey,
+    },
+    body: JSON.stringify({
+      text: params.text,
+      model_id: 'eleven_monolingual_v1',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`ElevenLabs API error: ${error}`);
+  }
+
+  // Convert audio to base64 for storage
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString('base64');
+  
+  return `data:audio/mpeg;base64,${base64}`;
 }
 
-export interface TTSRequest {
-  text: string;
-  voiceId: string;
+/**
+ * Generate video using Replicate
+ */
+export async function generateVideo(params: {
+  prompt: string;
+  imageUrl?: string;
+}): Promise<string> {
+  const client = getReplicate();
+  if (!client) {
+    throw new Error('Replicate is not configured');
+  }
+
+  // Using Stable Video Diffusion for video generation
+  const output = await client.run(
+    "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+    {
+      input: {
+        input_image: params.imageUrl || '',
+        sizing_strategy: "maintain_aspect_ratio",
+        frames_per_second: 24,
+        motion_bucket_id: 127,
+      }
+    }
+  ) as string;
+
+  return output;
+}
+
+/**
+ * Generate image using Replicate (FLUX model)
+ */
+export async function generateImage(params: {
+  prompt: string;
+  aspectRatio?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
+  outputFormat?: 'webp' | 'jpg' | 'png';
+}): Promise<string> {
+  const client = getReplicate();
+  if (!client) {
+    throw new Error('Replicate is not configured');
+  }
+
+  // Using FLUX Schnell for fast image generation
+  const output = await client.run(
+    "black-forest-labs/flux-schnell",
+    {
+      input: {
+        prompt: params.prompt,
+        aspect_ratio: params.aspectRatio || '16:9',
+        output_format: params.outputFormat || 'webp',
+        output_quality: 90,
+      }
+    }
+  ) as string[];
+
+  return output[0] || '';
+}
+
+/**
+ * Transcribe audio using OpenAI Whisper
+ */
+export async function transcribeAudio(params: {
+  audioFile: File | Buffer;
   language?: string;
-  speed?: number;
-}
-
-export interface TTSResponse {
-  audioUrl: string;
-  provider: AiProvider;
-  duration?: number;
-}
-
-export interface VideoHostRequest {
-  script: string;
-  stylePreset: "verticalShort" | "squareClip" | "horizontalHost";
-  voiceProfile?: string;
-}
-
-export interface VideoHostResponse {
-  videoUrl: string;
-  thumbnailUrl?: string;
-  provider: AiProvider;
-  duration?: number;
-}
-
-/**
- * Get provider from settings or env
- */
-export async function getAiProvider(type: AiModelType): Promise<AiProvider> {
-  // Try to get from empireSettings first
-  try {
-    const { getEmpireSetting } = await import("../db");
-    const setting = await getEmpireSetting(`ai_${type}_provider`);
-    if (setting?.value) {
-      const provider = JSON.parse(setting.value) as AiProvider;
-      if (provider && provider !== "none") return provider;
-    }
-  } catch (error) {
-    console.warn("[AI] Failed to get provider from settings:", error);
+}): Promise<string> {
+  const client = getOpenAI();
+  if (!client) {
+    throw new Error('OpenAI is not configured');
   }
 
-  // Fallback to env vars
-  const envKey = `AI_${type.toUpperCase()}_PROVIDER`;
-  const envProvider = process.env[envKey] as AiProvider | undefined;
-  if (envProvider && envProvider !== "none") return envProvider;
+  const transcription = await client.audio.transcriptions.create({
+    file: params.audioFile as any,
+    model: 'whisper-1',
+    language: params.language || 'en',
+  });
 
-  // Default to mock for development
-  return "mock";
+  return transcription.text;
 }
 
 /**
- * Chat completion (LLM)
+ * Generate embeddings for semantic search
  */
-export async function chatCompletion(
-  request: ChatCompletionRequest
-): Promise<ChatCompletionResponse> {
-  const provider = await getAiProvider("chat");
-
-  switch (provider) {
-    case "openai":
-      return await chatCompletionOpenAI(request);
-    case "mock":
-      return await chatCompletionMock(request);
-    default:
-      console.warn(`[AI] Provider ${provider} not implemented, using mock`);
-      return await chatCompletionMock(request);
+export async function generateEmbeddings(text: string): Promise<number[]> {
+  const client = getOpenAI();
+  if (!client) {
+    throw new Error('OpenAI is not configured');
   }
+
+  const response = await client.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: text,
+  });
+
+  return response.data[0].embedding;
 }
 
 /**
- * Text-to-Speech
+ * Moderate content using OpenAI
  */
-export async function textToSpeech(request: TTSRequest): Promise<TTSResponse> {
-  const provider = await getAiProvider("tts");
-
-  switch (provider) {
-    case "elevenlabs":
-      return await ttsElevenLabs(request);
-    case "mock":
-      return await ttsMock(request);
-    default:
-      console.warn(`[AI] Provider ${provider} not implemented, using mock`);
-      return await ttsMock(request);
+export async function moderateContent(text: string): Promise<{
+  flagged: boolean;
+  categories: Record<string, boolean>;
+}> {
+  const client = getOpenAI();
+  if (!client) {
+    throw new Error('OpenAI is not configured');
   }
-}
 
-/**
- * Video Host Generation
- */
-export async function generateVideoHost(
-  request: VideoHostRequest
-): Promise<VideoHostResponse> {
-  const provider = await getAiProvider("videoHost");
+  const moderation = await client.moderations.create({
+    input: text,
+  });
 
-  switch (provider) {
-    case "d-id":
-      return await videoHostDID(request);
-    case "mock":
-      return await videoHostMock(request);
-    default:
-      console.warn(`[AI] Provider ${provider} not implemented, using mock`);
-      return await videoHostMock(request);
-  }
-}
-
-// ============================================
-// Provider Implementations
-// ============================================
-
-/**
- * OpenAI Chat Completion (stub - ready for real integration)
- */
-async function chatCompletionOpenAI(
-  request: ChatCompletionRequest
-): Promise<ChatCompletionResponse> {
-  // TODO: Implement real OpenAI API call
-  // const apiKey = process.env.OPENAI_API_KEY;
-  // if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
+  const result = moderation.results[0];
   
-  // For now, fallback to mock
-  return await chatCompletionMock(request);
-}
-
-/**
- * Mock Chat Completion
- */
-async function chatCompletionMock(
-  request: ChatCompletionRequest
-): Promise<ChatCompletionResponse> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  const lastMessage = request.messages[request.messages.length - 1]?.content || "";
-  const persona = request.persona || "Danny Hectic B";
-
-  // Generate a mock response based on context
-  let mockResponse = "";
-  if (lastMessage.toLowerCase().includes("shout")) {
-    mockResponse = `Yo, it's ${persona}! That's a sick shout fam, you're locked in! Keep the energy up and stay Hectic! 🔥`;
-  } else if (lastMessage.toLowerCase().includes("track") || lastMessage.toLowerCase().includes("song")) {
-    mockResponse = `That track is fire! I'll make sure to get that in the mix. The culture needs to hear this!`;
-  } else if (lastMessage.toLowerCase().includes("event") || lastMessage.toLowerCase().includes("show")) {
-    mockResponse = `Big things coming! Make sure you're locked in for the next Hectic event. It's gonna be legendary!`;
-  } else {
-    mockResponse = `Yo, it's ${persona}! You're asking about something Hectic, and I'm here for it. Let's keep the energy up and stay locked in! 🔥`;
-  }
-
   return {
-    text: mockResponse,
-    provider: "mock",
-    model: "mock-gpt-4",
+    flagged: result.flagged,
+    categories: result.categories as Record<string, boolean>,
   };
 }
 
 /**
- * ElevenLabs TTS (stub - ready for real integration)
+ * Chat completion with streaming support
  */
-async function ttsElevenLabs(request: TTSRequest): Promise<TTSResponse> {
-  // TODO: Implement real ElevenLabs API call
-  // const apiKey = process.env.ELEVENLABS_API_KEY;
-  // if (!apiKey) throw new Error("ELEVENLABS_API_KEY not configured");
-  
-  // For now, fallback to mock
-  return await ttsMock(request);
-}
-
-/**
- * Mock TTS
- */
-async function ttsMock(request: TTSRequest): Promise<TTSResponse> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Generate a mock audio URL
-  const jobId = `mock-${Date.now()}`;
-  const audioUrl = `/mock-audio/ai-voice-job-${jobId}.mp3`;
-
-  return {
-    audioUrl,
-    provider: "mock",
-    duration: Math.ceil(request.text.length / 10), // Rough estimate: 10 chars per second
-  };
-}
-
-/**
- * D-ID Video Host (stub - ready for real integration)
- */
-async function videoHostDID(request: VideoHostRequest): Promise<VideoHostResponse> {
-  // TODO: Implement real D-ID API call
-  // const apiKey = process.env.DID_API_KEY;
-  // if (!apiKey) throw new Error("DID_API_KEY not configured");
-  
-  // For now, fallback to mock
-  return await videoHostMock(request);
-}
-
-/**
- * Mock Video Host
- */
-async function videoHostMock(request: VideoHostRequest): Promise<VideoHostResponse> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  // Generate mock URLs
-  const jobId = `mock-${Date.now()}`;
-  const videoUrl = `/mock-video/ai-video-job-${jobId}.mp4`;
-  const thumbnailUrl = `/mock-thumbnails/ai-video-job-${jobId}.jpg`;
-
-  return {
-    videoUrl,
-    thumbnailUrl,
-    provider: "mock",
-    duration: Math.ceil(request.script.length / 10), // Rough estimate
-  };
-}
-
-/**
- * Check if AI Studio is enabled
- */
-export async function isAiStudioEnabled(): Promise<boolean> {
-  try {
-    const { getEmpireSetting } = await import("../db");
-    const setting = await getEmpireSetting("ai_studio_enabled");
-    if (setting?.value) {
-      const enabled = JSON.parse(setting.value) as boolean;
-      return enabled !== false; // Default to true if not set
-    }
-  } catch (error) {
-    console.warn("[AI] Failed to check AI Studio enabled:", error);
+export async function* streamChatCompletion(params: {
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  model?: string;
+  temperature?: number;
+}) {
+  const client = getOpenAI();
+  if (!client) {
+    throw new Error('OpenAI is not configured');
   }
-  return true; // Default enabled
-}
 
-/**
- * Check if fan-facing AI tools are enabled
- */
-export async function areFanFacingAiToolsEnabled(): Promise<boolean> {
-  try {
-    const { getEmpireSetting } = await import("../db");
-    const setting = await getEmpireSetting("fan_facing_ai_enabled");
-    if (setting?.value) {
-      const enabled = JSON.parse(setting.value) as boolean;
-      return enabled === true;
+  const stream = await client.chat.completions.create({
+    model: params.model || ENV.openaiModel || 'gpt-4o',
+    messages: params.messages,
+    temperature: params.temperature ?? 0.7,
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const content = chunk.choices[0]?.delta?.content;
+    if (content) {
+      yield content;
     }
-  } catch (error) {
-    console.warn("[AI] Failed to check fan-facing AI enabled:", error);
   }
-  return false; // Default disabled for safety
 }
-

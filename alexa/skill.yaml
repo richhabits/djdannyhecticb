@@ -1,0 +1,60 @@
+# Alexa Skill Configuration
+
+skill_id: amzn1.ask.skill.hectic-radio
+
+skill_name: Hectic Radio
+
+invocation_name: hectic radio
+
+intents:
+  - name: PlayLiveRadio
+    samples:
+      - play live radio
+      - start streaming
+      - tune in
+      - listen live
+    
+  - name: PlayMix
+    slots:
+      - name: MixName
+        type: AMAZON.SearchQuery
+    samples:
+      - play {MixName}
+      - play the mix {MixName}
+      - I want to hear {MixName}
+  
+  - name: RequestTrack
+    slots:
+      - name: TrackName
+        type: AMAZON.SearchQuery
+      - name: ArtistName
+        type: AMAZON.SearchQuery
+    samples:
+      - request {TrackName} by {ArtistName}
+      - play {TrackName}
+      - I want to hear {TrackName}
+  
+  - name: SendShoutOut
+    slots:
+      - name: Message
+        type: AMAZON.SearchQuery
+    samples:
+      - send a shout out {Message}
+      - shout out {Message}
+  
+  - name: WhatsPlaying
+    samples:
+      - what's playing
+      - what's this track
+      - track info
+      - what song is this
+  
+  - name: GetListenerCount
+    samples:
+      - how many listeners
+      - listener count
+      - how many people are listening
+
+endpoint:
+  type: HTTPS
+  uri: https://api.hecticradio.com/alexa

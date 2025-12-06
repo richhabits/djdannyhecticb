@@ -1,0 +1,50 @@
+# Docker Compose for local development
+
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: djdanny-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: djdannyhecticb
+      MYSQL_USER: djdanny
+      MYSQL_PASSWORD: djdannypass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: djdanny-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://djdanny:djdannypass@db:3306/djdannyhecticb
+      - OAUTH_SERVER_URL=${OAUTH_SERVER_URL}
+      - APP_ID=${APP_ID}
+      - JWT_SECRET=${JWT_SECRET}
+      # Add other env vars from .env file
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  db_data:
