@@ -21,6 +21,17 @@ export const appRouter = router({
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    getDownloadUrl: publicProcedure
+      .input(z.object({
+        mixId: z.string(),
+        format: z.enum(["mp3", "wav", "flac"]).default("mp3"),
+      }))
+      .mutation(async ({ input }) => {
+        const { getDownloadUrl } = await import("./_core/s3");
+        const key = `mixes/${input.mixId}/mix.${input.format}`;
+        const url = await getDownloadUrl(key);
+        return { url };
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system
@@ -1987,6 +1998,100 @@ export const appRouter = router({
         } : null,
       };
     }),
+  }),
+
+  // ============================================
+  // EMAIL SERVICE INTEGRATION
+  // ============================================
+  email: router({
+    subscribe: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        name: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { emailService } = await import("./_core/email");
+        const result = await emailService.subscribeToNewsletter(
+          input.email,
+          input.name,
+          input.tags
+        );
+        
+        // Send welcome email
+        if (result.success && input.name) {
+          await emailService.sendWelcomeEmail(input.email, input.name);
+        }
+        
+        return result;
+      }),
+    
+    contact: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        subject: z.string().min(1),
+        message: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const { emailService } = await import("./_core/email");
+        
+        // Send email to admin
+        const result = await emailService.send({
+          to: { email: "info@djdannyhecticb.com", name: "DJ Danny Hectic B" },
+          subject: `[Website Contact] ${input.subject}`,
+          html: `
+            <h2>New Contact Form Submission</h2>
+            <p><strong>From:</strong> ${input.name} (${input.email})</p>
+            <p><strong>Subject:</strong> ${input.subject}</p>
+            <hr />
+            <p>${input.message.replace(/\n/g, "<br />")}</p>
+          `,
+          replyTo: input.email,
+        });
+        
+        // Send auto-reply to user
+        if (result.success) {
+          await emailService.send({
+            to: { email: input.email, name: input.name },
+            subject: "Thanks for reaching out!",
+            html: `
+              <p>Hey ${input.name}!</p>
+              <p>Thanks for getting in touch. I've received your message and will get back to you as soon as possible.</p>
+              <p>In the meantime, stay locked into Hectic Radio!</p>
+              <p>— DJ Danny Hectic B</p>
+            `,
+          });
+        }
+        
+        return result;
+      }),
+    
+    sendBookingConfirmation: adminProcedure
+      .input(z.object({
+        email: z.string().email(),
+        name: z.string(),
+        eventDate: z.string(),
+        eventType: z.string(),
+        location: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { emailService } = await import("./_core/email");
+        return emailService.sendBookingConfirmation(input.email, input);
+      }),
+    
+    sendMixAlert: adminProcedure
+      .input(z.object({
+        email: z.string().email(),
+        name: z.string(),
+        mixTitle: z.string(),
+        mixUrl: z.string(),
+        genre: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { emailService } = await import("./_core/email");
+        return emailService.sendNewMixAlert(input.email, input);
+      }),
   }),
 
   integrations: router({

@@ -1,0 +1,82 @@
+# Labeler configuration for auto-labeling PRs
+
+# Frontend changes
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'client/**/*'
+          - 'vite.config.ts'
+
+# Backend changes
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/**/*'
+          - 'drizzle/**/*'
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**/*'
+          - '*.md'
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.test.ts'
+          - '**/*.test.tsx'
+          - '**/*.spec.ts'
+          - '**/*.spec.tsx'
+          - 'vitest.config.ts'
+
+# Configuration
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.config.*'
+          - '.env*'
+          - 'package.json'
+          - 'pnpm-lock.yaml'
+          - 'tsconfig*.json'
+
+# CI/CD
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**/*'
+
+# Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'pnpm-lock.yaml'
+
+# UI Components
+components:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'client/src/components/**/*'
+
+# Pages
+pages:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'client/src/pages/**/*'
+
+# API
+api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/routers.ts'
+          - 'server/_core/**/*'
+
+# Database
+database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'drizzle/**/*'
+          - 'server/db.ts'
+          - 'server/storage.ts'
