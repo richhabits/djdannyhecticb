@@ -7,6 +7,7 @@ export const QUEUE_NAMES = {
 
 let sharedConnection: IORedis | null = null;
 const schedulers = new Map<string, QueueScheduler>();
+const queueCache = new Map<string, Queue>();
 
 function getRedisUrl() {
   return process.env.REDIS_URL || "redis://127.0.0.1:6379";
@@ -39,8 +40,34 @@ function ensureScheduler(name: string) {
 
 export function getQueue(name: string, options?: QueueOptions) {
   ensureScheduler(name);
-  return new Queue(name, {
+  if (queueCache.has(name)) {
+    return queueCache.get(name)!;
+  }
+  const queue = new Queue(name, {
     connection: getRedisConnection(),
     ...(options ?? {}),
   });
+  queueCache.set(name, queue);
+  return queue;
+}
+
+export async function getQueueStats(name: string) {
+  const queue = getQueue(name);
+  const counts = await queue.getJobCounts(
+    "waiting",
+    "active",
+    "completed",
+    "failed",
+    "delayed",
+    "paused"
+  );
+  const metrics = await queue.getMetrics("completed");
+  return {
+    name,
+    counts,
+    metrics: {
+      completed: metrics,
+    },
+    isPaused: await queue.isPaused(),
+  };
 }

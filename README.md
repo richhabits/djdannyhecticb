@@ -188,6 +188,8 @@ djdannyhecticb/
 | `SPOTIFY_CLIENT_SECRET` | Optional | Spotify API client secret |
 | `SPOTIFY_PLAYLIST_IDS` | Optional | Comma-separated playlist IDs to sync |
 | `SPOTIFY_SHOW_ID` | Optional | Spotify show ID to pull podcast episodes |
+| `MUSIC_SYNC_CRON` | Optional | Cron expression for automatic music sync (default `0 * * * *`) |
+| `JOB_CRON_TZ` | Optional | Timezone for cron schedules (default `UTC`) |
 | `YOUTUBE_API_KEY` | Optional | YouTube Data API key |
 | `YOUTUBE_CHANNEL_ID` | Optional | Channel ID to fetch latest uploads |
 
@@ -208,6 +210,7 @@ djdannyhecticb/
 Spotify and YouTube data can now be synced directly into the app:
 
 - **Spotify**: set `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_PLAYLIST_IDS` (comma separated list), and optionally `SPOTIFY_SHOW_ID`. Use the admin Integrations page → Music tab to trigger a sync or auto-fill the top 6 streaming cards.
+- **Automation**: `MUSIC_SYNC_CRON` configures the automatic queue-based sync cadence (defaults to hourly). Set to `off` to disable, and adjust `JOB_CRON_TZ` if you need non-UTC scheduling.
 - **YouTube**: set `YOUTUBE_API_KEY` and `YOUTUBE_CHANNEL_ID`, then sync to capture the latest uploads + stats.
 
 All synced data is cached in MySQL, so public pages render instantly even if the third-party APIs are rate-limited.

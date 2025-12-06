@@ -1,6 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { STREAMING_PLATFORM_SLUGS } from "@shared/streamingPlatforms";
 import { enqueueMusicSync } from "./_core/musicJobs";
+import { getQueueStats, QUEUE_NAMES } from "./_core/queue";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
@@ -121,6 +122,15 @@ export const appRouter = router({
         const job = await enqueueMusicSync("youtube");
         return { status: "queued", jobId: job.id };
       }),
+    }),
+  }),
+
+  operations: router({
+    jobs: adminProcedure.query(async () => {
+      const queues = await Promise.all(
+        Object.values(QUEUE_NAMES).map(async (name) => getQueueStats(name))
+      );
+      return { queues };
     }),
   }),
 
