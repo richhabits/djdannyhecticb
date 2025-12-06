@@ -5,6 +5,8 @@ import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_
 import { z } from "zod";
 import * as db from "./db";
 
+const FAN_FACING_SCRIPT_TYPES = new Set(["fanShout", "promo"]);
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -1411,6 +1413,9 @@ export const appRouter = router({
           if (input.type === "fanShout" && !(await areFanFacingAiToolsEnabled())) {
             throw new Error("Fan-facing AI tools are currently disabled");
           }
+          if (FAN_FACING_SCRIPT_TYPES.has(input.type)) {
+            await requireFanConsent(ctx.user, input.context);
+          }
           const { createAiScriptJob } = await import("./_core/aiScriptFactory");
           const jobId = await createAiScriptJob(input.type, input.context, ctx.user?.id);
           const job = await db.getAIScriptJob(jobId);
@@ -1587,6 +1592,14 @@ export const appRouter = router({
         fanFacingEnabled: await areFanFacingAiToolsEnabled(),
       };
     }),
+
+    shouts: router({
+      list: publicProcedure
+        .input(z.object({ limit: z.number().min(1).max(50).default(12) }).optional())
+        .query(({ input }) => db.listFanShoutGallery(input?.limit ?? 12)),
+    }),
+
+    metrics: adminProcedure.query(() => db.getAiStudioMetrics()),
   }),
 
   // ============================================
@@ -2222,3 +2235,32 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+async function requireFanConsent(
+  user: { id?: number; role?: string; email?: string } | null | undefined,
+  context: Record<string, unknown> | undefined
+) {
+  if (user?.role === "admin") return;
+
+  const emailFromContext =
+    (context as any)?.userInfo?.email ||
+    (context as any)?.shoutData?.email ||
+    (context as any)?.contact?.email;
+
+  const sanitizedEmail =
+    typeof emailFromContext === "string" && emailFromContext.trim().length > 0
+      ? emailFromContext.trim().toLowerCase()
+      : undefined;
+
+  const userId = user?.id;
+  const lookupEmail = sanitizedEmail || (user?.email ?? undefined);
+
+  if (!lookupEmail && !userId) {
+    throw new Error("Email consent required before using AI fan tools.");
+  }
+
+  const consent = await db.getUserConsent(undefined, userId, lookupEmail);
+  if (!consent || consent.aiContentConsent !== true) {
+    throw new Error("Please provide AI content consent before using fan tools.");
+  }
+}

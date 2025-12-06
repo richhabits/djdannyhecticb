@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +8,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { FileText, Volume2, Video, AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function AdminAIStudio() {
   const { user, isAuthenticated } = useAuth();
@@ -20,6 +22,30 @@ export default function AdminAIStudio() {
   const { data: studioStatus } = trpc.aiStudio.status.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const { data: metrics } = trpc.aiStudio.metrics.useQuery(undefined, {
+    enabled: !!user && user.role === "admin",
+  });
+
+  const previousStatus = useRef<typeof studioStatus>();
+
+  useEffect(() => {
+    if (!studioStatus) return;
+    if (previousStatus.current) {
+      if (previousStatus.current.aiStudioEnabled !== studioStatus.aiStudioEnabled) {
+        toast[studioStatus.aiStudioEnabled ? "success" : "warning"](
+          studioStatus.aiStudioEnabled ? "AI Studio enabled" : "AI Studio paused"
+        );
+      }
+      if (previousStatus.current.fanFacingEnabled !== studioStatus.fanFacingEnabled) {
+        toast.info(
+          studioStatus.fanFacingEnabled
+            ? "Fan-facing AI tools opened"
+            : "Fan-facing AI tools closed"
+        );
+      }
+    }
+    previousStatus.current = studioStatus;
+  }, [studioStatus]);
 
   if (!isAuthenticated || user?.role !== "admin") {
     return (
@@ -44,6 +70,10 @@ export default function AdminAIStudio() {
     ...(voiceJobs?.filter((j) => j.status === "failed") || []),
     ...(videoJobs?.filter((j) => j.status === "failed") || []),
   ].filter((j) => new Date(j.createdAt) >= new Date(Date.now() - 24 * 60 * 60 * 1000)).length;
+
+  const queueStats = metrics?.queue ?? { scripts: 0, voice: 0, video: 0 };
+  const completedStats = metrics?.completed24h ?? { scripts: 0, voice: 0, video: 0 };
+  const automation = metrics?.automation ?? { workerEnabled: false, intervalMs: 0 };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -121,6 +151,77 @@ export default function AdminAIStudio() {
             <div className="text-2xl font-bold">{consentStats?.total ?? 0}</div>
             <p className="text-xs text-muted-foreground">
               AI: {consentStats?.aiContent ?? 0} · Marketing: {consentStats?.marketing ?? 0} · Data: {consentStats?.dataShare ?? 0}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Queue Depth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-2">Jobs waiting for automation</p>
+            <div className="flex justify-between text-sm">
+              <div>
+                <p className="font-medium">Scripts</p>
+                <p className="text-2xl font-bold">{queueStats.scripts}</p>
+              </div>
+              <div>
+                <p className="font-medium">Voice</p>
+                <p className="text-2xl font-bold">{queueStats.voice}</p>
+              </div>
+              <div>
+                <p className="font-medium">Video</p>
+                <p className="text-2xl font-bold">{queueStats.video}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">24h Output</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-2">Completed via automation/manual</p>
+            <div className="flex justify-between text-sm">
+              <div>
+                <p className="font-medium">Scripts</p>
+                <p className="text-2xl font-bold">{completedStats.scripts}</p>
+              </div>
+              <div>
+                <p className="font-medium">Voice</p>
+                <p className="text-2xl font-bold">{completedStats.voice}</p>
+              </div>
+              <div>
+                <p className="font-medium">Video</p>
+                <p className="text-2xl font-bold">{completedStats.video}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Automation</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Worker</span>
+              <Badge variant={automation.workerEnabled ? "default" : "secondary"}>
+                {automation.workerEnabled ? "Enabled" : "Disabled"}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Interval</span>
+              <span className="font-semibold">
+                {(automation.intervalMs / 1000).toFixed(1)}s
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Background worker auto-processes queues when kill switches allow.
             </p>
           </CardContent>
         </Card>
