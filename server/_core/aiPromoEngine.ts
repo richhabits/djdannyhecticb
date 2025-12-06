@@ -1,8 +1,10 @@
 /**
  * Auto Promo Engine - Generates promo clips, subtitles, thumbnails
- * 
- * TODO: Replace with real AI provider call when ready
+ * Uses real AI providers when available
  */
+
+import { chatCompletion } from "./aiProviders";
+import { dannyPersona } from "./dannyPersona";
 
 export type PromoType = "clip" | "subtitle" | "thumbnail" | "post";
 export type SourceType = "mix" | "show" | "shout" | "reaction";
@@ -22,16 +24,41 @@ export interface GeneratedPromo {
 
 /**
  * Generate promo content
- * TODO: Replace with real AI call
+ * Uses AI to generate engaging promotional content
  */
 export async function generatePromoContent(request: PromoRequest): Promise<GeneratedPromo> {
-  // TODO: Replace with actual AI provider call
-  // For clips: Would generate video edit suggestions or actual clips
-  // For subtitles: Would generate captions
-  // For thumbnails: Would generate thumbnail designs
-  // For posts: Would generate social media posts
-  
   const { type, sourceType, sourceData } = request;
+
+  if (type === "post") {
+    const prompt = `Generate a social media post for a ${sourceType}:
+${sourceData?.title ? `Title: ${sourceData.title}` : ""}
+${sourceData?.name ? `Name: ${sourceData.name}` : ""}
+${sourceData?.message ? `Message: ${sourceData.message.substring(0, 200)}` : ""}
+
+Make it engaging, in Danny Hectic B's style, with emojis and hashtags. Keep it concise (2-3 sentences max).`;
+
+    try {
+      const aiResponse = await chatCompletion({
+        messages: [
+          {
+            role: "system",
+            content: dannyPersona.systemPrompt + "\n\nYou are generating social media promotional posts. Be engaging, energetic, and authentic.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        persona: "Danny Hectic B",
+      });
+
+      return {
+        content: aiResponse.text,
+      };
+    } catch (error) {
+      console.error("[AI Promo] Failed to generate promo:", error);
+    }
+  }
   
   let content = "";
   

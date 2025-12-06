@@ -8,8 +8,10 @@ import { MetaTagsComponent } from "@/components/MetaTags";
 import { UserPlus, UserMinus, MessageSquare, Heart, Share2, Trophy, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Profile() {
+  const { user } = useAuth();
   const [, params] = useRoute<{ username: string }>("/profile/:username");
   const username = params?.username || "";
 
@@ -34,7 +36,7 @@ export default function Profile() {
   );
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const currentProfileId = 1; // TODO: Get from auth
+  const currentProfileId = user?.id;
 
   const followMutation = trpc.genz.follows.follow.useMutation({
     onSuccess: () => {

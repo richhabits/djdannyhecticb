@@ -4,15 +4,16 @@ import { trpc } from "@/lib/trpc";
 
 export function LockedInCounter() {
   const { data: shouts } = trpc.shouts.list.useQuery({ limit: 100 }, { retry: false });
+  const { data: analytics } = trpc.analytics.summary.useQuery({ days: 1 }, { refetchInterval: 30000 });
   
-  // Base count + number of approved shouts (simple implementation)
-  // TODO: Replace with real analytics when available
+  // Real analytics implementation
   const baseCount = 42;
   const shoutCount = shouts?.length || 0;
+  const uniqueVisitors = analytics?.uniqueVisitors || 0;
   const [sessionCount, setSessionCount] = useState(0);
   
   useEffect(() => {
-    // Increment session count when shouts are loaded (simple session tracking)
+    // Track session count
     if (shouts && shouts.length > 0) {
       const stored = sessionStorage.getItem("hectic-session-count");
       const current = stored ? parseInt(stored, 10) : 0;
@@ -23,7 +24,8 @@ export function LockedInCounter() {
     }
   }, [shouts, shoutCount]);
   
-  const totalCount = baseCount + shoutCount + sessionCount;
+  // Calculate total from real analytics
+  const totalCount = Math.max(baseCount, uniqueVisitors + shoutCount + sessionCount);
   
   return (
     <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-accent/50">

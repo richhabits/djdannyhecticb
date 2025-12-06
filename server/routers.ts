@@ -4,6 +4,14 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import * as analytics from "./_core/analytics";
+import * as spotify from "./_core/spotify";
+import * as youtube from "./_core/youtube";
+import * as payments from "./_core/payments";
+import { monitoring } from "./_core/monitoring";
+import { jobQueue } from "./_core/queue";
+import { getPoolStats } from "./db";
+import { cache } from "./_core/cache";
 
 export const appRouter = router({
   system: systemRouter,
@@ -18,9 +26,87 @@ export const appRouter = router({
     }),
   }),
 
+  analytics: router({
+    track: publicProcedure
+      .input(z.object({
+        eventType: z.string(),
+        eventName: z.string(),
+        properties: z.record(z.any()).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await analytics.trackEvent({
+          userId: ctx.user?.id,
+          eventType: input.eventType,
+          eventName: input.eventName,
+          properties: input.properties,
+        });
+        return { success: true };
+      }),
+    trackPageView: publicProcedure
+      .input(z.object({
+        path: z.string(),
+        referrer: z.string().optional(),
+        userAgent: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await analytics.trackPageView({
+          userId: ctx.user?.id,
+          ...input,
+        });
+        return { success: true };
+      }),
+    trackClick: publicProcedure
+      .input(z.object({
+        element: z.string(),
+        elementId: z.string().optional(),
+        elementText: z.string().optional(),
+        path: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await analytics.trackClick({
+          userId: ctx.user?.id,
+          ...input,
+        });
+        return { success: true };
+      }),
+    summary: publicProcedure
+      .input(z.object({ days: z.number().default(30) }).optional())
+      .query(async ({ input }) => {
+        return await analytics.getAnalyticsSummary(input?.days || 30);
+      }),
+  }),
+
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    download: publicProcedure
+      .input(z.object({ mixId: z.number() }))
+      .mutation(async ({ input }) => {
+        const mixes = await db.getAllMixes();
+        const mix = mixes.find((m) => m.id === input.mixId);
+        if (!mix || !mix.audioUrl) {
+          throw new Error("Mix not found or no audio URL");
+        }
+
+        // Generate presigned download URL if using S3
+        try {
+          const { storageGet } = await import("./storage");
+          // Extract key from URL if it's an S3 path
+          const url = new URL(mix.audioUrl);
+          const key = url.pathname.replace(/^\//, "");
+          const downloadInfo = await storageGet(key);
+          return {
+            downloadUrl: downloadInfo.url,
+            expiresIn: 3600, // 1 hour
+          };
+        } catch {
+          // If not S3, return original URL
+          return {
+            downloadUrl: mix.audioUrl,
+            expiresIn: null,
+          };
+        }
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system
@@ -29,6 +115,44 @@ export const appRouter = router({
     upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
     featured: publicProcedure.query(() => db.getFeaturedEvents()),
     all: publicProcedure.query(() => db.getAllEvents()),
+    bookings: router({
+      list: publicProcedure
+        .input(z.object({
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+        }).optional())
+        .query(async ({ input }) => {
+          const bookings = await db.listEventBookings();
+          if (input?.startDate && input?.endDate) {
+            const start = new Date(input.startDate);
+            const end = new Date(input.endDate);
+            return bookings.filter((b) => {
+              const bookingStart = new Date(b.startTime);
+              return bookingStart >= start && bookingStart <= end;
+            });
+          }
+          return bookings;
+        }),
+      create: protectedProcedure
+        .input(z.object({
+          eventId: z.number().optional(),
+          startTime: z.string(),
+          endTime: z.string(),
+          name: z.string(),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          message: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          return await db.createEventBooking({
+            ...input,
+            userId: ctx.user?.id,
+            startTime: new Date(input.startTime),
+            endTime: new Date(input.endTime),
+            status: "pending",
+          });
+        }),
+    }),
   }),
 
   podcasts: router({
@@ -731,8 +855,36 @@ export const appRouter = router({
         description: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        // TODO: Serialize actual data from database
-        const dataBlob = JSON.stringify({ timestamp: new Date().toISOString(), label: input.label });
+        // Serialize actual data from database
+        const dbInstance = await db.getDb();
+        const backupData = {
+          timestamp: new Date().toISOString(),
+          label: input.label,
+          description: input.description,
+          data: {
+            shouts: await db.getAllShouts().catch(() => []),
+            events: await db.getAllEvents().catch(() => []),
+            bookings: await db.listEventBookings().catch(() => []),
+            wallets: await db.listWallets(1000).catch(() => []),
+            rewards: await db.listRewards().catch(() => []),
+            redemptions: await db.listRedemptions({}, 1000).catch(() => []),
+            streams: await db.listStreams().catch(() => []),
+            shows: await db.getAllShows().catch(() => []),
+            tracks: await db.getTrackHistory(100).catch(() => []),
+            mixes: await db.getAllMixes().catch(() => []),
+            podcasts: await db.getAllPodcasts().catch(() => []),
+          },
+        };
+        // Add users if database is available
+        if (dbInstance) {
+          try {
+            const { users } = await import("../drizzle/schema");
+            backupData.data.users = await dbInstance.select().from(users).limit(1000).catch(() => []);
+          } catch {
+            backupData.data.users = [];
+          }
+        }
+        const dataBlob = JSON.stringify(backupData);
         const crypto = await import("crypto");
         const checksum = crypto.createHash("sha256").update(dataBlob).digest("hex");
         const backup = await db.createBackup({
@@ -2186,6 +2338,126 @@ export const appRouter = router({
             actorName: ctx.user?.name || "Admin",
           });
           return updated;
+        }),
+    }),
+
+    spotify: router({
+      search: publicProcedure
+        .input(z.object({
+          query: z.string().min(1),
+          limit: z.number().min(1).max(50).default(20),
+        }))
+        .query(async ({ input }) => {
+          return await spotify.searchSpotifyTracks(input.query, input.limit);
+        }),
+      track: publicProcedure
+        .input(z.object({ trackId: z.string() }))
+        .query(async ({ input }) => {
+          return await spotify.getSpotifyTrack(input.trackId);
+        }),
+      playlist: publicProcedure
+        .input(z.object({ playlistId: z.string() }))
+        .query(async ({ input }) => {
+          return await spotify.getSpotifyPlaylist(input.playlistId);
+        }),
+    }),
+
+    youtube: router({
+      search: publicProcedure
+        .input(z.object({
+          query: z.string().min(1),
+          maxResults: z.number().min(1).max(50).default(20),
+        }))
+        .query(async ({ input }) => {
+          return await youtube.searchYouTubeVideos(input.query, input.maxResults);
+        }),
+      video: publicProcedure
+        .input(z.object({ videoId: z.string() }))
+        .query(async ({ input }) => {
+          return await youtube.getYouTubeVideo(input.videoId);
+        }),
+      playlist: publicProcedure
+        .input(z.object({ playlistId: z.string() }))
+        .query(async ({ input }) => {
+          return await youtube.getYouTubePlaylist(input.playlistId);
+        }),
+    }),
+
+    payments: router({
+      createIntent: protectedProcedure
+        .input(z.object({
+          amount: z.number().min(1),
+          currency: z.string().default("gbp"),
+          description: z.string().optional(),
+          metadata: z.record(z.string()).optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          return await payments.createPaymentIntent({
+            amount: input.amount,
+            currency: input.currency,
+            description: input.description,
+            metadata: {
+              ...input.metadata,
+              userId: ctx.user?.id?.toString() || "",
+            },
+          });
+        }),
+      createCheckout: protectedProcedure
+        .input(z.object({
+          amount: z.number().min(1),
+          currency: z.string().default("gbp"),
+          successUrl: z.string(),
+          cancelUrl: z.string(),
+          description: z.string().optional(),
+          metadata: z.record(z.string()).optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          return await payments.createCheckoutSession({
+            ...input,
+            metadata: {
+              ...input.metadata,
+              userId: ctx.user?.id?.toString() || "",
+            },
+          });
+        }),
+      verify: publicProcedure
+        .input(z.object({ paymentIntentId: z.string() }))
+        .query(async ({ input }) => {
+          return await payments.verifyPaymentIntent(input.paymentIntentId);
+        }),
+    }),
+
+    performance: router({
+      stats: adminProcedure.query(async () => {
+        const stats = monitoring.getSummary(3600000); // Last hour
+        const poolStats = await getPoolStats();
+        const queueStats = jobQueue.getStats();
+        
+        return {
+          ...stats,
+          database: poolStats,
+          queue: queueStats,
+          cache: {
+            enabled: !!process.env.REDIS_URL,
+          },
+        };
+      }),
+      endpointStats: adminProcedure
+        .input(z.object({
+          endpoint: z.string(),
+          method: z.string().default("GET"),
+        }))
+        .query(({ input }) => {
+          return monitoring.getEndpointStats(input.endpoint, input.method);
+        }),
+      clearCache: adminProcedure
+        .input(z.object({ pattern: z.string().optional() }).optional())
+        .mutation(async ({ input }) => {
+          if (input?.pattern) {
+            const count = await cache.invalidatePattern(input.pattern);
+            return { cleared: count };
+          }
+          return { cleared: 0 };
         }),
     }),
   }),

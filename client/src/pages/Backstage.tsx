@@ -5,12 +5,14 @@ import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { Lock, Sparkles, Calendar, Trophy, Music } from "lucide-react";
 import { Link } from "wouter";
-
-const currentProfileId = 1; // TODO: Get from auth
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Backstage() {
+  const { user } = useAuth();
+  const currentProfileId = user?.id;
+
   const { data: innerCircleStatus } = trpc.innerCircle.getStatus.useQuery(
-    { profileId: currentProfileId },
+    { profileId: currentProfileId || 0 },
     { enabled: !!currentProfileId }
   );
 

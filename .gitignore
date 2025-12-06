@@ -105,3 +105,13 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Documentation (keep implementation docs)
+# IMPLEMENTATION_SUMMARY.md
+# SCALING_GUIDE.md
+# SCALING_COMPLETE.md
+
+# Temporary files
+*.tmp
+*.temp
+package.json.scaling

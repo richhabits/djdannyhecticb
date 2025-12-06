@@ -1,8 +1,10 @@
 /**
  * AI Personalized Shoutouts Generator
- * 
- * TODO: Replace with real AI provider call when ready
+ * Uses real AI providers when available
  */
+
+import { chatCompletion } from "./aiProviders";
+import { dannyPersona } from "./dannyPersona";
 
 export type ShoutoutType = "birthday" | "roast" | "motivational" | "breakup" | "custom";
 
@@ -14,12 +16,40 @@ export interface ShoutoutRequest {
 
 /**
  * Generate personalized shoutout
- * TODO: Replace with real AI call
+ * Uses AI to generate authentic Danny-style shoutouts
  */
 export async function generatePersonalizedShoutout(request: ShoutoutRequest): Promise<string> {
-  // TODO: Replace with actual AI provider call
-  
   const { recipientName, type, customContext } = request;
+
+  const typePrompts = {
+    birthday: "a birthday shoutout - celebratory, energetic, and fun",
+    roast: "a playful roast - funny but respectful, with Danny's humor",
+    motivational: "a motivational message - inspiring and uplifting",
+    breakup: "a supportive message for someone going through a breakup - empathetic and encouraging",
+    custom: `a custom shoutout with this context: ${customContext || "general appreciation"}`,
+  };
+
+  const prompt = `Generate ${typePrompts[type]} for ${recipientName}. Make it authentic, in Danny Hectic B's style - energetic, engaging, and genuine. Keep it 2-3 sentences, use emojis appropriately, and end with "🔥" or similar.`;
+
+  try {
+    const aiResponse = await chatCompletion({
+      messages: [
+        {
+          role: "system",
+          content: dannyPersona.systemPrompt + "\n\nYou are generating personalized shoutouts. Be authentic, energetic, and engaging.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      persona: "Danny Hectic B",
+    });
+
+    return aiResponse.text;
+  } catch (error) {
+    console.error("[AI Shoutouts] Failed to generate shoutout:", error);
+    // Fallback to template-based response
   
   switch (type) {
     case "birthday":
