@@ -1,9 +1,0 @@
-{
-  "scaling-dependencies": {
-    "ioredis": "^5.3.2",
-    "socket.io": "^4.7.2",
-    "compression": "^1.7.4",
-    "@types/compression": "^1.7.5"
-  },
-  "note": "Add these to your package.json dependencies for full scaling support"
-}
