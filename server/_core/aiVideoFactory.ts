@@ -5,6 +5,7 @@
  */
 
 import { generateVideoHost, VideoHostRequest } from "./aiProviders";
+import { publishVideoJobAsset } from "./aiAssetPublisher";
 import * as db from "../db";
 import { InsertAIVideoJob } from "../../drizzle/schema";
 
@@ -68,6 +69,11 @@ export async function processAiVideoJob(jobId: number): Promise<{ videoUrl: stri
     // Update job with result
     await db.updateAIVideoJob(jobId, {
       status: "completed",
+      videoUrl: response.videoUrl,
+      thumbnailUrl: response.thumbnailUrl,
+    });
+
+    await publishVideoJobAsset(jobId, {
       videoUrl: response.videoUrl,
       thumbnailUrl: response.thumbnailUrl,
     });
