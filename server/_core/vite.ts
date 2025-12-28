@@ -6,7 +6,9 @@ import path from "path";
 
 export async function setupVite(app: Express, server: Server) {
   const { createServer: createViteServer } = await import("vite");
-  const viteConfig = (await import("../../vite.config")).default;
+  // Use a variable to prevent esbuild from bundling the config file
+  const configName = "vite.config";
+  const viteConfig = (await import(`../../${configName}`)).default;
 
   const serverOptions = {
     middlewareMode: true,
