@@ -5,6 +5,7 @@
  */
 
 import { textToSpeech, TTSRequest } from "./aiProviders";
+import { publishVoiceJobAsset } from "./aiAssetPublisher";
 import * as db from "../db";
 import { InsertAIVoiceJob } from "../../drizzle/schema";
 
@@ -70,6 +71,7 @@ export async function processAiVoiceJob(jobId: number): Promise<string> {
       voiceId,
       language: "en",
       speed: 1.0,
+      jobId,
     };
 
     const response = await textToSpeech(request);
@@ -79,6 +81,8 @@ export async function processAiVoiceJob(jobId: number): Promise<string> {
       status: "completed",
       audioUrl: response.audioUrl,
     });
+
+    await publishVoiceJobAsset(jobId, response.audioUrl);
 
     return response.audioUrl;
   } catch (error) {

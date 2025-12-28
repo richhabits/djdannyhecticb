@@ -1,4 +1,4 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, count, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -2350,6 +2350,139 @@ export async function updateAIScriptJob(id: number, updates: Partial<InsertAIScr
   return updated[0];
 }
 
+export async function listFanShoutGallery(limit: number = 12) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const shouts = await db
+    .select()
+    .from(aiScriptJobs)
+    .where(and(eq(aiScriptJobs.type, "fanShout"), eq(aiScriptJobs.status, "completed")))
+    .orderBy(desc(aiScriptJobs.createdAt))
+    .limit(limit);
+
+  const items = await Promise.all(
+    shouts.map(async (job) => {
+      const voice = await getLatestVoiceJobForScript(job.id);
+      const video = await getLatestVideoJobForScript(job.id);
+      const context = safeParseJSON(job.inputContext);
+      return {
+        id: job.id,
+        createdAt: job.createdAt,
+        resultText: job.resultText,
+        shoutData: context?.shoutData || null,
+        voice: voice && voice.status === "completed" && voice.audioUrl
+          ? {
+              audioUrl: voice.audioUrl,
+              voiceProfile: voice.voiceProfile,
+            }
+          : null,
+        video: video && video.status === "completed" && video.videoUrl
+          ? {
+              videoUrl: video.videoUrl,
+              thumbnailUrl: video.thumbnailUrl,
+              stylePreset: video.stylePreset,
+            }
+          : null,
+      };
+    })
+  );
+
+  return items;
+}
+
+function safeParseJSON(value?: string | null) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+export async function getAiStudioMetrics() {
+  const db = await getDb();
+  if (!db) return defaultAiStudioMetrics();
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const [{ value: scriptPending }] = await db
+    .select({ value: count() })
+    .from(aiScriptJobs)
+    .where(eq(aiScriptJobs.status, "pending"));
+
+  const [{ value: voicePending }] = await db
+    .select({ value: count() })
+    .from(aiVoiceJobs)
+    .where(eq(aiVoiceJobs.status, "pending"));
+
+  const [{ value: videoPending }] = await db
+    .select({ value: count() })
+    .from(aiVideoJobs)
+    .where(eq(aiVideoJobs.status, "pending"));
+
+  const [{ value: scriptCompleted }] = await db
+    .select({ value: count() })
+    .from(aiScriptJobs)
+    .where(and(eq(aiScriptJobs.status, "completed"), gt(aiScriptJobs.updatedAt, since)));
+
+  const [{ value: voiceCompleted }] = await db
+    .select({ value: count() })
+    .from(aiVoiceJobs)
+    .where(and(eq(aiVoiceJobs.status, "completed"), gt(aiVoiceJobs.updatedAt, since)));
+
+  const [{ value: videoCompleted }] = await db
+    .select({ value: count() })
+    .from(aiVideoJobs)
+    .where(and(eq(aiVideoJobs.status, "completed"), gt(aiVideoJobs.updatedAt, since)));
+
+  return {
+    queue: {
+      scripts: Number(scriptPending) || 0,
+      voice: Number(voicePending) || 0,
+      video: Number(videoPending) || 0,
+    },
+    completed24h: {
+      scripts: Number(scriptCompleted) || 0,
+      voice: Number(voiceCompleted) || 0,
+      video: Number(videoCompleted) || 0,
+    },
+    automation: {
+      workerEnabled: process.env.AI_WORKER_ENABLED !== "false",
+      intervalMs: Number(process.env.AI_WORKER_INTERVAL_MS ?? 15000),
+    },
+  };
+}
+
+function defaultAiStudioMetrics() {
+  return {
+    queue: { scripts: 0, voice: 0, video: 0 },
+    completed24h: { scripts: 0, voice: 0, video: 0 },
+    automation: {
+      workerEnabled: process.env.AI_WORKER_ENABLED !== "false",
+      intervalMs: Number(process.env.AI_WORKER_INTERVAL_MS ?? 15000),
+    },
+  };
+}
+
+export async function listAutoPostableContent(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return await db
+    .select()
+    .from(contentQueue)
+    .where(
+      and(
+        eq(contentQueue.source, "aiJob"),
+        eq(contentQueue.status, "scheduled"),
+        lte(contentQueue.scheduledAt, now)
+      )
+    )
+    .orderBy(asc(contentQueue.scheduledAt))
+    .limit(limit);
+}
+
 // AI Voice Jobs
 export async function createAIVoiceJob(job: InsertAIVoiceJob) {
   const db = await getDb();
@@ -2392,6 +2525,18 @@ export async function updateAIVoiceJob(id: number, updates: Partial<InsertAIVoic
   return updated[0];
 }
 
+export async function getLatestVoiceJobForScript(scriptJobId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(aiVoiceJobs)
+    .where(eq(aiVoiceJobs.scriptJobId, scriptJobId))
+    .orderBy(desc(aiVoiceJobs.createdAt))
+    .limit(1);
+  return result[0];
+}
+
 // AI Video Jobs
 export async function createAIVideoJob(job: InsertAIVideoJob) {
   const db = await getDb();
@@ -2432,6 +2577,18 @@ export async function updateAIVideoJob(id: number, updates: Partial<InsertAIVide
   await db.update(aiVideoJobs).set({ ...updates, updatedAt: new Date() }).where(eq(aiVideoJobs.id, id));
   const updated = await db.select().from(aiVideoJobs).where(eq(aiVideoJobs.id, id)).limit(1);
   return updated[0];
+}
+
+export async function getLatestVideoJobForScript(scriptJobId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(aiVideoJobs)
+    .where(eq(aiVideoJobs.scriptJobId, scriptJobId))
+    .orderBy(desc(aiVideoJobs.createdAt))
+    .limit(1);
+  return result[0];
 }
 
 // User Consents
@@ -3082,6 +3239,28 @@ export async function createContentItem(item: InsertContentQueueItem) {
   const insertedId = result[0].insertId;
   const created = await db.select().from(contentQueue).where(eq(contentQueue.id, insertedId)).limit(1);
   return created[0];
+}
+
+export async function getContentItemBySource(
+  source: InsertContentQueueItem["source"],
+  sourceId: number
+) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(contentQueue)
+    .where(and(eq(contentQueue.source, source as any), eq(contentQueue.sourceId, sourceId)))
+    .limit(1);
+  return result[0];
+}
+
+export async function updateContentItem(id: number, updates: Partial<InsertContentQueueItem>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(contentQueue).set({ ...updates, updatedAt: new Date() }).where(eq(contentQueue.id, id));
+  const updated = await db.select().from(contentQueue).where(eq(contentQueue.id, id)).limit(1);
+  return updated[0];
 }
 
 export async function updateContentItemStatus(id: number, status: InsertContentQueueItem["status"], externalUrl?: string) {

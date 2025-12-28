@@ -24,6 +24,7 @@ export interface ScriptContext {
   };
   userInfo?: {
     name: string;
+    email?: string;
     level?: number;
     personaType?: string;
   };

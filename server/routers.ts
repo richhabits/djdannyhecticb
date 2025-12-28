@@ -23,6 +23,8 @@ import {
 } from "../drizzle/schema";
 import { chatWithDanny } from "./lib/gemini";
 
+const FAN_FACING_SCRIPT_TYPES = new Set(["fanShout", "promo"]);
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -1476,9 +1478,15 @@ export const appRouter = router({
           context: z.record(z.any()),
         }))
         .mutation(async ({ input, ctx }) => {
-          const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+          const { areFanFacingAiToolsEnabled, isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           if (input.type === "fanShout" && !(await areFanFacingAiToolsEnabled())) {
             throw new Error("Fan-facing AI tools are currently disabled");
+          }
+          if (FAN_FACING_SCRIPT_TYPES.has(input.type)) {
+            await requireFanConsent(ctx.user, input.context);
           }
           const { createAiScriptJob } = await import("./_core/aiScriptFactory");
           const jobId = await createAiScriptJob(input.type, input.context, ctx.user?.id);
@@ -1489,6 +1497,10 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input, ctx }) => {
           const { processAiScriptJob } = await import("./_core/aiScriptFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const result = await processAiScriptJob(input.id);
           await db.createAuditLog({
             action: "process_ai_script_job",
@@ -1520,7 +1532,10 @@ export const appRouter = router({
           voiceProfile: z.enum(["hectic_main", "hectic_soft", "hectic_shouty"]).default("hectic_main"),
         }))
         .mutation(async ({ input, ctx }) => {
-          const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+          const { areFanFacingAiToolsEnabled, isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           if (!(await areFanFacingAiToolsEnabled()) && !ctx.user) {
             throw new Error("Fan-facing AI tools are currently disabled");
           }
@@ -1538,6 +1553,10 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input, ctx }) => {
           const { processAiVoiceJob } = await import("./_core/aiVoiceFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const audioUrl = await processAiVoiceJob(input.id);
           await db.createAuditLog({
             action: "process_ai_voice_job",
@@ -1568,6 +1587,10 @@ export const appRouter = router({
         }))
         .mutation(async ({ input, ctx }) => {
           const { createAiVideoJob } = await import("./_core/aiVideoFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const jobId = await createAiVideoJob({
             scriptJobId: input.scriptJobId,
             stylePreset: input.stylePreset,
@@ -1587,6 +1610,10 @@ export const appRouter = router({
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input, ctx }) => {
           const { processAiVideoJob } = await import("./_core/aiVideoFactory");
+          const { isAiStudioEnabled } = await import("./_core/aiProviders");
+          if (!(await isAiStudioEnabled())) {
+            throw new Error("AI Studio is currently disabled");
+          }
           const result = await processAiVideoJob(input.id);
           await db.createAuditLog({
             action: "process_ai_video_job",
@@ -1629,6 +1656,22 @@ export const appRouter = router({
         .query(({ input }) => db.getUserConsent(input.profileId, input.userId, input.email)),
       stats: adminProcedure.query(() => db.getConsentStats()),
     }),
+
+    status: publicProcedure.query(async () => {
+      const { isAiStudioEnabled, areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
+      return {
+        aiStudioEnabled: await isAiStudioEnabled(),
+        fanFacingEnabled: await areFanFacingAiToolsEnabled(),
+      };
+    }),
+
+    shouts: router({
+      list: publicProcedure
+        .input(z.object({ limit: z.number().min(1).max(50).default(12) }).optional())
+        .query(({ input }) => db.listFanShoutGallery(input?.limit ?? 12)),
+    }),
+
+    metrics: adminProcedure.query(() => db.getAiStudioMetrics()),
   }),
 
   // ============================================
@@ -2275,3 +2318,32 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+async function requireFanConsent(
+  user: { id?: number; role?: string; email?: string } | null | undefined,
+  context: Record<string, unknown> | undefined
+) {
+  if (user?.role === "admin") return;
+
+  const emailFromContext =
+    (context as any)?.userInfo?.email ||
+    (context as any)?.shoutData?.email ||
+    (context as any)?.contact?.email;
+
+  const sanitizedEmail =
+    typeof emailFromContext === "string" && emailFromContext.trim().length > 0
+      ? emailFromContext.trim().toLowerCase()
+      : undefined;
+
+  const userId = user?.id;
+  const lookupEmail = sanitizedEmail || (user?.email ?? undefined);
+
+  if (!lookupEmail && !userId) {
+    throw new Error("Email consent required before using AI fan tools.");
+  }
+
+  const consent = await db.getUserConsent(undefined, userId, lookupEmail);
+  if (!consent || consent.aiContentConsent !== true) {
+    throw new Error("Please provide AI content consent before using fan tools.");
+  }
+}

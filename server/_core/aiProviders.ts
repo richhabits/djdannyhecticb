@@ -1,3 +1,5 @@
+import { storagePut } from "../storage";
+
 /**
  * AI Provider Abstraction Layer
  * 
@@ -26,6 +28,7 @@ export interface TTSRequest {
   voiceId: string;
   language?: string;
   speed?: number;
+  jobId?: number;
 }
 
 export interface TTSResponse {
@@ -46,6 +49,11 @@ export interface VideoHostResponse {
   provider: AiProvider;
   duration?: number;
 }
+
+const OPENAI_API_URL = (process.env.OPENAI_API_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
+const DID_API_BASE = (process.env.DID_API_BASE || "https://api.d-id.com/v1").replace(/\/+$/, "");
+const DID_STATUS_POLL_INTERVAL_MS = Number(process.env.DID_POLL_INTERVAL_MS ?? 2000);
+const DID_STATUS_MAX_ATTEMPTS = Number(process.env.DID_STATUS_MAX_ATTEMPTS ?? 15);
 
 /**
  * Get provider from settings or env
@@ -137,12 +145,52 @@ export async function generateVideoHost(
 async function chatCompletionOpenAI(
   request: ChatCompletionRequest
 ): Promise<ChatCompletionResponse> {
-  // TODO: Implement real OpenAI API call
-  // const apiKey = process.env.OPENAI_API_KEY;
-  // if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
-  
-  // For now, fallback to mock
-  return await chatCompletionMock(request);
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY not configured");
+  }
+
+  const model = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
+  const payload: Record<string, unknown> = {
+    model,
+    messages: request.messages,
+    temperature: request.temperature ?? 0.8,
+  };
+  if (typeof request.maxTokens === "number") {
+    payload.max_tokens = request.maxTokens;
+  }
+
+  const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(
+      `[OpenAI] Request failed (${response.status} ${response.statusText}): ${message}`
+    );
+  }
+
+  const data = await response.json();
+  const text =
+    data?.choices?.[0]?.message?.content?.trim() ??
+    data?.choices?.[0]?.delta?.content?.join("") ??
+    "";
+
+  if (!text) {
+    throw new Error("[OpenAI] Empty response from chat completion");
+  }
+
+  return {
+    text,
+    provider: "openai",
+    model: data?.model ?? model,
+  };
 }
 
 /**
@@ -180,12 +228,69 @@ async function chatCompletionMock(
  * ElevenLabs TTS (stub - ready for real integration)
  */
 async function ttsElevenLabs(request: TTSRequest): Promise<TTSResponse> {
-  // TODO: Implement real ElevenLabs API call
-  // const apiKey = process.env.ELEVENLABS_API_KEY;
-  // if (!apiKey) throw new Error("ELEVENLABS_API_KEY not configured");
-  
-  // For now, fallback to mock
-  return await ttsMock(request);
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    throw new Error("ELEVENLABS_API_KEY not configured");
+  }
+  if (!request.voiceId) {
+    throw new Error("voiceId is required for ElevenLabs TTS");
+  }
+
+  const modelId = process.env.ELEVENLABS_MODEL_ID || "eleven_turbo_v2";
+  const stability = Number(process.env.ELEVENLABS_STABILITY ?? 0.58);
+  const similarityBoost = Number(process.env.ELEVENLABS_SIMILARITY ?? 0.85);
+  const style = Number(process.env.ELEVENLABS_STYLE ?? 0);
+  const useSpeakerBoost = process.env.ELEVENLABS_SPEAKER_BOOST !== "false";
+
+  const payload = {
+    text: request.text,
+    model_id: modelId,
+    voice_settings: {
+      stability,
+      similarity_boost: similarityBoost,
+      style,
+      use_speaker_boost: useSpeakerBoost,
+    },
+    ...(request.language ? { language: request.language } : {}),
+  };
+
+  const response = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${request.voiceId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "audio/mpeg",
+        "xi-api-key": apiKey,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(
+      `[ElevenLabs] Request failed (${response.status} ${response.statusText}): ${message}`
+    );
+  }
+
+  const audioBuffer = Buffer.from(await response.arrayBuffer());
+  const fallbackUrl = `data:audio/mpeg;base64,${audioBuffer.toString("base64")}`;
+  let audioUrl = fallbackUrl;
+
+  try {
+    const key = `ai/voice/${request.jobId || Date.now()}-${request.voiceId}.mp3`;
+    const { url } = await storagePut(key, audioBuffer, "audio/mpeg");
+    audioUrl = url;
+  } catch (error) {
+    console.warn("[AI] Failed to upload ElevenLabs audio to storage, using data URL", error);
+  }
+
+  return {
+    audioUrl,
+    provider: "elevenlabs",
+    duration: Math.ceil(request.text.length / 12),
+  };
 }
 
 /**
@@ -210,12 +315,73 @@ async function ttsMock(request: TTSRequest): Promise<TTSResponse> {
  * D-ID Video Host (stub - ready for real integration)
  */
 async function videoHostDID(request: VideoHostRequest): Promise<VideoHostResponse> {
-  // TODO: Implement real D-ID API call
-  // const apiKey = process.env.DID_API_KEY;
-  // if (!apiKey) throw new Error("DID_API_KEY not configured");
-  
-  // For now, fallback to mock
-  return await videoHostMock(request);
+  const apiKey = process.env.DID_API_KEY;
+  if (!apiKey) {
+    throw new Error("DID_API_KEY not configured");
+  }
+
+  const presenterPayload = resolveDidPresenterPayload();
+  const authHeader = buildDidAuthHeader(apiKey);
+  const voiceProvider = process.env.DID_VOICE_PROVIDER || "microsoft";
+  const voiceId = resolveDidVoiceId(request.voiceProfile);
+  const aspectRatio = resolveAspectRatio(request.stylePreset);
+
+  const talkPayload: Record<string, unknown> = {
+    script: {
+      type: "text",
+      input: request.script,
+      provider: {
+        type: voiceProvider,
+        voice_id: voiceId,
+      },
+      ssml: false,
+    },
+    config: {
+      result_format: "mp4",
+      aspect_ratio: aspectRatio,
+    },
+    ...presenterPayload,
+  };
+
+  if (process.env.DID_DRIVER_ID) {
+    (talkPayload as any).driver_id = process.env.DID_DRIVER_ID;
+  }
+  if (process.env.DID_DRIVER_URL) {
+    (talkPayload as any).driver_url = process.env.DID_DRIVER_URL;
+  }
+
+  const response = await fetch(`${DID_API_BASE}/talks`, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(talkPayload),
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(
+      `[D-ID] Failed to start talk (${response.status} ${response.statusText}): ${message}`
+    );
+  }
+
+  const creation = await response.json();
+  if (!creation?.id) {
+    throw new Error("[D-ID] Talk creation response missing id");
+  }
+
+  const finalStatus = await pollDidTalk(creation.id, authHeader);
+  if (!finalStatus.result_url) {
+    throw new Error("[D-ID] Talk completed without a video URL");
+  }
+
+  return {
+    videoUrl: finalStatus.result_url,
+    thumbnailUrl: finalStatus.thumbnail_url,
+    provider: "d-id",
+    duration: finalStatus.duration,
+  };
 }
 
 /**
@@ -236,6 +402,84 @@ async function videoHostMock(request: VideoHostRequest): Promise<VideoHostRespon
     provider: "mock",
     duration: Math.ceil(request.script.length / 10), // Rough estimate
   };
+}
+
+type DidTalkStatus = {
+  id: string;
+  status: "created" | "started" | "done" | "error";
+  result_url?: string;
+  thumbnail_url?: string;
+  duration?: number;
+  error?: string;
+};
+
+function buildDidAuthHeader(rawKey: string): string {
+  if (rawKey.startsWith("Basic ")) return rawKey;
+  const keyWithSecret = rawKey.includes(":") ? rawKey : `${rawKey}:`;
+  const encoded = Buffer.from(keyWithSecret).toString("base64");
+  return `Basic ${encoded}`;
+}
+
+function resolveDidPresenterPayload(): { source_id?: string; source_url?: string } {
+  const sourceId = process.env.DID_SOURCE_ID;
+  const sourceUrl = process.env.DID_SOURCE_URL;
+  if (!sourceId && !sourceUrl) {
+    throw new Error("D-ID presenter not configured. Set DID_SOURCE_ID or DID_SOURCE_URL.");
+  }
+  return sourceId ? { source_id: sourceId } : { source_url: sourceUrl! };
+}
+
+function resolveDidVoiceId(profile?: string): string {
+  const defaultVoice = process.env.DID_DEFAULT_VOICE_ID || "en-US-JennyNeural";
+  if (!profile) return defaultVoice;
+  const envKey = `DID_VOICE_${profile.replace(/[^a-z0-9]/gi, "_").toUpperCase()}`;
+  return process.env[envKey] || defaultVoice;
+}
+
+function resolveAspectRatio(preset: VideoHostRequest["stylePreset"]): string {
+  switch (preset) {
+    case "verticalShort":
+      return "9:16";
+    case "squareClip":
+      return "1:1";
+    case "horizontalHost":
+    default:
+      return "16:9";
+  }
+}
+
+async function pollDidTalk(id: string, authHeader: string): Promise<DidTalkStatus> {
+  for (let attempt = 0; attempt < DID_STATUS_MAX_ATTEMPTS; attempt++) {
+    const statusResponse = await fetch(`${DID_API_BASE}/talks/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: authHeader,
+      },
+    });
+
+    if (!statusResponse.ok) {
+      const message = await statusResponse.text().catch(() => statusResponse.statusText);
+      throw new Error(
+        `[D-ID] Failed to fetch talk status (${statusResponse.status} ${statusResponse.statusText}): ${message}`
+      );
+    }
+
+    const status = (await statusResponse.json()) as DidTalkStatus;
+    if (status.status === "done" && status.result_url) {
+      return status;
+    }
+    if (status.status === "error") {
+      throw new Error(status.error || "[D-ID] Talk failed");
+    }
+
+    await sleep(DID_STATUS_POLL_INTERVAL_MS);
+  }
+
+  throw new Error("[D-ID] Talk generation timed out");
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
