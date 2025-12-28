@@ -1,17 +1,27 @@
 version: '3.8'
 
 services:
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: djdannyhecticb
+    volumes:
+      - db_data:/var/lib/mysql
+
   web:
     build: .
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=mysql://root:password@db:3306/djdannyhecticb
       - JWT_SECRET=${JWT_SECRET}
-    restart: always
     depends_on:
       - db
+    restart: always
 
   nginx:
     image: nginx:alpine
@@ -25,3 +35,6 @@ services:
     depends_on:
       - web
     restart: always
+
+volumes:
+  db_data:
