@@ -10,6 +10,8 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
     restart: always
+    depends_on:
+      - db
 
   nginx:
     image: nginx:alpine
