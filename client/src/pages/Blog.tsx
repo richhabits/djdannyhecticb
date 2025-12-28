@@ -126,7 +126,7 @@ export default function Blog() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">DJ Blog & Insights</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
@@ -146,7 +146,7 @@ export default function Blog() {
               placeholder="Search articles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-12 pr-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -158,7 +158,7 @@ export default function Blog() {
                 onClick={() => setActiveCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
                   activeCategory === category
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white'
                     : 'bg-card border border-border hover:border-accent'
                 }`}
               >
@@ -180,13 +180,13 @@ export default function Blog() {
                   className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col cursor-pointer group"
                 >
                   {/* Image */}
-                  <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-8 text-6xl flex items-center justify-center h-40 group-hover:scale-105 transition-transform">
+                  <div className="bg-gradient-to-br from-orange-900/20 to-amber-900/20 p-8 text-6xl flex items-center justify-center h-40 group-hover:scale-105 transition-transform">
                     {post.image}
                   </div>
 
                   {/* Content */}
                   <div className="p-6 flex flex-col flex-1">
-                    <p className="text-xs text-purple-400 font-bold mb-2">{post.category}</p>
+                    <p className="text-xs text-orange-400 font-bold mb-2">{post.category}</p>
                     <h3 className="text-lg font-bold mb-3 group-hover:text-accent transition">
                       {post.title}
                     </h3>
@@ -203,7 +203,7 @@ export default function Blog() {
                         </div>
                         <span>{post.readTime}</span>
                       </div>
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-700 group-hover:to-pink-700">
+                      <Button className="w-full bg-gradient-to-r from-orange-600 to-amber-600 group-hover:from-orange-700 group-hover:to-amber-700">
                         Read More
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
@@ -221,7 +221,7 @@ export default function Blog() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-2xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Get DJ Tips in Your Inbox</h2>
           <p className="text-lg text-muted-foreground">
@@ -231,9 +231,9 @@ export default function Blog() {
             <input
               type="email"
               placeholder="Enter your email..."
-              className="flex-1 px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
               Subscribe
             </Button>
           </div>

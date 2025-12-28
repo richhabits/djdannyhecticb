@@ -62,11 +62,15 @@ import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
 
+import Bio from "./pages/Bio";
+import Support from "./pages/Support";
+
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
+      <Route path={"/bio"} component={Bio} />
       <Route path={"/history"} component={History} />
       <Route path={"/testimonials"} component={Testimonials} />
       <Route path={"/shop"} component={Shop} />
@@ -101,7 +105,7 @@ function Router() {
       <Route path={"/admin/now-playing"} component={AdminNowPlaying} />
       <Route path={"/admin/shows"} component={AdminShows} />
       <Route path={"/admin/empire"} component={AdminEmpire} />
-      <Route path={"/support"} component={() => <div className="container mx-auto p-6"><h1>Support Danny</h1><p>Support page coming soon...</p></div>} />
+      <Route path={"/support"} component={Support} />
       <Route path={"/ai-danny"} component={AIDanny} />
       <Route path={"/profile/:username"} component={Profile} />
       <Route path={"/world"} component={World} />
@@ -130,18 +134,32 @@ function Router() {
   );
 }
 
+import { initGA, logPageView } from "./lib/analytics";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
+
 function App() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    initGA();
+  }, []);
+
+  useEffect(() => {
+    logPageView();
+  }, [location]);
+
   return (
     <ErrorBoundary>
       <ThemeProvider
-        defaultTheme="light"
-        // switchable
+        defaultTheme="dark"
+      // switchable
       >
         <TooltipProvider>
+          <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
           <Toaster />
           <GlobalBanner />
           <Router />
-          <LiveChat />
           <LiveAudioPlayer />
           <AIDannyFloating />
           <HecticOnboarding />

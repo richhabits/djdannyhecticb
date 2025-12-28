@@ -1,20 +1,25 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Music, Play, Download, Headphones } from "lucide-react";
+import { Music, Play, Download, Headphones, X, Disc } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
+import ReactPlayer from "react-player";
+import { MetaTagsComponent } from "@/components/MetaTags";
+import { cn } from "@/lib/utils";
 
 export default function Mixes() {
   const { isAuthenticated } = useAuth();
   const [playing, setPlaying] = useState<number | null>(null);
   const [selectedMixes, setSelectedMixes] = useState<any[]>([]);
+  // Track which mix is playing in "Deep Embed" mode
+  const [playingExternal, setPlayingExternal] = useState<string | null>(null);
+
   const { data: mixes, isLoading } = trpc.mixes.free.useQuery();
 
-  // Sample tracks for demonstration
+  // Sample tracks for demonstration (Enhanced with more external links)
   const sampleTracks = [
     {
       id: "1",
@@ -22,7 +27,7 @@ export default function Mixes() {
       artist: "DJ Danny Hectic B",
       duration: 3600,
       spotifyUrl: "https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp",
-      soundcloudUrl: "https://soundcloud.com/user-example/track-example",
+      soundcloudUrl: "https://soundcloud.com/djdannyhecticb/garage-nation-promo",
       coverArt: "/logo-danny-hectic-b.png"
     },
     {
@@ -31,6 +36,7 @@ export default function Mixes() {
       artist: "DJ Danny Hectic B",
       duration: 4500,
       spotifyUrl: "https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV",
+      youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // Placeholder
       coverArt: "/logo-danny-hectic-b.png"
     },
     {
@@ -38,7 +44,7 @@ export default function Mixes() {
       title: "Amapiano Vibes",
       artist: "DJ Danny Hectic B",
       duration: 3300,
-      soundcloudUrl: "https://soundcloud.com/user-example/amapiano-mix",
+      soundcloudUrl: "https://soundcloud.com/djdannyhecticb/amapiano-sessions-vol-1",
       coverArt: "/logo-danny-hectic-b.png"
     },
     {
@@ -58,138 +64,183 @@ export default function Mixes() {
   ];
 
   const handlePlayMix = (mix: any) => {
-    setSelectedMixes([mix]);
+    // Priority: External Link (Deep Embed) -> Internal Audio
+    if (mix.soundcloudUrl || mix.youtubeUrl) {
+      setPlayingExternal(String(mix.id));
+      // Stop internal player if running
+      setSelectedMixes([]);
+    } else {
+      setPlayingExternal(null);
+      setSelectedMixes([{
+        id: String(mix.id),
+        title: mix.title,
+        artist: mix.artist || "DJ Danny Hectic B",
+        duration: mix.duration || 0,
+        url: mix.audioUrl,
+        coverArt: mix.coverImageUrl,
+      }]);
+    }
   };
 
   const handlePlayAll = () => {
-    setSelectedMixes(sampleTracks);
+    if (!mixes) return;
+    setPlayingExternal(null);
+    setSelectedMixes(mixes.map(m => ({
+      id: String(m.id),
+      title: m.title,
+      artist: m.artist || "DJ Danny Hectic B",
+      duration: m.duration || 0,
+      url: m.audioUrl,
+      coverArt: m.coverImageUrl,
+    })));
+  };
+
+  const utils = trpc.useUtils();
+  const handleDownload = async (id: number) => {
+    try {
+      const { url } = await utils.mixes.downloadUrl.fetch({ id });
+      window.open(url, '_blank');
+    } catch (e) {
+      // toast.error("Failed to get download link");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            <Music className="w-6 h-6" />
-            <span className="font-bold">DJ Danny Hectic B</span>
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/mixes" className="text-sm font-medium text-accent">Mixes</Link>
-            <Link href="/events" className="text-sm hover:text-accent">Events</Link>
-            <Link href="/live-studio" className="text-sm hover:text-accent">Live</Link>
-            <Link href="/podcasts" className="text-sm hover:text-accent">Podcast</Link>
-            {isAuthenticated && <Link href="/bookings" className="text-sm hover:text-accent">Book</Link>}
-          </nav>
-        </div>
-      </header>
+    <>
+      <MetaTagsComponent
+        title="ARCHIVE | HECTIC RADIO"
+        description="Stream 30 years of UK Garage & House mixes. Free download available."
+        url="/mixes"
+      />
+      <div className="min-h-screen bg-background text-foreground font-mono pt-14">
 
-      {/* Hero */}
-      <section className="py-12 md:py-20 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
-        <div className="container px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-bold mb-4"><span className="gradient-text">Free Mixes</span></h1>
-              <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
-                Explore our collection of exclusive mixes featuring UK Garage, House, Grime & Amapiano. Stream on Spotify, SoundCloud, or download.
-              </p>
+        {/* Brutalist Header */}
+        <section className="border-b border-foreground px-4 py-8 md:px-6 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div>
+            <h1 className="text-6xl md:text-9xl font-black uppercase leading-[0.8] tracking-tighter">
+              The<br />Archive
+            </h1>
+          </div>
+          <div className="md:text-right space-y-4">
+            <div className="text-right">
+              <p className="text-sm font-bold uppercase tracking-widest mb-2 text-muted-foreground">Total Audio</p>
+              <p className="text-xl font-bold uppercase">500+ Hours</p>
             </div>
-            <Button size="lg" onClick={handlePlayAll} className="gradient-bg hover-lift">
-              <Headphones className="w-5 h-5 mr-2" />
-              Play All Mixes
+            <Button size="lg" onClick={handlePlayAll} className="rounded-none bg-accent text-foreground hover:bg-foreground hover:text-background border border-foreground font-black uppercase tracking-widest">
+              <Play className="w-5 h-5 mr-2" />
+              Play All
             </Button>
           </div>
-        </div>
-      </section>
-
-      {/* Audio Player */}
-      {selectedMixes.length > 0 && (
-        <section className="py-8 border-b border-border sticky top-16 z-40 bg-background/95 backdrop-blur">
-          <div className="container px-4">
-            <AudioPlayer tracks={selectedMixes} autoPlay />
-          </div>
         </section>
-      )}
 
-      {/* Mixes Grid */}
-      <section className="py-16 md:py-24">
-        <div className="container px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8">All Mixes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {sampleTracks.map((mix) => (
-              <Card key={mix.id} className="overflow-hidden glass hover-lift group">
-                <div className="relative h-48 bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
-                  {mix.coverArt ? (
-                    <img src={mix.coverArt} alt={mix.title} className="w-full h-full object-cover" />
+        {/* Audio Player Bar */}
+        {selectedMixes.length > 0 && (
+          <section className="border-b border-foreground sticky top-14 z-40 bg-background">
+            <AudioPlayer tracks={selectedMixes} autoPlay />
+          </section>
+        )}
+
+        {/* Mixes List - Raw Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:gap-[1px] bg-foreground border-b border-foreground">
+          {(mixes || sampleTracks).map((mix) => {
+            const isPlayingExternal = playingExternal === String(mix.id);
+            const hasExternalLink = mix.soundcloudUrl || mix.youtubeUrl;
+
+            return (
+              <div key={mix.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
+
+                {/* Visual / Player Area */}
+                <div className="aspect-video bg-black relative overflow-hidden border-b border-foreground">
+                  {isPlayingExternal ? (
+                    <div className="w-full h-full">
+                      <ReactPlayer
+                        url={mix.soundcloudUrl || mix.youtubeUrl}
+                        width="100%"
+                        height="100%"
+                        playing={true}
+                        controls={true}
+                        config={{ soundcloud: { options: { visual: true } } }}
+                      />
+                      <button
+                        onClick={() => setPlayingExternal(null)}
+                        className="absolute top-0 right-0 p-2 bg-foreground text-background font-bold uppercase text-xs"
+                      >
+                        [X] Close
+                      </button>
+                    </div>
                   ) : (
-                    <Music className="w-16 h-16 text-white/50" />
+                    <>
+                      {(mix.coverImageUrl || mix.coverArt) ? (
+                        <img src={mix.coverImageUrl || mix.coverArt} className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-0" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted/10">
+                          <Disc className="w-16 h-16 text-muted-foreground opacity-20" />
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-0 gap-4">
+                        <Button
+                          onClick={() => handlePlayMix(mix)}
+                          className="rounded-none bg-foreground text-background hover:bg-white border border-foreground font-bold uppercase"
+                        >
+                          {hasExternalLink ? <Play className="w-5 h-5 mr-2" /> : <Headphones className="w-5 h-5 mr-2" />}
+                          {hasExternalLink ? "Stream" : "Listen"}
+                        </Button>
+                      </div>
+                    </>
                   )}
-                  <button
-                    onClick={() => handlePlayMix(mix)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 smooth-transition"
-                  >
-                    <div className="w-16 h-16 rounded-full glass flex items-center justify-center hover:scale-110 smooth-transition">
-                      <Play className="w-6 h-6 text-white fill-white" />
-                    </div>
-                  </button>
                 </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-lg mb-2">{mix.title}</h3>
-                  <p className="text-sm text-accent font-semibold mb-2">{mix.artist}</p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Duration: {Math.floor(mix.duration / 60)} min
-                  </p>
-                  <div className="flex flex-col gap-2">
+
+                {/* Meta */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-black uppercase leading-tight mb-2 group-hover:text-accent transition-colors duration-0">
+                      {mix.title}
+                    </h3>
+                    <p className="text-sm font-bold uppercase text-muted-foreground tracking-widest">
+                      {mix.artist || "DJ Danny Hectic B"}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {mix.spotifyUrl && (
+                      <a href={mix.spotifyUrl} target="_blank" className="flex-1 bg-transparent border border-foreground py-3 text-center font-bold uppercase text-xs hover:bg-foreground hover:text-background transition-colors duration-0">
+                        Spotify
+                      </a>
+                    )}
                     <Button
-                      onClick={() => handlePlayMix(mix)}
-                      className="w-full gradient-bg hover-lift"
-                      size="sm"
+                      onClick={() => handleDownload(mix.id)}
+                      variant="outline"
+                      className="flex-1 rounded-none border-foreground font-bold uppercase text-xs h-auto py-3 hover:bg-foreground hover:text-background"
                     >
-                      <Play className="w-4 h-4 mr-2" />
-                      Play Now
+                      Download
                     </Button>
-                    <div className="flex gap-2">
-                      {mix.spotifyUrl && (
-                        <Button variant="outline" size="sm" className="flex-1 text-xs">
-                          Spotify
-                        </Button>
-                      )}
-                      {mix.soundcloudUrl && (
-                        <Button variant="outline" size="sm" className="flex-1 text-xs">
-                          SoundCloud
-                        </Button>
-                      )}
-                      <Button variant="outline" size="sm" className="flex-1 text-xs">
-                        <Download className="w-3 h-3" />
-                      </Button>
-                    </div>
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* CTA */}
-      <section className="py-12 bg-card border-t border-border">
-        <div className="container text-center">
-          <h2 className="text-2xl font-bold mb-4">Want to Book DJ Services?</h2>
+              </div>
+            );
+          })}
+        </section>
+
+        {/* Footer CTA */}
+        <section className="p-12 text-center">
+          <h2 className="text-3xl font-black uppercase mb-6">Need a DJ?</h2>
           {isAuthenticated ? (
             <Link href="/bookings">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
-                Create Booking Request
+              <Button size="lg" className="rounded-none bg-foreground text-background hover:bg-accent border border-foreground font-black uppercase tracking-widest text-xl px-12 py-8 h-auto">
+                Book Danny
               </Button>
             </Link>
           ) : (
             <a href={getLoginUrl()}>
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
-                Sign In to Book
+              <Button size="lg" className="rounded-none bg-foreground text-background hover:bg-accent border border-foreground font-black uppercase tracking-widest text-xl px-12 py-8 h-auto">
+                Login To Book
               </Button>
             </a>
           )}
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

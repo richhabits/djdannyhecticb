@@ -1,9 +1,27 @@
+
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { eq, desc, and, sql } from "drizzle-orm";
+import {
+  users,
+  posts,
+  comments,
+  likes,
+  streams,
+  shouts,
+  trackRequests,
+  shows,
+  bookings,
+  events,
+  products,
+  follows,
+  profiles,
+} from "../drizzle/schema";
+import { chatWithDanny } from "./lib/gemini";
 
 export const appRouter = router({
   system: systemRouter,
@@ -21,6 +39,16 @@ export const appRouter = router({
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
     free: publicProcedure.query(() => db.getFreeMixes()),
+    downloadUrl: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const mix = await db.getMixById(input.id);
+        if (!mix || !mix.audioUrl) throw new Error("Mix not found");
+        // Extract S3 key from audioUrl or store it separately
+        const key = mix.audioUrl.split("/").pop() || "";
+        const { getPresignedDownloadUrl } = await import("./s3");
+        return { url: await getPresignedDownloadUrl(key) };
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system
@@ -64,11 +92,11 @@ export const appRouter = router({
         };
         return db.createShout(shoutData as any);
       }),
-    
+
     list: publicProcedure
-      .input(z.object({ limit: z.number().min(1).max(50).default(20) }).optional())
+      .input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional())
       .query(({ input }) => db.getApprovedShouts(input?.limit ?? 20)),
-    
+
     listAll: protectedProcedure
       .input(z.object({
         approved: z.boolean().optional(),
@@ -76,7 +104,7 @@ export const appRouter = router({
         trackRequestsOnly: z.boolean().optional(),
       }).optional())
       .query(({ input }) => db.getAllShouts(input)),
-    
+
     updateStatus: adminProcedure
       .input(z.object({
         id: z.number(),
@@ -91,9 +119,9 @@ export const appRouter = router({
 
   streams: router({
     active: publicProcedure.query(() => db.getActiveStream()),
-    
+
     list: adminProcedure.query(() => db.listStreams()),
-    
+
     create: adminProcedure
       .input(z.object({
         name: z.string().min(1).max(255),
@@ -108,7 +136,7 @@ export const appRouter = router({
         isActive: z.boolean().default(false),
       }))
       .mutation(({ input }) => db.createStream(input)),
-    
+
     update: adminProcedure
       .input(z.object({
         id: z.number(),
@@ -124,19 +152,36 @@ export const appRouter = router({
         isActive: z.boolean().optional(),
       }))
       .mutation(({ input: { id, ...updates } }) => db.updateStream(id, updates)),
-    
+
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => {
         db.deleteStream(input.id);
         return { success: true };
       }),
-    
+
+    getStats: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getStreamStats(input.id);
+      }),
+
+    goLive: adminProcedure
+      .input(z.object({
+        streamId: z.number(),
+        showName: z.string().min(1).max(255),
+        hostName: z.string().min(1).max(255),
+        category: z.string().default("Live Mix"),
+        statsUrl: z.string().optional(),
+        serverType: z.string().optional(),
+      }))
+      .mutation(({ input }) => db.goLive(input.streamId, input.showName, input.hostName, input.category)),
+
     setActive: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.setActiveStream(input.id)),
-    
-      status: adminProcedure
+
+    status: adminProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const streams = await db.listStreams();
@@ -149,15 +194,33 @@ export const appRouter = router({
       }),
   }),
 
+  danny: router({
+    chat: publicProcedure
+      .input(z.object({
+        message: z.string().min(1).max(500),
+        model: z.enum(["gemini-pro", "gemini-1.5-flash"]).optional().default("gemini-pro"), // Audit: Added "multiple" model support
+      }))
+      .mutation(async ({ input }) => {
+        return { response: await chatWithDanny(input.message, input.model) };
+      }),
+    status: publicProcedure.query(() => db.getDannyStatus()),
+    updateStatus: adminProcedure
+      .input(z.object({
+        status: z.string().min(1).max(50),
+        message: z.string().max(255).optional(),
+      }))
+      .mutation(({ input }) => db.updateDannyStatus(input)),
+  }),
+
   trackRequests: router({
     list: publicProcedure
-      .input(z.object({ limit: z.number().min(1).max(50).default(20) }).optional())
+      .input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional())
       .query(({ input }) => db.getTrackRequests(input?.limit ?? 20)),
-    
+
     upvote: publicProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.upvoteTrackRequest(input.id)),
-    
+
     updateStatus: adminProcedure
       .input(z.object({
         id: z.number(),
@@ -166,12 +229,21 @@ export const appRouter = router({
       .mutation(({ input }) => db.updateTrackRequestStatus(input.id, input.status)),
   }),
 
+  feed: router({
+    list: publicProcedure
+      .input(z.object({ includeVip: z.boolean().default(false) }))
+      .query(({ input }) => db.getFeedPosts(input.includeVip)),
+    react: publicProcedure
+      .input(z.object({ postId: z.number(), emoji: z.string() }))
+      .mutation(({ input }) => db.toggleFeedPostReaction(input.postId, input.emoji)),
+  }),
+
   tracks: router({
     nowPlaying: publicProcedure.query(() => db.getNowPlaying()),
     history: publicProcedure
       .input(z.object({ limit: z.number().min(1).max(20).default(10) }).optional())
       .query(({ input }) => db.getTrackHistory(input?.limit ?? 10)),
-    
+
     create: adminProcedure
       .input(z.object({
         title: z.string().min(1).max(255),
@@ -184,7 +256,7 @@ export const appRouter = router({
   shows: router({
     list: publicProcedure.query(() => db.listShows()),
     all: adminProcedure.query(() => db.getAllShows()),
-    
+
     create: adminProcedure
       .input(z.object({
         name: z.string().min(1).max(255),
@@ -196,7 +268,7 @@ export const appRouter = router({
         isActive: z.boolean().default(true),
       }))
       .mutation(({ input }) => db.createShow(input)),
-    
+
     update: adminProcedure
       .input(z.object({
         id: z.number(),
@@ -209,7 +281,7 @@ export const appRouter = router({
         isActive: z.boolean().optional(),
       }))
       .mutation(({ input: { id, ...updates } }) => db.updateShow(id, updates)),
-    
+
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => {
@@ -231,21 +303,21 @@ export const appRouter = router({
         // Fetch context
         const nowPlaying = await db.getNowPlaying();
         const shows = await db.listShows();
-        
+
         // Find next show
         const now = new Date();
         const currentDay = now.getDay();
         const currentTime = now.getHours() * 60 + now.getMinutes();
-        
+
         let nextShow;
         for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
           const checkDay = (currentDay + dayOffset) % 7;
           const dayShows = shows.filter((s) => s.dayOfWeek === checkDay);
-          
+
           for (const show of dayShows) {
             const [hours, minutes] = show.startTime.split(":").map(Number);
             const showTime = hours * 60 + minutes;
-            
+
             if (dayOffset === 0 && showTime > currentTime) {
               nextShow = show;
               break;
@@ -257,7 +329,7 @@ export const appRouter = router({
           }
           if (nextShow) break;
         }
-        
+
         const context = {
           nowPlaying: nowPlaying ? {
             title: nowPlaying.title,
@@ -271,14 +343,14 @@ export const appRouter = router({
           } : undefined,
           hotlineNumber: "07957 432842",
         };
-        
+
         // Use Danny's persona for AI responses
         const { getDannyContext } = await import("./_core/dannyPersona");
         const dannyContext = getDannyContext({
           nowPlaying: context.nowPlaying,
           nextShow: context.nextShow,
         });
-        
+
         const { callListenerAI } = await import("./_core/aiListener");
         const response = await callListenerAI(input.message, {
           ...context,
@@ -286,7 +358,7 @@ export const appRouter = router({
         });
         return { response };
       }),
-    
+
     bookingAssistant: publicProcedure
       .input(z.object({
         message: z.string().optional(),
@@ -302,28 +374,28 @@ export const appRouter = router({
         );
         return { response };
       }),
-    
+
     showSummary: adminProcedure
       .input(z.object({ showDate: z.string() }))
       .query(async ({ input }) => {
         // Fetch data for the date
         const allTracks = await db.getTrackHistory(100);
         const allShouts = await db.getAllShouts({ approved: true });
-        
+
         const targetDate = new Date(input.showDate);
         const nextDay = new Date(targetDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        
+
         const tracks = allTracks.filter((t) => {
           const playedAt = new Date(t.playedAt);
           return playedAt >= targetDate && playedAt < nextDay;
         });
-        
+
         const shouts = allShouts.filter((s) => {
           const createdAt = new Date(s.createdAt);
           return createdAt >= targetDate && createdAt < nextDay;
         });
-        
+
         const { generateShowSummary } = await import("./_core/aiShowSummary");
         const summary = await generateShowSummary({
           date: input.showDate,
@@ -337,7 +409,7 @@ export const appRouter = router({
             message: s.message,
           })),
         });
-        
+
         return { summary };
       }),
   }),
@@ -361,9 +433,9 @@ export const appRouter = router({
         dataConsent: z.boolean(),
       }))
       .mutation(({ input }) => db.createEventBooking(input)),
-    
+
     list: adminProcedure.query(() => db.listEventBookings()),
-    
+
     get: adminProcedure
       .input(z.object({ id: z.number() }))
       .query(({ input }) => db.getEventBooking(input.id)),
@@ -626,7 +698,7 @@ export const appRouter = router({
     auditLogs: adminProcedure
       .input(z.object({ limit: z.number().default(100) }))
       .query(({ input }) => db.listAuditLogs(input.limit)),
-    
+
     settings: router({
       get: adminProcedure
         .input(z.object({ key: z.string() }))
@@ -670,7 +742,7 @@ export const appRouter = router({
     markErrorResolved: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.markErrorLogResolved(input.id)),
-    
+
     incidentBanners: router({
       getActive: publicProcedure.query(() => db.getActiveIncidentBanner()),
       create: adminProcedure
@@ -999,7 +1071,7 @@ export const appRouter = router({
             rules: "You're AI Danny, be helpful and hype!",
           };
           const response = await callListenerAI(input.message, context);
-          
+
           const chat = await db.createAIDannyChat({
             sessionId: input.sessionId,
             profileId: input.profileId,
@@ -1948,32 +2020,32 @@ export const appRouter = router({
     stats: adminProcedure.query(async () => {
       // Aggregate stats for the control tower dashboard
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      
+
       // Shouts (last 7 days)
       const allShouts = await db.getAllShouts();
       const shoutsLast7Days = allShouts.filter((s) => new Date(s.createdAt) >= sevenDaysAgo).length;
-      
+
       // Track votes (approximate from track requests)
       const trackRequests = await db.getTrackRequests();
       const totalVotes = trackRequests.reduce((sum, tr) => sum + (tr.votes || 0), 0);
-      
+
       // Wallets
       const allWallets = await db.listWallets(1000);
       const totalCoins = allWallets.reduce((sum, w) => sum + (w.balanceCoins || 0), 0);
-      
+
       // Episodes
       const episodes = await db.listShowEpisodes(undefined, false);
       const publishedEpisodes = episodes.filter((e) => e.status === "published").length;
-      
+
       // AI Jobs
       const scriptJobs = await db.listAIScriptJobs({}, 1000);
       const voiceJobs = await db.listAIVoiceJobs({}, 1000);
       const videoJobs = await db.listAIVideoJobs({}, 1000);
       const totalAIJobs = scriptJobs.length + voiceJobs.length + videoJobs.length;
-      
+
       // Active incident
       const activeIncident = await db.getActiveIncidentBanner();
-      
+
       return {
         shoutsLast7Days,
         trackVotesTotal: totalVotes,
@@ -2103,34 +2175,34 @@ export const appRouter = router({
         .mutation(async ({ input, ctx }) => {
           const episode = await db.getShowEpisode(input.episodeId);
           if (!episode) throw new Error("Episode not found");
-          
+
           const items = [];
-          
+
           // Create "New episode" post
           items.push(await db.createContentItem({
             type: "post",
-            title: `New episode: ${episode.title}`,
+            title: `New episode: ${episode.title} `,
             description: episode.description || "",
             targetPlatform: "multi",
             source: "episode",
             sourceId: episode.id,
             status: "draft",
             payload: JSON.stringify({
-              caption: `New episode out now: ${episode.title}`,
+              caption: `New episode out now: ${episode.title} `,
               hashtags: ["hecticradio", "djdannyhecticb"],
             }),
           }));
-          
+
           // Create clip item
           items.push(await db.createContentItem({
             type: "clip",
-            title: `Best clip from: ${episode.title}`,
+            title: `Best clip from: ${episode.title} `,
             targetPlatform: "tiktok",
             source: "episode",
             sourceId: episode.id,
             status: "draft",
           }));
-          
+
           await db.createAuditLog({
             action: "auto_populate_content_from_episode",
             entityType: "content_queue",
@@ -2138,7 +2210,7 @@ export const appRouter = router({
             actorId: ctx.user?.id,
             actorName: ctx.user?.name || "Admin",
           });
-          
+
           return items;
         }),
     }),
@@ -2188,6 +2260,17 @@ export const appRouter = router({
           return updated;
         }),
     }),
+  }),
+
+  profiles: router({
+    createOrUpdate: publicProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        genres: z.array(z.string()).optional(),
+        whatsappOptIn: z.boolean().default(false),
+        aiMemoryEnabled: z.boolean().default(false),
+      }))
+      .mutation(({ input }) => db.createOrUpdateUserProfile(input)),
   }),
 });
 

@@ -90,7 +90,7 @@ export default function History() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">A Legacy Built on Sound</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
@@ -105,7 +105,7 @@ export default function History() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {achievements.map((achievement, idx) => (
               <Card key={idx} className="p-6 text-center">
-                <p className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent mb-2">
                   {achievement.value}
                 </p>
                 <p className="text-muted-foreground">{achievement.label}</p>
@@ -124,10 +124,10 @@ export default function History() {
               <div key={idx} className="flex gap-6">
                 <div className="flex flex-col items-center">
                   <div className="text-3xl mb-4">{item.icon}</div>
-                  <div className="w-1 h-20 bg-gradient-to-b from-purple-500 to-pink-500" />
+                  <div className="w-1 h-20 bg-gradient-to-b from-orange-500 to-amber-500" />
                 </div>
                 <div className="pb-8">
-                  <p className="text-sm font-bold text-purple-400 mb-1">{item.year}</p>
+                  <p className="text-sm font-bold text-orange-400 mb-1">{item.year}</p>
                   <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
                   <p className="text-muted-foreground">{item.description}</p>
                 </div>
@@ -141,22 +141,22 @@ export default function History() {
       <section className="py-16 md:py-24 border-t border-border bg-card/50">
         <div className="container">
           <div className="flex items-center gap-3 mb-12">
-            <Radio className="w-8 h-8 text-purple-400" />
+            <Radio className="w-8 h-8 text-orange-400" />
             <h2 className="text-4xl font-bold">Pirate Radio Legacy</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {piratRadioStations.map((station, idx) => (
-              <Card key={idx} className="p-8 border-purple-500/30">
+              <Card key={idx} className="p-8 border-orange-500/30">
                 <h3 className="text-2xl font-bold mb-2">{station.name}</h3>
-                <p className="text-purple-400 font-semibold mb-4">{station.years}</p>
+                <p className="text-orange-400 font-semibold mb-4">{station.years}</p>
                 <p className="text-muted-foreground mb-6">{station.description}</p>
                 <div className="space-y-2">
                   <p className="font-semibold text-sm">Key Highlights:</p>
                   <ul className="space-y-2">
                     {station.highlights.map((highlight, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm">
-                        <Zap className="w-4 h-4 text-pink-400" />
+                        <Zap className="w-4 h-4 text-amber-400" />
                         {highlight}
                       </li>
                     ))}
@@ -166,19 +166,19 @@ export default function History() {
             ))}
             
             {/* Pirate Radio Impact */}
-            <Card className="p-8 border-pink-500/30 md:col-span-2">
+            <Card className="p-8 border-amber-500/30 md:col-span-2">
               <h3 className="text-2xl font-bold mb-4">Impact & Influence</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <p className="text-3xl font-bold text-purple-400 mb-2">5+</p>
+                  <p className="text-3xl font-bold text-orange-400 mb-2">5+</p>
                   <p className="text-muted-foreground">Active Pirate Stations</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-pink-400 mb-2">24/7</p>
+                  <p className="text-3xl font-bold text-amber-400 mb-2">24/7</p>
                   <p className="text-muted-foreground">Continuous Broadcasting</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-blue-400 mb-2">Thousands</p>
+                  <p className="text-3xl font-bold text-orange-400 mb-2">Thousands</p>
                   <p className="text-muted-foreground">Loyal Listeners</p>
                 </div>
               </div>
@@ -204,11 +204,11 @@ export default function History() {
                 
                 <div className="space-y-3 pt-4 border-t border-border">
                   <div>
-                    <p className="text-xs text-purple-400 font-bold mb-1">ROLE</p>
+                    <p className="text-xs text-orange-400 font-bold mb-1">ROLE</p>
                     <p className="font-semibold">{promotion.role}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-pink-400 font-bold mb-1">IMPACT</p>
+                    <p className="text-xs text-amber-400 font-bold mb-1">IMPACT</p>
                     <p className="text-sm text-muted-foreground">{promotion.impact}</p>
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function History() {
       </section>
 
       {/* Recognition */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-3xl">
           <div className="text-center space-y-6">
             <div className="flex justify-center gap-2">
@@ -235,7 +235,7 @@ export default function History() {
             </p>
             <div className="flex gap-4 justify-center pt-4">
               <Link href="/bookings">
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+                <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
                   Book for Your Event
                 </Button>
               </Link>

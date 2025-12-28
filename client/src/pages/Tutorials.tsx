@@ -134,7 +134,7 @@ export default function Tutorials() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">DJ Tips & Tutorials</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
@@ -156,7 +156,7 @@ export default function Tutorials() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
                   selectedCategory === category
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                    ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white'
                     : 'bg-card border border-border hover:border-accent'
                 }`}
               >
@@ -173,7 +173,7 @@ export default function Tutorials() {
                 className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col cursor-pointer group"
               >
                 {/* Thumbnail */}
-                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 p-6 text-5xl flex items-center justify-center h-40 group-hover:scale-105 transition-transform relative">
+                <div className="bg-gradient-to-br from-orange-900/20 to-amber-900/20 p-6 text-5xl flex items-center justify-center h-40 group-hover:scale-105 transition-transform relative">
                   {tutorial.icon}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition">
                     <Play className="w-12 h-12 text-white" />
@@ -196,7 +196,7 @@ export default function Tutorials() {
                         <Clock className="w-3 h-3" />
                         {tutorial.duration}
                       </div>
-                      <span className="text-purple-400">{tutorial.views} views</span>
+                      <span className="text-orange-400">{tutorial.views} views</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs px-2 py-1 rounded ${
@@ -225,8 +225,8 @@ export default function Tutorials() {
                 <div className="text-6xl mb-4">{guide.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{guide.title}</h3>
                 <p className="text-muted-foreground mb-4">{guide.description}</p>
-                <p className="text-sm text-purple-400 font-semibold mb-6">{guide.pages}</p>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">
+                <p className="text-sm text-orange-400 font-semibold mb-6">{guide.pages}</p>
+                <Button className="w-full bg-gradient-to-r from-orange-600 to-amber-600">
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
@@ -271,14 +271,14 @@ export default function Tutorials() {
               <Card key={path.step} className="p-6 hover:border-accent transition">
                 <div className="flex gap-6">
                   <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold">
                       {path.step}
                     </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-2">{path.title}</h3>
                     <p className="text-muted-foreground mb-3">{path.description}</p>
-                    <p className="text-sm text-purple-400 font-semibold">{path.tutorials} tutorials</p>
+                    <p className="text-sm text-orange-400 font-semibold">{path.tutorials} tutorials</p>
                   </div>
                 </div>
               </Card>
@@ -288,14 +288,14 @@ export default function Tutorials() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-3xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Ready to Level Up Your DJ Skills?</h2>
           <p className="text-lg text-muted-foreground">
             Book a private lesson with DJ Danny Hectic B for personalized training.
           </p>
           <Link href="/contact">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-6 text-lg">
               Book a Lesson
             </Button>
           </Link>

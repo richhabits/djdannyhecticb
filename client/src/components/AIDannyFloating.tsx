@@ -45,7 +45,7 @@ export function AIDannyFloating() {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-24 right-6 z-50">
         <Button
           size="lg"
           className="rounded-full h-16 w-16 shadow-lg gradient-bg hover:scale-110 transition-transform"
@@ -61,7 +61,7 @@ export function AIDannyFloating() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)]">
+    <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)]">
       <Card className="shadow-2xl border-accent/20">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">

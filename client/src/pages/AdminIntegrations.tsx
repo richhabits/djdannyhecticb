@@ -110,7 +110,7 @@ export default function AdminIntegrations() {
                         </TableCell>
                         <TableCell>{integration.handle || "-"}</TableCell>
                         <TableCell>
-                          <a href={integration.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                          <a href={integration.url} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
                             {integration.url}
                           </a>
                         </TableCell>

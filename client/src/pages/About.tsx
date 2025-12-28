@@ -23,7 +23,7 @@ export default function About() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-12 md:py-20 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">About DJ Danny Hectic B</h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
@@ -39,7 +39,7 @@ export default function About() {
             {/* Image */}
             <div className="flex justify-center">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg blur-xl opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg blur-xl opacity-50" />
                 <img
                   src="/dj-danny-bio.jpg"
                   alt="DJ Danny Hectic B"
@@ -65,7 +65,7 @@ export default function About() {
 
               <div className="flex gap-3 pt-4">
                 <Link href="/bookings">
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+                  <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
                     Book DJ Danny
                   </Button>
                 </Link>
@@ -86,8 +86,8 @@ export default function About() {
           <h2 className="text-3xl font-bold text-center mb-12">Why Choose DJ Danny Hectic B?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
-                <Award className="w-6 h-6 text-purple-400" />
+              <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                <Award className="w-6 h-6 text-orange-400" />
               </div>
               <h3 className="font-semibold mb-2">Professional Experience</h3>
               <p className="text-sm text-muted-foreground">
@@ -96,8 +96,8 @@ export default function About() {
             </Card>
 
             <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center mx-auto mb-4">
-                <Music className="w-6 h-6 text-pink-400" />
+              <div className="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                <Music className="w-6 h-6 text-amber-400" />
               </div>
               <h3 className="font-semibold mb-2">Diverse Music Selection</h3>
               <p className="text-sm text-muted-foreground">
@@ -106,8 +106,8 @@ export default function About() {
             </Card>
 
             <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-6 h-6 text-blue-400" />
+              <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-6 h-6 text-orange-400" />
               </div>
               <h3 className="font-semibold mb-2">Audience Engagement</h3>
               <p className="text-sm text-muted-foreground">
@@ -133,7 +133,7 @@ export default function About() {
         <div className="container max-w-3xl">
           <h2 className="text-3xl font-bold mb-12">Experience & Expertise</h2>
           <div className="space-y-8">
-            <div className="border-l-4 border-purple-500 pl-6">
+            <div className="border-l-4 border-orange-500 pl-6">
               <h3 className="text-xl font-semibold mb-2">Wedding & Event DJ</h3>
               <p className="text-muted-foreground mb-2">
                 Specializing in creating the perfect atmosphere for your special day. From ceremony music to reception entertainment, DJ Danny ensures every moment is memorable.
@@ -141,7 +141,7 @@ export default function About() {
               <p className="text-sm text-muted-foreground">Events: Weddings, Anniversaries, Engagements, Receptions</p>
             </div>
 
-            <div className="border-l-4 border-pink-500 pl-6">
+            <div className="border-l-4 border-amber-500 pl-6">
               <h3 className="text-xl font-semibold mb-2">Club & Nightlife DJ</h3>
               <p className="text-muted-foreground mb-2">
                 High-energy performances at clubs, bars, and nightlife venues. Known for reading the crowd and delivering sets that keep the dance floor packed.
@@ -149,7 +149,7 @@ export default function About() {
               <p className="text-sm text-muted-foreground">Venues: Clubs, Bars, Lounges, Nightclubs</p>
             </div>
 
-            <div className="border-l-4 border-blue-500 pl-6">
+            <div className="border-l-4 border-orange-500 pl-6">
               <h3 className="text-xl font-semibold mb-2">Corporate Events</h3>
               <p className="text-muted-foreground mb-2">
                 Professional DJ services for corporate parties, product launches, conferences, and company celebrations. Adaptable to any corporate environment.
@@ -169,14 +169,14 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-t border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-t border-border">
         <div className="container max-w-2xl text-center space-y-6">
           <h2 className="text-3xl font-bold">Ready to Book?</h2>
           <p className="text-lg text-muted-foreground">
             Let DJ Danny Hectic B bring the energy and excitement to your next event.
           </p>
           <Link href="/bookings">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-6 text-lg">
               Get in Touch
             </Button>
           </Link>

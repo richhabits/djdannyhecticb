@@ -96,7 +96,7 @@ export default function Testimonials() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">What Clients Say</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
@@ -112,7 +112,7 @@ export default function Testimonials() {
             {stats.map((stat, idx) => (
               <Card key={idx} className="p-6 text-center">
                 <div className="text-4xl mb-4">{stat.icon}</div>
-                <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                <p className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent mb-2">
                   {stat.value}
                 </p>
                 <p className="text-muted-foreground">{stat.label}</p>
@@ -141,7 +141,7 @@ export default function Testimonials() {
 
                 {/* Quote */}
                 <div className="flex gap-3 mb-6">
-                  <Quote className="w-6 h-6 text-purple-400 flex-shrink-0" />
+                  <Quote className="w-6 h-6 text-orange-400 flex-shrink-0" />
                   <p className="text-lg text-muted-foreground italic flex-1">
                     "{testimonial.text}"
                   </p>
@@ -154,7 +154,7 @@ export default function Testimonials() {
                     <div>
                       <p className="font-bold">{testimonial.name}</p>
                       <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                      <p className="text-xs text-purple-400 font-semibold mt-1">
+                      <p className="text-xs text-orange-400 font-semibold mt-1">
                         {testimonial.event}
                       </p>
                     </div>
@@ -167,7 +167,7 @@ export default function Testimonials() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-3xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Ready to Create Your Event's Story?</h2>
           <p className="text-lg text-muted-foreground">
@@ -175,7 +175,7 @@ export default function Testimonials() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/bookings">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+              <Button className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-6 text-lg">
                 Book Now
               </Button>
             </Link>

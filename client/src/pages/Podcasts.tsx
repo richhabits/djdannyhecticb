@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Music, Play, Headphones, Music as SpotifyIcon } from "lucide-react";
+import { Music, Play, Headphones, Music as SpotifyIcon, X } from "lucide-react";
 import { Link } from "wouter";
 import { formatDate } from "date-fns";
-import { useState } from "react";
+import AudioPlayer from "@/components/AudioPlayer";
 
 export default function Podcasts() {
-  const [playing, setPlaying] = useState<number | null>(null);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const { data: podcasts, isLoading } = trpc.podcasts.list.useQuery();
   const { data: streamingLinks } = trpc.streaming.links.useQuery();
 
@@ -30,7 +30,7 @@ export default function Podcasts() {
       </header>
 
       {/* Hero */}
-      <section className="py-12 md:py-20 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-12 md:py-20 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Podcast</h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
@@ -92,7 +92,7 @@ export default function Podcasts() {
                           className="w-24 h-24 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
                           <Headphones className="w-8 h-8 text-white/50" />
                         </div>
                       )}
@@ -117,22 +117,15 @@ export default function Podcasts() {
                         </div>
                       </div>
 
-                      {/* Player */}
-                      {playing === podcast.id && (
-                        <audio autoPlay controls className="w-full mt-4">
-                          <source src={podcast.audioUrl} type="audio/mpeg" />
-                        </audio>
-                      )}
-
                       {/* Actions */}
                       <div className="flex gap-2 mt-4">
                         <Button
                           size="sm"
-                          variant={playing === podcast.id ? "default" : "outline"}
-                          onClick={() => setPlaying(playing === podcast.id ? null : podcast.id)}
+                          variant={playingTrackId === String(podcast.id) ? "default" : "outline"}
+                          onClick={() => setPlayingTrackId(String(podcast.id))}
                         >
                           <Play className="w-4 h-4 mr-2" />
-                          {playing === podcast.id ? 'Playing' : 'Play'}
+                          {playingTrackId === String(podcast.id) ? 'Playing' : 'Play'}
                         </Button>
                         {podcast.spotifyUrl && (
                           <a href={podcast.spotifyUrl} target="_blank" rel="noopener noreferrer">
@@ -155,6 +148,31 @@ export default function Podcasts() {
                   </div>
                 </Card>
               ))}
+
+              {/* Player - Fixed at bottom when playing */}
+              {playingTrackId && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
+                  <AudioPlayer
+                    tracks={podcasts.map(p => ({
+                      id: String(p.id),
+                      title: p.title,
+                      artist: "DJ Danny Hectic B",
+                      duration: p.duration || 0,
+                      url: p.audioUrl,
+                      coverArt: p.coverImageUrl,
+                    }))}
+                    autoPlay
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-6 right-8 z-50"
+                    onClick={() => setPlayingTrackId(null)}
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
@@ -166,7 +184,7 @@ export default function Podcasts() {
       </section>
 
       {/* Subscribe CTA */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-t border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-t border-border">
         <div className="container max-w-2xl text-center space-y-6">
           <h2 className="text-3xl font-bold">Subscribe to the Podcast</h2>
           <p className="text-lg text-muted-foreground">

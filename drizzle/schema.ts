@@ -166,6 +166,8 @@ export const streams = mysqlTable("streams", {
   sourceHost: varchar("sourceHost", { length: 255 }),
   sourcePort: int("sourcePort"),
   mount: varchar("mount", { length: 255 }),
+  statsUrl: varchar("statsUrl", { length: 512 }), // URL for JSON stats
+  streamId: int("streamId"), // SID for Shoutcast
   adminApiUrl: varchar("adminApiUrl", { length: 512 }),
   adminUser: varchar("adminUser", { length: 255 }),
   adminPassword: varchar("adminPassword", { length: 255 }),

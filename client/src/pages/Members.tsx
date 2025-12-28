@@ -159,7 +159,7 @@ export default function Members() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Join the Community</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
@@ -178,12 +178,12 @@ export default function Members() {
                 key={tier.id}
                 className={`p-8 flex flex-col relative ${
                   tier.featured
-                    ? "border-2 border-purple-500 ring-2 ring-purple-500/20"
+                    ? "border-2 border-orange-500 ring-2 ring-orange-500/20"
                     : "border-border/50"
                 }`}
               >
                 {tier.featured && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-1 rounded-full text-sm font-bold">
                     Most Popular
                   </div>
                 )}
@@ -191,13 +191,13 @@ export default function Members() {
                 <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
                 <p className="text-muted-foreground text-sm mb-4">{tier.description}</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-purple-400">{tier.price}</span>
+                  <span className="text-4xl font-bold text-orange-400">{tier.price}</span>
                   <span className="text-muted-foreground ml-2">{tier.period}</span>
                 </div>
                 <ul className="space-y-3 flex-1 mb-6">
                   {tier.features.map((feature, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-sm">
-                      <Star className="w-4 h-4 text-purple-400" />
+                      <Star className="w-4 h-4 text-orange-400" />
                       {feature}
                     </li>
                   ))}
@@ -206,7 +206,7 @@ export default function Members() {
                   onClick={() => setSelectedTier(tier.id)}
                   className={
                     tier.featured
-                      ? "w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                      ? "w-full bg-gradient-to-r from-orange-600 to-amber-600"
                       : "w-full bg-card border border-border hover:border-accent"
                   }
                 >
@@ -229,8 +229,8 @@ export default function Members() {
                 <h3 className="text-lg font-bold mb-2">{content.title}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{content.description}</p>
                 <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-purple-400" />
-                  <span className="text-xs font-semibold text-purple-400">{content.available}</span>
+                  <Lock className="w-4 h-4 text-orange-400" />
+                  <span className="text-xs font-semibold text-orange-400">{content.available}</span>
                 </div>
               </Card>
             ))}
@@ -250,7 +250,7 @@ export default function Members() {
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
                     <p className="text-muted-foreground mb-4">{feature.description}</p>
-                    <p className="text-sm font-semibold text-purple-400">{feature.members} members</p>
+                    <p className="text-sm font-semibold text-orange-400">{feature.members} members</p>
                   </div>
                 </div>
               </Card>
@@ -260,7 +260,7 @@ export default function Members() {
       </section>
 
       {/* Member Stories */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container">
           <h2 className="text-4xl font-bold mb-12 text-center">What Members Say</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -288,7 +288,7 @@ export default function Members() {
                 <div className="text-4xl mb-4">{story.avatar}</div>
                 <p className="text-muted-foreground mb-4 italic">"{story.quote}"</p>
                 <p className="font-bold">{story.name}</p>
-                <p className="text-sm text-purple-400">{story.role}</p>
+                <p className="text-sm text-orange-400">{story.role}</p>
               </Card>
             ))}
           </div>
@@ -340,13 +340,13 @@ export default function Members() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-3xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Join 2000+ Members Today</h2>
           <p className="text-lg text-muted-foreground">
             Start your journey with exclusive content, community support, and expert guidance.
           </p>
-          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+          <Button className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-6 text-lg">
             Get Started Now
           </Button>
         </div>

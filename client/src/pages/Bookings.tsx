@@ -7,21 +7,22 @@ import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { formatDate } from "date-fns";
 import { toast } from "sonner";
+import { BookingCalendar } from "@/components/BookingCalendar";
 
 const GENRES = [
-  { id: 'house', name: 'House', color: 'from-purple-500 to-blue-500', icon: '🎵' },
+  { id: 'house', name: 'House', color: 'from-orange-500 to-orange-500', icon: '🎵' },
   { id: 'garage', name: 'Garage', color: 'from-orange-500 to-red-500', icon: '🔥' },
-  { id: 'soulful', name: 'Soulful House', color: 'from-pink-500 to-rose-500', icon: '💫' },
+  { id: 'soulful', name: 'Soulful House', color: 'from-amber-500 to-amber-500', icon: '💫' },
   { id: 'funky', name: 'Funky House', color: 'from-yellow-500 to-orange-500', icon: '✨' },
   { id: 'grime', name: 'Grime', color: 'from-gray-700 to-black', icon: '⚡' },
   { id: 'amapiano', name: 'Amapiano', color: 'from-green-500 to-teal-500', icon: '🎶' },
 ];
 
 const BOOKING_METHODS = [
-  { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'bg-blue-600', description: 'Message via Facebook' },
-  { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-pink-600', description: 'DM on Instagram' },
+  { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'bg-orange-600', description: 'Message via Facebook' },
+  { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-amber-600', description: 'DM on Instagram' },
   { id: 'tiktok', name: 'TikTok', icon: Music2, color: 'bg-black', description: 'Comment on TikTok' },
-  { id: 'form', name: 'Direct Form', icon: Mail, color: 'bg-purple-600', description: 'Fill booking form' },
+  { id: 'form', name: 'Direct Form', icon: Mail, color: 'bg-orange-600', description: 'Fill booking form' },
 ];
 
 export default function Bookings() {
@@ -96,13 +97,13 @@ export default function Bookings() {
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
-    
+
     const newMessage = {
       sender: 'user' as const,
       message: chatInput,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    
+
     setChatMessages(prev => [...prev, newMessage]);
     setChatInput('');
 
@@ -130,7 +131,7 @@ export default function Bookings() {
       instagram: 'https://www.instagram.com/djdannyhecticb',
       tiktok: 'https://www.tiktok.com/@djdannyhecticb',
     };
-    
+
     if (socialLinks[method as keyof typeof socialLinks]) {
       window.open(socialLinks[method as keyof typeof socialLinks], '_blank');
       toast.success(`Opening ${method}! Send DJ Danny a message about your booking.`);
@@ -144,7 +145,7 @@ export default function Bookings() {
           <h1 className="text-3xl font-bold">Sign In Required</h1>
           <p className="text-muted-foreground">Please sign in to view and create bookings.</p>
           <Link href="/">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
               Go Home
             </Button>
           </Link>
@@ -175,12 +176,12 @@ export default function Bookings() {
         {/* Main Content */}
         <div className="flex-1 space-y-6">
           {/* Hero Section */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-black p-8 md:p-12 border border-purple-500/20">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-900/40 via-amber-900/40 to-black p-8 md:p-12 border border-orange-500/20">
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl" />
-              <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-500 rounded-full mix-blend-screen filter blur-3xl" />
+              <div className="absolute top-0 left-0 w-96 h-96 bg-orange-500 rounded-full mix-blend-screen filter blur-3xl" />
+              <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500 rounded-full mix-blend-screen filter blur-3xl" />
             </div>
-            
+
             <div className="relative z-10">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">Book DJ Danny Hectic B 🎵</h1>
               <p className="text-lg text-gray-300 mb-6">
@@ -189,7 +190,7 @@ export default function Bookings() {
               <div className="flex flex-wrap gap-3">
                 <Button
                   onClick={() => setShowForm(!showForm)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Start Booking
@@ -220,7 +221,7 @@ export default function Bookings() {
                         <h3 className="font-bold text-lg">{method.name}</h3>
                         <p className="text-sm text-gray-400">{method.description}</p>
                       </div>
-                      <div className="text-xs font-semibold text-purple-400">Click to book →</div>
+                      <div className="text-xs font-semibold text-orange-400">Click to book →</div>
                     </div>
                   </button>
                 );
@@ -230,7 +231,7 @@ export default function Bookings() {
 
           {/* Booking Form */}
           {showForm && (
-            <Card className="p-8 border-purple-500/30 bg-card/50 backdrop-blur">
+            <Card className="p-8 border-orange-500/30 bg-card/50 backdrop-blur">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Your Event Details</h2>
                 <button onClick={() => setShowForm(false)} className="p-1 hover:bg-card rounded">
@@ -252,11 +253,10 @@ export default function Bookings() {
                             ? prev.filter(g => g !== genre.id)
                             : [...prev, genre.id]
                         )}
-                        className={`p-4 rounded-lg font-semibold transition-all transform hover:scale-105 ${
-                          selectedGenres.includes(genre.id)
+                        className={`p-4 rounded-lg font-semibold transition-all transform hover:scale-105 ${selectedGenres.includes(genre.id)
                             ? `bg-gradient-to-r ${genre.color} text-white shadow-lg`
                             : 'bg-card border border-border hover:border-accent'
-                        }`}
+                          }`}
                       >
                         <span className="text-xl mr-2">{genre.icon}</span>
                         {genre.name}
@@ -274,7 +274,7 @@ export default function Bookings() {
                       required
                       value={formData.eventName}
                       onChange={(e) => setFormData({ ...formData, eventName: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="e.g., Summer House Party"
                     />
                   </div>
@@ -284,7 +284,7 @@ export default function Bookings() {
                       required
                       value={formData.eventType}
                       onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="wedding">Wedding</option>
                       <option value="corporate">Corporate Event</option>
@@ -297,49 +297,44 @@ export default function Bookings() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Event Date *</label>
-                    <input
-                      type="datetime-local"
-                      required
-                      value={formData.eventDate}
-                      onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  <div className="md:col-span-1">
+                    <BookingCalendar
+                      selected={formData.eventDate ? new Date(formData.eventDate) : undefined}
+                      onSelect={(date) => setFormData({ ...formData, eventDate: date.toISOString() })}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Location *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.eventLocation}
-                      onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      placeholder="City, Venue"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Guest Count</label>
-                    <input
-                      type="number"
-                      value={formData.guestCount}
-                      onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      placeholder="Estimated guests"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Budget</label>
-                    <input
-                      type="text"
-                      value={formData.budget}
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      placeholder="e.g., $500-$1000"
-                    />
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Location *</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.eventLocation}
+                        onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="City, Venue"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Guest Count</label>
+                      <input
+                        type="number"
+                        value={formData.guestCount}
+                        onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Estimated guests"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Budget</label>
+                      <input
+                        type="text"
+                        value={formData.budget}
+                        onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="e.g., $500-$1000"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -348,7 +343,7 @@ export default function Bookings() {
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="What's the vibe? Any special requests?"
                     rows={4}
                   />
@@ -362,7 +357,7 @@ export default function Bookings() {
                       required
                       value={formData.contactEmail}
                       onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -371,7 +366,7 @@ export default function Bookings() {
                       type="tel"
                       value={formData.contactPhone}
                       onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
@@ -381,7 +376,7 @@ export default function Bookings() {
                   <Button
                     type="submit"
                     disabled={createBookingMutation.isPending}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700"
                   >
                     {createBookingMutation.isPending ? "Submitting..." : "🎉 Submit Booking"}
                   </Button>
@@ -409,20 +404,19 @@ export default function Bookings() {
                         <h3 className="text-xl font-bold mb-2">{booking.eventName}</h3>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-purple-400" />
+                            <Calendar className="w-4 h-4 text-orange-400" />
                             {formatDate(new Date(booking.eventDate), 'EEEE, MMMM d, yyyy h:mm a')}
                           </div>
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-pink-400" />
+                            <MapPin className="w-4 h-4 text-amber-400" />
                             {booking.eventLocation}
                           </div>
                         </div>
                       </div>
-                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${
-                        booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
-                        booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-gray-500/20 text-gray-400'
-                      }`}>
+                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                          booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-gray-500/20 text-gray-400'
+                        }`}>
                         {booking.status.toUpperCase()}
                       </span>
                     </div>
@@ -436,7 +430,7 @@ export default function Bookings() {
         {/* Live Chat Sidebar */}
         <div className={`fixed bottom-0 right-0 top-0 w-full md:w-96 bg-card border-l border-border flex flex-col transition-transform ${showChat ? 'translate-x-0' : 'translate-x-full'} md:translate-x-0 md:relative md:top-auto md:bottom-auto md:right-auto`}>
           {/* Chat Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Music className="w-6 h-6" />
@@ -458,11 +452,10 @@ export default function Bookings() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {chatMessages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs px-4 py-2 rounded-lg ${
-                  msg.sender === 'user'
-                    ? 'bg-purple-600 text-white rounded-br-none'
+                <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender === 'user'
+                    ? 'bg-orange-600 text-white rounded-br-none'
                     : 'bg-card border border-border text-foreground rounded-bl-none'
-                }`}>
+                  }`}>
                   <p className="text-sm">{msg.message}</p>
                   <p className="text-xs opacity-70 mt-1">{msg.time}</p>
                 </div>
@@ -479,11 +472,11 @@ export default function Bookings() {
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Ask about booking..."
-                className="flex-1 px-3 py-2 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                className="flex-1 px-3 py-2 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
               />
               <button
                 onClick={handleSendMessage}
-                className="p-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition"
+                className="p-2 rounded-lg bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 transition"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -496,7 +489,7 @@ export default function Bookings() {
         {!showChat && (
           <button
             onClick={() => setShowChat(true)}
-            className="fixed bottom-4 right-4 md:hidden w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white shadow-lg z-30"
+            className="fixed bottom-4 right-4 md:hidden w-14 h-14 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 flex items-center justify-center text-white shadow-lg z-30"
           >
             <MessageCircle className="w-6 h-6" />
           </button>

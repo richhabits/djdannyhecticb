@@ -53,7 +53,7 @@ export function GlobalBanner() {
   };
 
   return (
-    <Alert variant={getVariant()} className="mb-4">
+    <Alert variant={getVariant()} className="mb-4 block">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-2 flex-1">
           {getIcon()}

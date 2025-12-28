@@ -95,7 +95,7 @@ export default function Contact() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Get in Touch</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
@@ -117,7 +117,7 @@ export default function Contact() {
                   className="group"
                 >
                   <Card className="p-6 h-full hover:border-accent transition cursor-pointer">
-                    <Icon className="w-8 h-8 text-purple-400 mb-4 group-hover:scale-110 transition-transform" />
+                    <Icon className="w-8 h-8 text-orange-400 mb-4 group-hover:scale-110 transition-transform" />
                     <h3 className="text-lg font-bold mb-2">{method.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{method.description}</p>
                     <p className="font-semibold text-accent">{method.contact}</p>
@@ -145,7 +145,7 @@ export default function Contact() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="Your name"
                     />
                   </div>
@@ -156,7 +156,7 @@ export default function Contact() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="your@email.com"
                     />
                   </div>
@@ -169,7 +169,7 @@ export default function Contact() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="+1 (555) 123-4567"
                     />
                   </div>
@@ -180,7 +180,7 @@ export default function Contact() {
                       required
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="How can we help?"
                     />
                   </div>
@@ -192,7 +192,7 @@ export default function Contact() {
                     required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="Tell us more..."
                     rows={6}
                   />
@@ -201,7 +201,7 @@ export default function Contact() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-6 text-lg"
+                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 py-6 text-lg"
                 >
                   {isSubmitting ? "Sending..." : (
                     <>
@@ -219,21 +219,21 @@ export default function Contact() {
                 <h2 className="text-3xl font-bold mb-6">Contact Information</h2>
                 <div className="space-y-4">
                   <div className="flex gap-4">
-                    <Mail className="w-6 h-6 text-purple-400 flex-shrink-0 mt-1" />
+                    <Mail className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
                     <div>
                       <p className="font-semibold">Email</p>
                       <p className="text-muted-foreground">contact@djdannyhectic.com</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <Phone className="w-6 h-6 text-pink-400 flex-shrink-0 mt-1" />
+                    <Phone className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
                     <div>
                       <p className="font-semibold">Phone</p>
                       <p className="text-muted-foreground">+1 (555) 123-4567</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <MapPin className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+                    <MapPin className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
                     <div>
                       <p className="font-semibold">Location</p>
                       <p className="text-muted-foreground">London, United Kingdom</p>
@@ -243,9 +243,9 @@ export default function Contact() {
               </div>
 
               {/* Business Hours */}
-              <Card className="p-6 border-purple-500/30">
+              <Card className="p-6 border-orange-500/30">
                 <div className="flex items-center gap-3 mb-4">
-                  <Clock className="w-6 h-6 text-purple-400" />
+                  <Clock className="w-6 h-6 text-orange-400" />
                   <h3 className="text-xl font-bold">Business Hours</h3>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -265,7 +265,7 @@ export default function Contact() {
               </Card>
 
               {/* Social Links */}
-              <Card className="p-6 border-pink-500/30">
+              <Card className="p-6 border-amber-500/30">
                 <h3 className="text-xl font-bold mb-4">Follow Us</h3>
                 <div className="flex gap-3">
                   {['Instagram', 'Facebook', 'TikTok', 'Spotify'].map((social) => (

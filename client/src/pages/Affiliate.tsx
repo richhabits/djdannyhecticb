@@ -93,14 +93,14 @@ export default function Affiliate() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Affiliate Program</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mb-8">
             Earn generous commissions by promoting DJ Danny Hectic B's mixes, merchandise, and services.
           </p>
           <Link href="#join">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-6 text-lg">
               Join the Program
             </Button>
           </Link>
@@ -114,7 +114,7 @@ export default function Affiliate() {
             {stats.map((stat, idx) => (
               <Card key={idx} className="p-6 text-center">
                 <div className="text-4xl mb-4">{stat.icon}</div>
-                <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                <p className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent mb-2">
                   {stat.value}
                 </p>
                 <p className="text-muted-foreground text-sm">{stat.label}</p>
@@ -157,7 +157,7 @@ export default function Affiliate() {
             ].map((item) => (
               <div key={item.step} className="flex gap-6">
                 <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold">
                     {item.step}
                   </div>
                 </div>
@@ -182,18 +182,18 @@ export default function Affiliate() {
                 key={idx}
                 className={`p-8 flex flex-col ${
                   tier.featured
-                    ? "border-2 border-purple-500 ring-2 ring-purple-500/20 relative"
+                    ? "border-2 border-orange-500 ring-2 ring-orange-500/20 relative"
                     : "border-border/50"
                 }`}
               >
                 {tier.featured && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-1 rounded-full text-sm font-bold">
                     Most Popular
                   </div>
                 )}
                 <div className="text-5xl mb-4">{tier.icon}</div>
                 <h3 className="text-2xl font-bold mb-2">{tier.tier}</h3>
-                <p className="text-4xl font-bold text-purple-400 mb-2">{tier.commission}</p>
+                <p className="text-4xl font-bold text-orange-400 mb-2">{tier.commission}</p>
                 <p className="text-sm text-muted-foreground mb-6">{tier.requirements}</p>
                 <ul className="space-y-3 flex-1 mb-6">
                   {tier.benefits.map((benefit, i) => (
@@ -206,7 +206,7 @@ export default function Affiliate() {
                 <Button
                   className={
                     tier.featured
-                      ? "w-full bg-gradient-to-r from-purple-600 to-pink-600"
+                      ? "w-full bg-gradient-to-r from-orange-600 to-amber-600"
                       : "w-full bg-card border border-border hover:border-accent"
                   }
                 >
@@ -228,7 +228,7 @@ export default function Affiliate() {
                 <div className="text-5xl mb-4">{item.icon}</div>
                 <h3 className="text-lg font-bold mb-2">{item.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
-                <p className="text-2xl font-bold text-purple-400">{item.commission}</p>
+                <p className="text-2xl font-bold text-orange-400">{item.commission}</p>
               </Card>
             ))}
           </div>
@@ -236,14 +236,14 @@ export default function Affiliate() {
       </section>
 
       {/* Referral Code */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-2xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Your Referral Code</h2>
           <p className="text-lg text-muted-foreground">
             Share this code with your audience to start earning commissions immediately.
           </p>
           <div className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg p-4">
-            <code className="text-2xl font-bold text-purple-400">{referralCode}</code>
+            <code className="text-2xl font-bold text-orange-400">{referralCode}</code>
             <button
               onClick={copyToClipboard}
               className="p-2 hover:bg-background rounded transition"
@@ -334,14 +334,14 @@ export default function Affiliate() {
       </section>
 
       {/* CTA */}
-      <section id="join" className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section id="join" className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-3xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Ready to Start Earning?</h2>
           <p className="text-lg text-muted-foreground">
             Join hundreds of affiliates already making money promoting DJ Danny Hectic B.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6 text-lg">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-6 text-lg">
               Apply Now
             </Button>
             <Link href="/contact">

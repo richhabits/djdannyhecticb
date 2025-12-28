@@ -15,23 +15,25 @@ export default function AIDanny() {
   const [sessionId] = useState(() => {
     const stored = localStorage.getItem("ai-danny-session");
     return stored || generateSessionId();
+    return stored || generateSessionId();
   });
   const [message, setMessage] = useState("");
+  const [localMessages, setLocalMessages] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     localStorage.setItem("ai-danny-session", sessionId);
   }, [sessionId]);
 
-  const { data: history, refetch } = trpc.genz.aiDanny.history.useQuery({
-    sessionId,
-    limit: 100,
-  });
+  // We don't have a history endpoint on the danny router yet, so we'll skip initial history fetch or add it later.
+  // For now, let's just make the chat work for the current session.
+  // const { data: history, refetch } = trpc.genz.aiDanny.history.useQuery({ ... }); 
 
-  const chatMutation = trpc.genz.aiDanny.chat.useMutation({
-    onSuccess: () => {
+  const chatMutation = trpc.danny.chat.useMutation({
+    onSuccess: (data) => {
       setMessage("");
-      refetch();
+      // Add bot response to local state since we don't have history refetch yet
+      setLocalMessages(prev => [...prev, { id: Date.now().toString(), response: data.response }]);
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Failed to send message";
@@ -48,12 +50,13 @@ export default function AIDanny() {
     if (!message.trim()) return;
 
     chatMutation.mutate({
-      sessionId,
-      message: message.trim(),
+      message: message.trim(), // API expects 'message' object
     });
+    // Optimistic update
+    setLocalMessages(prev => [...prev, { id: Date.now().toString(), message: message.trim() }]);
   };
 
-  const messages = history || [];
+  const messages = localMessages || [];
 
   return (
     <>

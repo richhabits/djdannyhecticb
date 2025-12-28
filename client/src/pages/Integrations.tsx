@@ -19,13 +19,13 @@ export default function Integrations() {
   };
 
   const socialLogins = [
-    { name: "Google", icon: "🔍", color: "from-blue-500 to-blue-600", description: "Sign in with Google account" },
-    { name: "Facebook", icon: "📘", color: "from-blue-600 to-blue-700", description: "Connect with Facebook friends" },
+    { name: "Google", icon: "🔍", color: "from-orange-500 to-orange-600", description: "Sign in with Google account" },
+    { name: "Facebook", icon: "📘", color: "from-orange-600 to-orange-700", description: "Connect with Facebook friends" },
     { name: "Apple", icon: "🍎", color: "from-gray-800 to-black", description: "Sign in with Apple ID" },
     { name: "Spotify", icon: "🎵", color: "from-green-500 to-green-600", description: "Sync your music taste" },
-    { name: "Instagram", icon: "📸", color: "from-pink-500 to-purple-600", description: "Share to Instagram stories" },
+    { name: "Instagram", icon: "📸", color: "from-amber-500 to-orange-600", description: "Share to Instagram stories" },
     { name: "TikTok", icon: "🎬", color: "from-black to-gray-900", description: "Create TikTok challenges" },
-    { name: "Twitter/X", icon: "🐦", color: "from-blue-400 to-blue-500", description: "Share updates on X" },
+    { name: "Twitter/X", icon: "🐦", color: "from-orange-400 to-orange-500", description: "Share updates on X" },
     { name: "YouTube", icon: "▶️", color: "from-red-500 to-red-600", description: "Access YouTube mixes" },
   ];
 

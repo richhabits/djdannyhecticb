@@ -9,7 +9,7 @@ interface SocialLink {
 }
 
 interface SocialLinksProps {
-  variant?: "default" | "compact";
+  variant?: "default" | "compact" | "magazine";
   className?: string;
 }
 
@@ -64,6 +64,28 @@ export function SocialLinks({ variant = "default", className }: SocialLinksProps
         ))}
       </div>
     );
+  }
+
+  // New Magazine / Premium Variant
+  // Uses sharp edges, magazine-border style, and monochrome/high-contrast look
+  if (variant === "magazine") {
+    return (
+      <div className={cn("flex flex-wrap items-center gap-2", className)}>
+        {SOCIAL_LINKS.map((link) => (
+          <a
+            key={link.name}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={link.name}
+            className="group relative inline-flex items-center justify-center p-3 text-sm font-bold text-white transition-all duration-200 bg-transparent border border-white/20 hover:border-accent hover:bg-accent/10 sharp-edge"
+          >
+            <span className="mr-2 opacity-70 group-hover:opacity-100 transition-opacity">{link.icon}</span>
+            <span className="uppercase tracking-wider text-xs">{link.name}</span>
+          </a>
+        ))}
+      </div>
+    )
   }
 
   return (

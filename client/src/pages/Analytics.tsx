@@ -20,21 +20,21 @@ export default function Analytics() {
       value: "42",
       change: "+12%",
       icon: Calendar,
-      color: "text-blue-400",
+      color: "text-orange-400",
     },
     {
       label: "Website Visitors",
       value: "8,234",
       change: "+45%",
       icon: Users,
-      color: "text-purple-400",
+      color: "text-orange-400",
     },
     {
       label: "Mixes Downloaded",
       value: "1,823",
       change: "+67%",
       icon: Music,
-      color: "text-pink-400",
+      color: "text-amber-400",
     },
   ];
 
@@ -87,7 +87,7 @@ export default function Analytics() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-8 md:py-12 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-8 md:py-12 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -108,7 +108,7 @@ export default function Analytics() {
                 onClick={() => setTimeRange(range)}
                 className={`px-4 py-2 rounded-lg font-semibold transition ${
                   timeRange === range
-                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                    ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white"
                     : "bg-card border border-border hover:border-accent"
                 }`}
               >
@@ -156,17 +156,17 @@ export default function Analytics() {
                   </div>
                   <div className="flex gap-2 h-8">
                     <div
-                      className="bg-blue-500 rounded"
+                      className="bg-orange-500 rounded"
                       style={{ width: `${(data.bookings / 5000) * 100}%` }}
                       title={`Bookings: $${data.bookings}`}
                     />
                     <div
-                      className="bg-purple-500 rounded"
+                      className="bg-orange-500 rounded"
                       style={{ width: `${(data.merchandise / 5000) * 100}%` }}
                       title={`Merchandise: $${data.merchandise}`}
                     />
                     <div
-                      className="bg-pink-500 rounded"
+                      className="bg-amber-500 rounded"
                       style={{ width: `${(data.mixes / 5000) * 100}%` }}
                       title={`Mixes: $${data.mixes}`}
                     />
@@ -175,15 +175,15 @@ export default function Analytics() {
               ))}
               <div className="flex gap-4 pt-4 border-t border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded" />
+                  <div className="w-3 h-3 bg-orange-500 rounded" />
                   <span className="text-sm">Bookings</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-purple-500 rounded" />
+                  <div className="w-3 h-3 bg-orange-500 rounded" />
                   <span className="text-sm">Merchandise</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-pink-500 rounded" />
+                  <div className="w-3 h-3 bg-amber-500 rounded" />
                   <span className="text-sm">Mixes</span>
                 </div>
               </div>
@@ -210,7 +210,7 @@ export default function Analytics() {
                   <tr key={idx} className="border-b border-border hover:bg-card/50 transition">
                     <td className="p-4">{performer.name}</td>
                     <td className="text-right p-4">
-                      <span className="text-purple-400 font-semibold">{performer.downloads}</span>
+                      <span className="text-orange-400 font-semibold">{performer.downloads}</span>
                     </td>
                     <td className="text-right p-4">
                       <span className="text-green-400 font-semibold">{performer.revenue}</span>
@@ -232,11 +232,11 @@ export default function Analytics() {
               <Card key={idx} className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">{source.source}</h3>
-                  <span className="text-purple-400 font-bold">{source.percentage}%</span>
+                  <span className="text-orange-400 font-bold">{source.percentage}%</span>
                 </div>
                 <div className="w-full bg-card border border-border rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 h-full"
+                    className="bg-gradient-to-r from-orange-600 to-amber-600 h-full"
                     style={{ width: `${source.percentage}%` }}
                   />
                 </div>
@@ -269,13 +269,13 @@ export default function Analytics() {
       <section className="py-8 border-t border-border bg-card/50">
         <div className="container max-w-2xl">
           <Card className="p-8 text-center space-y-4">
-            <BarChart3 className="w-12 h-12 text-purple-400 mx-auto" />
+            <BarChart3 className="w-12 h-12 text-orange-400 mx-auto" />
             <h3 className="text-xl font-bold">Generate Custom Reports</h3>
             <p className="text-muted-foreground">
               Export detailed analytics reports in PDF or CSV format for your records.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+              <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
                 <Download className="w-4 h-4 mr-2" />
                 Export as PDF
               </Button>

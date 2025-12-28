@@ -97,7 +97,7 @@ export default function LiveChat() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-110 animate-bounce"
+        className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-110 animate-bounce"
         title="Open chat"
       >
         <MessageCircle className="w-6 h-6" />
@@ -109,10 +109,10 @@ export default function LiveChat() {
     <div className="fixed bottom-6 right-6 z-40 w-96 max-w-[calc(100vw-2rem)]">
       <Card className="flex flex-col h-[600px] bg-background border-border shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-4 rounded-t-lg flex items-center justify-between">
           <div>
             <h3 className="font-bold">DJ Danny Support</h3>
-            <p className="text-xs text-purple-100">Usually replies instantly</p>
+            <p className="text-xs text-orange-100">Usually replies instantly</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -151,7 +151,7 @@ export default function LiveChat() {
                   <div
                     className={`max-w-xs px-4 py-2 rounded-lg ${
                       message.sender === "user"
-                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-br-none"
+                        ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-br-none"
                         : "bg-card border border-border text-foreground rounded-bl-none"
                     }`}
                   >
@@ -159,7 +159,7 @@ export default function LiveChat() {
                     <p
                       className={`text-xs mt-1 ${
                         message.sender === "user"
-                          ? "text-purple-100"
+                          ? "text-orange-100"
                           : "text-muted-foreground"
                       }`}
                     >
@@ -225,13 +225,13 @@ export default function LiveChat() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your message..."
-                  className="flex-1 px-3 py-2 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none text-sm"
+                  className="flex-1 px-3 py-2 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                   rows={2}
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputValue.trim()}
-                  className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition"
+                  className="p-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition"
                 >
                   <Send className="w-4 h-4" />
                 </button>

@@ -12,16 +12,24 @@ export function LiveAudioPlayer() {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, {
     retry: false,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 10000, // Faster updates for live status
   });
-  
+
+  const { data: streamStats } = trpc.streams.getStats.useQuery(
+    { id: activeStream?.id || 0 },
+    {
+      enabled: !!activeStream?.id && (activeStream.type === 'icecast' || activeStream.type === 'shoutcast'),
+      refetchInterval: 5000,
+    }
+  );
+
   const streamUrl = activeStream?.publicUrl || FALLBACK_STREAM_URL;
 
+  // Recreate audio element if stream URL changes
   useEffect(() => {
-    // Recreate audio element if stream URL changes
     if (audioRef.current && audioRef.current.src !== streamUrl) {
       const wasPlaying = isPlaying;
       audioRef.current.pause();
@@ -44,7 +52,7 @@ export function LiveAudioPlayer() {
         return;
       }
     }
-    
+
     // Create audio element if it doesn't exist
     if (!audioRef.current && streamUrl) {
       audioRef.current = new Audio(streamUrl);
@@ -87,7 +95,7 @@ export function LiveAudioPlayer() {
       console.warn("[AudioPlayer] No stream URL configured");
       return;
     }
-    
+
     if (!audioRef.current) {
       audioRef.current = new Audio(streamUrl);
       audioRef.current.crossOrigin = "anonymous";
@@ -145,14 +153,27 @@ export function LiveAudioPlayer() {
           <div className="flex items-center gap-2 shrink-0">
             {streamUrl ? (
               <>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-semibold text-red-500">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/50">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-semibold text-orange-500">
                     LIVE NOW
                   </span>
                 </div>
                 <span className="text-sm font-medium text-foreground hidden sm:inline">
-                  {activeStream ? `on ${activeStream.name}` : "on Hectic Radio"}
+                  {(activeStream as any)?.showName ? (
+                    <>
+                      <span className="font-bold text-orange-400">{(activeStream as any).showName}</span>
+                      <span className="mx-1 text-muted-foreground">with</span>
+                      <span className="text-amber-400">{(activeStream as any).hostName || "Danny Hectic"}</span>
+                      {streamStats && (
+                        <span className="ml-3 text-xs text-muted-foreground border-l border-border pl-3">
+                          🎵 {streamStats.currentTrack} <span className="mx-1">•</span> 👥 {streamStats.listeners} locked in
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    activeStream ? `on ${activeStream.name}` : "on Hectic Radio"
+                  )}
                 </span>
               </>
             ) : (

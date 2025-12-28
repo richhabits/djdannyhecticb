@@ -27,7 +27,7 @@ export default function Events() {
       </header>
 
       {/* Hero */}
-      <section className="py-12 md:py-20 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-12 md:py-20 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Upcoming Events</h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
@@ -68,7 +68,7 @@ export default function Events() {
                           className="w-full h-48 object-cover rounded-lg"
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <div className="w-full h-48 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
                           <Calendar className="w-12 h-12 text-white/50" />
                         </div>
                       )}
@@ -84,16 +84,16 @@ export default function Events() {
 
                         <div className="space-y-3 mb-6">
                           <div className="flex items-center gap-3 text-sm">
-                            <Calendar className="w-5 h-5 text-purple-400" />
+                            <Calendar className="w-5 h-5 text-orange-400" />
                             <span>{formatDate(new Date(event.eventDate), 'EEEE, MMMM d, yyyy')}</span>
                           </div>
                           <div className="flex items-center gap-3 text-sm">
-                            <MapPin className="w-5 h-5 text-pink-400" />
+                            <MapPin className="w-5 h-5 text-amber-400" />
                             <span>{event.location}</span>
                           </div>
                           {event.price && (
                             <div className="flex items-center gap-3 text-sm">
-                              <Ticket className="w-5 h-5 text-blue-400" />
+                              <Ticket className="w-5 h-5 text-orange-400" />
                               <span>{event.price}</span>
                             </div>
                           )}
@@ -103,13 +103,13 @@ export default function Events() {
                       <div className="flex gap-3">
                         {event.ticketUrl ? (
                           <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer">
-                            <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+                            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
                               <Ticket className="w-4 h-4 mr-2" />
                               Get Tickets
                             </Button>
                           </a>
                         ) : (
-                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+                          <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
                             <Ticket className="w-4 h-4 mr-2" />
                             Coming Soon
                           </Button>
@@ -133,7 +133,7 @@ export default function Events() {
       </section>
 
       {/* Newsletter */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-t border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-t border-border">
         <div className="container max-w-2xl text-center space-y-6">
           <h2 className="text-3xl font-bold">Stay Updated</h2>
           <p className="text-lg text-muted-foreground">
@@ -145,7 +145,7 @@ export default function Events() {
               placeholder="Enter your email"
               className="flex-1 px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent"
             />
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
               Subscribe
             </Button>
           </div>

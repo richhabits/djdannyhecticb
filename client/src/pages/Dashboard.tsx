@@ -35,7 +35,7 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">Sign In Required</h1>
           <p className="text-muted-foreground">Please sign in to access your dashboard.</p>
           <Link href="/">
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
+            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
               Go Home
             </Button>
           </Link>
@@ -84,7 +84,7 @@ export default function Dashboard() {
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-20">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center mx-auto mb-4">
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-lg font-semibold">{user?.name || 'User'}</h2>
@@ -113,7 +113,7 @@ export default function Dashboard() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Welcome Card */}
-            <Card className="p-8 bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500/50">
+            <Card className="p-8 bg-gradient-to-r from-orange-900/20 to-amber-900/20 border-orange-500/50">
               <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(' ')[0]}! 🎵</h1>
               <p className="text-muted-foreground">
                 Manage your bookings, explore mixes, and stay connected with DJ Danny Hectic B.
@@ -152,8 +152,8 @@ export default function Dashboard() {
                     <p className="text-sm text-muted-foreground mb-1">Total Bookings</p>
                     <p className="text-3xl font-bold">{bookings?.length || 0}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <Music className="w-6 h-6 text-blue-400" />
+                  <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <Music className="w-6 h-6 text-orange-400" />
                   </div>
                 </div>
               </Card>
@@ -236,7 +236,7 @@ export default function Dashboard() {
         <div className="fixed bottom-4 right-4 w-96 h-96 z-40 shadow-2xl rounded-lg overflow-hidden bg-background border border-border flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-purple-400" />
+              <MessageSquare className="w-5 h-5 text-orange-400" />
               <span className="font-semibold">AI Assistant</span>
             </div>
             <button
@@ -262,7 +262,7 @@ export default function Dashboard() {
       {!showChat && (
         <button
           onClick={() => setShowChat(true)}
-          className="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl transition z-40"
+          className="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 flex items-center justify-center text-white shadow-lg hover:shadow-xl transition z-40"
           title="Open AI Assistant"
         >
           <MessageSquare className="w-6 h-6" />

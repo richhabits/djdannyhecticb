@@ -131,7 +131,7 @@ export default function Newsletter() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-purple-900/20 to-background border-b border-border">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
         <div className="container max-w-3xl">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Stay Connected</h1>
           <p className="text-xl text-muted-foreground mb-8">
@@ -147,12 +147,12 @@ export default function Newsletter() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email..."
-                className="flex-1 px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <Button
                 type="submit"
                 disabled={isSubscribing}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3"
+                className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-3"
               >
                 {isSubscribing ? "Subscribing..." : "Subscribe"}
               </Button>
@@ -173,7 +173,7 @@ export default function Newsletter() {
               const Icon = benefit.icon;
               return (
                 <Card key={idx} className="p-6 hover:border-accent transition">
-                  <Icon className="w-8 h-8 text-purple-400 mb-4" />
+                  <Icon className="w-8 h-8 text-orange-400 mb-4" />
                   <h3 className="text-lg font-bold mb-2">{benefit.title}</h3>
                   <p className="text-muted-foreground text-sm">{benefit.description}</p>
                 </Card>
@@ -193,7 +193,7 @@ export default function Newsletter() {
                 <div className="text-5xl mb-4">{sequence.icon}</div>
                 <h3 className="text-lg font-bold mb-2">{sequence.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{sequence.description}</p>
-                <p className="text-sm font-semibold text-purple-400">{sequence.emails}</p>
+                <p className="text-sm font-semibold text-orange-400">{sequence.emails}</p>
               </Card>
             ))}
           </div>
@@ -215,7 +215,7 @@ export default function Newsletter() {
                 onClick={() => setSelectedFrequency(freq.id)}
                 className={`p-6 rounded-lg border-2 transition text-center ${
                   selectedFrequency === freq.id
-                    ? "border-purple-500 bg-purple-500/10"
+                    ? "border-orange-500 bg-orange-500/10"
                     : "border-border hover:border-accent"
                 }`}
               >
@@ -228,7 +228,7 @@ export default function Newsletter() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container">
           <h2 className="text-4xl font-bold mb-12 text-center">What Subscribers Say</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -237,7 +237,7 @@ export default function Newsletter() {
                 <div className="text-4xl mb-4">{testimonial.avatar}</div>
                 <p className="text-muted-foreground mb-4 italic">"{testimonial.quote}"</p>
                 <p className="font-bold">{testimonial.name}</p>
-                <p className="text-sm text-purple-400">{testimonial.role}</p>
+                <p className="text-sm text-orange-400">{testimonial.role}</p>
               </Card>
             ))}
           </div>
@@ -255,7 +255,7 @@ export default function Newsletter() {
               { label: "Satisfaction", value: "98%" },
             ].map((stat, idx) => (
               <Card key={idx} className="p-6 text-center">
-                <p className="text-3xl font-bold text-purple-400 mb-2">{stat.value}</p>
+                <p className="text-3xl font-bold text-orange-400 mb-2">{stat.value}</p>
                 <p className="text-muted-foreground">{stat.label}</p>
               </Card>
             ))}
@@ -305,7 +305,7 @@ export default function Newsletter() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
         <div className="container max-w-3xl text-center space-y-6">
           <h2 className="text-4xl font-bold">Join 5,000+ Subscribers</h2>
           <p className="text-lg text-muted-foreground">
@@ -318,12 +318,12 @@ export default function Newsletter() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email..."
-              className="px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-auto"
+              className="px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500 w-full sm:w-auto"
             />
             <Button
               type="submit"
               disabled={isSubscribing}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3"
+              className="bg-gradient-to-r from-orange-600 to-amber-600 px-8 py-3"
             >
               {isSubscribing ? "Subscribing..." : "Subscribe Now"}
             </Button>

@@ -34,14 +34,14 @@ export default function Login() {
     {
       name: "Google",
       icon: "🔍",
-      color: "from-blue-500 to-blue-600",
-      hoverColor: "hover:from-blue-600 hover:to-blue-700"
+      color: "from-orange-500 to-orange-600",
+      hoverColor: "hover:from-orange-600 hover:to-orange-700"
     },
     {
       name: "Facebook",
       icon: "📘",
-      color: "from-blue-600 to-blue-700",
-      hoverColor: "hover:from-blue-700 hover:to-blue-800"
+      color: "from-orange-600 to-orange-700",
+      hoverColor: "hover:from-orange-700 hover:to-orange-800"
     },
     {
       name: "Apple",
@@ -70,32 +70,32 @@ export default function Login() {
     {
       name: "Instagram",
       icon: "📸",
-      color: "from-pink-500 to-purple-600",
-      hoverColor: "hover:from-pink-600 hover:to-purple-700"
+      color: "from-amber-500 to-orange-600",
+      hoverColor: "hover:from-amber-600 hover:to-orange-700"
     },
     {
       name: "Twitter/X",
       icon: "🐦",
-      color: "from-blue-400 to-blue-500",
-      hoverColor: "hover:from-blue-500 hover:to-blue-600"
+      color: "from-orange-400 to-orange-500",
+      hoverColor: "hover:from-orange-500 hover:to-orange-600"
     },
     {
       name: "Discord",
       icon: "💬",
-      color: "from-indigo-500 to-indigo-600",
-      hoverColor: "hover:from-indigo-600 hover:to-indigo-700"
+      color: "from-orange-500 to-orange-600",
+      hoverColor: "hover:from-orange-600 hover:to-orange-700"
     },
     {
       name: "Twitch",
       icon: "🎮",
-      color: "from-purple-500 to-purple-600",
-      hoverColor: "hover:from-purple-600 hover:to-purple-700"
+      color: "from-orange-500 to-orange-600",
+      hoverColor: "hover:from-orange-600 hover:to-orange-700"
     },
     {
       name: "LinkedIn",
       icon: "💼",
-      color: "from-blue-700 to-blue-800",
-      hoverColor: "hover:from-blue-800 hover:to-blue-900"
+      color: "from-orange-700 to-orange-800",
+      hoverColor: "hover:from-orange-800 hover:to-orange-900"
     },
     {
       name: "GitHub",

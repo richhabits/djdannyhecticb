@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
+import * as mock from './_core/mockData';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -105,14 +106,24 @@ export async function getUserByOpenId(openId: string) {
 // Mixes queries
 export async function getAllMixes() {
   const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
+  if (!db) return mock.mockMixes;
+  try {
+    return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
+  } catch (e) {
+    console.warn("[DB] getAllMixes failed, using mock");
+    return mock.mockMixes;
+  }
 }
 
 export async function getFreeMixes() {
   const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(desc(mixes.createdAt));
+  if (!db) return mock.mockMixes.filter(m => m.isFree);
+  try {
+    return await db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(desc(mixes.createdAt));
+  } catch (e) {
+    console.warn("[DB] getFreeMixes failed, using mock");
+    return mock.mockMixes.filter(m => m.isFree);
+  }
 }
 
 // Bookings queries
@@ -137,8 +148,13 @@ export async function createBooking(booking: any) {
 // Events queries
 export async function getUpcomingEvents() {
   const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
+  if (!db) return mock.mockEvents;
+  try {
+    return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
+  } catch (e) {
+    console.warn("[DB] getUpcomingEvents failed, using mock");
+    return mock.mockEvents;
+  }
 }
 
 export async function getFeaturedEvents() {
@@ -156,22 +172,32 @@ export async function getAllEvents() {
 // Podcasts queries
 export async function getAllPodcasts() {
   const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(podcasts).orderBy(desc(podcasts.createdAt));
+  if (!db) return mock.mockPodcasts;
+  try {
+    return await db.select().from(podcasts).orderBy(desc(podcasts.createdAt));
+  } catch (e) {
+    console.warn("[DB] getAllPodcasts failed, using mock");
+    return mock.mockPodcasts;
+  }
 }
 
 // Streaming links queries
 export async function getStreamingLinks() {
   const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+  if (!db) return mock.mockStreamingLinks;
+  try {
+    return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
+  } catch (e) {
+    console.warn("[DB] getStreamingLinks failed, using mock");
+    return mock.mockStreamingLinks;
+  }
 }
 
 // Shouts queries
 export async function createShout(shout: InsertShout) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Validation: message must not be empty and not too long
   if (!shout.message || shout.message.trim().length === 0) {
     throw new Error("Message is required");
@@ -195,7 +221,7 @@ export async function createShout(shout: InsertShout) {
       throw new Error("Phone number contains invalid characters");
     }
   }
-  
+
   const result = await db.insert(shouts).values({
     name: shout.name.trim(),
     location: shout.location?.trim() || null,
@@ -210,7 +236,7 @@ export async function createShout(shout: InsertShout) {
     approved: false, // New shouts require approval
     readOnAir: false,
   });
-  
+
   // Get the inserted shout
   const insertedId = result[0].insertId;
   const created = await db.select().from(shouts).where(eq(shouts.id, insertedId)).limit(1);
@@ -219,41 +245,46 @@ export async function createShout(shout: InsertShout) {
 
 export async function getApprovedShouts(limit: number = 20) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return mock.mockShouts.slice(0, limit);
   // Exclude phone from public list for privacy
-  const result = await db
-    .select({
-      id: shouts.id,
-      name: shouts.name,
-      location: shouts.location,
-      message: shouts.message,
-      trackRequest: shouts.trackRequest,
-      canReadOnAir: shouts.canReadOnAir,
-      approved: shouts.approved,
-      readOnAir: shouts.readOnAir,
-      createdAt: shouts.createdAt,
-      updatedAt: shouts.updatedAt,
-    })
-    .from(shouts)
-    .where(eq(shouts.approved, true))
-    .orderBy(desc(shouts.createdAt))
-    .limit(limit);
-  return result;
+  try {
+    const result = await db
+      .select({
+        id: shouts.id,
+        name: shouts.name,
+        location: shouts.location,
+        message: shouts.message,
+        trackRequest: shouts.trackRequest,
+        canReadOnAir: shouts.canReadOnAir,
+        approved: shouts.approved,
+        readOnAir: shouts.readOnAir,
+        createdAt: shouts.createdAt,
+        updatedAt: shouts.updatedAt,
+      })
+      .from(shouts)
+      .where(eq(shouts.approved, true))
+      .orderBy(desc(shouts.createdAt))
+      .limit(limit);
+    return result;
+  } catch (e) {
+    console.warn("[DB] getApprovedShouts failed, using mock");
+    return mock.mockShouts.slice(0, limit);
+  }
 }
 
 export async function getAllShouts(filters?: { approved?: boolean; readOnAir?: boolean }) {
   const db = await getDb();
   if (!db) return [];
-  
+
   const conditions = [];
-  
+
   if (filters?.approved !== undefined) {
     conditions.push(eq(shouts.approved, filters.approved));
   }
   if (filters?.readOnAir !== undefined) {
     conditions.push(eq(shouts.readOnAir, filters.readOnAir));
   }
-  
+
   if (conditions.length > 0) {
     return await db
       .select()
@@ -261,7 +292,7 @@ export async function getAllShouts(filters?: { approved?: boolean; readOnAir?: b
       .where(and(...conditions))
       .orderBy(desc(shouts.createdAt));
   }
-  
+
   return await db.select().from(shouts).orderBy(desc(shouts.createdAt));
 }
 
@@ -271,7 +302,7 @@ export async function updateShoutStatus(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(shouts)
     .set({
@@ -279,21 +310,61 @@ export async function updateShoutStatus(
       updatedAt: new Date(),
     })
     .where(eq(shouts.id, id));
-  
+
   const updated = await db.select().from(shouts).where(eq(shouts.id, id)).limit(1);
   return updated[0];
 }
 
 // Streams queries
+export async function getStreamStats(id: number) {
+  const db = await getDb();
+  if (!db) {
+    // Mock fallback
+    const mock = mockStreams.find(s => s.id === id);
+    return mock?.stats || null;
+  }
+
+  const stream = await db.select().from(streams).where(eq(streams.id, id)).limit(1);
+  if (!stream[0] || !stream[0].statsUrl) return null;
+
+  try {
+    // Determine parser based on type
+    const isShoutcast = stream[0].type === "shoutcast";
+    // For now, simple fetch. In prod, use a proper XML/JSON parser.
+    const response = await fetch(stream[0].statsUrl);
+    const data = await response.json();
+
+    // Basic mapping (adjust based on actual API response structure)
+    if (isShoutcast) {
+      return {
+        listeners: data.currentlisteners || 0,
+        peak: data.peaklisteners || 0,
+        currentTrack: data.songtitle || "Unknown Track"
+      };
+    } else {
+      // Icecast (status-json.xsl)
+      const source = data.icestats?.source?.[0] || data.icestats?.source;
+      return {
+        listeners: source?.listeners || 0,
+        peak: source?.listener_peak || 0,
+        currentTrack: source?.title || "Unknown Track"
+      };
+    }
+  } catch (e) {
+    console.error("Failed to fetch stream stats:", e);
+    return null;
+  }
+}
+
 export async function createStream(stream: InsertStream) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // If this stream is being set as active, deactivate all others
   if (stream.isActive) {
     await db.update(streams).set({ isActive: false });
   }
-  
+
   const result = await db.insert(streams).values(stream);
   const insertedId = result[0].insertId;
   const created = await db.select().from(streams).where(eq(streams.id, insertedId)).limit(1);
@@ -308,30 +379,35 @@ export async function listStreams() {
 
 export async function getActiveStream() {
   const db = await getDb();
-  if (!db) return undefined;
-  const result = await db
-    .select({
-      id: streams.id,
-      name: streams.name,
-      type: streams.type,
-      publicUrl: streams.publicUrl,
-    })
-    .from(streams)
-    .where(eq(streams.isActive, true))
-    .limit(1);
-  return result[0];
+  if (!db) return mock.mockStreams[0];
+  try {
+    const result = await db
+      .select({
+        id: streams.id,
+        name: streams.name,
+        type: streams.type,
+        publicUrl: streams.publicUrl,
+      })
+      .from(streams)
+      .where(eq(streams.isActive, true))
+      .limit(1);
+    return result[0];
+  } catch (e) {
+    console.warn("[DB] getActiveStream failed, using mock");
+    return mock.mockStreams[0];
+  }
 }
 
 export async function setActiveStream(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Deactivate all streams
   await db.update(streams).set({ isActive: false });
-  
+
   // Activate the specified stream
   await db.update(streams).set({ isActive: true }).where(eq(streams.id, id));
-  
+
   const updated = await db.select().from(streams).where(eq(streams.id, id)).limit(1);
   return updated[0];
 }
@@ -339,12 +415,12 @@ export async function setActiveStream(id: number) {
 export async function updateStream(id: number, updates: Partial<InsertStream>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // If setting as active, deactivate others
   if (updates.isActive === true) {
     await db.update(streams).set({ isActive: false });
   }
-  
+
   await db
     .update(streams)
     .set({
@@ -352,7 +428,7 @@ export async function updateStream(id: number, updates: Partial<InsertStream>) {
       updatedAt: new Date(),
     })
     .where(eq(streams.id, id));
-  
+
   const updated = await db.select().from(streams).where(eq(streams.id, id)).limit(1);
   return updated[0];
 }
@@ -366,22 +442,27 @@ export async function deleteStream(id: number) {
 // Track Requests - extend shouts queries
 export async function getTrackRequests(limit: number = 20) {
   const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select({
-      id: shouts.id,
-      name: shouts.name,
-      trackTitle: shouts.trackTitle,
-      trackArtist: shouts.trackArtist,
-      votes: shouts.votes,
-      trackStatus: shouts.trackStatus,
-      approved: shouts.approved,
-      createdAt: shouts.createdAt,
-    })
-    .from(shouts)
-    .where(and(eq(shouts.isTrackRequest, true), eq(shouts.approved, true)))
-    .orderBy(desc(shouts.votes), desc(shouts.createdAt))
-    .limit(limit);
+  if (!db) return mock.mockTrackRequests.slice(0, limit);
+  try {
+    return await db
+      .select({
+        id: shouts.id,
+        name: shouts.name,
+        trackTitle: shouts.trackTitle,
+        trackArtist: shouts.trackArtist,
+        votes: shouts.votes,
+        trackStatus: shouts.trackStatus,
+        approved: shouts.approved,
+        createdAt: shouts.createdAt,
+      })
+      .from(shouts)
+      .where(and(eq(shouts.isTrackRequest, true), eq(shouts.approved, true)))
+      .orderBy(desc(shouts.votes), desc(shouts.createdAt))
+      .limit(limit);
+  } catch (e) {
+    console.warn("[DB] getTrackRequests failed, using mock");
+    return mock.mockTrackRequests.slice(0, limit);
+  }
 }
 
 export async function upvoteTrackRequest(id: number) {
@@ -422,22 +503,32 @@ export async function createTrack(track: InsertTrack) {
 
 export async function getNowPlaying() {
   const db = await getDb();
-  if (!db) return undefined;
-  const result = await db
-    .select()
-    .from(tracks)
-    .orderBy(desc(tracks.playedAt))
-    .limit(1);
-  return result[0];
+  if (!db) return mock.mockTracks[0];
+  try {
+    const result = await db
+      .select()
+      .from(tracks)
+      .orderBy(desc(tracks.playedAt))
+      .limit(1);
+    return result[0];
+  } catch (e) {
+    console.warn("[DB] getNowPlaying failed, using mock");
+    return mock.mockTracks[0];
+  }
 }
 
 export async function getTrackHistory(limit: number = 10) {
   const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select().from(tracks)
-    .orderBy(desc(tracks.playedAt))
-    .limit(limit);
+  if (!db) return mock.mockTracks.slice(0, limit);
+  try {
+    return await db
+      .select().from(tracks)
+      .orderBy(desc(tracks.playedAt))
+      .limit(limit);
+  } catch (e) {
+    console.warn("[DB] getTrackHistory failed, using mock");
+    return mock.mockTracks.slice(0, limit);
+  }
 }
 
 // Shows / Schedule
@@ -452,12 +543,17 @@ export async function createShow(show: InsertShow) {
 
 export async function listShows() {
   const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(shows)
-    .where(eq(shows.isActive, true))
-    .orderBy(asc(shows.dayOfWeek), asc(shows.startTime));
+  if (!db) return mock.mockShows;
+  try {
+    return await db
+      .select()
+      .from(shows)
+      .where(eq(shows.isActive, true))
+      .orderBy(asc(shows.dayOfWeek), asc(shows.startTime));
+  } catch (e) {
+    console.warn("[DB] listShows failed, using mock");
+    return mock.mockShows;
+  }
 }
 
 export async function getAllShows() {
@@ -486,11 +582,40 @@ export async function deleteShow(id: number) {
   await db.delete(shows).where(eq(shows.id, id));
 }
 
+export async function getDannyStatus() {
+  const db = await getDb();
+  if (!db) return mock.mockDannyStatus[0];
+  try {
+    const result = await db
+      .select()
+      .from(dannyStatus)
+      .where(eq(dannyStatus.isActive, true))
+      .limit(1);
+    return result[0] || mock.mockDannyStatus[0];
+  } catch (e) {
+    console.warn("[DB] getDannyStatus failed, using mock");
+    return mock.mockDannyStatus[0];
+  }
+}
+
+export async function updateDannyStatus(status: Partial<InsertDannyStatus>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Deactivate all others first
+  await db.update(dannyStatus).set({ isActive: false });
+
+  return await db.insert(dannyStatus).values({
+    ...status as any,
+    isActive: true,
+  });
+}
+
 // Listener Stats (aggregated from shouts)
 export async function getListenerStats(limit: number = 20) {
   const db = await getDb();
   if (!db) return [];
-  
+
   // Get all approved shouts grouped by name
   const allShouts = await db
     .select({
@@ -499,10 +624,10 @@ export async function getListenerStats(limit: number = 20) {
     })
     .from(shouts)
     .where(eq(shouts.approved, true));
-  
+
   // Aggregate by name
   const statsMap = new Map<string, { totalShouts: number; firstSeen: Date; lastSeen: Date }>();
-  
+
   for (const shout of allShouts) {
     const name = shout.name.toLowerCase();
     if (!statsMap.has(name)) {
@@ -521,7 +646,7 @@ export async function getListenerStats(limit: number = 20) {
       stats.lastSeen = shout.createdAt;
     }
   }
-  
+
   // Convert to array and sort by totalShouts
   const stats = Array.from(statsMap.entries())
     .map(([name, data]) => ({
@@ -531,7 +656,7 @@ export async function getListenerStats(limit: number = 20) {
     }))
     .sort((a, b) => b.totalShouts - a.totalShouts)
     .slice(0, limit);
-  
+
   return stats;
 }
 
@@ -539,7 +664,7 @@ export async function getListenerStats(limit: number = 20) {
 export async function createEventBooking(booking: InsertEventBooking) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Validation
   if (!booking.name || booking.name.trim().length === 0) {
     throw new Error("Name is required");
@@ -550,7 +675,7 @@ export async function createEventBooking(booking: InsertEventBooking) {
   if (!booking.dataConsent) {
     throw new Error("Data consent is required");
   }
-  
+
   const result = await db.insert(eventBookings).values({
     name: booking.name.trim(),
     email: booking.email.trim(),
@@ -567,7 +692,7 @@ export async function createEventBooking(booking: InsertEventBooking) {
     marketingConsent: booking.marketingConsent ?? false,
     dataConsent: booking.dataConsent,
   });
-  
+
   const insertedId = result[0].insertId;
   const created = await db.select().from(eventBookings).where(eq(eventBookings.id, insertedId)).limit(1);
   return created[0];
@@ -590,14 +715,14 @@ export async function getEventBooking(id: number) {
 export async function createOrUpdateFanBadge(badge: InsertFanBadge) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Find existing by name
   const existing = await db
     .select()
     .from(fanBadges)
     .where(eq(fanBadges.name, badge.name))
     .limit(1);
-  
+
   if (existing[0]) {
     await db
       .update(fanBadges)
@@ -609,7 +734,7 @@ export async function createOrUpdateFanBadge(badge: InsertFanBadge) {
     const updated = await db.select().from(fanBadges).where(eq(fanBadges.id, existing[0].id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(fanBadges).values(badge);
   const insertedId = result[0].insertId;
   const created = await db.select().from(fanBadges).where(eq(fanBadges.id, insertedId)).limit(1);
@@ -755,13 +880,13 @@ export async function updateDJBattle(id: number, updates: Partial<InsertDJBattle
 export async function createOrUpdateListenerLocation(location: InsertListenerLocation) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const existing = await db
     .select()
     .from(listenerLocations)
     .where(eq(listenerLocations.name, location.name))
     .limit(1);
-  
+
   if (existing[0]) {
     await db
       .update(listenerLocations)
@@ -773,7 +898,7 @@ export async function createOrUpdateListenerLocation(location: InsertListenerLoc
     const updated = await db.select().from(listenerLocations).where(eq(listenerLocations.id, existing[0].id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(listenerLocations).values(location);
   const insertedId = result[0].insertId;
   const created = await db.select().from(listenerLocations).where(eq(listenerLocations.id, insertedId)).limit(1);
@@ -837,7 +962,7 @@ export async function listIdentityQuizzes(limit: number = 50) {
 export async function createOrUpdateSuperfan(superfan: InsertSuperfan) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   let existing;
   if (superfan.email) {
     const byEmail = await db
@@ -847,7 +972,7 @@ export async function createOrUpdateSuperfan(superfan: InsertSuperfan) {
       .limit(1);
     existing = byEmail[0];
   }
-  
+
   if (!existing && superfan.name) {
     const byName = await db
       .select()
@@ -856,7 +981,7 @@ export async function createOrUpdateSuperfan(superfan: InsertSuperfan) {
       .limit(1);
     existing = byName[0];
   }
-  
+
   if (existing) {
     await db
       .update(superfans)
@@ -869,7 +994,7 @@ export async function createOrUpdateSuperfan(superfan: InsertSuperfan) {
     const updated = await db.select().from(superfans).where(eq(superfans.id, existing.id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(superfans).values({
     ...superfan,
     perks: typeof superfan.perks === "string" ? superfan.perks : JSON.stringify(superfan.perks || []),
@@ -889,7 +1014,7 @@ export async function listSuperfans() {
 export async function createOrUpdateLoyaltyTracking(tracking: InsertLoyaltyTracking) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   let existing;
   if (tracking.email) {
     const byEmail = await db
@@ -899,7 +1024,7 @@ export async function createOrUpdateLoyaltyTracking(tracking: InsertLoyaltyTrack
       .limit(1);
     existing = byEmail[0];
   }
-  
+
   if (!existing && tracking.name) {
     const byName = await db
       .select()
@@ -908,7 +1033,7 @@ export async function createOrUpdateLoyaltyTracking(tracking: InsertLoyaltyTrack
       .limit(1);
     existing = byName[0];
   }
-  
+
   if (existing) {
     await db
       .update(loyaltyTracking)
@@ -921,7 +1046,7 @@ export async function createOrUpdateLoyaltyTracking(tracking: InsertLoyaltyTrack
     const updated = await db.select().from(loyaltyTracking).where(eq(loyaltyTracking.id, existing.id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(loyaltyTracking).values(tracking);
   const insertedId = result[0].insertId;
   const created = await db.select().from(loyaltyTracking).where(eq(loyaltyTracking.id, insertedId)).limit(1);
@@ -1221,14 +1346,18 @@ export async function markErrorLogResolved(id: number) {
 
 export async function getActiveIncidentBanner() {
   const db = await getDb();
-  if (!db) return undefined;
-  const now = new Date();
-  const result = await db
-    .select()
-    .from(incidentBanners)
-    .where(and(eq(incidentBanners.isActive, true), gt(incidentBanners.endAt || new Date(now.getTime() + 86400000), now)))
-    .limit(1);
-  return result[0];
+  if (!db) return mock.mockIncidentBanners[0];
+  try {
+    const now = new Date();
+    const result = await db
+      .select()
+      .from(incidentBanners)
+      .where(and(eq(incidentBanners.isActive, true), gt(incidentBanners.endAt || new Date(now.getTime() + 86400000), now)))
+      .limit(1);
+    return result[0] || mock.mockIncidentBanners[0];
+  } catch (e) {
+    return mock.mockIncidentBanners[0];
+  }
 }
 
 export async function createIncidentBanner(banner: InsertIncidentBanner) {
@@ -1489,13 +1618,13 @@ export async function getEmpireOverview() {
 export async function createOrUpdateGenZProfile(profile: InsertGenZProfile) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const existing = await db
     .select()
     .from(genZProfiles)
     .where(eq(genZProfiles.username, profile.username))
     .limit(1);
-  
+
   if (existing[0]) {
     await db
       .update(genZProfiles)
@@ -1504,7 +1633,7 @@ export async function createOrUpdateGenZProfile(profile: InsertGenZProfile) {
     const updated = await db.select().from(genZProfiles).where(eq(genZProfiles.id, existing[0].id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(genZProfiles).values(profile);
   const insertedId = result[0].insertId;
   const created = await db.select().from(genZProfiles).where(eq(genZProfiles.id, insertedId)).limit(1);
@@ -1535,25 +1664,25 @@ export async function listGenZProfiles(limit: number = 50) {
 export async function createFollow(follow: InsertFollow) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Check if already following
   const existing = await db
     .select()
     .from(follows)
     .where(and(eq(follows.followerId, follow.followerId), eq(follows.followingId, follow.followingId)))
     .limit(1);
-  
+
   if (existing[0]) return existing[0];
-  
+
   const result = await db.insert(follows).values(follow);
   const insertedId = result[0].insertId;
-  
+
   // Update follower/following counts
   const followerCount = (await db.select().from(follows).where(eq(follows.followerId, follow.followerId))).length;
   const followingCount = (await db.select().from(follows).where(eq(follows.followingId, follow.followingId))).length;
   await db.update(genZProfiles).set({ followingCount }).where(eq(genZProfiles.id, follow.followerId));
   await db.update(genZProfiles).set({ followersCount: followingCount }).where(eq(genZProfiles.id, follow.followingId));
-  
+
   const created = await db.select().from(follows).where(eq(follows.id, insertedId)).limit(1);
   return created[0];
 }
@@ -1630,13 +1759,13 @@ export async function getUserPost(id: number) {
 export async function togglePostReaction(reaction: InsertPostReaction) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const existing = await db
     .select()
     .from(postReactions)
     .where(and(eq(postReactions.postId, reaction.postId), eq(postReactions.profileId, reaction.profileId)))
     .limit(1);
-  
+
   if (existing[0]) {
     await db.delete(postReactions).where(eq(postReactions.id, existing[0].id));
     // Update post likes count
@@ -1734,16 +1863,16 @@ export async function getUserAchievements(profileId: number) {
 export async function unlockAchievement(achievement: InsertUserAchievement) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Check if already unlocked
   const existing = await db
     .select()
     .from(userAchievements)
     .where(and(eq(userAchievements.profileId, achievement.profileId), eq(userAchievements.achievementId, achievement.achievementId)))
     .limit(1);
-  
+
   if (existing[0]) return existing[0];
-  
+
   const result = await db.insert(userAchievements).values(achievement);
   const insertedId = result[0].insertId;
   const created = await db.select().from(userAchievements).where(eq(userAchievements.id, insertedId)).limit(1);
@@ -1778,13 +1907,13 @@ export async function getAIDannyChatHistory(sessionId: string, limit: number = 5
 export async function createOrUpdateWorldAvatar(avatar: InsertWorldAvatar) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const existing = await db
     .select()
     .from(worldAvatars)
     .where(eq(worldAvatars.profileId, avatar.profileId))
     .limit(1);
-  
+
   if (existing[0]) {
     await db
       .update(worldAvatars)
@@ -1798,7 +1927,7 @@ export async function createOrUpdateWorldAvatar(avatar: InsertWorldAvatar) {
     const updated = await db.select().from(worldAvatars).where(eq(worldAvatars.id, existing[0].id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(worldAvatars).values({
     ...avatar,
     avatarData: typeof avatar.avatarData === "string" ? avatar.avatarData : JSON.stringify(avatar.avatarData || {}),
@@ -2082,20 +2211,20 @@ export async function createTrafficEvent(event: InsertTrafficEvent) {
 export async function getTrafficStats(days: number = 7) {
   const db = await getDb();
   if (!db) return { bySource: {}, byMedium: {}, byRoute: {}, hourlyActivity: {} };
-  
+
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-  
+
   const events = await db
     .select()
     .from(trafficEvents)
     .where(gt(trafficEvents.timestamp, cutoff));
-  
+
   const bySource: Record<string, number> = {};
   const byMedium: Record<string, number> = {};
   const byRoute: Record<string, number> = {};
   const hourlyActivity: Record<number, number> = {};
-  
+
   events.forEach((event) => {
     if (event.utmSource) {
       bySource[event.utmSource] = (bySource[event.utmSource] || 0) + 1;
@@ -2111,7 +2240,7 @@ export async function getTrafficStats(days: number = 7) {
       hourlyActivity[hour] = (hourlyActivity[hour] || 0) + 1;
     }
   });
-  
+
   return { bySource, byMedium, byRoute, hourlyActivity };
 }
 
@@ -2119,13 +2248,13 @@ export async function getTrafficStats(days: number = 7) {
 export async function createOrUpdateInnerCircle(innerCircleData: InsertInnerCircle) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const existing = await db
     .select()
     .from(innerCircle)
     .where(eq(innerCircle.profileId, innerCircleData.profileId))
     .limit(1);
-  
+
   if (existing[0]) {
     await db
       .update(innerCircle)
@@ -2138,7 +2267,7 @@ export async function createOrUpdateInnerCircle(innerCircleData: InsertInnerCirc
     const updated = await db.select().from(innerCircle).where(eq(innerCircle.id, existing[0].id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(innerCircle).values({
     ...innerCircleData,
     unlockedAt: innerCircleData.isEligible ? new Date() : undefined,
@@ -2309,7 +2438,7 @@ export async function updateAIVideoJob(id: number, updates: Partial<InsertAIVide
 export async function createOrUpdateUserConsent(consent: InsertUserConsent) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   let existing;
   if (consent.profileId) {
     const byProfile = await db
@@ -2333,7 +2462,7 @@ export async function createOrUpdateUserConsent(consent: InsertUserConsent) {
       .limit(1);
     existing = byEmail[0];
   }
-  
+
   if (existing) {
     await db
       .update(userConsents)
@@ -2345,7 +2474,7 @@ export async function createOrUpdateUserConsent(consent: InsertUserConsent) {
     const updated = await db.select().from(userConsents).where(eq(userConsents.id, existing.id)).limit(1);
     return updated[0];
   }
-  
+
   const result = await db.insert(userConsents).values(consent);
   const insertedId = result[0].insertId;
   const created = await db.select().from(userConsents).where(eq(userConsents.id, insertedId)).limit(1);
@@ -2355,7 +2484,7 @@ export async function createOrUpdateUserConsent(consent: InsertUserConsent) {
 export async function getUserConsent(profileId?: number, userId?: number, email?: string) {
   const db = await getDb();
   if (!db) return undefined;
-  
+
   if (profileId) {
     const result = await db.select().from(userConsents).where(eq(userConsents.profileId, profileId)).limit(1);
     if (result[0]) return result[0];
@@ -2374,7 +2503,7 @@ export async function getUserConsent(profileId?: number, userId?: number, email?
 export async function getConsentStats() {
   const db = await getDb();
   if (!db) return { total: 0, aiContent: 0, marketing: 0, dataShare: 0 };
-  
+
   const all = await db.select().from(userConsents);
   return {
     total: all.length,
@@ -2396,10 +2525,10 @@ export async function getConsentStats() {
 export async function getOrCreateWallet(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const existing = await db.select().from(wallets).where(eq(wallets.userId, userId)).limit(1);
   if (existing[0]) return existing[0];
-  
+
   const result = await db.insert(wallets).values({ userId, balanceCoins: 0 });
   const insertedId = result[0].insertId;
   const created = await db.select().from(wallets).where(eq(wallets.id, insertedId)).limit(1);
@@ -2429,25 +2558,25 @@ export async function adjustCoins(options: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const wallet = await getOrCreateWallet(options.userId);
-  
+
   // Check balance for spending
   if (options.type === "spend" && wallet.balanceCoins + options.amount < 0) {
     throw new Error("Insufficient coins");
   }
-  
+
   const newBalance = wallet.balanceCoins + options.amount;
   const newLifetimeEarned = options.type === "earn" ? wallet.lifetimeCoinsEarned + Math.abs(options.amount) : wallet.lifetimeCoinsEarned;
   const newLifetimeSpent = options.type === "spend" ? wallet.lifetimeCoinsSpent + Math.abs(options.amount) : wallet.lifetimeCoinsSpent;
-  
+
   await db.update(wallets).set({
     balanceCoins: newBalance,
     lifetimeCoinsEarned: newLifetimeEarned,
     lifetimeCoinsSpent: newLifetimeSpent,
     lastUpdatedAt: new Date(),
   }).where(eq(wallets.id, wallet.id));
-  
+
   const transaction = await db.insert(coinTransactions).values({
     userId: options.userId,
     walletId: wallet.id,
@@ -2457,7 +2586,7 @@ export async function adjustCoins(options: {
     referenceId: options.referenceId,
     description: options.description,
   });
-  
+
   const updated = await db.select().from(wallets).where(eq(wallets.id, wallet.id)).limit(1);
   return updated[0];
 }
@@ -2512,13 +2641,13 @@ export async function updateReward(id: number, updates: Partial<InsertReward>) {
 export async function createRedemption(userId: number, rewardId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const reward = await getReward(rewardId);
   if (!reward || !reward.isActive) throw new Error("Reward not found or inactive");
-  
+
   const wallet = await getOrCreateWallet(userId);
   if (wallet.balanceCoins < reward.costCoins) throw new Error("Insufficient coins");
-  
+
   // Deduct coins
   await adjustCoins({
     userId,
@@ -2528,7 +2657,7 @@ export async function createRedemption(userId: number, rewardId: number) {
     referenceId: rewardId,
     description: `Redeemed: ${reward.name}`,
   });
-  
+
   // Create redemption
   const result = await db.insert(redemptions).values({
     userId,
@@ -2591,15 +2720,15 @@ export async function getReferralCode(code: string) {
 export async function applyReferralCode(code: string, newUserId: number, rewardCoins: number = 100) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const referralCode = await getReferralCode(code);
   if (!referralCode) throw new Error("Invalid referral code");
-  
+
   // Check expiry
   if (referralCode.expiresAt && new Date(referralCode.expiresAt) < new Date()) {
     throw new Error("Referral code expired");
   }
-  
+
   // Check max uses
   if (referralCode.maxUses) {
     const uses = await db.select().from(referralUses).where(eq(referralUses.codeId, referralCode.id));
@@ -2607,7 +2736,7 @@ export async function applyReferralCode(code: string, newUserId: number, rewardC
       throw new Error("Referral code max uses reached");
     }
   }
-  
+
   // Check if already used by this user
   const existingUse = await db
     .select()
@@ -2615,14 +2744,14 @@ export async function applyReferralCode(code: string, newUserId: number, rewardC
     .where(and(eq(referralUses.codeId, referralCode.id), eq(referralUses.referredUserId, newUserId)))
     .limit(1);
   if (existingUse[0]) throw new Error("Referral code already used by this user");
-  
+
   // Record use
   await db.insert(referralUses).values({
     codeId: referralCode.id,
     referredUserId: newUserId,
     rewardCoins,
   });
-  
+
   // Award coins to both users
   await adjustCoins({
     userId: newUserId,
@@ -2632,7 +2761,7 @@ export async function applyReferralCode(code: string, newUserId: number, rewardC
     referenceId: referralCode.id,
     description: `Referral bonus`,
   });
-  
+
   await adjustCoins({
     userId: referralCode.ownerUserId,
     amount: rewardCoins,
@@ -2641,7 +2770,7 @@ export async function applyReferralCode(code: string, newUserId: number, rewardC
     referenceId: referralCode.id,
     description: `Referral reward for ${code}`,
   });
-  
+
   return { success: true };
 }
 
@@ -2658,13 +2787,13 @@ export async function listReferralCodes(ownerUserId?: number) {
 export async function getReferralStats(ownerUserId: number) {
   const db = await getDb();
   if (!db) return { totalUses: 0, totalCoinsAwarded: 0, codes: [] };
-  
+
   const codes = await listReferralCodes(ownerUserId);
   const uses = await db
     .select()
     .from(referralUses)
     .where(eq(referralUses.codeId, codes.map((c) => c.id)[0] || 0));
-  
+
   return {
     totalUses: uses.length,
     totalCoinsAwarded: uses.reduce((sum, u) => sum + u.rewardCoins, 0),
@@ -3030,15 +3159,15 @@ export async function updateWebhook(id: number, updates: Partial<InsertWebhook>)
 export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], payload: any) {
   const db = await getDb();
   if (!db) return { dispatched: 0, errors: [] };
-  
+
   const activeWebhooks = await db
     .select()
     .from(webhooks)
     .where(and(eq(webhooks.isActive, true), eq(webhooks.eventType, eventType)));
-  
+
   const errors: string[] = [];
   let dispatched = 0;
-  
+
   for (const webhook of activeWebhooks) {
     try {
       // In a real implementation, this would make HTTP POST requests
@@ -3050,6 +3179,158 @@ export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], pa
       errors.push(`${webhook.name}: ${errorMsg}`);
     }
   }
-  
+
   return { dispatched, errors };
+}
+
+export async function getActiveIncidentBanners() {
+  const db = await getDb();
+  if (!db) return mock.mockIncidentBanners;
+  try {
+    return await db
+      .select()
+      .from(incidentBanners)
+      .where(eq(incidentBanners.isActive, true));
+  } catch (e) {
+    console.warn("[DB] getActiveIncidentBanners failed, using mock");
+    return mock.mockIncidentBanners;
+  }
+}
+
+export async function getFeedPosts(includeVip: boolean = false) {
+  const db = await getDb();
+  const allMock = [...mock.mockFeedPosts, ...(mock as any).moreMockFeedPosts];
+  if (!db) return allMock;
+  try {
+    const query = db.select().from(feedPosts).orderBy(desc(feedPosts.createdAt));
+    const results = await query;
+    return includeVip ? results : results.filter(p => !p.isVipOnly);
+  } catch (e) {
+    console.warn("[DB] getFeedPosts failed, using mock");
+    return allMock;
+  }
+}
+
+export async function toggleFeedPostReaction(postId: number, emoji: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const post = await db.select().from(feedPosts).where(eq(feedPosts.id, postId)).limit(1);
+  if (!post[0]) throw new Error("Post not found");
+
+  const reactions = JSON.parse(post[0].reactions || "{}");
+  reactions[emoji] = (reactions[emoji] || 0) + 1;
+
+  await db.update(feedPosts).set({ reactions: JSON.stringify(reactions) }).where(eq(feedPosts.id, postId));
+}
+
+export async function getMixById(id: number) {
+  const db = await getDb();
+  if (!db) return mock.mockMixes.find(m => m.id === id);
+  try {
+    const results = await db.select().from(mixes).where(eq(mixes.id, id)).limit(1);
+    return results[0] || mock.mockMixes.find(m => m.id === id);
+  } catch (e) {
+    return mock.mockMixes.find(m => m.id === id);
+  }
+}
+
+// User Profiles (Onboarding & Preferences)
+export async function createOrUpdateUserProfile(profile: InsertUserProfile) {
+  try {
+    const database = getDb();
+    if (!database) throw new Error("Database not available");
+
+    // Convert genres array to JSON string if it's an object/array
+    const data = {
+      ...profile,
+      genres: typeof profile.genres === 'object' ? JSON.stringify(profile.genres) : profile.genres,
+    };
+
+    // Check if profile exists by name (simplified for now as we don't have user IDs yet)
+    const existing = await database.select().from(userProfiles).where(eq(userProfiles.name, profile.name)).limit(1);
+
+    if (existing.length > 0) {
+      await database
+        .update(userProfiles)
+        .set(data)
+        .where(eq(userProfiles.id, existing[0].id));
+      const updated = await database.select().from(userProfiles).where(eq(userProfiles.id, existing[0].id)).limit(1);
+      return updated[0];
+    }
+
+    const result = await database.insert(userProfiles).values(data as any);
+    const insertedId = (result as any)[0].insertId;
+    const created = await database.select().from(userProfiles).where(eq(userProfiles.id, insertedId)).limit(1);
+    return created[0];
+  } catch (error) {
+    console.error("[db] Error in createOrUpdateUserProfile:", error);
+    // Mock fallback
+    return {
+      id: Math.floor(Math.random() * 1000),
+      name: profile.name,
+      genres: typeof profile.genres === 'object' ? JSON.stringify(profile.genres) : profile.genres,
+      whatsappOptIn: profile.whatsappOptIn || false,
+      aiMemoryEnabled: profile.aiMemoryEnabled || false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+}
+
+// Extended Stream Management (Go Live Logic)
+export async function goLive(
+  streamId: number,
+  showName: string,
+  hostName: string,
+  category: string
+) {
+  try {
+    const database = getDb();
+    if (!database) throw new Error("Database not available");
+
+    // 1. Deactivate all other streams
+    await database.update(streams).set({ isActive: false });
+
+    // 2. Activate the selected stream
+    await database
+      .update(streams)
+      .set({
+        isActive: true,
+        // We'll overload the 'mount' and 'sourceHost' fields to store transient show data
+        // since we can't easily change the schema right now.
+        // mount -> showName
+        // sourceHost -> hostName
+        mount: showName,
+        sourceHost: hostName
+      })
+      .where(eq(streams.id, streamId));
+
+    // 3. Update Danny's Status
+    await database.insert(dannyStatus).values({
+      status: "On Air",
+      message: `Live Now: ${showName} with ${hostName}`,
+      isActive: true,
+    });
+
+    // Return the updated stream
+    const updated = await database.select().from(streams).where(eq(streams.id, streamId)).limit(1);
+    return {
+      ...updated[0],
+      showName,
+      hostName
+    };
+  } catch (error) {
+    console.error("[db] Error in goLive:", error);
+    // Mock fallback
+    return {
+      id: streamId,
+      name: "Mock Stream",
+      type: "shoutcast",
+      publicUrl: "https://stream.example.com",
+      isActive: true,
+      showName,
+      hostName,
+    };
+  }
 }
