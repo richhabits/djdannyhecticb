@@ -48,9 +48,13 @@ async function startServer() {
   app.use(cookieParser());
   
   // Aggressive memory optimization for production
-  const bodyLimit = process.env.NODE_ENV === "production" ? "500kb" : "10mb";
+  const bodyLimit = process.env.NODE_ENV === "production" ? "300kb" : "10mb";
   app.use(express.json({ limit: bodyLimit }));
   app.use(express.urlencoded({ limit: bodyLimit, extended: true }));
+  
+  // Disable unnecessary features to save resources
+  app.disable("x-powered-by");
+  app.disable("etag"); // Let nginx handle caching
   
   // Security headers (consolidated, no duplicate comment)
   app.use((req, res, next) => {

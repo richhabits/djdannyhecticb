@@ -26,7 +26,11 @@ COPY vite.config.ts tsconfig.json tsconfig.node.json ./
 ENV NODE_ENV=production
 RUN pnpm run build && \
     rm -rf node_modules .pnpm-store && \
-    find dist -name "*.map" -delete
+    find dist -name "*.map" -delete && \
+    # Remove unused files from dist
+    find dist -name "*.test.*" -delete && \
+    find dist -name "*.spec.*" -delete && \
+    find dist -type d -name "__tests__" -exec rm -rf {} + 2>/dev/null || true
 
 # Production stage - minimal alpine image
 FROM node:20-alpine

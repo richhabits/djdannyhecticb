@@ -61,7 +61,7 @@ docs/
 *.md
 !README.md
 
-# Large assets (optimize separately)
+# Large assets (optimize separately - only include essential logos)
 *.png
 *.jpg
 *.jpeg
@@ -71,8 +71,20 @@ docs/
 *.mov
 *.avi
 *.webm
-!client/public/logo*.png
-!client/public/logo*.jpg
+*.pdf
+*.zip
+*.tar
+*.gz
+!client/public/logo-icon.png
+!client/public/logo-danny-hectic-b.png
+
+# Exclude large node_modules subdirectories
+node_modules/.pnpm/@mux
+node_modules/.pnpm/@mermaid-js
+node_modules/.pnpm/mermaid
+node_modules/.pnpm/shiki
+node_modules/.pnpm/dashjs
+node_modules/.pnpm/hls.js
 
 # Documentation (keep only essential)
 *.md
