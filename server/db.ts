@@ -120,9 +120,8 @@ export async function getAllMixes() {
   try {
     return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
   } catch (e) {
-    // Only log in development to reduce I/O overhead
     if (process.env.NODE_ENV === "development") {
-      if (process.env.NODE_ENV === "development") { console.warn("[DB] getAllMixes failed, using mock"); }
+      console.warn("[DB] getAllMixes failed, using mock");
     }
     return mock.mockMixes;
   }
@@ -1110,14 +1109,14 @@ export async function listLoyaltyTracking(limit: number = 50) {
 export async function createSupportEvent(event: InsertSupportEvent) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Only include fields that are explicitly provided (omit undefined to let defaults work)
   const values: any = {
     fanName: event.fanName,
     amount: event.amount,
     currency: event.currency || "GBP",
   };
-  
+
   // Only add optional fields if they're provided
   if (event.fanId !== undefined && event.fanId !== null) {
     values.fanId = event.fanId;
@@ -1131,7 +1130,7 @@ export async function createSupportEvent(event: InsertSupportEvent) {
   if (event.status !== undefined) {
     values.status = event.status;
   }
-  
+
   const result = await db.insert(supportEvents).values(values);
   const insertedId = result[0].insertId;
   const created = await db.select().from(supportEvents).where(eq(supportEvents.id, insertedId)).limit(1);
@@ -1633,12 +1632,12 @@ export async function getEmpireOverview() {
     .select()
     .from(shouts)
     .where(gt(shouts.createdAt, oneDayAgo));
-  
+
   const weeklyShouts = await db
     .select()
     .from(shouts)
     .where(gt(shouts.createdAt, oneWeekAgo));
-  
+
   const dailyActiveListeners = new Set(dailyShouts.map((s) => s.name)).size;
   const weeklyActiveListeners = new Set(weeklyShouts.map((s) => s.name)).size;
 
@@ -1657,21 +1656,21 @@ export async function getEmpireOverview() {
 
   // Revenue summary - Optimized: use SQL aggregation instead of fetching all records
   const supportTotal = await getSupportEventTotal("GBP");
-  
+
   // Count completed purchases directly in SQL
   const completedPurchasesCount = await db
     .select({ count: sql<number>`count(*)` })
     .from(purchases)
     .where(eq(purchases.status, "completed"))
     .then((rows) => Number(rows[0]?.count || 0));
-  
+
   // Count active subscriptions directly in SQL
   const activeSubscriptionsCount = await db
     .select({ count: sql<number>`count(*)` })
     .from(subscriptions)
     .where(eq(subscriptions.status, "active"))
     .then((rows) => Number(rows[0]?.count || 0));
-  
+
   // Only count bookings, don't fetch all data
   const bookingCount = await db
     .select({ count: sql<number>`count(*)` })
@@ -2784,12 +2783,12 @@ export async function getRecommendationsForEntity(entityType: "mix" | "track" | 
     .from(userFavorites)
     .where(and(eq(userFavorites.entityType, entityType), eq(userFavorites.entityId, entityId)))
     .limit(100);
-  
+
   if (favoriters.length === 0) return [];
-  
+
   const userIds = favoriters.map(f => f.userId).filter(Boolean);
   if (userIds.length === 0) return [];
-  
+
   // Get other entities favorited by these users
   const recommendations = await db
     .select({
@@ -2807,7 +2806,7 @@ export async function getRecommendationsForEntity(entityType: "mix" | "track" | 
     .groupBy(userFavorites.entityType, userFavorites.entityId)
     .orderBy(desc(sql`COUNT(*)`))
     .limit(limit);
-  
+
   return recommendations;
 }
 
@@ -3544,7 +3543,7 @@ export async function getTrackById(id: number) {
 export async function updateTrack(id: number, updates: Partial<InsertTrack>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(tracks)
     .set({
@@ -3552,7 +3551,7 @@ export async function updateTrack(id: number, updates: Partial<InsertTrack>) {
       updatedAt: new Date(),
     })
     .where(eq(tracks.id, id));
-  
+
   const updated = await db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
   return updated[0];
 }
@@ -3578,7 +3577,7 @@ export async function getPodcastById(id: number) {
 export async function createPodcast(podcast: InsertPodcast) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const result = await db.insert(podcasts).values(podcast);
   const insertedId = result[0].insertId;
   const created = await db.select().from(podcasts).where(eq(podcasts.id, insertedId)).limit(1);
@@ -3588,7 +3587,7 @@ export async function createPodcast(podcast: InsertPodcast) {
 export async function updatePodcast(id: number, updates: Partial<InsertPodcast>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(podcasts)
     .set({
@@ -3596,7 +3595,7 @@ export async function updatePodcast(id: number, updates: Partial<InsertPodcast>)
       updatedAt: new Date(),
     })
     .where(eq(podcasts.id, id));
-  
+
   const updated = await db.select().from(podcasts).where(eq(podcasts.id, id)).limit(1);
   return updated[0];
 }
@@ -3622,7 +3621,7 @@ export async function getStreamingLinkById(id: number) {
 export async function createStreamingLink(link: InsertStreamingLink) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const result = await db.insert(streamingLinks).values(link);
   const insertedId = result[0].insertId;
   const created = await db.select().from(streamingLinks).where(eq(streamingLinks.id, insertedId)).limit(1);
@@ -3632,7 +3631,7 @@ export async function createStreamingLink(link: InsertStreamingLink) {
 export async function updateStreamingLink(id: number, updates: Partial<InsertStreamingLink>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(streamingLinks)
     .set({
@@ -3640,7 +3639,7 @@ export async function updateStreamingLink(id: number, updates: Partial<InsertStr
       updatedAt: new Date(),
     })
     .where(eq(streamingLinks.id, id));
-  
+
   const updated = await db.select().from(streamingLinks).where(eq(streamingLinks.id, id)).limit(1);
   return updated[0];
 }
@@ -3655,7 +3654,7 @@ export async function deleteStreamingLink(id: number) {
 export async function updateEventBooking(id: number, updates: Partial<InsertEventBooking>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(eventBookings)
     .set({
@@ -3663,7 +3662,7 @@ export async function updateEventBooking(id: number, updates: Partial<InsertEven
       updatedAt: new Date(),
     })
     .where(eq(eventBookings.id, id));
-  
+
   const updated = await db.select().from(eventBookings).where(eq(eventBookings.id, id)).limit(1);
   return updated[0];
 }

@@ -24,6 +24,8 @@ COPY vite.config.ts tsconfig.json tsconfig.node.json ./
 # Build with production optimizations
 ENV NODE_ENV=production
 RUN pnpm run build && \
+    # Build server separately
+    pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js && \
     rm -rf node_modules .pnpm-store && \
     find dist -name "*.map" -delete && \
     # Remove unused files from dist
@@ -67,4 +69,4 @@ EXPOSE 3000
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["pnpm", "start"]
+CMD ["node", "dist/index.js"]
