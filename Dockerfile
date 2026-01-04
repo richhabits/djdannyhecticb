@@ -32,7 +32,7 @@ RUN touch .env
 
 RUN pnpm run build && \
     # Verify server bundle was created
-    test -f dist/index.js && echo "✅ Server bundle created" || (echo "❌ Server bundle missing, creating..." && pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js) && \
+    test -f dist/index.mjs && echo "✅ Server bundle created" || (echo "❌ Server bundle missing, creating..." && pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.mjs) && \
     rm -rf node_modules .pnpm-store && \
     find dist -name "*.map" -delete && \
     # Remove unused files from dist
@@ -76,4 +76,4 @@ EXPOSE 3000
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "--input-type=module", "dist/index.js"]
+CMD ["node", "dist/index.mjs"]
