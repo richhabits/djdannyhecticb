@@ -9,9 +9,8 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
-# Install dependencies with cache mount to save space
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --prefer-offline
+# Install dependencies (removed cache mount for compatibility)
+RUN pnpm install --frozen-lockfile --prefer-offline
 
 # Copy only what's needed for build
 COPY client/ ./client/
@@ -45,9 +44,8 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate && \
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
-# Install production dependencies only with cache
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile --prefer-offline && \
+# Install production dependencies only
+RUN pnpm install --prod --frozen-lockfile --prefer-offline && \
     pnpm store prune && \
     rm -rf /root/.local/share/pnpm/store/.tmp
 
