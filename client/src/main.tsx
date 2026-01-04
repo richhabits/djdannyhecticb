@@ -13,6 +13,11 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
+import { initCopyProtection, addCopyrightWatermark } from "./lib/copyProtection";
+
+// Initialize copy protection
+initCopyProtection();
+addCopyrightWatermark();
 
 const queryClient = new QueryClient();
 
