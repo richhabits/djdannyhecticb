@@ -1,6 +1,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
+import { authenticateAdminRequest } from "./adminAuth";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -13,26 +14,19 @@ export async function createContext(
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
+  // First try OAuth authentication
   try {
     user = await sdk.authenticateRequest(opts.req);
   } catch (error) {
     user = null;
   }
 
-  // FORCE MOCK ADMIN FOR DEV
-  if (!user && process.env.NODE_ENV !== "production") {
-    // console.warn("[Dev] Injecting mock admin user");
-    user = {
-      id: 1,
-      openId: "mock-admin-id",
-      name: "Dev Admin",
-      email: "admin@example.com",
-      loginMethod: "mock",
-      role: "admin",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      lastSignedIn: new Date(),
-    };
+  // If no OAuth user, try admin password authentication
+  if (!user) {
+    const adminAuth = await authenticateAdminRequest(opts.req);
+    if (adminAuth.success && adminAuth.user) {
+      user = adminAuth.user;
+    }
   }
 
   return {

@@ -16,6 +16,7 @@ import {
   Gift,
   Play,
   Settings,
+  Megaphone,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -235,6 +236,25 @@ export default function AdminControlTower() {
           </CardContent>
         </Card>
 
+        {/* Marketing Hub Panel */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5" />
+              Marketing Hub
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Marketing Tools</p>
+              <p className="text-sm">Leads, campaigns, social posts</p>
+            </div>
+            <Link href="/admin/marketing">
+              <Button variant="outline" size="sm" className="w-full">Marketing Hub</Button>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Safety & Empire Panel */}
         <Card>
           <CardHeader>
@@ -282,6 +302,12 @@ export default function AdminControlTower() {
               <Button variant="outline" className="w-full">
                 <Sparkles className="h-4 w-4 mr-2" />
                 Create AI Script
+              </Button>
+            </Link>
+            <Link href="/admin/marketing">
+              <Button variant="outline" className="w-full">
+                <Megaphone className="h-4 w-4 mr-2" />
+                Marketing Hub
               </Button>
             </Link>
             <Link href="/admin/empire">

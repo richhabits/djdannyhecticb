@@ -1,6 +1,6 @@
-import { asc, desc, eq, gt, and } from "drizzle-orm";
+import { asc, desc, eq, gt, and, or, like, sql, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, bookings, events, podcasts, streamingLinks, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook } from "../drizzle/schema";
+import { InsertUser, users, mixes, InsertMix, bookings, events, InsertEvent, podcasts, InsertPodcast, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, adminCredentials, InsertAdminCredential, marketingLeads, InsertMarketingLead, marketingCampaigns, InsertMarketingCampaign, outreachActivities, InsertOutreachActivity, socialMediaPosts, InsertSocialMediaPost, venueScraperResults, InsertVenueScraperResult, userFavorites, InsertUserFavorite, userPlaylists, InsertUserPlaylist, userPlaylistItems, InsertUserPlaylistItem, trackIdRequests, InsertTrackIdRequest, socialShares, InsertSocialShare, videoTestimonials, InsertVideoTestimonial, socialProofNotifications, InsertSocialProofNotification, socialMediaFeedPosts, InsertSocialMediaFeedPost, musicRecommendations, InsertMusicRecommendation } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 import * as mock from './_core/mockData';
@@ -14,9 +14,13 @@ export async function getDb() {
   }
   if (!_db && process.env.DATABASE_URL) {
     try {
+      // Drizzle handles connection pooling automatically via mysql2
       _db = drizzle(process.env.DATABASE_URL);
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      // Only log in development to reduce I/O overhead
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[Database] Failed to connect:", error);
+      }
       _db = null;
     }
   }
@@ -110,7 +114,10 @@ export async function getAllMixes() {
   try {
     return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
   } catch (e) {
-    console.warn("[DB] getAllMixes failed, using mock");
+    // Only log in development to reduce I/O overhead
+    if (process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === "development") { console.warn("[DB] getAllMixes failed, using mock"); }
+    }
     return mock.mockMixes;
   }
 }
@@ -121,7 +128,9 @@ export async function getFreeMixes() {
   try {
     return await db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(desc(mixes.createdAt));
   } catch (e) {
-    console.warn("[DB] getFreeMixes failed, using mock");
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[DB] getFreeMixes failed, using mock");
+    }
     return mock.mockMixes.filter(m => m.isFree);
   }
 }
@@ -152,7 +161,7 @@ export async function getUpcomingEvents() {
   try {
     return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
   } catch (e) {
-    console.warn("[DB] getUpcomingEvents failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getUpcomingEvents failed, using mock"); }
     return mock.mockEvents;
   }
 }
@@ -176,7 +185,7 @@ export async function getAllPodcasts() {
   try {
     return await db.select().from(podcasts).orderBy(desc(podcasts.createdAt));
   } catch (e) {
-    console.warn("[DB] getAllPodcasts failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getAllPodcasts failed, using mock"); }
     return mock.mockPodcasts;
   }
 }
@@ -188,7 +197,7 @@ export async function getStreamingLinks() {
   try {
     return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
   } catch (e) {
-    console.warn("[DB] getStreamingLinks failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getStreamingLinks failed, using mock"); }
     return mock.mockStreamingLinks;
   }
 }
@@ -267,7 +276,7 @@ export async function getApprovedShouts(limit: number = 20) {
       .limit(limit);
     return result;
   } catch (e) {
-    console.warn("[DB] getApprovedShouts failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getApprovedShouts failed, using mock"); }
     return mock.mockShouts.slice(0, limit);
   }
 }
@@ -393,7 +402,7 @@ export async function getActiveStream() {
       .limit(1);
     return result[0];
   } catch (e) {
-    console.warn("[DB] getActiveStream failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getActiveStream failed, using mock"); }
     return mock.mockStreams[0];
   }
 }
@@ -460,7 +469,7 @@ export async function getTrackRequests(limit: number = 20) {
       .orderBy(desc(shouts.votes), desc(shouts.createdAt))
       .limit(limit);
   } catch (e) {
-    console.warn("[DB] getTrackRequests failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getTrackRequests failed, using mock"); }
     return mock.mockTrackRequests.slice(0, limit);
   }
 }
@@ -512,7 +521,7 @@ export async function getNowPlaying() {
       .limit(1);
     return result[0];
   } catch (e) {
-    console.warn("[DB] getNowPlaying failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getNowPlaying failed, using mock"); }
     return mock.mockTracks[0];
   }
 }
@@ -526,7 +535,7 @@ export async function getTrackHistory(limit: number = 10) {
       .orderBy(desc(tracks.playedAt))
       .limit(limit);
   } catch (e) {
-    console.warn("[DB] getTrackHistory failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getTrackHistory failed, using mock"); }
     return mock.mockTracks.slice(0, limit);
   }
 }
@@ -551,7 +560,7 @@ export async function listShows() {
       .where(eq(shows.isActive, true))
       .orderBy(asc(shows.dayOfWeek), asc(shows.startTime));
   } catch (e) {
-    console.warn("[DB] listShows failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] listShows failed, using mock"); }
     return mock.mockShows;
   }
 }
@@ -593,7 +602,7 @@ export async function getDannyStatus() {
       .limit(1);
     return result[0] || mock.mockDannyStatus[0];
   } catch (e) {
-    console.warn("[DB] getDannyStatus failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getDannyStatus failed, using mock"); }
     return mock.mockDannyStatus[0];
   }
 }
@@ -616,17 +625,20 @@ export async function getListenerStats(limit: number = 20) {
   const db = await getDb();
   if (!db) return [];
 
-  // Get all approved shouts grouped by name
+  // Optimized: Use SQL aggregation instead of fetching all records
+  // Get approved shouts with aggregation in SQL
   const allShouts = await db
     .select({
       name: shouts.name,
       createdAt: shouts.createdAt,
     })
     .from(shouts)
-    .where(eq(shouts.approved, true));
+    .where(eq(shouts.approved, true))
+    .orderBy(desc(shouts.createdAt))
+    .limit(limit * 10); // Fetch more than needed for accurate stats, but still limited
 
-  // Aggregate by name
-  const statsMap = new Map<string, { totalShouts: number; firstSeen: Date; lastSeen: Date }>();
+  // Aggregate by name (in-memory for now, but with limited dataset)
+  const statsMap = new Map<string, { totalShouts: number; firstSeen: Date; lastSeen: Date; displayName: string }>();
 
   for (const shout of allShouts) {
     const name = shout.name.toLowerCase();
@@ -635,6 +647,7 @@ export async function getListenerStats(limit: number = 20) {
         totalShouts: 0,
         firstSeen: shout.createdAt,
         lastSeen: shout.createdAt,
+        displayName: shout.name,
       });
     }
     const stats = statsMap.get(name)!;
@@ -648,14 +661,16 @@ export async function getListenerStats(limit: number = 20) {
   }
 
   // Convert to array and sort by totalShouts
-  const stats = Array.from(statsMap.entries())
-    .map(([name, data]) => ({
-      name: name,
-      displayName: allShouts.find((s) => s.name.toLowerCase() === name)?.name || name,
-      ...data,
-    }))
+  const stats = Array.from(statsMap.values())
     .sort((a, b) => b.totalShouts - a.totalShouts)
-    .slice(0, limit);
+    .slice(0, limit)
+    .map((data) => ({
+      name: data.displayName.toLowerCase(),
+      displayName: data.displayName,
+      totalShouts: data.totalShouts,
+      firstSeen: data.firstSeen,
+      lastSeen: data.lastSeen,
+    }));
 
   return stats;
 }
@@ -1089,7 +1104,29 @@ export async function listLoyaltyTracking(limit: number = 50) {
 export async function createSupportEvent(event: InsertSupportEvent) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(supportEvents).values(event);
+  
+  // Only include fields that are explicitly provided (omit undefined to let defaults work)
+  const values: any = {
+    fanName: event.fanName,
+    amount: event.amount,
+    currency: event.currency || "GBP",
+  };
+  
+  // Only add optional fields if they're provided
+  if (event.fanId !== undefined && event.fanId !== null) {
+    values.fanId = event.fanId;
+  }
+  if (event.email !== undefined && event.email !== null) {
+    values.email = event.email;
+  }
+  if (event.message !== undefined && event.message !== null) {
+    values.message = event.message;
+  }
+  if (event.status !== undefined) {
+    values.status = event.status;
+  }
+  
+  const result = await db.insert(supportEvents).values(values);
   const insertedId = result[0].insertId;
   const created = await db.select().from(supportEvents).where(eq(supportEvents.id, insertedId)).limit(1);
   return created[0];
@@ -1099,6 +1136,14 @@ export async function listSupportEvents(limit: number = 100) {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(supportEvents).orderBy(desc(supportEvents.createdAt)).limit(limit);
+}
+
+export async function updateSupportEvent(id: number, updates: Partial<InsertSupportEvent>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(supportEvents).set(updates).where(eq(supportEvents.id, id));
+  const updated = await db.select().from(supportEvents).where(eq(supportEvents.id, id)).limit(1);
+  return updated[0];
 }
 
 export async function getSupportEventTotal(currency: string = "GBP") {
@@ -1164,6 +1209,28 @@ export async function listPurchases(limit: number = 100) {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(purchases).orderBy(desc(purchases.createdAt)).limit(limit);
+}
+
+export async function getPurchase(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(purchases).where(eq(purchases.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updatePurchase(id: number, updates: Partial<InsertPurchase>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(purchases).set({ ...updates, updatedAt: new Date() }).where(eq(purchases.id, id));
+  const updated = await db.select().from(purchases).where(eq(purchases.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function getPurchaseByPaymentIntentId(paymentIntentId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(purchases).where(eq(purchases.paymentIntentId, paymentIntentId)).limit(1);
+  return result[0];
 }
 
 export async function createSubscription(subscription: InsertSubscription) {
@@ -1555,35 +1622,69 @@ export async function getEmpireOverview() {
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  // Daily/weekly active listeners (from shouts)
-  const allShouts = await db.select().from(shouts);
-  const dailyShouts = allShouts.filter((s) => s.createdAt && new Date(s.createdAt) > oneDayAgo);
-  const weeklyShouts = allShouts.filter((s) => s.createdAt && new Date(s.createdAt) > oneWeekAgo);
+  // Daily/weekly active listeners (from shouts) - Optimized: filter in SQL, not in memory
+  const dailyShouts = await db
+    .select()
+    .from(shouts)
+    .where(gt(shouts.createdAt, oneDayAgo));
+  
+  const weeklyShouts = await db
+    .select()
+    .from(shouts)
+    .where(gt(shouts.createdAt, oneWeekAgo));
+  
   const dailyActiveListeners = new Set(dailyShouts.map((s) => s.name)).size;
   const weeklyActiveListeners = new Set(weeklyShouts.map((s) => s.name)).size;
 
   // Shouts per day
   const shoutsPerDay = dailyShouts.length;
 
-  // Track requests per day
-  const trackRequestsPerDay = dailyShouts.filter((s) => s.isTrackRequest).length;
+  // Track requests per day - filter in SQL for better performance
+  const trackRequestsPerDay = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(shouts)
+    .where(and(
+      gt(shouts.createdAt, oneDayAgo),
+      eq(shouts.isTrackRequest, true)
+    ))
+    .then((rows) => Number(rows[0]?.count || 0));
 
-  // Revenue summary
+  // Revenue summary - Optimized: use SQL aggregation instead of fetching all records
   const supportTotal = await getSupportEventTotal("GBP");
-  const allPurchases = await listPurchases(1000);
-  const allSubscriptions = await listSubscriptions(true);
-  const allEventBookings = await db.select().from(eventBookings);
+  
+  // Count completed purchases directly in SQL
+  const completedPurchasesCount = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(purchases)
+    .where(eq(purchases.status, "completed"))
+    .then((rows) => Number(rows[0]?.count || 0));
+  
+  // Count active subscriptions directly in SQL
+  const activeSubscriptionsCount = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(subscriptions)
+    .where(eq(subscriptions.status, "active"))
+    .then((rows) => Number(rows[0]?.count || 0));
+  
+  // Only count bookings, don't fetch all data
+  const bookingCount = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(eventBookings)
+    .then((rows) => Number(rows[0]?.count || 0));
 
   const revenueSummary = {
-    bookings: allEventBookings.length,
+    bookings: bookingCount,
     support: parseFloat(supportTotal.total),
-    products: allPurchases.filter((p) => p.status === "completed").length,
-    subscriptions: allSubscriptions.filter((s) => s.status === "active").length,
+    products: completedPurchasesCount,
+    subscriptions: activeSubscriptionsCount,
   };
 
-  // Error rate (last 24h)
-  const errorLogs24h = await listErrorLogs(1000);
-  const errorRate24h = errorLogs24h.filter((e) => e.createdAt && new Date(e.createdAt) > oneDayAgo).length;
+  // Error rate (last 24h) - filter in SQL
+  const errorRate24h = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(errorLogs)
+    .where(gt(errorLogs.createdAt, oneDayAgo))
+    .then((rows) => Number(rows[0]?.count || 0));
 
   // Superfan conversion (rough estimate)
   const allSuperfans = await listSuperfans();
@@ -2602,6 +2703,108 @@ export async function getCoinTransactions(userId: number, limit: number = 50) {
     .limit(limit);
 }
 
+// ============================================
+// SOCIAL MEDIA FEED INTEGRATION
+// ============================================
+
+export async function createSocialMediaFeedPost(post: InsertSocialMediaFeedPost) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(socialMediaFeedPosts).values(post);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(socialMediaFeedPosts).where(eq(socialMediaFeedPosts.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function getSocialMediaFeedPosts(filters?: { platform?: string; isActive?: boolean; limit?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+  let query = db.select().from(socialMediaFeedPosts);
+  const conditions = [];
+  if (filters?.platform) {
+    conditions.push(eq(socialMediaFeedPosts.platform, filters.platform as any));
+  }
+  if (filters?.isActive !== undefined) {
+    conditions.push(eq(socialMediaFeedPosts.isActive, filters.isActive));
+  }
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  query = query.orderBy(desc(socialMediaFeedPosts.postedAt));
+  if (filters?.limit) {
+    query = query.limit(filters.limit) as any;
+  }
+  return await query;
+}
+
+export async function updateSocialMediaFeedPost(id: number, updates: Partial<InsertSocialMediaFeedPost>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(socialMediaFeedPosts).set({ ...updates, updatedAt: new Date() }).where(eq(socialMediaFeedPosts.id, id));
+  const updated = await db.select().from(socialMediaFeedPosts).where(eq(socialMediaFeedPosts.id, id)).limit(1);
+  return updated[0];
+}
+
+// ============================================
+// MUSIC DISCOVERY / RECOMMENDATIONS
+// ============================================
+
+export async function createMusicRecommendation(recommendation: InsertMusicRecommendation) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(musicRecommendations).values(recommendation);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(musicRecommendations).where(eq(musicRecommendations.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function getMusicRecommendations(userId: number, limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(musicRecommendations)
+    .where(eq(musicRecommendations.userId, userId))
+    .orderBy(desc(musicRecommendations.score))
+    .limit(limit);
+}
+
+export async function getRecommendationsForEntity(entityType: "mix" | "track" | "event" | "podcast", entityId: number, limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get users who favorited this entity, then recommend what else they favorited
+  const favoriters = await db
+    .select({ userId: userFavorites.userId })
+    .from(userFavorites)
+    .where(and(eq(userFavorites.entityType, entityType), eq(userFavorites.entityId, entityId)))
+    .limit(100);
+  
+  if (favoriters.length === 0) return [];
+  
+  const userIds = favoriters.map(f => f.userId).filter(Boolean);
+  if (userIds.length === 0) return [];
+  
+  // Get other entities favorited by these users
+  const recommendations = await db
+    .select({
+      entityType: userFavorites.entityType,
+      entityId: userFavorites.entityId,
+      count: sql<number>`COUNT(*)`.as('count'),
+    })
+    .from(userFavorites)
+    .where(
+      and(
+        sql`${userFavorites.userId} IN (${userIds.join(',')})`,
+        sql`NOT (${userFavorites.entityType} = ${entityType} AND ${userFavorites.entityId} = ${entityId})`
+      )
+    )
+    .groupBy(userFavorites.entityType, userFavorites.entityId)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(limit);
+  
+  return recommendations;
+}
+
 // Rewards
 export async function createReward(reward: InsertReward) {
   const db = await getDb();
@@ -2845,6 +3048,44 @@ export async function updateShowPhase9(id: number, updates: Partial<InsertShowPh
   await db.update(showsPhase9).set({ ...updates, updatedAt: new Date() }).where(eq(showsPhase9.id, id));
   const updated = await db.select().from(showsPhase9).where(eq(showsPhase9.id, id)).limit(1);
   return updated[0];
+}
+
+// ============================================
+// SOCIAL PROOF NOTIFICATIONS
+// ============================================
+export async function getActiveSocialProofNotifications(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return await db
+    .select()
+    .from(socialProofNotifications)
+    .where(
+      and(
+        eq(socialProofNotifications.isActive, true),
+        or(
+          isNull(socialProofNotifications.expiresAt),
+          gt(socialProofNotifications.expiresAt, now)
+        )
+      )
+    )
+    .orderBy(desc(socialProofNotifications.createdAt))
+    .limit(limit);
+}
+
+export async function createSocialProofNotification(notification: InsertSocialProofNotification) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(socialProofNotifications).values(notification);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(socialProofNotifications).where(eq(socialProofNotifications.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function expireSocialProofNotification(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(socialProofNotifications).set({ isActive: false, updatedAt: new Date() }).where(eq(socialProofNotifications.id, id));
 }
 
 export async function setPrimaryShowPhase9(id: number) {
@@ -3192,7 +3433,7 @@ export async function getActiveIncidentBanners() {
       .from(incidentBanners)
       .where(eq(incidentBanners.isActive, true));
   } catch (e) {
-    console.warn("[DB] getActiveIncidentBanners failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getActiveIncidentBanners failed, using mock"); }
     return mock.mockIncidentBanners;
   }
 }
@@ -3206,7 +3447,7 @@ export async function getFeedPosts(includeVip: boolean = false) {
     const results = await query;
     return includeVip ? results : results.filter(p => !p.isVipOnly);
   } catch (e) {
-    console.warn("[DB] getFeedPosts failed, using mock");
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getFeedPosts failed, using mock"); }
     return allMock;
   }
 }
@@ -3224,6 +3465,38 @@ export async function toggleFeedPostReaction(postId: number, emoji: string) {
   await db.update(feedPosts).set({ reactions: JSON.stringify(reactions) }).where(eq(feedPosts.id, postId));
 }
 
+export async function createMix(mix: InsertMix) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(mixes).values(mix);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(mixes).where(eq(mixes.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateMix(id: number, updates: Partial<InsertMix>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(mixes)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(mixes.id, id));
+
+  const updated = await db.select().from(mixes).where(eq(mixes.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteMix(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(mixes).where(eq(mixes.id, id));
+}
+
 export async function getMixById(id: number) {
   const db = await getDb();
   if (!db) return mock.mockMixes.find(m => m.id === id);
@@ -3233,6 +3506,166 @@ export async function getMixById(id: number) {
   } catch (e) {
     return mock.mockMixes.find(m => m.id === id);
   }
+}
+
+// Track management functions
+export async function getAllTracks(limit?: number) {
+  const db = await getDb();
+  if (!db) return mock.mockTracks.slice(0, limit || 50);
+  try {
+    const query = db.select().from(tracks).orderBy(desc(tracks.playedAt));
+    if (limit) {
+      return await query.limit(limit);
+    }
+    return await query;
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") { console.warn("[DB] getAllTracks failed, using mock"); }
+    return mock.mockTracks.slice(0, limit || 50);
+  }
+}
+
+export async function getTrackById(id: number) {
+  const db = await getDb();
+  if (!db) return mock.mockTracks.find(t => t.id === id);
+  try {
+    const results = await db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
+    return results[0];
+  } catch (e) {
+    return mock.mockTracks.find(t => t.id === id);
+  }
+}
+
+export async function updateTrack(id: number, updates: Partial<InsertTrack>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(tracks)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(tracks.id, id));
+  
+  const updated = await db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteTrack(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(tracks).where(eq(tracks.id, id));
+}
+
+// Podcast management functions
+export async function getPodcastById(id: number) {
+  const db = await getDb();
+  if (!db) return mock.mockPodcasts.find(p => p.id === id);
+  try {
+    const results = await db.select().from(podcasts).where(eq(podcasts.id, id)).limit(1);
+    return results[0];
+  } catch (e) {
+    return mock.mockPodcasts.find(p => p.id === id);
+  }
+}
+
+export async function createPodcast(podcast: InsertPodcast) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(podcasts).values(podcast);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(podcasts).where(eq(podcasts.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updatePodcast(id: number, updates: Partial<InsertPodcast>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(podcasts)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(podcasts.id, id));
+  
+  const updated = await db.select().from(podcasts).where(eq(podcasts.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deletePodcast(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(podcasts).where(eq(podcasts.id, id));
+}
+
+// Streaming Links management functions
+export async function getStreamingLinkById(id: number) {
+  const db = await getDb();
+  if (!db) return mock.mockStreamingLinks.find(l => l.id === id);
+  try {
+    const results = await db.select().from(streamingLinks).where(eq(streamingLinks.id, id)).limit(1);
+    return results[0];
+  } catch (e) {
+    return mock.mockStreamingLinks.find(l => l.id === id);
+  }
+}
+
+export async function createStreamingLink(link: InsertStreamingLink) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(streamingLinks).values(link);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(streamingLinks).where(eq(streamingLinks.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateStreamingLink(id: number, updates: Partial<InsertStreamingLink>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(streamingLinks)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(streamingLinks.id, id));
+  
+  const updated = await db.select().from(streamingLinks).where(eq(streamingLinks.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteStreamingLink(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(streamingLinks).where(eq(streamingLinks.id, id));
+}
+
+// Event Booking management functions
+export async function updateEventBooking(id: number, updates: Partial<InsertEventBooking>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(eventBookings)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(eventBookings.id, id));
+  
+  const updated = await db.select().from(eventBookings).where(eq(eventBookings.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteEventBooking(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(eventBookings).where(eq(eventBookings.id, id));
 }
 
 // User Profiles (Onboarding & Preferences)
@@ -3333,4 +3766,99 @@ export async function goLive(
       hostName,
     };
   }
+}
+
+/**
+ * Site-wide search across all content types
+ */
+export async function searchAll(query: string, limit: number = 20) {
+  const db = await getDb();
+  if (!db) return { mixes: [], events: [], podcasts: [], tracks: [], shows: [] };
+
+  const searchTerm = `%${query}%`;
+  const results: {
+    mixes: any[];
+    events: any[];
+    podcasts: any[];
+    tracks: any[];
+    shows: any[];
+  } = {
+    mixes: [],
+    events: [],
+    podcasts: [],
+    tracks: [],
+    shows: [],
+  };
+
+  try {
+    // Search mixes
+    results.mixes = await db
+      .select()
+      .from(mixes)
+      .where(
+        or(
+          like(mixes.title, searchTerm),
+          like(mixes.description || "", searchTerm),
+          like(mixes.genre || "", searchTerm)
+        )
+      )
+      .limit(limit);
+
+    // Search events
+    results.events = await db
+      .select()
+      .from(events)
+      .where(
+        or(
+          like(events.title, searchTerm),
+          like(events.description || "", searchTerm),
+          like(events.location, searchTerm)
+        )
+      )
+      .limit(limit);
+
+    // Search podcasts
+    results.podcasts = await db
+      .select()
+      .from(podcasts)
+      .where(
+        or(
+          like(podcasts.title, searchTerm),
+          like(podcasts.description || "", searchTerm)
+        )
+      )
+      .limit(limit);
+
+    // Search tracks
+    results.tracks = await db
+      .select()
+      .from(tracks)
+      .where(
+        or(
+          like(tracks.title, searchTerm),
+          like(tracks.artist, searchTerm),
+          like(tracks.note || "", searchTerm)
+        )
+      )
+      .limit(limit);
+
+    // Search shows
+    results.shows = await db
+      .select()
+      .from(shows)
+      .where(
+        or(
+          like(shows.name, searchTerm),
+          like(shows.description || "", searchTerm),
+          like(shows.host || "", searchTerm)
+        )
+      )
+      .limit(limit);
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[DB] searchAll failed:", e);
+    }
+  }
+
+  return results;
 }

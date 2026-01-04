@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Music, Star, Quote, Users } from "lucide-react";
+import { Music, Star, Quote, Users, Play } from "lucide-react";
 import { Link } from "wouter";
+import { trpc } from "@/lib/trpc";
+import ReactPlayer from "react-player";
+import { useState } from "react";
 
 export default function Testimonials() {
+  const { data: videoTestimonials = [] } = trpc.videoTestimonials.list.useQuery({ isApproved: true });
+  const [playingVideo, setPlayingVideo] = useState<number | null>(null);
+
   const testimonials = [
     {
       name: "Sarah Johnson",
@@ -121,6 +127,64 @@ export default function Testimonials() {
           </div>
         </div>
       </section>
+
+      {/* Video Testimonials */}
+      {videoTestimonials.length > 0 && (
+        <section className="py-16 md:py-24 border-t border-border">
+          <div className="container">
+            <h2 className="text-4xl font-bold mb-12 text-center">Video Testimonials</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videoTestimonials.map((testimonial) => (
+                <Card key={testimonial.id} className="overflow-hidden">
+                  <div className="aspect-video bg-black relative">
+                    {playingVideo === testimonial.id ? (
+                      <ReactPlayer
+                        url={testimonial.videoUrl}
+                        width="100%"
+                        height="100%"
+                        playing
+                        controls
+                      />
+                    ) : (
+                      <>
+                        {testimonial.thumbnailUrl ? (
+                          <img
+                            src={testimonial.thumbnailUrl}
+                            alt={testimonial.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted/10">
+                            <Play className="w-16 h-16 text-muted-foreground opacity-20" />
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setPlayingVideo(testimonial.id)}
+                          className="absolute inset-0 flex items-center justify-center bg-black/50 hover:bg-black/30 transition-colors"
+                        >
+                          <Play className="w-12 h-12 text-white" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <Card className="p-6">
+                    <div className="flex gap-1 mb-2">
+                      {testimonial.rating && [...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <h3 className="font-bold text-lg mb-1">{testimonial.name}</h3>
+                    {testimonial.role && <p className="text-sm text-muted-foreground mb-2">{testimonial.role}</p>}
+                    {testimonial.event && (
+                      <p className="text-xs text-orange-400 font-semibold">{testimonial.event}</p>
+                    )}
+                  </Card>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Testimonials Grid */}
       <section className="py-16 md:py-24 border-t border-border">

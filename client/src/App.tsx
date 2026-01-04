@@ -10,6 +10,17 @@ import About from "./pages/About";
 import History from "./pages/History";
 import Testimonials from "./pages/Testimonials";
 import Shop from "./pages/Shop";
+import Checkout from "./pages/Checkout";
+import Pricing from "./pages/Pricing";
+import FAQ from "./pages/FAQ";
+import VideoGallery from "./pages/VideoGallery";
+import Equipment from "./pages/Equipment";
+import Discography from "./pages/Discography";
+import Awards from "./pages/Awards";
+import Press from "./pages/Press";
+import Portfolio from "./pages/Portfolio";
+import TrackID from "./pages/TrackID";
+import SocialFeed from "./pages/SocialFeed";
 import Gallery from "./pages/Gallery";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
@@ -32,6 +43,12 @@ import AdminStreams from "./pages/AdminStreams";
 import AdminNowPlaying from "./pages/AdminNowPlaying";
 import AdminShows from "./pages/AdminShows";
 import AdminEmpire from "./pages/AdminEmpire";
+import AdminMixes from "./pages/AdminMixes";
+import AdminTracks from "./pages/AdminTracks";
+import AdminBookings from "./pages/AdminBookings";
+import AdminPodcasts from "./pages/AdminPodcasts";
+import AdminStreamingLinks from "./pages/AdminStreamingLinks";
+import AdminMarketingHub from "./pages/AdminMarketingHub";
 import ListenerLeaderboard from "./pages/ListenerLeaderboard";
 import Live from "./pages/Live";
 import BookDanny from "./pages/BookDanny";
@@ -61,6 +78,9 @@ import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
+import { GlobalSearch } from "./components/GlobalSearch";
+import { SocialProofNotifications } from "./components/SocialProofNotifications";
+import { GlobalNav } from "./components/GlobalNav";
 
 import Bio from "./pages/Bio";
 import Support from "./pages/Support";
@@ -74,6 +94,17 @@ function Router() {
       <Route path={"/history"} component={History} />
       <Route path={"/testimonials"} component={Testimonials} />
       <Route path={"/shop"} component={Shop} />
+      <Route path={"/checkout"} component={Checkout} />
+      <Route path={"/pricing"} component={Pricing} />
+      <Route path={"/faq"} component={FAQ} />
+      <Route path={"/videos"} component={VideoGallery} />
+      <Route path={"/equipment"} component={Equipment} />
+      <Route path={"/discography"} component={Discography} />
+      <Route path={"/awards"} component={Awards} />
+      <Route path={"/press"} component={Press} />
+      <Route path={"/portfolio"} component={Portfolio} />
+      <Route path={"/track-id"} component={TrackID} />
+      <Route path={"/social-feed"} component={SocialFeed} />
       <Route path={"/gallery"} component={Gallery} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/contact"} component={Contact} />
@@ -104,6 +135,12 @@ function Router() {
       <Route path={"/admin/streams"} component={AdminStreams} />
       <Route path={"/admin/now-playing"} component={AdminNowPlaying} />
       <Route path={"/admin/shows"} component={AdminShows} />
+      <Route path={"/admin/mixes"} component={AdminMixes} />
+      <Route path={"/admin/tracks"} component={AdminTracks} />
+      <Route path={"/admin/bookings"} component={AdminBookings} />
+      <Route path={"/admin/podcasts"} component={AdminPodcasts} />
+      <Route path={"/admin/streaming-links"} component={AdminStreamingLinks} />
+      <Route path={"/admin/marketing"} component={AdminMarketingHub} />
       <Route path={"/admin/empire"} component={AdminEmpire} />
       <Route path={"/support"} component={Support} />
       <Route path={"/ai-danny"} component={AIDanny} />
@@ -159,10 +196,12 @@ function App() {
           <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
           <Toaster />
           <GlobalBanner />
+          <GlobalNav />
           <Router />
           <LiveAudioPlayer />
           <AIDannyFloating />
           <HecticOnboarding />
+          <SocialProofNotifications />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

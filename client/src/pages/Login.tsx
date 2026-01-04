@@ -11,14 +11,36 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Login failed");
+        setIsLoading(false);
+        return;
+      }
+
       toast.success("Logged in successfully!");
+      // Redirect to admin control or dashboard
+      window.location.href = "/admin/control";
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed. Please try again.");
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+    }
   };
 
   const handleOAuthLogin = (provider: string) => {

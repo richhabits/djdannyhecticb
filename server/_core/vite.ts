@@ -50,14 +50,23 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
-      : path.resolve(import.meta.dirname, "public");
+  // In production Docker, files are in /app/dist/public
+  // In development, files are in dist/public relative to project root
+  let distPath = process.env.NODE_ENV === "production"
+    ? path.resolve(process.cwd(), "dist", "public")
+    : path.resolve(import.meta.dirname, "../..", "dist", "public");
+  
   if (!fs.existsSync(distPath)) {
-    console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
-    );
+    // Try alternative path for production Docker builds
+    const altPath = path.resolve(process.cwd(), "dist", "public");
+    if (fs.existsSync(altPath)) {
+      distPath = altPath;
+    } else {
+      // Always log this error as it's critical for production
+      console.error(
+        `Could not find the build directory: ${distPath}, make sure to build the client first`
+      );
+    }
   }
 
   app.use(express.static(distPath));

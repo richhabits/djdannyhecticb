@@ -52,6 +52,24 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+// Register Service Worker for PWA
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        if (process.env.NODE_ENV === "development") {
+          console.log("SW registered: ", registration);
+        }
+      })
+      .catch((registrationError) => {
+        if (process.env.NODE_ENV === "development") {
+          console.log("SW registration failed: ", registrationError);
+        }
+      });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>

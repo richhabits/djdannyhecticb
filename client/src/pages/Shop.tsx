@@ -1,78 +1,31 @@
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { trpc } from "@/lib/trpc";
 
 export default function Shop() {
   const [newsletter, setNewsletter] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [, navigate] = useLocation();
 
-  const products = [
-    {
-      id: 1,
-      name: "HB VOL. 1 (VINYL)",
-      category: "Vinyl",
-      price: "£25.99",
-      image: "https://images.unsplash.com/photo-1603048588665-791ca8aea616?q=80&w=2670&auto=format&fit=crop",
-      inStock: true,
-      tag: "BESTSELLER"
-    },
-    {
-      id: 2,
-      name: "HB VOL. 1 (WAV/MP3)",
-      category: "Digital",
-      price: "£9.99",
-      image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=2670&auto=format&fit=crop",
-      inStock: true,
-      tag: "INSTANT"
-    },
-    {
-      id: 3,
-      name: "EMPIRE HOODIE BLK",
-      category: "Merch",
-      price: "£49.99",
-      image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=2670&auto=format&fit=crop",
-      inStock: true,
-      tag: "NEW SEASON"
-    },
-    {
-      id: 4,
-      name: "STUDIO SESSIONS PACK",
-      category: "Digital",
-      price: "£29.99",
-      image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2670&auto=format&fit=crop",
-      inStock: true,
-      tag: "PRO AUDIO"
-    },
-    {
-      id: 5,
-      name: "HECTIC CAP ORANGE",
-      category: "Merch",
-      price: "£24.99",
-      image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=2670&auto=format&fit=crop",
-      inStock: true,
-      tag: null
-    },
-    {
-      id: 6,
-      name: "HB VOL. 2 (PRE-ORDER)",
-      category: "Vinyl",
-      price: "£25.99",
-      image: "https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?q=80&w=2676&auto=format&fit=crop",
-      inStock: false,
-      tag: "COMING SOON"
-    },
-  ];
+  const { data: products = [], isLoading } = trpc.products.list.useQuery({ activeOnly: true });
+
+  // Map product types to categories for filtering
+  const getCategory = (type: string) => {
+    if (type === "drop" || type === "soundpack" || type === "preset" || type === "course") return "Digital";
+    return "Other";
+  };
 
   const filteredProducts = activeCategory === "All"
     ? products
-    : products.filter(p => p.category === activeCategory);
+    : products.filter(p => getCategory(p.type) === activeCategory);
 
-  const handleAddToCart = (productName: string) => {
-    toast.success(`${productName} ADDED`);
+  const handleBuyNow = (productId: number) => {
+    navigate(`/checkout?productId=${productId}`);
   };
 
   return (
@@ -114,37 +67,51 @@ export default function Shop() {
 
         {/* Product Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:gap-[1px] bg-foreground border-b border-foreground">
-          {filteredProducts.map((p) => (
-            <div key={p.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
-              <div className="aspect-square relative overflow-hidden border-b border-foreground">
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-0 group-hover:grayscale-0" />
-                {!p.inStock && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                    <span className="text-3xl font-black uppercase border border-foreground px-4 py-2 bg-background">Sold Out</span>
-                  </div>
-                )}
-                {p.tag && (
-                  <span className="absolute top-0 left-0 bg-foreground text-background text-xs font-bold px-2 py-1 uppercase">{p.tag}</span>
-                )}
-              </div>
-
-              <div className="p-4 flex-1 flex flex-col justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground mb-1">{p.category}</p>
-                  <h3 className="text-2xl font-black uppercase leading-none mb-2">{p.name}</h3>
-                  <p className="text-xl font-bold">{p.price}</p>
+          {isLoading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">No products available</p>
+            </div>
+          ) : (
+            filteredProducts.map((p) => (
+              <div key={p.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
+                <div className="aspect-square relative overflow-hidden border-b border-foreground">
+                  <img
+                    src={p.thumbnailUrl || "https://images.unsplash.com/photo-1603048588665-791ca8aea616?q=80&w=2670&auto=format&fit=crop"}
+                    alt={p.name}
+                    className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-0 group-hover:grayscale-0"
+                  />
+                  {!p.isActive && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                      <span className="text-3xl font-black uppercase border border-foreground px-4 py-2 bg-background">Unavailable</span>
+                    </div>
+                  )}
                 </div>
 
-                <Button
-                  onClick={() => handleAddToCart(p.name)}
-                  disabled={!p.inStock}
-                  className="w-full rounded-none border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background uppercase font-bold text-lg h-12"
-                >
-                  {p.inStock ? "Add To Cart" : "Unavailable"}
-                </Button>
+                <div className="p-4 flex-1 flex flex-col justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase text-muted-foreground mb-1">{getCategory(p.type)}</p>
+                    <h3 className="text-2xl font-black uppercase leading-none mb-2">{p.name}</h3>
+                    <p className="text-xl font-bold">{p.currency} {p.price}</p>
+                    {p.description && (
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{p.description}</p>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={() => handleBuyNow(p.id)}
+                    disabled={!p.isActive}
+                    className="w-full rounded-none border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background uppercase font-bold text-lg h-12"
+                  >
+                    {p.isActive ? "Buy Now" : "Unavailable"}
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </section>
 
         {/* Raw Newsletter footer */}

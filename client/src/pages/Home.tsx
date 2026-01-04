@@ -2,76 +2,42 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Music, Menu, X, ArrowRight, Play, Disc } from "lucide-react";
-import { useState } from "react";
+import { Music, ArrowRight, Play, Disc } from "lucide-react";
 import { APP_LOGO } from "@/const";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { WebsiteStructuredData } from "@/components/StructuredData";
 import { DannyStatus } from "@/components/DannyStatus";
 import { HeroVideo } from "@/components/HeroVideo";
 import { trpc } from "@/lib/trpc";
 import { SocialLinks } from "@/components/SocialLinks";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, { retry: false });
 
   return (
     <>
       <MetaTagsComponent
-        title="HECTIC RADIO | RAW & UNCUT"
-        description="DJ Danny Hectic B. Archive. Live streams. Merchandise."
+        title="HECTIC RADIO | RAW & UNCUT - DJ Danny Hectic B"
+        description="DJ Danny Hectic B - Legendary UK Garage and House DJ. Live streams, mixes, events, and merchandise. 30+ years in the game."
         url="/"
         type="website"
+        keywords="DJ Danny Hectic B, UK Garage, House Music, DJ, Music, Radio, Hectic Radio, Live Stream, Mixes, Events"
+        canonical={typeof window !== "undefined" ? window.location.origin : "https://djdannyhecticb.co.uk"}
       />
-
-      {/* Brutalist Navigation - Fixed Top Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-foreground h-14 flex items-center px-4 md:px-6 justify-between">
-        <div className="flex items-center gap-4">
-          {!mobileMenuOpen && (
-            <button onClick={() => setMobileMenuOpen(true)} className="md:hidden">
-              <Menu className="w-6 h-6" />
-            </button>
-          )}
-          <Link href="/" className="text-xl font-bold tracking-tighter uppercase flex items-center gap-2">
-            <div className="w-4 h-4 bg-accent animate-pulse" />
-            Hectic Radio
-          </Link>
-        </div>
-
-        <div className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest">
-          <Link href="/bio" className="hover:text-accent">Profile</Link>
-          <Link href="/mixes" className="hover:text-accent">Archive</Link>
-          <Link href="/shop" className="hover:text-accent">Supply</Link>
-          <Link href="/live-studio" className="hover:text-accent">Live</Link>
-          <Link href="/support" className="hover:text-accent">Support</Link>
-          {isAuthenticated ? (
-            <Link href="/dashboard" className="bg-foreground text-background px-3 py-1 hover:bg-accent hover:text-foreground">Dashboard</Link>
-          ) : (
-            <a href={getLoginUrl()} className="bg-foreground text-background px-3 py-1 hover:bg-accent hover:text-foreground">Login</a>
-          )}
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 bg-background z-[60] flex flex-col p-6 animate-in slide-in-from-left duration-200">
-            <div className="flex justify-between items-center mb-12">
-              <span className="text-xl font-bold uppercase">Menu</span>
-              <button onClick={() => setMobileMenuOpen(false)}><X className="w-8 h-8" /></button>
-            </div>
-            <div className="flex flex-col gap-6 text-2xl font-bold uppercase tracking-tighter">
-              <Link href="/bio" onClick={() => setMobileMenuOpen(false)}>Profile</Link>
-              <Link href="/mixes" onClick={() => setMobileMenuOpen(false)}>Archive</Link>
-              <Link href="/shop" onClick={() => setMobileMenuOpen(false)}>Supply</Link>
-              <Link href="/live-studio" onClick={() => setMobileMenuOpen(false)}>Live Channel</Link>
-              <Link href="/support" onClick={() => setMobileMenuOpen(false)}>Support</Link>
-              {!isAuthenticated && <a href={getLoginUrl()}>Login / Join</a>}
-            </div>
-          </div>
-        )}
-      </nav>
+      <WebsiteStructuredData
+        name="Hectic Radio - DJ Danny Hectic B"
+        description="Legendary UK Garage and House DJ. Live streams, mixes, events, and merchandise."
+        url={typeof window !== "undefined" ? window.location.origin : "https://djdannyhecticb.co.uk"}
+        potentialAction={{
+          "@type": "SearchAction",
+          target: `${typeof window !== "undefined" ? window.location.origin : "https://djdannyhecticb.co.uk"}/search?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        }}
+      />
 
       <div className="min-h-screen bg-background text-foreground pt-14">
 

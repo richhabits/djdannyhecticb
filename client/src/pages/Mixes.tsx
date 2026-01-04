@@ -1,23 +1,38 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { Music, Play, Download, Headphones, X, Disc } from "lucide-react";
+import { Music, Play, Download, Headphones, X, Disc, Filter, Heart, HeartOff, SlidersHorizontal } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
 import ReactPlayer from "react-player";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { MusicStructuredData } from "@/components/StructuredData";
 import { cn } from "@/lib/utils";
+import { Recommendations } from "@/components/Recommendations";
 
 export default function Mixes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [playing, setPlaying] = useState<number | null>(null);
   const [selectedMixes, setSelectedMixes] = useState<any[]>([]);
   // Track which mix is playing in "Deep Embed" mode
   const [playingExternal, setPlayingExternal] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterGenre, setFilterGenre] = useState<string>("All");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "title">("newest");
 
   const { data: mixes, isLoading } = trpc.mixes.free.useQuery();
+  
+  // Get user favorites if authenticated
+  const { data: favorites = [] } = trpc.favorites.list.useQuery(
+    { entityType: "mix" },
+    { enabled: isAuthenticated }
+  );
+  const favoriteIds = new Set(favorites.map((f: any) => f.entityId));
+  
+  const toggleFavorite = trpc.favorites.add.useMutation();
+  const removeFavorite = trpc.favorites.remove.useMutation();
 
   // Sample tracks for demonstration (Enhanced with more external links)
   const sampleTracks = [
@@ -108,10 +123,22 @@ export default function Mixes() {
   return (
     <>
       <MetaTagsComponent
-        title="ARCHIVE | HECTIC RADIO"
-        description="Stream 30 years of UK Garage & House mixes. Free download available."
+        title="DJ Mixes Archive | DJ Danny Hectic B - UK Garage & House Music"
+        description="Listen to DJ Danny Hectic B's collection of UK Garage and House music mixes. Free downloads and streaming available. 30+ years of legendary mixes."
         url="/mixes"
+        keywords="DJ mixes, UK Garage, House Music, DJ Danny Hectic B, free mixes, music archive, download mixes"
+        canonical={typeof window !== "undefined" ? `${window.location.origin}/mixes` : "https://djdannyhecticb.co.uk/mixes"}
       />
+      {mixes && mixes.length > 0 && mixes[0] && (
+        <MusicStructuredData
+          name={mixes[0].title}
+          description={mixes[0].description || mixes[0].title}
+          image={mixes[0].coverImageUrl}
+          url={typeof window !== "undefined" ? `${window.location.origin}/mixes/${mixes[0].id}` : `https://djdannyhecticb.co.uk/mixes/${mixes[0].id}`}
+          datePublished={mixes[0].createdAt.toISOString()}
+          audioUrl={mixes[0].audioUrl}
+        />
+      )}
       <div className="min-h-screen bg-background text-foreground font-mono pt-14">
 
         {/* Brutalist Header */}
@@ -140,14 +167,80 @@ export default function Mixes() {
           </section>
         )}
 
+        {/* Filters Bar */}
+        <section className="sticky top-14 z-30 bg-background border-b border-foreground px-4 py-4">
+          <div className="container max-w-7xl mx-auto flex flex-wrap items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="rounded-none border-foreground uppercase font-bold"
+            >
+              <SlidersHorizontal className="w-4 h-4 mr-2" />
+              Filters
+            </Button>
+            
+            {showFilters && (
+              <div className="flex flex-wrap gap-4 items-center w-full">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-bold uppercase">Genre:</label>
+                  <select
+                    value={filterGenre}
+                    onChange={(e) => setFilterGenre(e.target.value)}
+                    className="bg-background border border-foreground px-3 py-1 uppercase font-bold text-sm"
+                  >
+                    <option value="All">All</option>
+                    <option value="UK Garage">UK Garage</option>
+                    <option value="House">House</option>
+                    <option value="Techno">Techno</option>
+                    <option value="Drum & Bass">Drum & Bass</option>
+                    <option value="Grime">Grime</option>
+                    <option value="Amapiano">Amapiano</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-bold uppercase">Sort:</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-background border border-foreground px-3 py-1 uppercase font-bold text-sm"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="title">Title A-Z</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Mixes List - Raw Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:gap-[1px] bg-foreground border-b border-foreground">
-          {(mixes || sampleTracks).map((mix) => {
-            const isPlayingExternal = playingExternal === String(mix.id);
-            const hasExternalLink = mix.soundcloudUrl || mix.youtubeUrl;
+          {(() => {
+            let filtered = (mixes || sampleTracks).filter((mix) => {
+              if (filterGenre !== "All" && mix.genre !== filterGenre) return false;
+              return true;
+            });
 
-            return (
-              <div key={mix.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
+            // Sort
+            filtered = [...filtered].sort((a, b) => {
+              if (sortBy === "newest") {
+                return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+              } else if (sortBy === "oldest") {
+                return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+              } else {
+                return (a.title || "").localeCompare(b.title || "");
+              }
+            });
+
+            return filtered.map((mix) => {
+              const isPlayingExternal = playingExternal === String(mix.id);
+              const hasExternalLink = mix.soundcloudUrl || mix.youtubeUrl;
+              const isFavorited = isAuthenticated && favoriteIds.has(mix.id);
+
+              return (
+                <div key={mix.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
 
                 {/* Visual / Player Area */}
                 <div className="aspect-video bg-black relative overflow-hidden border-b border-foreground">
@@ -191,36 +284,60 @@ export default function Mixes() {
                   )}
                 </div>
 
-                {/* Meta */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div className="mb-6">
-                    <h3 className="text-2xl font-black uppercase leading-tight mb-2 group-hover:text-accent transition-colors duration-0">
-                      {mix.title}
-                    </h3>
-                    <p className="text-sm font-bold uppercase text-muted-foreground tracking-widest">
-                      {mix.artist || "DJ Danny Hectic B"}
-                    </p>
+                  {/* Meta */}
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div className="mb-6">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="text-2xl font-black uppercase leading-tight group-hover:text-accent transition-colors duration-0 flex-1">
+                          {mix.title}
+                        </h3>
+                        {isAuthenticated && (
+                          <button
+                            onClick={async () => {
+                              if (isFavorited) {
+                                await removeFavorite.mutateAsync({ entityType: "mix", entityId: mix.id });
+                              } else {
+                                await toggleFavorite.mutateAsync({ entityType: "mix", entityId: mix.id });
+                              }
+                            }}
+                            className="flex-shrink-0 p-2 hover:bg-muted rounded"
+                          >
+                            {isFavorited ? (
+                              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                            ) : (
+                              <Heart className="w-5 h-5 text-muted-foreground" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-sm font-bold uppercase text-muted-foreground tracking-widest">
+                        {mix.artist || "DJ Danny Hectic B"}
+                      </p>
+                      {mix.genre && (
+                        <p className="text-xs text-muted-foreground mt-1">{mix.genre}</p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      {mix.spotifyUrl && (
+                        <a href={mix.spotifyUrl} target="_blank" className="flex-1 bg-transparent border border-foreground py-3 text-center font-bold uppercase text-xs hover:bg-foreground hover:text-background transition-colors duration-0">
+                          Spotify
+                        </a>
+                      )}
+                      <Button
+                        onClick={() => handleDownload(mix.id)}
+                        variant="outline"
+                        className="flex-1 rounded-none border-foreground font-bold uppercase text-xs h-auto py-3 hover:bg-foreground hover:text-background"
+                      >
+                        Download
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    {mix.spotifyUrl && (
-                      <a href={mix.spotifyUrl} target="_blank" className="flex-1 bg-transparent border border-foreground py-3 text-center font-bold uppercase text-xs hover:bg-foreground hover:text-background transition-colors duration-0">
-                        Spotify
-                      </a>
-                    )}
-                    <Button
-                      onClick={() => handleDownload(mix.id)}
-                      variant="outline"
-                      className="flex-1 rounded-none border-foreground font-bold uppercase text-xs h-auto py-3 hover:bg-foreground hover:text-background"
-                    >
-                      Download
-                    </Button>
-                  </div>
                 </div>
-
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </section>
 
         {/* Footer CTA */}

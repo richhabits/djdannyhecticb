@@ -301,4 +301,20 @@ class SDKServer {
   }
 }
 
-export const sdk = new SDKServer();
+// Lazy initialization to prevent crashes if OAuth isn't configured
+let _sdkInstance: SDKServer | null = null;
+export const sdk = new Proxy({} as SDKServer, {
+  get(_target, prop) {
+    if (!_sdkInstance) {
+      try {
+        _sdkInstance = new SDKServer();
+      } catch (error) {
+        console.error("[SDK] Failed to initialize:", error);
+        // Return a no-op object to prevent crashes
+        return () => {};
+      }
+    }
+    const value = (_sdkInstance as any)[prop];
+    return typeof value === "function" ? value.bind(_sdkInstance) : value;
+  },
+});

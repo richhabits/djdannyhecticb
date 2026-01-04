@@ -8,6 +8,9 @@ interface MetaTagsProps {
   url?: string;
   image?: string;
   type?: string;
+  canonical?: string;
+  keywords?: string;
+  robots?: string;
   siteName?: string;
 }
 
@@ -17,6 +20,9 @@ export function MetaTagsComponent({
   url,
   image,
   type,
+  canonical,
+  keywords,
+  robots,
   siteName,
 }: MetaTagsProps) {
   const [location] = useLocation();
@@ -29,9 +35,24 @@ export function MetaTagsComponent({
       url: fullUrl,
       image,
       type,
+      canonical: canonical || fullUrl,
+      keywords,
+      robots,
       siteName,
     });
-  }, [title, description, fullUrl, image, type, siteName]);
+  }, [title, description, fullUrl, image, type, canonical, keywords, robots, siteName]);
+
+  // Also set canonical link
+  useEffect(() => {
+    const canonicalUrl = canonical || fullUrl;
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "canonical";
+      document.head.appendChild(link);
+    }
+    link.href = canonicalUrl;
+  }, [canonical, fullUrl]);
 
   return null;
 }

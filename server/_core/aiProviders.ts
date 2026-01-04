@@ -6,7 +6,7 @@
  */
 
 export type AiModelType = "chat" | "tts" | "videoHost";
-export type AiProvider = "openai" | "elevenlabs" | "d-id" | "custom" | "mock" | "none";
+export type AiProvider = "openai" | "elevenlabs" | "d-id" | "custom" | "mock" | "none" | "gemini" | "groq" | "huggingface" | "cohere" | "ollama";
 
 export interface ChatCompletionRequest {
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
@@ -83,11 +83,48 @@ export async function chatCompletion(
   switch (provider) {
     case "openai":
       return await chatCompletionOpenAI(request);
+    case "gemini":
+      const { chatCompletionGemini } = await import("./aiProvidersFree");
+      return await chatCompletionGemini(request);
+    case "groq":
+      const { chatCompletionGroq } = await import("./aiProvidersFree");
+      return await chatCompletionGroq(request);
+    case "huggingface":
+      const { chatCompletionHuggingFace } = await import("./aiProvidersFree");
+      return await chatCompletionHuggingFace(request);
+    case "cohere":
+      const { chatCompletionCohere } = await import("./aiProvidersFree");
+      return await chatCompletionCohere(request);
+    case "ollama":
+      const { chatCompletionOllama } = await import("./aiProvidersFree");
+      return await chatCompletionOllama(request);
     case "mock":
       return await chatCompletionMock(request);
     default:
-      console.warn(`[AI] Provider ${provider} not implemented, using mock`);
-      return await chatCompletionMock(request);
+      // Try to use best available free provider
+      try {
+        const { getBestFreeProvider, chatCompletionGemini, chatCompletionGroq, chatCompletionHuggingFace, chatCompletionCohere, chatCompletionOllama } = await import("./aiProvidersFree");
+        const bestProvider = await getBestFreeProvider();
+        switch (bestProvider) {
+          case "groq":
+            return await chatCompletionGroq(request);
+          case "gemini":
+            return await chatCompletionGemini(request);
+          case "huggingface":
+            return await chatCompletionHuggingFace(request);
+          case "cohere":
+            return await chatCompletionCohere(request);
+          case "ollama":
+            return await chatCompletionOllama(request);
+          default:
+            return await chatCompletionMock(request);
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(`[AI] Provider ${provider} not implemented, using mock:`, error);
+        }
+        return await chatCompletionMock(request);
+      }
   }
 }
 

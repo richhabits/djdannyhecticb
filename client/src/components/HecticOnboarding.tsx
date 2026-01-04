@@ -25,6 +25,10 @@ export function HecticOnboarding() {
   const createProfile = trpc.profiles.createOrUpdate.useMutation({
     onSuccess: () => {
       localStorage.setItem("hectic-onboarding-complete", "true");
+      // Also set dismissed if user checked "don't show again"
+      if (dontShowAgain) {
+        localStorage.setItem("hectic-onboarding-dismissed", "true");
+      }
       setIsOpen(false);
       toast.success("Welcome to the Hectic Universe! You're locked in.");
     },
@@ -39,8 +43,10 @@ export function HecticOnboarding() {
     const hasCompleted = localStorage.getItem("hectic-onboarding-complete");
     const isDismissed = localStorage.getItem("hectic-onboarding-dismissed");
 
+    // Only show if user hasn't completed or dismissed it
     if (!hasCompleted && !isDismissed) {
-      const timer = setTimeout(() => setIsOpen(true), 15000); // 15 seconds to let them vibe first
+      // Wait 3 seconds to let the page load first
+      const timer = setTimeout(() => setIsOpen(true), 3000);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -50,6 +56,16 @@ export function HecticOnboarding() {
       localStorage.setItem("hectic-onboarding-dismissed", "true");
     }
     setIsOpen(false);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Dialog is being closed - check if "don't show again" was checked
+      if (dontShowAgain) {
+        localStorage.setItem("hectic-onboarding-dismissed", "true");
+      }
+    }
+    setIsOpen(open);
   };
 
   const handleSubmit = () => {
@@ -67,7 +83,7 @@ export function HecticOnboarding() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xl glass-premium border-accent/20 p-8 rounded-3xl overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-600" />
 

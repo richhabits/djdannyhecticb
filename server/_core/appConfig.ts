@@ -8,7 +8,7 @@
 export const APP_CONFIG = {
   primaryBrandId: 1, // Default to Danny Hectic B brand
   appName: "DJ Danny Hectic B",
-  supportEmail: "support@djdannyhecticb.com",
+  supportEmail: "support@djdannyhecticb.co.uk",
   legalName: "DJ Danny Hectic B",
   defaultBrand: {
     name: "DJ Danny Hectic B",

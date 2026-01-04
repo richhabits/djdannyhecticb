@@ -1,0 +1,43 @@
+{
+  "name": "DJ Danny Hectic B - Hectic Radio",
+  "short_name": "Hectic Radio",
+  "description": "Legendary UK Garage and House DJ. Live streams, mixes, events, and merchandise.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-danny-hectic-b.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-danny-hectic-b.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "entertainment"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Live Studio",
+      "short_name": "Live",
+      "description": "Watch live streams",
+      "url": "/live-studio",
+      "icons": [{ "src": "/logo-danny-hectic-b.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Mixes",
+      "short_name": "Mixes",
+      "description": "Browse mixes",
+      "url": "/mixes",
+      "icons": [{ "src": "/logo-danny-hectic-b.png", "sizes": "96x96" }]
+    }
+  ]
+}
+
