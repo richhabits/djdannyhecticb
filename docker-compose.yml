@@ -1,8 +1,17 @@
 services:
   db:
     image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M --max-connections=50
     restart: always
+    # Resource limits to save money
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: djdannyhecticb
@@ -13,6 +22,15 @@ services:
     build: .
     ports:
       - "3000:3000"
+    # Resource limits to save money
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mysql://root:password@db:3306/djdannyhecticb
