@@ -23,6 +23,13 @@ COPY vite.config.ts tsconfig.json tsconfig.node.json ./
 
 # Build with production optimizations
 ENV NODE_ENV=production
+ENV VITE_APP_TITLE="DJ Danny Hectic B"
+ENV VITE_APP_LOGO="/logo-icon.png"
+ENV VITE_APP_ID="djdannyhecticb"
+
+# Create dummy .env for build
+RUN touch .env
+
 RUN pnpm run build && \
     # Verify server bundle was created
     test -f dist/index.js && echo "✅ Server bundle created" || (echo "❌ Server bundle missing, creating..." && pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js) && \
@@ -69,4 +76,4 @@ EXPOSE 3000
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["node", "--input-type=module", "dist/index.js"]
