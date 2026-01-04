@@ -24,8 +24,8 @@ COPY vite.config.ts tsconfig.json tsconfig.node.json ./
 # Build with production optimizations
 ENV NODE_ENV=production
 RUN pnpm run build && \
-    # Build server separately
-    pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js && \
+    # Verify server bundle was created
+    test -f dist/index.js && echo "✅ Server bundle created" || (echo "❌ Server bundle missing, creating..." && pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js) && \
     rm -rf node_modules .pnpm-store && \
     find dist -name "*.map" -delete && \
     # Remove unused files from dist
