@@ -45,8 +45,11 @@ COPY --from=build-client /app/dist ./dist
 # Create empty .env if .env.example doesn't exist
 RUN touch .env
 
-# Remove unnecessary files to save space
-RUN rm -rf /tmp/* /var/cache/apk/* /root/.npm /root/.cache /root/.local/share/pnpm/store && \
+    # Remove unnecessary files to save space
+    RUN rm -rf /tmp/* /var/cache/apk/* /root/.npm /root/.cache /root/.local/share/pnpm/store/.tmp && \
+        find /app -name "*.map" -delete && \
+        find /app -name "*.test.*" -delete && \
+        find /app -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null || true /root/.local/share/pnpm/store && \
     find /app -name "*.map" -delete && \
     find /app -name "*.test.*" -delete && \
     find /app -name "*.spec.*" -delete

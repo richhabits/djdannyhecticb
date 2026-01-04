@@ -180,6 +180,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.cache
+.cache/
+.vite/
+.turbo/
+.DS_Store
+*.swp
+*.swo
+*~
 
 # Runtime
 pids/
