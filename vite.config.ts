@@ -24,6 +24,27 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // Optimize for size and speed
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ["console.log", "console.info", "console.debug"],
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          trpc: ["@trpc/client", "@trpc/react-query", "@trpc/server"],
+        },
+        // Remove source maps in production to save space
+        sourcemap: false,
+      },
+    },
+    // Chunk size warnings disabled for optimization
+    chunkSizeWarningLimit: 1000,
   },
   server: {
     host: true,

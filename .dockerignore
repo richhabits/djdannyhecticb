@@ -53,6 +53,26 @@ coverage
 __tests__
 test
 tests
+*.test.js
+*.spec.js
+
+# Documentation (save space)
+docs/
+*.md
+!README.md
+
+# Large assets (optimize separately)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.mov
+*.avi
+*.webm
+!client/public/logo*.png
+!client/public/logo*.jpg
 
 # Documentation (keep only essential)
 *.md

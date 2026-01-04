@@ -47,10 +47,10 @@ async function startServer() {
   // Cookie parser for session management
   app.use(cookieParser());
   
-  // Optimize body parser: smaller default limit, larger only for upload routes
-  // Most API requests are small, saving memory
-  app.use(express.json({ limit: process.env.NODE_ENV === "production" ? "1mb" : "10mb" }));
-  app.use(express.urlencoded({ limit: process.env.NODE_ENV === "production" ? "1mb" : "10mb", extended: true }));
+  // Aggressive memory optimization for production
+  const bodyLimit = process.env.NODE_ENV === "production" ? "500kb" : "10mb";
+  app.use(express.json({ limit: bodyLimit }));
+  app.use(express.urlencoded({ limit: bodyLimit, extended: true }));
   
   // Security headers (consolidated, no duplicate comment)
   app.use((req, res, next) => {
