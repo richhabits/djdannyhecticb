@@ -74,6 +74,9 @@ import AdminAIVideo from "./pages/AdminAIVideo";
 import Wallet from "./pages/Wallet";
 import Rewards from "./pages/Rewards";
 import AdminEconomy from "./pages/AdminEconomy";
+import AdminVideos from "./pages/AdminVideos"; // New
+import AdminBlog from "./pages/AdminBlog"; // New
+import AdminMedia from "./pages/AdminMedia"; // New
 import ShowPage from "./pages/ShowPage";
 import ShowEpisodes from "./pages/ShowEpisodes";
 import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
@@ -169,6 +172,9 @@ function Router() {
       <Route path={"/show/episodes"} component={ShowEpisodes} />
       <Route path={"/show/episode/:slug"} component={ShowEpisodeDetail} />
       <Route path={"/admin/show-live"} component={AdminShowLive} />
+      <Route path={"/admin/videos"} component={AdminVideos} />
+      <Route path={"/admin/blog"} component={AdminBlog} />
+      <Route path={"/admin/media"} component={AdminMedia} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
       <Route path={"/404"} component={NotFound} />
@@ -206,7 +212,7 @@ function App() {
           <Router />
           <LiveAudioPlayer />
           <AIDannyFloating />
-          <HecticOnboarding />
+          {/* <HecticOnboarding /> */}
           <SocialProofNotifications />
         </TooltipProvider>
       </ThemeProvider>

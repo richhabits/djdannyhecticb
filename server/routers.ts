@@ -3421,6 +3421,64 @@ export const appRouter = router({
       }))
       .mutation(({ input }) => db.createMusicRecommendation(input)),
   }),
+  // ============================================
+  // PHASE 7: ADMIN FEATURE EXPANSION
+  // ============================================
+
+  videos: router({
+    list: publicProcedure.query(() => db.getAllVideos()),
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().min(1).max(255),
+        youtubeUrl: z.string().url(),
+        category: z.string().min(1).max(100),
+        description: z.string().optional(),
+        thumbnailUrl: z.string().url().optional(),
+        isFeatured: z.boolean().default(false),
+      }))
+      .mutation(({ input }) => db.createVideo(input)),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(({ input }) => db.deleteVideo(input.id)),
+  }),
+
+  articles: router({
+    list: publicProcedure.query(() => db.getAllArticles(true)),
+    adminList: adminProcedure.query(() => db.getAllArticles(false)),
+    getBySlug: publicProcedure.input(z.string()).query(({ input }) => db.getArticleBySlug(input)),
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().min(1).max(255),
+        slug: z.string().min(1).max(255),
+        content: z.string(),
+        excerpt: z.string().optional(),
+        category: z.string().optional(),
+        coverImageUrl: z.string().url().optional(),
+        authorId: z.number().optional(),
+        isPublished: z.boolean().default(false),
+      }))
+      .mutation(({ input }) => db.createArticle(input)),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        slug: z.string().optional(),
+        content: z.string().optional(),
+        isPublished: z.boolean().optional(),
+      }))
+      .mutation(({ input }) => db.updateArticle(input.id, input)),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(({ input }) => db.deleteArticle(input.id)),
+  }),
+
+  media: router({
+    list: adminProcedure.query(() => db.getMediaLibrary()),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(({ input }) => db.deleteMediaItem(input.id)),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
+

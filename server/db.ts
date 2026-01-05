@@ -6,7 +6,7 @@
 
 import { asc, desc, eq, gt, and, or, like, sql, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, InsertMix, bookings, events, InsertEvent, podcasts, InsertPodcast, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, adminCredentials, InsertAdminCredential, marketingLeads, InsertMarketingLead, marketingCampaigns, InsertMarketingCampaign, outreachActivities, InsertOutreachActivity, socialMediaPosts, InsertSocialMediaPost, venueScraperResults, InsertVenueScraperResult, userFavorites, InsertUserFavorite, userPlaylists, InsertUserPlaylist, userPlaylistItems, InsertUserPlaylistItem, trackIdRequests, InsertTrackIdRequest, socialShares, InsertSocialShare, videoTestimonials, InsertVideoTestimonial, socialProofNotifications, InsertSocialProofNotification, socialMediaFeedPosts, InsertSocialMediaFeedPost, musicRecommendations, InsertMusicRecommendation } from "../drizzle/schema";
+import { InsertUser, users, mixes, InsertMix, bookings, events, InsertEvent, podcasts, InsertPodcast, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, adminCredentials, InsertAdminCredential, marketingLeads, InsertMarketingLead, marketingCampaigns, InsertMarketingCampaign, outreachActivities, InsertOutreachActivity, socialMediaPosts, InsertSocialMediaPost, venueScraperResults, InsertVenueScraperResult, userFavorites, InsertUserFavorite, userPlaylists, InsertUserPlaylist, userPlaylistItems, InsertUserPlaylistItem, trackIdRequests, InsertTrackIdRequest, socialShares, InsertSocialShare, videoTestimonials, InsertVideoTestimonial, socialProofNotifications, InsertSocialProofNotification, socialMediaFeedPosts, InsertSocialMediaFeedPost, musicRecommendations, InsertMusicRecommendation, videos, InsertVideo, articles, InsertArticle, mediaLibrary, InsertMediaItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 import * as mock from './_core/mockData';
@@ -4038,4 +4038,111 @@ export async function convertScraperResultToLead(id: number, extraData?: any) {
 
   const created = await db.select().from(marketingLeads).where(eq(marketingLeads.id, leadId)).limit(1);
   return created[0];
+}
+/**
+ * ============================================
+ * PHASE 7: ADMIN FEATURE EXPANSION (VIDEOS, BLOG, MEDIA)
+ * ============================================
+ */
+
+// Videos
+export async function getAllVideos() {
+  const db = await getDb();
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return [];
+    return mock.mockVideos || []; // Use mock if available
+  }
+  return await db.select().from(videos).orderBy(desc(videos.publishedAt));
+}
+
+export async function createVideo(video: InsertVideo) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(videos).values(video);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(videos).where(eq(videos.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function deleteVideo(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(videos).where(eq(videos.id, id));
+}
+
+// Articles (Blog)
+export async function getAllArticles(publishedOnly = true) {
+  const db = await getDb();
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return [];
+    return mock.mockBlogPosts || [];
+  }
+
+  let query = db.select().from(articles).orderBy(desc(articles.publishedAt));
+
+  if (publishedOnly) {
+    // @ts-ignore
+    query = query.where(eq(articles.isPublished, true));
+  }
+
+  return await query;
+}
+
+export async function getArticleBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return undefined;
+    return mock.mockBlogPosts?.find((p: any) => p.slug === slug);
+  }
+  const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
+  return result[0];
+}
+
+export async function createArticle(article: InsertArticle) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(articles).values(article);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(articles).where(eq(articles.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateArticle(id: number, updates: Partial<InsertArticle>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(articles).set({ ...updates, updatedAt: new Date() }).where(eq(articles.id, id));
+  const updated = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteArticle(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(articles).where(eq(articles.id, id));
+}
+
+// Media Library
+export async function getMediaLibrary() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(mediaLibrary).orderBy(desc(mediaLibrary.createdAt));
+}
+
+export async function addMediaItem(item: InsertMediaItem) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(mediaLibrary).values(item);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(mediaLibrary).where(eq(mediaLibrary.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function deleteMediaItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(mediaLibrary).where(eq(mediaLibrary.id, id));
 }

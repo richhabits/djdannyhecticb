@@ -814,6 +814,72 @@ export type GenZProfile = typeof genZProfiles.$inferSelect;
 export type InsertGenZProfile = typeof genZProfiles.$inferInsert;
 
 /**
+ * ============================================
+ * PHASE 7: ADMIN FEATURE EXPANSION (VIDEOS, BLOG, MEDIA)
+ * ============================================
+ */
+
+/**
+ * Videos table for YouTube/External video management
+ */
+export const videos = mysqlTable("videos", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  youtubeUrl: varchar("youtubeUrl", { length: 512 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // Live Set, Mix, Interview, etc.
+  description: text("description"),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  views: int("views").default(0).notNull(), // Manual override or synced
+  duration: varchar("duration", { length: 20 }), // e.g., "1:23:45"
+  publishedAt: timestamp("publishedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = typeof videos.$inferInsert;
+
+/**
+ * Articles table for Blog/News
+ */
+export const articles = mysqlTable("articles", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(), // Rich text / HTML
+  excerpt: text("excerpt"),
+  category: varchar("category", { length: 100 }),
+  coverImageUrl: varchar("coverImageUrl", { length: 512 }),
+  authorId: int("authorId"), // Link to user
+  authorName: varchar("authorName", { length: 255 }), // Snapshot of author name
+  isPublished: boolean("isPublished").default(false).notNull(),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Article = typeof articles.$inferSelect;
+export type InsertArticle = typeof articles.$inferInsert;
+
+/**
+ * Media Library table for uploads
+ */
+export const mediaLibrary = mysqlTable("media_library", {
+  id: int("id").autoincrement().primaryKey(),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  originalName: varchar("originalName", { length: 255 }).notNull(),
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  size: int("size").notNull(),
+  url: varchar("url", { length: 512 }).notNull(),
+  uploadedBy: int("uploadedBy"), // User ID
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MediaItem = typeof mediaLibrary.$inferSelect;
+export type InsertMediaItem = typeof mediaLibrary.$inferInsert;
+
+/**
  * Follow relationships
  */
 export const follows = mysqlTable("follows", {
