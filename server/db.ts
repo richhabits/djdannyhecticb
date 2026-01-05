@@ -116,7 +116,10 @@ export async function getUserByOpenId(openId: string) {
 // Mixes queries
 export async function getAllMixes() {
   const db = await getDb();
-  if (!db) return mock.mockMixes;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") throw new Error("Database not available");
+    return mock.mockMixes;
+  }
   try {
     return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
   } catch (e) {
@@ -162,7 +165,10 @@ export async function createBooking(booking: any) {
 // Events queries
 export async function getUpcomingEvents() {
   const db = await getDb();
-  if (!db) return mock.mockEvents;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") throw new Error("Database not available");
+    return mock.mockEvents;
+  }
   try {
     return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
   } catch (e) {
@@ -186,7 +192,10 @@ export async function getAllEvents() {
 // Podcasts queries
 export async function getAllPodcasts() {
   const db = await getDb();
-  if (!db) return mock.mockPodcasts;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") throw new Error("Database not available");
+    return mock.mockPodcasts;
+  }
   try {
     return await db.select().from(podcasts).orderBy(desc(podcasts.createdAt));
   } catch (e) {
@@ -198,7 +207,10 @@ export async function getAllPodcasts() {
 // Streaming links queries
 export async function getStreamingLinks() {
   const db = await getDb();
-  if (!db) return mock.mockStreamingLinks;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") throw new Error("Database not available");
+    return mock.mockStreamingLinks;
+  }
   try {
     return await db.select().from(streamingLinks).orderBy(asc(streamingLinks.order));
   } catch (e) {
@@ -259,7 +271,10 @@ export async function createShout(shout: InsertShout) {
 
 export async function getApprovedShouts(limit: number = 20) {
   const db = await getDb();
-  if (!db) return mock.mockShouts.slice(0, limit);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return mock.mockShouts.slice(0, limit); // Shouts are safe
+    return mock.mockShouts.slice(0, limit);
+  }
   // Exclude phone from public list for privacy
   try {
     const result = await db
@@ -393,7 +408,13 @@ export async function listStreams() {
 
 export async function getActiveStream() {
   const db = await getDb();
-  if (!db) return mock.mockStreams[0];
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return mock.mockStreams[0]; // Stream info is critical, maybe throw?
+    // Actually for Active Stream, returning mock might be confusing. Throwing specific error is better.
+    // BUT frontend likely expects data. Let's return undefined if possible or throw.
+    if (process.env.NODE_ENV === "production") throw new Error("Database not available");
+    return mock.mockStreams[0];
+  }
   try {
     const result = await db
       .select({
@@ -456,7 +477,10 @@ export async function deleteStream(id: number) {
 // Track Requests - extend shouts queries
 export async function getTrackRequests(limit: number = 20) {
   const db = await getDb();
-  if (!db) return mock.mockTrackRequests.slice(0, limit);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return [];
+    return mock.mockTrackRequests.slice(0, limit);
+  }
   try {
     return await db
       .select({
@@ -517,7 +541,10 @@ export async function createTrack(track: InsertTrack) {
 
 export async function getNowPlaying() {
   const db = await getDb();
-  if (!db) return mock.mockTracks[0];
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return mock.mockTracks[0]; // Safe
+    return mock.mockTracks[0];
+  }
   try {
     const result = await db
       .select()
@@ -533,7 +560,10 @@ export async function getNowPlaying() {
 
 export async function getTrackHistory(limit: number = 10) {
   const db = await getDb();
-  if (!db) return mock.mockTracks.slice(0, limit);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return [];
+    return mock.mockTracks.slice(0, limit);
+  }
   try {
     return await db
       .select().from(tracks)
@@ -557,7 +587,10 @@ export async function createShow(show: InsertShow) {
 
 export async function listShows() {
   const db = await getDb();
-  if (!db) return mock.mockShows;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") throw new Error("Database not available");
+    return mock.mockShows;
+  }
   try {
     return await db
       .select()
@@ -598,7 +631,10 @@ export async function deleteShow(id: number) {
 
 export async function getDannyStatus() {
   const db = await getDb();
-  if (!db) return mock.mockDannyStatus[0];
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return mock.mockDannyStatus[0]; // Safe status
+    return mock.mockDannyStatus[0];
+  }
   try {
     const result = await db
       .select()
@@ -1418,7 +1454,10 @@ export async function markErrorLogResolved(id: number) {
 
 export async function getActiveIncidentBanner() {
   const db = await getDb();
-  if (!db) return mock.mockIncidentBanners[0];
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return mock.mockIncidentBanners[0];
+    return mock.mockIncidentBanners[0]; // Logic unchanged but pattern consistent
+  }
   try {
     const now = new Date();
     const result = await db
@@ -3431,7 +3470,10 @@ export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], pa
 
 export async function getActiveIncidentBanners() {
   const db = await getDb();
-  if (!db) return mock.mockIncidentBanners;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return mock.mockIncidentBanners; // Safe UI fallback
+    return mock.mockIncidentBanners;
+  }
   try {
     return await db
       .select()
@@ -3446,7 +3488,10 @@ export async function getActiveIncidentBanners() {
 export async function getFeedPosts(includeVip: boolean = false) {
   const db = await getDb();
   const allMock = [...mock.mockFeedPosts, ...(mock as any).moreMockFeedPosts];
-  if (!db) return allMock;
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return [];
+    return allMock;
+  }
   try {
     const query = db.select().from(feedPosts).orderBy(desc(feedPosts.createdAt));
     const results = await query;
@@ -3504,7 +3549,10 @@ export async function deleteMix(id: number) {
 
 export async function getMixById(id: number) {
   const db = await getDb();
-  if (!db) return mock.mockMixes.find(m => m.id === id);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return undefined;
+    return mock.mockMixes.find(m => m.id === id);
+  }
   try {
     const results = await db.select().from(mixes).where(eq(mixes.id, id)).limit(1);
     return results[0] || mock.mockMixes.find(m => m.id === id);
@@ -3516,7 +3564,10 @@ export async function getMixById(id: number) {
 // Track management functions
 export async function getAllTracks(limit?: number) {
   const db = await getDb();
-  if (!db) return mock.mockTracks.slice(0, limit || 50);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return [];
+    return mock.mockTracks.slice(0, limit || 50);
+  }
   try {
     const query = db.select().from(tracks).orderBy(desc(tracks.playedAt));
     if (limit) {
@@ -3531,7 +3582,10 @@ export async function getAllTracks(limit?: number) {
 
 export async function getTrackById(id: number) {
   const db = await getDb();
-  if (!db) return mock.mockTracks.find(t => t.id === id);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return undefined;
+    return mock.mockTracks.find(t => t.id === id);
+  }
   try {
     const results = await db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
     return results[0];
@@ -3565,7 +3619,10 @@ export async function deleteTrack(id: number) {
 // Podcast management functions
 export async function getPodcastById(id: number) {
   const db = await getDb();
-  if (!db) return mock.mockPodcasts.find(p => p.id === id);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return undefined;
+    return mock.mockPodcasts.find(p => p.id === id);
+  }
   try {
     const results = await db.select().from(podcasts).where(eq(podcasts.id, id)).limit(1);
     return results[0];
@@ -3609,7 +3666,10 @@ export async function deletePodcast(id: number) {
 // Streaming Links management functions
 export async function getStreamingLinkById(id: number) {
   const db = await getDb();
-  if (!db) return mock.mockStreamingLinks.find(l => l.id === id);
+  if (!db) {
+    if (process.env.NODE_ENV === "production") return undefined;
+    return mock.mockStreamingLinks.find(l => l.id === id);
+  }
   try {
     const results = await db.select().from(streamingLinks).where(eq(streamingLinks.id, id)).limit(1);
     return results[0];
@@ -3704,6 +3764,7 @@ export async function createOrUpdateUserProfile(profile: InsertUserProfile) {
   } catch (error) {
     console.error("[db] Error in createOrUpdateUserProfile:", error);
     // Mock fallback
+    if (process.env.NODE_ENV === "production") throw error;
     return {
       id: Math.floor(Math.random() * 1000),
       name: profile.name,
@@ -3873,41 +3934,41 @@ export async function searchAll(query: string, limit: number = 20) {
 // ============================================
 
 export async function deleteEvent(id: number) {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-    await db.delete(events).where(eq(events.id, id));
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(events).where(eq(events.id, id));
 }
 
 export async function getAllMarketingLeads(filters?: {
-    status?: string;
-    type?: string;
-    location?: string;
-    assignedTo?: number
+  status?: string;
+  type?: string;
+  location?: string;
+  assignedTo?: number
 }) {
-    const db = await getDb();
-    if (!db) return [];
+  const db = await getDb();
+  if (!db) return [];
 
-    let query = db.select().from(marketingLeads);
-    const conditions = [];
+  let query = db.select().from(marketingLeads);
+  const conditions = [];
 
-    if (filters?.status) {
-        conditions.push(eq(marketingLeads.status, filters.status as any));
-    }
-    if (filters?.type) {
-        conditions.push(eq(marketingLeads.type, filters.type as any));
-    }
-    if (filters?.location) {
-        conditions.push(like(marketingLeads.location, `%${filters.location}%`));
-    }
-    if (filters?.assignedTo) {
-        conditions.push(eq(marketingLeads.assignedTo, filters.assignedTo));
-    }
+  if (filters?.status) {
+    conditions.push(eq(marketingLeads.status, filters.status as any));
+  }
+  if (filters?.type) {
+    conditions.push(eq(marketingLeads.type, filters.type as any));
+  }
+  if (filters?.location) {
+    conditions.push(like(marketingLeads.location, `%${filters.location}%`));
+  }
+  if (filters?.assignedTo) {
+    conditions.push(eq(marketingLeads.assignedTo, filters.assignedTo));
+  }
 
-    if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as any;
-    }
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
 
-    return await query.orderBy(desc(marketingLeads.createdAt));
+  return await query.orderBy(desc(marketingLeads.createdAt));
 }
 
 // ============================================
@@ -3915,66 +3976,66 @@ export async function getAllMarketingLeads(filters?: {
 // ============================================
 
 export async function createEvent(event: InsertEvent) {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-    const result = await db.insert(events).values(event);
-    const insertedId = result[0].insertId;
-    const created = await db.select().from(events).where(eq(events.id, insertedId)).limit(1);
-    return created[0];
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(events).values(event);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(events).where(eq(events.id, insertedId)).limit(1);
+  return created[0];
 }
 
 export async function updateEvent(id: number, updates: Partial<InsertEvent>) {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-    await db.update(events).set({ ...updates, updatedAt: new Date() }).where(eq(events.id, id));
-    const updated = await db.select().from(events).where(eq(events.id, id)).limit(1);
-    return updated[0];
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(events).set({ ...updates, updatedAt: new Date() }).where(eq(events.id, id));
+  const updated = await db.select().from(events).where(eq(events.id, id)).limit(1);
+  return updated[0];
 }
 
 export async function getMarketingLeadById(id: number) {
-    const db = await getDb();
-    if (!db) return undefined;
-    const result = await db.select().from(marketingLeads).where(eq(marketingLeads.id, id)).limit(1);
-    return result[0];
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(marketingLeads).where(eq(marketingLeads.id, id)).limit(1);
+  return result[0];
 }
 
 export async function createVenueScraperResult(result: InsertVenueScraperResult) {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-    const insertResult = await db.insert(venueScraperResults).values(result);
-    const insertedId = insertResult[0].insertId;
-    const created = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, insertedId)).limit(1);
-    return created[0];
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const insertResult = await db.insert(venueScraperResults).values(result);
+  const insertedId = insertResult[0].insertId;
+  const created = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, insertedId)).limit(1);
+  return created[0];
 }
 
 export async function convertScraperResultToLead(id: number, extraData?: any) {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
 
-    // Get the result
-    const scraperResult = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, id)).limit(1);
-    if (!scraperResult[0]) throw new Error("Scraper result not found");
+  // Get the result
+  const scraperResult = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, id)).limit(1);
+  if (!scraperResult[0]) throw new Error("Scraper result not found");
 
-    const venue = scraperResult[0];
-    const rawData = typeof venue.rawData === 'string' ? JSON.parse(venue.rawData) : venue.rawData;
+  const venue = scraperResult[0];
+  const rawData = typeof venue.rawData === 'string' ? JSON.parse(venue.rawData) : venue.rawData;
 
-    // Create lead
-    const leadData: InsertMarketingLead = {
-        name: venue.name,
-        type: "bar", // Default fallback
-        location: venue.location,
-        source: venue.source,
-        website: venue.sourceUrl || undefined,
-        socialMedia: rawData.socialMedia ? JSON.stringify(rawData.socialMedia) : undefined,
-        ...extraData
-    };
+  // Create lead
+  const leadData: InsertMarketingLead = {
+    name: venue.name,
+    type: "bar", // Default fallback
+    location: venue.location,
+    source: venue.source,
+    website: venue.sourceUrl || undefined,
+    socialMedia: rawData.socialMedia ? JSON.stringify(rawData.socialMedia) : undefined,
+    ...extraData
+  };
 
-    const leadResult = await db.insert(marketingLeads).values(leadData);
-    const leadId = leadResult[0].insertId;
+  const leadResult = await db.insert(marketingLeads).values(leadData);
+  const leadId = leadResult[0].insertId;
 
-    // Update result as converted
-    await db.update(venueScraperResults).set({ convertedToLead: true }).where(eq(venueScraperResults.id, id));
+  // Update result as converted
+  await db.update(venueScraperResults).set({ convertedToLead: true }).where(eq(venueScraperResults.id, id));
 
-    const created = await db.select().from(marketingLeads).where(eq(marketingLeads.id, leadId)).limit(1);
-    return created[0];
+  const created = await db.select().from(marketingLeads).where(eq(marketingLeads.id, leadId)).limit(1);
+  return created[0];
 }
