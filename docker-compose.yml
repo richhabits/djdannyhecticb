@@ -19,6 +19,10 @@ services:
 
   web:
     build: .
+    env_file:
+      - .env
+    volumes:
+      - ./dist/index.mjs:/app/dist/index.mjs
     ports:
       - "3000:3000"
     deploy:

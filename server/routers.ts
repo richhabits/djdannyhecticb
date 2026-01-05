@@ -785,26 +785,32 @@ export const appRouter = router({
           throw new Error("Invalid amount");
         }
 
-        const { createSupportPaymentIntent } = await import("./lib/payments");
-        const result = await createSupportPaymentIntent({
-          amount,
-          currency: input.currency || "GBP",
-          fanName: input.fanName,
-          email: input.email,
-          message: input.message,
-          fanId: input.fanId || ctx.user?.id,
-        });
+        try {
+          console.log("[Support] Starting createPaymentIntent", { amount: input.amount, stringAmount: amountStr });
+          const { createSupportPaymentIntent } = await import("./lib/payments");
+          const result = await createSupportPaymentIntent({
+            amount,
+            currency: input.currency || "GBP",
+            fanName: input.fanName,
+            email: input.email,
+            message: input.message,
+            fanId: input.fanId || ctx.user?.id,
+          });
+          console.log("[Support] Success", result);
+          await db.createAuditLog({
+            action: "create_support_payment_intent",
+            entityType: "support_event",
+            entityId: result.supportEventId,
+            actorId: ctx.user?.id,
+            actorName: input.fanName,
+            afterSnapshot: { paymentIntentId: result.paymentIntentId },
+          });
 
-        await db.createAuditLog({
-          action: "create_support_payment_intent",
-          entityType: "support_event",
-          entityId: result.supportEventId,
-          actorId: ctx.user?.id,
-          actorName: input.fanName,
-          afterSnapshot: { paymentIntentId: result.paymentIntentId },
-        });
-
-        return result;
+          return result;
+        } catch (error) {
+          console.error("[Support] CRITICAL ERROR:", error);
+          throw error;
+        }
       }),
     create: publicProcedure
       .input(z.object({

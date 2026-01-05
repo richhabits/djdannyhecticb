@@ -3867,3 +3867,114 @@ export async function searchAll(query: string, limit: number = 20) {
 
   return results;
 }
+
+// ============================================
+// MISSING FUNCTIONS (Added for Fix)
+// ============================================
+
+export async function deleteEvent(id: number) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.delete(events).where(eq(events.id, id));
+}
+
+export async function getAllMarketingLeads(filters?: {
+    status?: string;
+    type?: string;
+    location?: string;
+    assignedTo?: number
+}) {
+    const db = await getDb();
+    if (!db) return [];
+
+    let query = db.select().from(marketingLeads);
+    const conditions = [];
+
+    if (filters?.status) {
+        conditions.push(eq(marketingLeads.status, filters.status as any));
+    }
+    if (filters?.type) {
+        conditions.push(eq(marketingLeads.type, filters.type as any));
+    }
+    if (filters?.location) {
+        conditions.push(like(marketingLeads.location, `%${filters.location}%`));
+    }
+    if (filters?.assignedTo) {
+        conditions.push(eq(marketingLeads.assignedTo, filters.assignedTo));
+    }
+
+    if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(marketingLeads.createdAt));
+}
+
+// ============================================
+// MORE MISSING FUNCTIONS (Added for Fix)
+// ============================================
+
+export async function createEvent(event: InsertEvent) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    const result = await db.insert(events).values(event);
+    const insertedId = result[0].insertId;
+    const created = await db.select().from(events).where(eq(events.id, insertedId)).limit(1);
+    return created[0];
+}
+
+export async function updateEvent(id: number, updates: Partial<InsertEvent>) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.update(events).set({ ...updates, updatedAt: new Date() }).where(eq(events.id, id));
+    const updated = await db.select().from(events).where(eq(events.id, id)).limit(1);
+    return updated[0];
+}
+
+export async function getMarketingLeadById(id: number) {
+    const db = await getDb();
+    if (!db) return undefined;
+    const result = await db.select().from(marketingLeads).where(eq(marketingLeads.id, id)).limit(1);
+    return result[0];
+}
+
+export async function createVenueScraperResult(result: InsertVenueScraperResult) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    const insertResult = await db.insert(venueScraperResults).values(result);
+    const insertedId = insertResult[0].insertId;
+    const created = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, insertedId)).limit(1);
+    return created[0];
+}
+
+export async function convertScraperResultToLead(id: number, extraData?: any) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    // Get the result
+    const scraperResult = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, id)).limit(1);
+    if (!scraperResult[0]) throw new Error("Scraper result not found");
+
+    const venue = scraperResult[0];
+    const rawData = typeof venue.rawData === 'string' ? JSON.parse(venue.rawData) : venue.rawData;
+
+    // Create lead
+    const leadData: InsertMarketingLead = {
+        name: venue.name,
+        type: "bar", // Default fallback
+        location: venue.location,
+        source: venue.source,
+        website: venue.sourceUrl || undefined,
+        socialMedia: rawData.socialMedia ? JSON.stringify(rawData.socialMedia) : undefined,
+        ...extraData
+    };
+
+    const leadResult = await db.insert(marketingLeads).values(leadData);
+    const leadId = leadResult[0].insertId;
+
+    // Update result as converted
+    await db.update(venueScraperResults).set({ convertedToLead: true }).where(eq(venueScraperResults.id, id));
+
+    const created = await db.select().from(marketingLeads).where(eq(marketingLeads.id, leadId)).limit(1);
+    return created[0];
+}

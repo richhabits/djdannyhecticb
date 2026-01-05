@@ -43,19 +43,19 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  
+
   // Cookie parser for session management
   app.use(cookieParser());
-  
+
   // Aggressive memory optimization for production
   const bodyLimit = process.env.NODE_ENV === "production" ? "300kb" : "10mb";
   app.use(express.json({ limit: bodyLimit }));
   app.use(express.urlencoded({ limit: bodyLimit, extended: true }));
-  
+
   // Disable unnecessary features to save resources
   app.disable("x-powered-by");
   app.disable("etag"); // Let nginx handle caching
-  
+
   // Security headers (consolidated, no duplicate comment)
   app.use((req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -90,6 +90,9 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
+      onError: ({ error, path, type }) => {
+        console.error(`[TRPC] Error on ${path} (${type}):`, error);
+      },
     })
   );
   // development mode uses Vite, production mode uses static files
