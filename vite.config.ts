@@ -1,13 +1,9 @@
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import fs from "node:fs";
 import path from "path";
 import { defineConfig } from "vite";
-import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
-
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
+const plugins = [react(), tailwindcss()];
 
 export default defineConfig({
   plugins,
@@ -24,37 +20,28 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    // Aggressive optimization for size and speed
     minify: "esbuild",
-    esbuild: {
-      drop: ["console", "debugger"],
-    },
+    cssMinify: true,
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Aggressive code splitting to reduce bundle size
           if (id.includes("node_modules")) {
-            if (id.includes("@radix-ui")) {
-              return "radix-ui";
+            // Group Core dependencies together to avoid forwardRef/mount race conditions
+            if (id.includes("react") || id.includes("react-dom") || id.includes("@radix-ui")) {
+              return "core";
             }
-            if (id.includes("@trpc")) {
+            // Other stable vendors
+            if (id.includes("@trpc") || id.includes("@tanstack/react-query")) {
               return "trpc";
             }
-            if (id.includes("react") || id.includes("react-dom")) {
-              return "react-vendor";
-            }
-            if (id.includes("framer-motion")) {
-              return "framer";
-            }
-            if (id.includes("lucide-react")) {
-              return "icons";
+            if (id.includes("framer-motion") || id.includes("lucide-react") || id.includes("clsx") || id.includes("tailwind-merge")) {
+              return "ui-vendors";
             }
             return "vendor";
           }
         },
-        // Remove source maps in production to save space
-        sourcemap: false,
-        // Optimize chunk names
         chunkFileNames: "js/[name]-[hash].js",
         entryFileNames: "js/[name]-[hash].js",
         assetFileNames: (assetInfo) => {
@@ -69,31 +56,6 @@ export default defineConfig({
           return "assets/[name]-[hash][extname]";
         },
       },
-      treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-        tryCatchDeoptimization: false,
-      },
-    },
-    // Chunk size warnings disabled for optimization
-    chunkSizeWarningLimit: 1000,
-    // Target modern browsers for smaller bundles
-    target: ["es2020", "edge88", "firefox78", "chrome87", "safari14"],
-  },
-  server: {
-    host: true,
-    allowedHosts: [
-      ".manuspre.computer",
-      ".manus.computer",
-      ".manus-asia.computer",
-      ".manuscomputer.ai",
-      ".manusvm.computer",
-      "localhost",
-      "127.0.0.1",
-    ],
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
     },
   },
 });
