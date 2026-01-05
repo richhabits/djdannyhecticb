@@ -80,6 +80,10 @@ async function startServer() {
   }
   // Admin authentication routes
   registerAdminAuthRoutes(app);
+
+  // Health Check (Self-Healing Sentinel)
+  app.get("/api/health", (req, res) => res.status(200).send("ok"));
+
   // SEO routes (sitemap, robots.txt)
   registerSEORoutes(app);
   // Payment webhooks (Stripe, PayPal)
