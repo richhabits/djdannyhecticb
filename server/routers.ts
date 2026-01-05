@@ -377,7 +377,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    getStats: adminProcedure
+    getStats: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await db.getStreamStats(input.id);

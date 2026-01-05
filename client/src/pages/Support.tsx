@@ -30,7 +30,7 @@ function SupportPaymentForm({ amount, name, email, message, onSuccess }: {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const createPaymentIntent = trpc.revenue.support.createPaymentIntent.useMutation({
+  const createPaymentIntent = trpc.support.createPaymentIntent.useMutation({
     onSuccess: (data) => {
       setClientSecret(data.clientSecret);
     },
@@ -124,240 +124,240 @@ function SupportPaymentForm({ amount, name, email, message, onSuccess }: {
 }
 
 export default function Support() {
-    const { user } = useAuth();
-    const [amount, setAmount] = useState<string>("");
-    const [message, setMessage] = useState("");
-    const [name, setName] = useState(user?.name || "");
-    const [email, setEmail] = useState(user?.email || "");
-    const [showPayment, setShowPayment] = useState(false);
-    const [location] = useLocation();
+  const { user } = useAuth();
+  const [amount, setAmount] = useState<string>("");
+  const [message, setMessage] = useState("");
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [showPayment, setShowPayment] = useState(false);
+  const [location] = useLocation();
 
-    // Check for success parameter
-    useEffect(() => {
-      const params = new URLSearchParams(location.split("?")[1] || "");
-      if (params.get("success") === "true") {
-        toast.success("Payment successful! Thank you for your support.");
-        setAmount("");
-        setMessage("");
-        setShowPayment(false);
-      }
-    }, [location]);
-
-    const PRESETS = ["3.00", "5.00", "10.00", "20.00", "50.00"];
-
-    const handleContinueToPayment = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!amount || parseFloat(amount) <= 0) {
-        toast.error("Please enter a valid amount");
-        return;
-      }
-      if (!name) {
-        toast.error("Please enter your name");
-        return;
-      }
-      setShowPayment(true);
-    };
-
-    const handleBack = () => {
+  // Check for success parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.split("?")[1] || "");
+    if (params.get("success") === "true") {
+      toast.success("Payment successful! Thank you for your support.");
+      setAmount("");
+      setMessage("");
       setShowPayment(false);
-    };
+    }
+  }, [location]);
 
-    return (
-        <>
-            <MetaTagsComponent
-                title="Support DJ Danny Hectic B | Keep It Locked"
-                description="Support the Hectic Radio movement. Your contributions help maintain the station and keep the music flowing."
-                url="/support"
-            />
-            <div className="min-h-screen bg-background text-foreground pt-14">
-                <div className="container py-12 px-4 max-w-6xl">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text">Support Hectic Radio</h1>
-                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                            Help keep the underground frequency alive. Your support maintains the station, equipment, and brings you the best in UK Garage & House music.
-                        </p>
-                    </div>
+  const PRESETS = ["3.00", "5.00", "10.00", "20.00", "50.00"];
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Left: Info Cards */}
-                        <div className="lg:col-span-1 space-y-6">
-                            <Card className="bg-card/50 border-border">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Heart className="w-5 h-5 text-red-500" />
-                                        Why Support?
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <p className="text-sm text-muted-foreground">
-                                        Hectic Radio operates independently. Your contributions directly support:
-                                    </p>
-                                    <ul className="space-y-3 text-sm">
-                                        <li className="flex items-start gap-2">
-                                            <Server className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
-                                            <span>Server hosting and bandwidth</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Zap className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
-                                            <span>Equipment maintenance and upgrades</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <Coffee className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
-                                            <span>Music licensing and acquisition</span>
-                                        </li>
-                                    </ul>
-                                </CardContent>
-                            </Card>
+  const handleContinueToPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (!name) {
+      toast.error("Please enter your name");
+      return;
+    }
+    setShowPayment(true);
+  };
 
-                            <Card className="bg-muted/50 border-border">
-                                <CardHeader>
-                                    <CardTitle className="text-sm">Top Supporter</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-semibold">Anonymous</span>
-                                        <span className="text-lg font-bold text-accent">£0.00</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+  const handleBack = () => {
+    setShowPayment(false);
+  };
 
-                        {/* Right: Donation Form */}
-                        <div className="lg:col-span-2">
-                            <Card className="bg-card/50 border-border">
-                                <CardHeader>
-                                    <CardTitle>{showPayment ? "Payment Details" : "Make a Contribution"}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    {!showPayment ? (
-                                        <form onSubmit={handleContinueToPayment} className="space-y-6">
-                                            {/* Amount Selection */}
-                                            <div className="space-y-4">
-                                                <label className="text-sm font-semibold block">Select Amount (GBP)</label>
-                                                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                                                    {PRESETS.map((val) => (
-                                                        <button
-                                                            key={val}
-                                                            type="button"
-                                                            onClick={() => setAmount(val)}
-                                                            className={cn(
-                                                                "py-3 border-2 rounded-lg font-semibold transition-all",
-                                                                amount === val
-                                                                    ? "bg-accent text-foreground border-accent"
-                                                                    : "bg-background border-border hover:border-accent"
-                                                            )}
-                                                        >
-                                                            £{val}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div className="flex items-center gap-2 border-2 border-border rounded-lg p-3 focus-within:border-accent">
-                                                    <span className="text-lg font-bold">£</span>
-                                                    <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0.01"
-                                                        value={amount}
-                                                        onChange={(e) => setAmount(e.target.value)}
-                                                        placeholder="Enter custom amount"
-                                                        className="border-0 focus-visible:ring-0 text-lg font-semibold"
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
+  return (
+    <>
+      <MetaTagsComponent
+        title="Support DJ Danny Hectic B | Keep It Locked"
+        description="Support the Hectic Radio movement. Your contributions help maintain the station and keep the music flowing."
+        url="/support"
+      />
+      <div className="min-h-screen bg-background text-foreground pt-14">
+        <div className="container py-12 px-4 max-w-6xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text">Support Hectic Radio</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Help keep the underground frequency alive. Your support maintains the station, equipment, and brings you the best in UK Garage & House music.
+            </p>
+          </div>
 
-                                            {/* Name */}
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-semibold block">Your Name *</label>
-                                                <Input
-                                                    value={name}
-                                                    onChange={(e) => setName(e.target.value)}
-                                                    placeholder="Enter your name"
-                                                    required
-                                                    className="h-12"
-                                                />
-                                            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left: Info Cards */}
+            <div className="lg:col-span-1 space-y-6">
+              <Card className="bg-card/50 border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-red-500" />
+                    Why Support?
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Hectic Radio operates independently. Your contributions directly support:
+                  </p>
+                  <ul className="space-y-3 text-sm">
+                    <li className="flex items-start gap-2">
+                      <Server className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span>Server hosting and bandwidth</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Zap className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span>Equipment maintenance and upgrades</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Coffee className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span>Music licensing and acquisition</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
 
-                                            {/* Email */}
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-semibold block">Email *</label>
-                                                <Input
-                                                    type="email"
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    placeholder="Enter your email"
-                                                    required
-                                                    className="h-12"
-                                                />
-                                            </div>
-
-                                            {/* Message */}
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-semibold block">Message (Optional)</label>
-                                                <Textarea
-                                                    value={message}
-                                                    onChange={(e) => setMessage(e.target.value)}
-                                                    placeholder="Leave a message of support..."
-                                                    rows={4}
-                                                    className="resize-none"
-                                                />
-                                            </div>
-
-                                            {/* Continue Button */}
-                                            <Button
-                                                type="submit"
-                                                disabled={!amount || !name || !email || parseFloat(amount) <= 0}
-                                                className="w-full h-12 text-lg font-semibold gradient-bg"
-                                            >
-                                                Continue to Payment
-                                            </Button>
-
-                                            <p className="text-xs text-muted-foreground text-center">
-                                                Your contribution helps keep Hectic Radio running. Thank you for your support!
-                                            </p>
-                                        </form>
-                                    ) : (
-                                        <div className="space-y-6">
-                                            {import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? (
-                                                <Elements
-                                                    stripe={stripePromise}
-                                                    options={{
-                                                      clientSecret: undefined, // Will be set in SupportPaymentForm
-                                                      appearance: {
-                                                        theme: "stripe",
-                                                      },
-                                                    }}
-                                                >
-                                                    <SupportPaymentForm
-                                                        amount={amount}
-                                                        name={name}
-                                                        email={email}
-                                                        message={message}
-                                                        onSuccess={() => {
-                                                          setShowPayment(false);
-                                                          setAmount("");
-                                                          setMessage("");
-                                                        }}
-                                                    />
-                                                </Elements>
-                                            ) : (
-                                                <div className="text-center py-8">
-                                                    <p className="text-muted-foreground mb-4">Payment processing is not configured.</p>
-                                                    <Button variant="outline" onClick={handleBack}>Back</Button>
-                                                </div>
-                                            )}
-                                            <Button variant="outline" onClick={handleBack} className="w-full">
-                                                Back to Details
-                                            </Button>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </div>
+              <Card className="bg-muted/50 border-border">
+                <CardHeader>
+                  <CardTitle className="text-sm">Top Supporter</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Anonymous</span>
+                    <span className="text-lg font-bold text-accent">£0.00</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-        </>
-    );
+
+            {/* Right: Donation Form */}
+            <div className="lg:col-span-2">
+              <Card className="bg-card/50 border-border">
+                <CardHeader>
+                  <CardTitle>{showPayment ? "Payment Details" : "Make a Contribution"}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!showPayment ? (
+                    <form onSubmit={handleContinueToPayment} className="space-y-6">
+                      {/* Amount Selection */}
+                      <div className="space-y-4">
+                        <label className="text-sm font-semibold block">Select Amount (GBP)</label>
+                        <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                          {PRESETS.map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setAmount(val)}
+                              className={cn(
+                                "py-3 border-2 rounded-lg font-semibold transition-all",
+                                amount === val
+                                  ? "bg-accent text-foreground border-accent"
+                                  : "bg-background border-border hover:border-accent"
+                              )}
+                            >
+                              £{val}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-2 border-2 border-border rounded-lg p-3 focus-within:border-accent">
+                          <span className="text-lg font-bold">£</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="Enter custom amount"
+                            className="border-0 focus-visible:ring-0 text-lg font-semibold"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Name */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold block">Your Name *</label>
+                        <Input
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Enter your name"
+                          required
+                          className="h-12"
+                        />
+                      </div>
+
+                      {/* Email */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold block">Email *</label>
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter your email"
+                          required
+                          className="h-12"
+                        />
+                      </div>
+
+                      {/* Message */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold block">Message (Optional)</label>
+                        <Textarea
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Leave a message of support..."
+                          rows={4}
+                          className="resize-none"
+                        />
+                      </div>
+
+                      {/* Continue Button */}
+                      <Button
+                        type="submit"
+                        disabled={!amount || !name || !email || parseFloat(amount) <= 0}
+                        className="w-full h-12 text-lg font-semibold gradient-bg"
+                      >
+                        Continue to Payment
+                      </Button>
+
+                      <p className="text-xs text-muted-foreground text-center">
+                        Your contribution helps keep Hectic Radio running. Thank you for your support!
+                      </p>
+                    </form>
+                  ) : (
+                    <div className="space-y-6">
+                      {import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? (
+                        <Elements
+                          stripe={stripePromise}
+                          options={{
+                            clientSecret: undefined, // Will be set in SupportPaymentForm
+                            appearance: {
+                              theme: "stripe",
+                            },
+                          }}
+                        >
+                          <SupportPaymentForm
+                            amount={amount}
+                            name={name}
+                            email={email}
+                            message={message}
+                            onSuccess={() => {
+                              setShowPayment(false);
+                              setAmount("");
+                              setMessage("");
+                            }}
+                          />
+                        </Elements>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground mb-4">Payment processing is not configured.</p>
+                          <Button variant="outline" onClick={handleBack}>Back</Button>
+                        </div>
+                      )}
+                      <Button variant="outline" onClick={handleBack} className="w-full">
+                        Back to Details
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
