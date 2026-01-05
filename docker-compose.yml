@@ -1,16 +1,16 @@
 services:
   db:
     image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M --max-connections=50 --max-allowed-packet=16M
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=128M --max-connections=30 --max-allowed-packet=16M --query-cache-size=0 --query-cache-type=0
     restart: always
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1024M
+          cpus: '0.5'
+          memory: 256M
         reservations:
-          cpus: '0.25'
-          memory: 512M
+          cpus: '0.1'
+          memory: 128M
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: djdannyhecticb
@@ -24,11 +24,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1024M
+          cpus: '0.75'
+          memory: 384M
         reservations:
           cpus: '0.25'
-          memory: 512M
+          memory: 128M
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mysql://root:password@db:3306/djdannyhecticb
@@ -44,22 +44,11 @@ services:
       dockerfile: Dockerfile.nginx
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
     depends_on:
       - web
     restart: always
     networks:
       - default
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   db_data:
