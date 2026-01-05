@@ -26,10 +26,9 @@ ENV NODE_ENV=production
 ENV VITE_APP_TITLE="DJ Danny Hectic B"
 ENV VITE_APP_LOGO="/logo-icon.png"
 ENV VITE_APP_ID="djdannyhecticb"
-ENV VITE_STRIPE_PUBLISHABLE_KEY="pk_live_51SmIYR2HkyKRVyFUZFMrRAOkuOsnf3fyRfcL4vkS3izcWs2nCyauNDRnDk2oCnAbMBmawrTXSNANGUd1rBFwi7bz00bFhWUfo4"
 
-# Create dummy .env for build
-RUN touch .env
+# Create .env for build and populate with key
+RUN echo "VITE_STRIPE_PUBLISHABLE_KEY=pk_live_51SmIYR2HkyKRVyFUZFMrRAOkuOsnf3fyRfcL4vkS3izcWs2nCyauNDRnDk2oCnAbMBmawrTXSNANGUd1rBFwi7bz00bFhWUfo4" > .env
 
 RUN pnpm run build && \
     # Verify server bundle was created
