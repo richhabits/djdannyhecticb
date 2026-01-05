@@ -25,23 +25,9 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     // Aggressive optimization for size and speed
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ["console.log", "console.info", "console.debug", "console.warn"],
-        passes: 2, // Multiple passes for better compression
-        unsafe: true,
-        unsafe_comps: true,
-        unsafe_math: true,
-        unsafe_methods: true,
-        dead_code: true,
-        unused: true,
-      },
-      mangle: {
-        toplevel: true,
-      },
+    minify: "esbuild",
+    esbuild: {
+      drop: ["console", "debugger"],
     },
     rollupOptions: {
       output: {
