@@ -107,9 +107,13 @@ export async function verifyAdminPassword(
 /**
  * Create admin session token
  */
-export async function createAdminSessionToken(
+/**
+ * Create session token (Admin/User)
+ */
+export async function createSessionToken(
   userId: number,
-  email: string
+  email: string,
+  role: "admin" | "user" = "admin"
 ): Promise<string> {
   const secret = new TextEncoder().encode(ENV.cookieSecret);
   const now = Math.floor(Date.now() / 1000);
@@ -117,7 +121,7 @@ export async function createAdminSessionToken(
   const token = await new SignJWT({
     userId,
     email,
-    role: "admin",
+    role,
   } as AdminSessionPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt(now)
@@ -126,6 +130,8 @@ export async function createAdminSessionToken(
 
   return token;
 }
+
+export const createAdminSessionToken = (userId: number, email: string) => createSessionToken(userId, email, "admin");
 
 /**
  * Authenticate admin from request (check session token)

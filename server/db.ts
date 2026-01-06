@@ -4077,7 +4077,9 @@ export async function createUserWithPassword(user: { email: string; password?: s
     role: "user",
   });
 
-  return result;
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(users).where(eq(users.id, insertedId)).limit(1);
+  return created[0];
 }
 
 export async function createVideo(video: InsertVideo) {

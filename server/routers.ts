@@ -54,8 +54,15 @@ export const appRouter = router({
         const user = await db.createUserWithPassword(input);
 
         // Auto-login
-        const { createSessionToken } = await import("./_core/auth"); // or verify imports
-        // ... simplified: return success
+        const { createSessionToken } = await import("./_core/adminAuth");
+
+        const token = await createSessionToken(user.id, user.email || input.email, "user");
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         return { success: true };
       }),
   }),
