@@ -27,6 +27,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  passwordHash: varchar("passwordHash", { length: 255 }),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 

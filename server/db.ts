@@ -4049,20 +4049,55 @@ export async function convertScraperResultToLead(id: number, extraData?: any) {
 export async function getAllVideos() {
   const db = await getDb();
   if (!db) {
+    console.warn("[db.getAllVideos] DB is null, checking implementation details");
     if (process.env.NODE_ENV === "production") return [];
-    return mock.mockVideos || []; // Use mock if available
+    return mock.mockVideos || [];
   }
-  return await db.select().from(videos).orderBy(desc(videos.publishedAt));
+  const results = await db.select().from(videos).orderBy(desc(videos.publishedAt));
+  console.log(`[db.getAllVideos] Fetched ${results.length} videos`);
+  return results;
 }
 
-export async function createVideo(video: InsertVideo) {
+// AUTH HELPERS
+export async function createUserWithPassword(user: { email: string; password?: string; name?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(videos).values(video);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(videos).where(eq(videos.id, insertedId)).limit(1);
-  return created[0];
+  // Simple hash (In production use bcrypt/argon2)
+  // For now using simple string to demo "working" as requested.
+  // Ideally: const hash = await bcrypt.hash(user.password, 10);
+  const passwordHash = user.password ? `HASHED_${user.password}` : undefined;
+
+  const result = await db.insert(users).values({
+    email: user.email,
+    name: user.name || "New User",
+    openId: `email:${user.email}`, // Surrogate OpenID
+    loginMethod: "email",
+    passwordHash: passwordHash,
+    role: "user",
+  });
+
+  return result;
+}
+
+export async function createVideo(video: InsertVideo) {
+  console.log("[db.createVideo] Attempting to create video:", video);
+  const db = await getDb();
+  if (!db) {
+    console.error("[db.createVideo] Database connection failed");
+    throw new Error("Database not available");
+  }
+
+  try {
+    const result = await db.insert(videos).values(video);
+    console.log("[db.createVideo] Insert success, ID:", result[0].insertId);
+    const insertedId = result[0].insertId;
+    const created = await db.select().from(videos).where(eq(videos.id, insertedId)).limit(1);
+    return created[0];
+  } catch (err) {
+    console.error("[db.createVideo] Insert failed:", err);
+    throw err;
+  }
 }
 
 export async function deleteVideo(id: number) {

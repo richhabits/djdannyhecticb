@@ -38,6 +38,7 @@ import Analytics from "./pages/Analytics";
 import Integrations from "./pages/Integrations";
 import EPK from "./pages/EPK";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
@@ -125,6 +126,8 @@ function Router() {
       <Route path={"/integrations"} component={Integrations} />
       <Route path={"/epk"} component={EPK} />
       <Route path={"/login"} component={Login} />
+      <Route path={"/signup"} component={Signup} />
+      <Route path={"/register"} component={Signup} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={Events} />
