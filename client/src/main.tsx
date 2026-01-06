@@ -19,6 +19,7 @@ import { initCopyProtection, addCopyrightWatermark } from "./lib/copyProtection"
 // Initialize copy protection
 initCopyProtection();
 addCopyrightWatermark();
+console.log("Main Entry Point Executing");
 
 const queryClient = new QueryClient();
 

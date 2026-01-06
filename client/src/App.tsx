@@ -192,6 +192,7 @@ import { useLocation } from "wouter";
 
 function App() {
   const [location] = useLocation();
+  console.log("App Component Rendering");
 
   useEffect(() => {
     initGA();
