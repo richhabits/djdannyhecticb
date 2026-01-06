@@ -4183,3 +4183,158 @@ export async function deleteMediaItem(id: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(mediaLibrary).where(eq(mediaLibrary.id, id));
 }
+
+// ============================================
+// MISSING MARKETING & SOCIAL FUNCTIONS (Appended for Build Fix)
+// ============================================
+
+export async function deleteMarketingLead(id: number) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.delete(marketingLeads).where(eq(marketingLeads.id, id));
+}
+
+// Marketing Campaigns
+export async function getAllMarketingCampaigns(filters?: { status?: string; type?: string }) {
+    const db = await getDb();
+    if (!db) return [];
+
+    let query = db.select().from(marketingCampaigns);
+    const conditions = [];
+
+    if (filters?.status) {
+        conditions.push(eq(marketingCampaigns.status, filters.status as any));
+    }
+    if (filters?.type) {
+        conditions.push(eq(marketingCampaigns.type, filters.type as any));
+    }
+
+    if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(marketingCampaigns.createdAt));
+}
+
+export async function getMarketingCampaignById(id: number) {
+    const db = await getDb();
+    if (!db) return undefined;
+    const result = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
+    return result[0];
+}
+
+export async function createMarketingCampaign(campaign: InsertMarketingCampaign) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    const result = await db.insert(marketingCampaigns).values(campaign);
+    const insertedId = result[0].insertId;
+    const created = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, insertedId)).limit(1);
+    return created[0];
+}
+
+export async function updateMarketingCampaign(id: number, updates: Partial<InsertMarketingCampaign>) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.update(marketingCampaigns).set({ ...updates, updatedAt: new Date() }).where(eq(marketingCampaigns.id, id));
+    const updated = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
+    return updated[0];
+}
+
+export async function deleteMarketingCampaign(id: number) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.delete(marketingCampaigns).where(eq(marketingCampaigns.id, id));
+}
+
+// Outreach Activities
+export async function getOutreachActivitiesByLeadId(leadId: number) {
+    const db = await getDb();
+    if (!db) return [];
+    return await db.select().from(outreachActivities).where(eq(outreachActivities.leadId, leadId)).orderBy(desc(outreachActivities.createdAt));
+}
+
+export async function createOutreachActivity(activity: InsertOutreachActivity) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    const result = await db.insert(outreachActivities).values(activity);
+    const insertedId = result[0].insertId;
+    const created = await db.select().from(outreachActivities).where(eq(outreachActivities.id, insertedId)).limit(1);
+    return created[0];
+}
+
+// Social Media Posts
+export async function getAllSocialMediaPosts(filters?: { platform?: string; status?: string; createdBy?: number }) {
+    const db = await getDb();
+    if (!db) return [];
+
+    let query = db.select().from(socialMediaPosts);
+    const conditions = [];
+
+    if (filters?.platform) {
+        conditions.push(eq(socialMediaPosts.platform, filters.platform as any));
+    }
+    if (filters?.status) {
+        conditions.push(eq(socialMediaPosts.status, filters.status as any));
+    }
+    if (filters?.createdBy) {
+        conditions.push(eq(socialMediaPosts.createdBy, filters.createdBy));
+    }
+
+    if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(socialMediaPosts.createdAt));
+}
+
+export async function getSocialMediaPostById(id: number) {
+    const db = await getDb();
+    if (!db) return undefined;
+    const result = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, id)).limit(1);
+    return result[0];
+}
+
+export async function createSocialMediaPost(post: InsertSocialMediaPost) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    const result = await db.insert(socialMediaPosts).values(post);
+    const insertedId = result[0].insertId;
+    const created = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, insertedId)).limit(1);
+    return created[0];
+}
+
+export async function updateSocialMediaPost(id: number, updates: Partial<InsertSocialMediaPost>) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.update(socialMediaPosts).set({ ...updates, updatedAt: new Date() }).where(eq(socialMediaPosts.id, id));
+    const updated = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, id)).limit(1);
+    return updated[0];
+}
+
+export async function deleteSocialMediaPost(id: number) {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    await db.delete(socialMediaPosts).where(eq(socialMediaPosts.id, id));
+}
+
+// Scraper Results
+export async function getAllVenueScraperResults(filters?: { processed?: boolean; convertedToLead?: boolean }) {
+    const db = await getDb();
+    if (!db) return [];
+
+    let query = db.select().from(venueScraperResults);
+    const conditions = [];
+
+    if (filters?.processed !== undefined) {
+        conditions.push(eq(venueScraperResults.processed, filters.processed));
+    }
+    if (filters?.convertedToLead !== undefined) {
+        conditions.push(eq(venueScraperResults.convertedToLead, filters.convertedToLead));
+    }
+
+    if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(venueScraperResults.createdAt));
+}
