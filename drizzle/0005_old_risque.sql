@@ -102,7 +102,7 @@ CREATE TABLE `track_id_requests` (
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `track_id_requests_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `user_favorites` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE `user_favorites` (
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `user_favorites_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `user_playlist_items` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`playlistId` int NOT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE `user_playlist_items` (
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `user_playlist_items_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `user_playlists` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE `user_playlists` (
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `user_playlists_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `video_testimonials` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(255) NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE `video_testimonials` (
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `video_testimonials_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `videos` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`title` varchar(255) NOT NULL,
@@ -164,10 +164,10 @@ CREATE TABLE `videos` (
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `videos_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
-ALTER TABLE `purchases` MODIFY COLUMN `status` enum('pending','completed','refunded','failed','cancelled') NOT NULL DEFAULT 'pending';--> statement-breakpoint
-ALTER TABLE `purchases` ADD `paymentProvider` enum('stripe','paypal','manual');--> statement-breakpoint
-ALTER TABLE `purchases` ADD `paymentIntentId` varchar(255);--> statement-breakpoint
-ALTER TABLE `purchases` ADD `paypalOrderId` varchar(255);--> statement-breakpoint
-ALTER TABLE `purchases` ADD `transactionId` varchar(255);--> statement-breakpoint
+
+ALTER TABLE `purchases` MODIFY COLUMN `status` enum('pending','completed','refunded','failed','cancelled') NOT NULL DEFAULT 'pending';
+ALTER TABLE `purchases` ADD `paymentProvider` enum('stripe','paypal','manual');
+ALTER TABLE `purchases` ADD `paymentIntentId` varchar(255);
+ALTER TABLE `purchases` ADD `paypalOrderId` varchar(255);
+ALTER TABLE `purchases` ADD `transactionId` varchar(255);
 ALTER TABLE `purchases` ADD `metadata` text;
