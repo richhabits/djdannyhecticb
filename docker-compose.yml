@@ -23,6 +23,7 @@ services:
       - .env
     volumes:
       - ./dist/index.mjs:/app/dist/index.mjs
+      - ./dist/public:/app/dist/public
     ports:
       - "3000:3000"
     deploy:
