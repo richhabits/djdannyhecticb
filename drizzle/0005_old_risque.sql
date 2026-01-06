@@ -15,7 +15,7 @@ CREATE TABLE `articles` (
 	CONSTRAINT `articles_id` PRIMARY KEY(`id`),
 	CONSTRAINT `articles_slug_unique` UNIQUE(`slug`)
 );
---> statement-breakpoint
+
 CREATE TABLE `media_library` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`filename` varchar(255) NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE `media_library` (
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `media_library_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `music_recommendations` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int,
@@ -39,7 +39,7 @@ CREATE TABLE `music_recommendations` (
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `music_recommendations_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `social_media_feed_posts` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`platform` enum('instagram','tiktok','youtube','twitter','facebook') NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE `social_media_feed_posts` (
 	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `social_media_feed_posts_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `social_proof_notifications` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`type` enum('booking','purchase','favorite','share','comment','view') NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE `social_proof_notifications` (
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `social_proof_notifications_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `social_shares` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`entityType` enum('mix','track','event','podcast','video','blog') NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE `social_shares` (
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `social_shares_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
+
 CREATE TABLE `track_id_requests` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`userId` int,
