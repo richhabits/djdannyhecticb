@@ -136,7 +136,7 @@ export const createAdminSessionToken = (userId: number, email: string) => create
 /**
  * Authenticate admin from request (check session token)
  */
-export async function authenticateAdminRequest(
+export async function authenticateSession(
   req: Request
 ): Promise<{ success: boolean; user?: any; error?: string }> {
   try {
@@ -151,9 +151,9 @@ export async function authenticateAdminRequest(
     const { payload } = await jwtVerify(token, secret);
     const sessionPayload = payload as unknown as AdminSessionPayload;
 
-    if (sessionPayload.role !== "admin") {
-      return { success: false, error: "Not an admin session" };
-    }
+    // if (sessionPayload.role !== "admin") {
+    //   return { success: false, error: "Not an admin session" };
+    // }
 
     // Get user from database
     const db = await getDb();
@@ -168,13 +168,13 @@ export async function authenticateAdminRequest(
       .limit(1)
       .then((rows) => rows[0]);
 
-    if (!user || user.role !== "admin") {
-      return { success: false, error: "Admin user not found" };
+    if (!user) {
+      return { success: false, error: "User not found" };
     }
 
     return { success: true, user };
   } catch (error) {
-    console.error("[AdminAuth] Error authenticating request:", error);
+    console.error("[Auth] Error authenticating request:", error);
     return { success: false, error: "Invalid session" };
   }
 }
