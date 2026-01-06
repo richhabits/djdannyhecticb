@@ -17,6 +17,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerAdminAuthRoutes } from "./adminAuthRoutes";
 import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
+import { registerUploadRoutes } from "../routes/upload";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -88,6 +89,8 @@ async function startServer() {
   registerSEORoutes(app);
   // Payment webhooks (Stripe, PayPal)
   registerPaymentRoutes(app);
+  // File Uploads
+  registerUploadRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

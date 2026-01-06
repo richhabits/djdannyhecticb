@@ -1,3 +1,9 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
 import { Button } from "@/components/ui/button";
 import { Share2, Facebook, Twitter, Instagram, Linkedin, MessageCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";

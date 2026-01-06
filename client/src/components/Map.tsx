@@ -1,4 +1,10 @@
 /**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+/**
  * GOOGLE MAPS FRONTEND INTEGRATION - ESSENTIAL GUIDE
  *
  * USAGE FROM PARENT COMPONENT:

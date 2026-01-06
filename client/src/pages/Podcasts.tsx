@@ -4,6 +4,7 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
@@ -11,11 +12,24 @@ import { Music, Play, Headphones, Music as SpotifyIcon, X } from "lucide-react";
 import { Link } from "wouter";
 import { formatDate } from "date-fns";
 import AudioPlayer from "@/components/AudioPlayer";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
+import { ShareModal } from "@/components/ShareModal";
+import { Share2 } from "lucide-react";
 
 export default function Podcasts() {
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const { data: podcasts, isLoading } = trpc.podcasts.list.useQuery();
   const { data: streamingLinks } = trpc.streaming.links.useQuery();
+  const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
+
+  const sortedPodcasts = React.useMemo(() => {
+    if (!podcasts) return [];
+    return [...podcasts].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return sortBy === "newest" ? dateB - dateA : dateA - dateB;
+    });
+  }, [podcasts, sortBy]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -68,25 +82,25 @@ export default function Podcasts() {
       {/* Episodes */}
       <section className="py-16 md:py-24">
         <div className="container">
-          <h2 className="text-2xl font-bold mb-8">Latest Episodes</h2>
-          {isLoading ? (
-            <div className="space-y-6">
-              {[...Array(4)].map((_, i) => (
-                <Card key={i} className="p-6 animate-pulse">
-                  <div className="flex gap-6">
-                    <div className="w-24 h-24 bg-muted rounded-lg flex-shrink-0" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-5 bg-muted rounded w-1/2" />
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-4 bg-muted rounded w-1/3" />
-                    </div>
-                  </div>
-                </Card>
-              ))}
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold">Latest Episodes</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold uppercase text-muted-foreground mr-2">Sort:</span>
+              <select
+                className="bg-background border border-border rounded px-2 py-1 text-sm font-medium"
+                onChange={(e) => setSortBy(e.target.value as "newest" | "oldest")}
+                value={sortBy}
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+              </select>
             </div>
-          ) : podcasts && podcasts.length > 0 ? (
+          </div>
+          {isLoading ? (
+            <SkeletonCard count={4} />
+          ) : sortedPodcasts && sortedPodcasts.length > 0 ? (
             <div className="space-y-6">
-              {podcasts.map((podcast) => (
+              {sortedPodcasts.map((podcast) => (
                 <Card key={podcast.id} className="p-6 hover:border-accent transition">
                   <div className="flex gap-6">
                     {/* Cover */}
@@ -149,6 +163,15 @@ export default function Podcasts() {
                             </Button>
                           </a>
                         )}
+                        <ShareModal
+                          title={`Listen to ${podcast.title}`}
+                          url={`${window.location.origin}/podcasts`}
+                          trigger={
+                            <Button size="sm" variant="outline">
+                              <Share2 className="w-4 h-4" />
+                            </Button>
+                          }
+                        />
                       </div>
                     </div>
                   </div>
@@ -159,13 +182,13 @@ export default function Podcasts() {
               {playingTrackId && (
                 <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
                   <AudioPlayer
-                    tracks={podcasts.map(p => ({
+                    tracks={(podcasts || []).map(p => ({
                       id: String(p.id),
                       title: p.title,
                       artist: "DJ Danny Hectic B",
                       duration: p.duration || 0,
                       url: p.audioUrl,
-                      coverArt: p.coverImageUrl,
+                      coverArt: p.coverImageUrl || undefined,
                     }))}
                     autoPlay
                   />

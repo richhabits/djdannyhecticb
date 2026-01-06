@@ -1,3 +1,9 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
 import { useState, useEffect } from "react";
 import { useLocation as useWouterLocation } from "wouter";
 import {
@@ -72,11 +78,30 @@ export function GlobalSearch() {
           onValueChange={setQuery}
         />
         <CommandList>
+          {query.length === 0 && (
+            <CommandGroup heading="Quick Links">
+              <CommandItem onSelect={() => handleSelect("/mixes")}>
+                <Disc className="mr-2 h-4 w-4" />
+                <span>Browse Mixes</span>
+              </CommandItem>
+              <CommandItem onSelect={() => handleSelect("/podcasts")}>
+                <Mic2 className="mr-2 h-4 w-4" />
+                <span>Latest Podcasts</span>
+              </CommandItem>
+              <CommandItem onSelect={() => handleSelect("/events")}>
+                <Calendar className="mr-2 h-4 w-4" />
+                <span>Upcoming Events</span>
+              </CommandItem>
+              <CommandItem onSelect={() => handleSelect("/shop")}>
+                <span className="mr-2 h-4 w-4 flex items-center justify-center font-bold text-xs">$</span>
+                <span>Merch Shop</span>
+              </CommandItem>
+            </CommandGroup>
+          )}
+
           {isLoading && query.length > 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">Searching...</div>
-          ) : query.length === 0 ? (
-            <CommandEmpty>Start typing to search...</CommandEmpty>
-          ) : totalResults === 0 ? (
+          ) : query.length > 0 && totalResults === 0 ? (
             <CommandEmpty>No results found.</CommandEmpty>
           ) : (
             <>

@@ -1,4 +1,10 @@
 /**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+/**
  * Base HTTP error class with status code.
  * Throw this from route handlers to send specific HTTP errors.
  */

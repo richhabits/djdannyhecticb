@@ -12,6 +12,8 @@ import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
+import { ShareModal } from "@/components/ShareModal";
+import { Share2 } from "lucide-react";
 import ReactPlayer from "react-player";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { MusicStructuredData } from "@/components/StructuredData";
@@ -29,14 +31,14 @@ export default function Mixes() {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "title">("newest");
 
   const { data: mixes, isLoading } = trpc.mixes.free.useQuery();
-  
+
   // Get user favorites if authenticated
   const { data: favorites = [] } = trpc.favorites.list.useQuery(
     { entityType: "mix" },
     { enabled: isAuthenticated }
   );
   const favoriteIds = new Set(favorites.map((f: any) => f.entityId));
-  
+
   const toggleFavorite = trpc.favorites.add.useMutation();
   const removeFavorite = trpc.favorites.remove.useMutation();
 
@@ -126,6 +128,23 @@ export default function Mixes() {
     }
   };
 
+  // Pre-calculate filtered mixes to avoid complex JSX logic
+  let filteredMixes = ((mixes || sampleTracks) as any[]).filter((mix) => {
+    if (filterGenre !== "All" && mix.genre !== filterGenre) return false;
+    return true;
+  });
+
+  // Sort
+  filteredMixes = [...filteredMixes].sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    } else if (sortBy === "oldest") {
+      return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+    } else {
+      return (a.title || "").localeCompare(b.title || "");
+    }
+  });
+
   return (
     <>
       <MetaTagsComponent
@@ -185,7 +204,7 @@ export default function Mixes() {
               <SlidersHorizontal className="w-4 h-4 mr-2" />
               Filters
             </Button>
-            
+
             {showFilters && (
               <div className="flex flex-wrap gap-4 items-center w-full">
                 <div className="flex items-center gap-2">
@@ -223,24 +242,19 @@ export default function Mixes() {
 
         {/* Mixes List - Raw Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:gap-[1px] bg-foreground border-b border-foreground">
-          {(() => {
-            let filtered = (mixes || sampleTracks).filter((mix) => {
-              if (filterGenre !== "All" && mix.genre !== filterGenre) return false;
-              return true;
-            });
-
-            // Sort
-            filtered = [...filtered].sort((a, b) => {
-              if (sortBy === "newest") {
-                return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-              } else if (sortBy === "oldest") {
-                return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
-              } else {
-                return (a.title || "").localeCompare(b.title || "");
-              }
-            });
-
-            return filtered.map((mix) => {
+          {isLoading ? (
+            // Skeleton Loading State
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-background h-full p-6 space-y-4">
+                <div className="aspect-video bg-muted animate-pulse" />
+                <div className="space-y-3">
+                  <div className="h-8 bg-muted animate-pulse w-3/4" />
+                  <div className="h-4 bg-muted animate-pulse w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : (
+            filteredMixes.map((mix) => {
               const isPlayingExternal = playingExternal === String(mix.id);
               const hasExternalLink = mix.soundcloudUrl || mix.youtubeUrl;
               const isFavorited = isAuthenticated && favoriteIds.has(mix.id);
@@ -248,47 +262,47 @@ export default function Mixes() {
               return (
                 <div key={mix.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
 
-                {/* Visual / Player Area */}
-                <div className="aspect-video bg-black relative overflow-hidden border-b border-foreground">
-                  {isPlayingExternal ? (
-                    <div className="w-full h-full">
-                      <ReactPlayer
-                        url={mix.soundcloudUrl || mix.youtubeUrl}
-                        width="100%"
-                        height="100%"
-                        playing={true}
-                        controls={true}
-                        config={{ soundcloud: { options: { visual: true } } }}
-                      />
-                      <button
-                        onClick={() => setPlayingExternal(null)}
-                        className="absolute top-0 right-0 p-2 bg-foreground text-background font-bold uppercase text-xs"
-                      >
-                        [X] Close
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {(mix.coverImageUrl || mix.coverArt) ? (
-                        <img src={mix.coverImageUrl || mix.coverArt} className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-0" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-muted/10">
-                          <Disc className="w-16 h-16 text-muted-foreground opacity-20" />
-                        </div>
-                      )}
-
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-0 gap-4">
-                        <Button
-                          onClick={() => handlePlayMix(mix)}
-                          className="rounded-none bg-foreground text-background hover:bg-white border border-foreground font-bold uppercase"
+                  {/* Visual / Player Area */}
+                  <div className="aspect-video bg-black relative overflow-hidden border-b border-foreground">
+                    {isPlayingExternal ? (
+                      <div className="w-full h-full">
+                        <ReactPlayer
+                          url={mix.soundcloudUrl || mix.youtubeUrl}
+                          width="100%"
+                          height="100%"
+                          playing={true}
+                          controls={true}
+                          config={{ soundcloud: { options: { visual: true } } }}
+                        />
+                        <button
+                          onClick={() => setPlayingExternal(null)}
+                          className="absolute top-0 right-0 p-2 bg-foreground text-background font-bold uppercase text-xs"
                         >
-                          {hasExternalLink ? <Play className="w-5 h-5 mr-2" /> : <Headphones className="w-5 h-5 mr-2" />}
-                          {hasExternalLink ? "Stream" : "Listen"}
-                        </Button>
+                          [X] Close
+                        </button>
                       </div>
-                    </>
-                  )}
-                </div>
+                    ) : (
+                      <>
+                        {(mix.coverImageUrl || mix.coverArt) ? (
+                          <img src={mix.coverImageUrl || mix.coverArt} className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-0" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted/10">
+                            <Disc className="w-16 h-16 text-muted-foreground opacity-20" />
+                          </div>
+                        )}
+
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-0 gap-4">
+                          <Button
+                            onClick={() => handlePlayMix(mix)}
+                            className="rounded-none bg-foreground text-background hover:bg-white border border-foreground font-bold uppercase"
+                          >
+                            {hasExternalLink ? <Play className="w-5 h-5 mr-2" /> : <Headphones className="w-5 h-5 mr-2" />}
+                            {hasExternalLink ? "Stream" : "Listen"}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
                   {/* Meta */}
                   <div className="p-6 flex-1 flex flex-col justify-between">
@@ -335,15 +349,25 @@ export default function Mixes() {
                         variant="outline"
                         className="flex-1 rounded-none border-foreground font-bold uppercase text-xs h-auto py-3 hover:bg-foreground hover:text-background"
                       >
+                        <Download className="w-4 h-4 mr-2" />
                         Download
                       </Button>
+                      <ShareModal
+                        title={`Listen to ${mix.title} by ${mix.artist}`}
+                        url={`${window.location.origin}/mixes`}
+                        trigger={
+                          <Button variant="outline" className="rounded-none border-foreground font-bold uppercase text-xs h-auto py-3 hover:bg-foreground hover:text-background px-4">
+                            <Share2 className="w-4 h-4" />
+                          </Button>
+                        }
+                      />
                     </div>
                   </div>
 
                 </div>
               );
-            });
-          })()}
+            })
+          )}
         </section>
 
         {/* Footer CTA */}

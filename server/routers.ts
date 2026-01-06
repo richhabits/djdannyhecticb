@@ -94,8 +94,30 @@ export const appRouter = router({
       }),
     adminList: adminProcedure.query(() => db.getAllMixes()),
     adminCreate: adminProcedure
-      .input(z.string()) // simplified for now or match old schema
-      .mutation(() => { throw new Error("Not implemented") }),
+      .input(z.object({
+        title: z.string().min(1).max(255),
+        audioUrl: z.string().url(),
+        imageUrl: z.string().url().optional(),
+        description: z.string().optional(),
+        duration: z.number().optional(),
+        genres: z.array(z.string()).optional(),
+        isExclusive: z.boolean().default(false),
+      })) // Match db.createMix schema
+      .mutation(async ({ input, ctx }) => {
+        const { createMix, createAuditLog } = await import("./db");
+        const mix = await createMix({
+          ...input,
+          genres: input.genres ? JSON.stringify(input.genres) : undefined
+        });
+        await createAuditLog({
+          action: "create_mix",
+          entityType: "mix",
+          entityId: mix.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return mix;
+      }),
   }),
 
   // Old bookings router removed - using new eventBookings system

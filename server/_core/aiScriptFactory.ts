@@ -1,4 +1,10 @@
 /**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+/**
  * AI Script Factory
  * 
  * Generates scripts for various purposes using the AI provider abstraction

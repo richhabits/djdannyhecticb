@@ -11,6 +11,7 @@ import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import LiveChat from "./components/LiveChat";
+import { AnimatedBackground } from "./components/AnimatedBackground";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import History from "./pages/History";
@@ -209,6 +210,7 @@ function App() {
       // switchable
       >
         <TooltipProvider>
+          <AnimatedBackground />
           <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
           <Toaster />
           <GlobalBanner />

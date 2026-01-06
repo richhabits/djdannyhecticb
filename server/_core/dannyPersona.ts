@@ -1,4 +1,10 @@
 /**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+/**
  * Danny Hectic B Persona Configuration
  * 
  * This file contains Danny's personality, voice, and knowledge base

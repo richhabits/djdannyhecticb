@@ -1,3 +1,9 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { setMetaTags, MetaTags } from "@/lib/meta";

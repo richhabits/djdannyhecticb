@@ -1,3 +1,9 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
 export const ENV = {
   // Backend can read either APP_ID or VITE_APP_ID (for compatibility)
   appId: process.env.APP_ID ?? process.env.VITE_APP_ID ?? "",

@@ -1,4 +1,10 @@
 /**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+/**
  * Auto Promo Engine - Generates promo clips, subtitles, thumbnails
  * 
  * TODO: Replace with real AI provider call when ready

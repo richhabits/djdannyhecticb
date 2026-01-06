@@ -1,3 +1,9 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -187,6 +193,10 @@
   /* Tactile Hover Effect */
   .hover-tactile {
     @apply transition-transform duration-75 active:translate-x-[2px] active:translate-y-[2px];
+  }
+
+  .hover-pop {
+    @apply transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98];
   }
 
   /* High contrast selection */

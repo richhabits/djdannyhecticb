@@ -1,3 +1,9 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -23,7 +29,6 @@ export default defineConfig({
     minify: "esbuild",
     cssMinify: true,
     reportCompressedSize: true,
-    chunkSizeWarningLimit: 2000,
     chunkSizeWarningLimit: 2000,
   },
 });
