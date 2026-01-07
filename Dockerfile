@@ -60,8 +60,10 @@ RUN pnpm install --prod --frozen-lockfile --prefer-offline && \
     pnpm store prune && \
     rm -rf /root/.local/share/pnpm/store/.tmp
 
-# Copy built files only
+# Copy built files and migrations
 COPY --from=build-client /app/dist ./dist
+COPY --from=build-client /app/drizzle ./drizzle
+
 
 # Create minimal .env
 RUN touch .env

@@ -116,8 +116,16 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
+    // Run migrations on production startup
+    try {
+      const { runMigrations } = await import("./migrate");
+      await runMigrations();
+    } catch (e) {
+      console.error("[Migration] Failed to import or run migrator:", e);
+    }
     serveStatic(app);
   }
+
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
