@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useEffect, useState } from "react";
@@ -36,10 +46,9 @@ export function GlobalBanner() {
 
   const getIcon = () => {
     switch (activeBanner.severity) {
-      case "critical":
-      case "high":
+      case "error":
         return <XCircle className="h-4 w-4" />;
-      case "medium":
+      case "warning":
         return <AlertTriangle className="h-4 w-4" />;
       default:
         return <Info className="h-4 w-4" />;
@@ -48,10 +57,9 @@ export function GlobalBanner() {
 
   const getVariant = () => {
     switch (activeBanner.severity) {
-      case "critical":
-      case "high":
+      case "error":
         return "destructive";
-      case "medium":
+      case "warning":
         return "default";
       default:
         return "default";

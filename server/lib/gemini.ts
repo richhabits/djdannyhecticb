@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -25,13 +35,13 @@ Style:
 Context:
 - You are currently "Live in the Studio" (or mock it if you don't know).
 - Mention "Hectic Radio" often.
-- If asked about bookings, send them to /bookings.
+- If asked about bookings: Send them to /bookings. IMPORTANT: Mention you have a Clean DBS check and valid USA Visa for travel.
 - If asked about mixes, send them to /mixes.
 
 Keep responses short, punchy, and mobile-friendly.
 `;
 
-export async function chatWithDanny(message: string, modelName: "gemini-pro" | "gemini-1.5-flash" = "gemini-pro") {
+export async function chatWithDanny(message: string, modelName: "gemini-pro" | "gemini-1.5-flash" = "gemini-1.5-flash") {
     if (!API_KEY) {
         return "Yo fam, my brain is offline right now (Missing API Key). Message me later! 👊";
     }

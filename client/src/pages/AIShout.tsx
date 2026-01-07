@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useState } from "react";
@@ -29,7 +39,7 @@ export default function AIShout() {
     name: "",
     location: "",
     recipient: "",
-    vibe: "Fun" as "Fun" | "Savage" | "Romantic" | "Motivational",
+    vibe: "Fun" as any,
     message: "",
     includeVoice: false,
     aiContentConsent: false,
@@ -38,15 +48,15 @@ export default function AIShout() {
   const createScript = trpc.aiStudio.scripts.create.useMutation({
     onSuccess: async (job) => {
       toast.success("Your Hectic AI Shout is being cooked! Check back soon.");
-      
+
       // If includeVoice is checked, create voice job
-      if (formData.includeVoice && job.id) {
+      if (formData.includeVoice && job && (job as any).id) {
         createVoice.mutate({
-          scriptJobId: job.id,
+          scriptJobId: (job as any).id,
           voiceProfile: "hectic_main",
         });
       }
-      
+
       setFormData({
         name: "",
         location: "",
@@ -79,7 +89,7 @@ export default function AIShout() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.aiContentConsent) {
       toast.error("Please consent to AI content usage");
       return;

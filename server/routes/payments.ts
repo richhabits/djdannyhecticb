@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import express from "express";
@@ -17,7 +27,7 @@ router.post(
   express.raw({ type: "application/json" }),
   async (req, res) => {
     const stripe = new Stripe(ENV.stripeSecretKey, {
-      apiVersion: "2024-12-18.acacia",
+      apiVersion: "2025-02-24.acacia",
     });
 
     const sig = req.headers["stripe-signature"];

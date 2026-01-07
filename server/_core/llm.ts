@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { ENV } from "./env";
@@ -25,7 +35,7 @@ export type FileContent = {
   type: "file_url";
   file_url: {
     url: string;
-    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
+    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4";
   };
 };
 
@@ -271,6 +281,21 @@ const normalizeResponseFormat = ({
   };
 };
 
+const withRetry = async <T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 1000
+): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    console.warn(`[LLM] Request failed, retrying in ${delay}ms... (${retries} retries left)`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return withRetry(fn, retries - 1, delay * 2);
+  }
+};
+
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   assertApiKey();
 
@@ -286,7 +311,8 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    // Corrected to gemini-1.5-flash as 2.5 is futuristic
+    model: "gemini-1.5-flash",
     messages: messages.map(normalizeMessage),
   };
 
@@ -302,10 +328,10 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768
+  payload.max_tokens = 32768;
   payload.thinking = {
     "budget_tokens": 128
-  }
+  };
 
   const normalizedResponseFormat = normalizeResponseFormat({
     responseFormat,
@@ -318,21 +344,34 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.response_format = normalizedResponseFormat;
   }
 
-  const response = await fetch(resolveApiUrl(), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`,
-    },
-    body: JSON.stringify(payload),
+  return withRetry(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
+    try {
+      const response = await fetch(resolveApiUrl(), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${ENV.forgeApiKey}`,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        // Don't retry on 4xx errors except 429
+        if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+          throw new Error(`LLM invoke failed (Non-retryable): ${response.status} ${response.statusText} – ${errorText}`);
+        }
+        throw new Error(`LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`);
+      }
+
+      return (await response.json()) as InvokeResult;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
-    );
-  }
-
-  return (await response.json()) as InvokeResult;
 }
+

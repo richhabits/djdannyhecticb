@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -111,7 +121,7 @@ export default function Mixes() {
     setSelectedMixes(mixes.map(m => ({
       id: String(m.id),
       title: m.title,
-      artist: m.artist || "DJ Danny Hectic B",
+      artist: "DJ Danny Hectic B",
       duration: m.duration || 0,
       url: m.audioUrl,
       coverArt: m.coverImageUrl,
@@ -158,7 +168,7 @@ export default function Mixes() {
         <MusicStructuredData
           name={mixes[0].title}
           description={mixes[0].description || mixes[0].title}
-          image={mixes[0].coverImageUrl}
+          image={mixes[0].coverImageUrl || undefined}
           url={typeof window !== "undefined" ? `${window.location.origin}/mixes/${mixes[0].id}` : `https://djdannyhecticb.co.uk/mixes/${mixes[0].id}`}
           datePublished={mixes[0].createdAt.toISOString()}
           audioUrl={mixes[0].audioUrl}
@@ -267,12 +277,14 @@ export default function Mixes() {
                     {isPlayingExternal ? (
                       <div className="w-full h-full">
                         <ReactPlayer
-                          url={mix.soundcloudUrl || mix.youtubeUrl}
-                          width="100%"
-                          height="100%"
-                          playing={true}
-                          controls={true}
-                          config={{ soundcloud: { options: { visual: true } } }}
+                          {...{
+                            url: mix.soundcloudUrl || mix.youtubeUrl || "",
+                            width: "100%",
+                            height: "100%",
+                            playing: true,
+                            controls: true,
+                            config: { soundcloud: { options: { visual: true } } }
+                          } as any}
                         />
                         <button
                           onClick={() => setPlayingExternal(null)}

@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useRoute } from "wouter";
@@ -14,6 +24,7 @@ import { MetaTagsComponent } from "@/components/MetaTags";
 import { UserPlus, UserMinus, MessageSquare, Heart, Share2, Trophy, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Profile() {
   const [, params] = useRoute<{ username: string }>("/profile/:username");
@@ -40,7 +51,8 @@ export default function Profile() {
   );
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const currentProfileId = 1; // TODO: Get from auth
+  const { user } = useAuthContext();
+  const currentProfileId = user?.id;
 
   const followMutation = trpc.genz.follows.follow.useMutation({
     onSuccess: () => {
@@ -91,7 +103,7 @@ export default function Profile() {
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <Avatar className="h-24 w-24 -mt-12 border-4 border-background">
-                <AvatarImage src={profile.avatarUrl} />
+                <AvatarImage src={profile.avatarUrl || undefined} />
                 <AvatarFallback>{profile.username[0].toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -112,6 +124,7 @@ export default function Profile() {
                   <Button
                     variant={isFollowing ? "outline" : "default"}
                     onClick={() => {
+                      if (!currentProfileId) return;
                       if (isFollowing) {
                         unfollowMutation.mutate({ followerId: currentProfileId, followingId: profile.id });
                       } else {

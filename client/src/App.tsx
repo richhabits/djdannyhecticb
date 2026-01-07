@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { Toaster } from "@/components/ui/sonner";
@@ -191,6 +201,8 @@ import { initGA, logPageView } from "./lib/analytics";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
+import { AuthProvider } from "./contexts/AuthContext";
+
 function App() {
   const [location] = useLocation();
   console.log("App Component Rendering");
@@ -209,18 +221,20 @@ function App() {
         defaultTheme="dark"
       // switchable
       >
-        <TooltipProvider>
-          <AnimatedBackground />
-          <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
-          <Toaster />
-          <GlobalBanner />
-          <GlobalNav />
-          <Router />
-          <LiveAudioPlayer />
-          <AIDannyFloating />
-          {/* <HecticOnboarding /> */}
-          <SocialProofNotifications />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <AnimatedBackground />
+            <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
+            <Toaster />
+            <GlobalBanner />
+            <GlobalNav />
+            <Router />
+            <LiveAudioPlayer />
+            <AIDannyFloating />
+            {/* <HecticOnboarding /> */}
+            <SocialProofNotifications />
+          </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

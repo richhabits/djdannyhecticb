@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -146,7 +156,7 @@ export default function AdminBookings() {
                     bookings.map((booking) => (
                       <TableRow key={booking.id}>
                         <TableCell>
-                          <div className="font-medium">{booking.eventName || booking.name}</div>
+                          <div className="font-medium">{booking.name}</div>
                           {booking.organisation && (
                             <div className="text-sm text-muted-foreground">
                               {booking.organisation}
@@ -157,12 +167,12 @@ export default function AdminBookings() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-1 text-sm">
                               <Mail className="w-3 h-3" />
-                              {booking.contactEmail || booking.email}
+                              {booking.email}
                             </div>
-                            {booking.contactPhone || booking.phone && (
+                            {booking.phone && (
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Phone className="w-3 h-3" />
-                                {booking.contactPhone || booking.phone}
+                                {booking.phone}
                               </div>
                             )}
                           </div>
@@ -177,7 +187,7 @@ export default function AdminBookings() {
                             </div>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <MapPin className="w-3 h-3" />
-                              {booking.eventLocation || booking.location}
+                              {booking.location}
                             </div>
                           </div>
                         </TableCell>
@@ -186,7 +196,7 @@ export default function AdminBookings() {
                         </TableCell>
                         <TableCell>
                           <Select
-                            value={booking.status}
+                            value={booking.status || "pending"}
                             onValueChange={(value) => handleStatusChange(booking.id, value)}
                           >
                             <SelectTrigger className="w-32">

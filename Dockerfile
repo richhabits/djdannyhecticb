@@ -27,8 +27,10 @@ ENV VITE_APP_TITLE="DJ Danny Hectic B"
 ENV VITE_APP_LOGO="/logo-icon.png"
 ENV VITE_APP_ID="djdannyhecticb"
 
-# Create .env for build and populate with key
-RUN echo "VITE_STRIPE_PUBLISHABLE_KEY=pk_live_51SmIYR2HkyKRVyFUZFMrRAOkuOsnf3fyRfcL4vkS3izcWs2nCyauNDRnDk2oCnAbMBmawrTXSNANGUd1rBFwi7bz00bFhWUfo4" > .env
+# VITE_STRIPE_PUBLISHABLE_KEY should be passed as build-arg or secret if needed at build time
+# for now we use a placeholder or assume it's set in the environment
+ARG VITE_STRIPE_PUBLISHABLE_KEY
+ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
 
 RUN pnpm run build && \
     # Verify server bundle was created
@@ -70,7 +72,9 @@ RUN rm -rf /tmp/* /var/cache/apk/* /root/.npm /root/.cache && \
     find /app -name "*.test.*" -delete && \
     find /app -name "*.spec.*" -delete && \
     find /app -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null || true && \
-    find /app -name "*.md" ! -name "README*" -delete 2>/dev/null || true
+    # Set ownership to node user
+    RUN chown -R node:node /app
+USER node
 
 EXPOSE 3000
 

@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,12 +21,13 @@ import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { Lock, Sparkles, Calendar, Trophy, Music } from "lucide-react";
 import { Link } from "wouter";
-
-const currentProfileId = 1; // TODO: Get from auth
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Backstage() {
+  const { user } = useAuthContext();
+  const currentProfileId = user?.id;
   const { data: innerCircleStatus } = trpc.innerCircle.getStatus.useQuery(
-    { profileId: currentProfileId },
+    { profileId: currentProfileId ?? 0 },
     { enabled: !!currentProfileId }
   );
 

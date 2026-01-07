@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 /**
@@ -28,53 +38,16 @@ export interface GhostModeContext {
  * TODO: Replace with real AI call
  */
 export async function callAIGhostMode(context: GhostModeContext): Promise<string> {
-  // TODO: Replace with actual AI provider call
-  // Example:
-  // const systemPrompt = buildSystemPromptForMode(context.mode);
-  // const response = await fetch(AI_API_URL, {
-  //   method: "POST",
-  //   headers: {
-  //     "Authorization": `Bearer ${process.env.AI_API_KEY}`,
-  //   },
-  //   body: JSON.stringify({
-  //     model: process.env.AI_MODEL,
-  //     messages: [
-  //       { role: "system", content: systemPrompt },
-  //       { role: "user", content: context.message },
-  //     ],
-  //   }),
-  // });
-  
-  // Stubbed responses based on mode
-  const { mode, message, recipientName } = context;
-  const lowerMessage = message.toLowerCase();
-  
-  if (mode === "roast") {
-    if (lowerMessage.includes("bad") || lowerMessage.includes("hate")) {
-      return `Yo ${recipientName || "fam"}, I hear you but that's a wild take! Let me put you on to something better. You're locked in but maybe your ears need a reset! 😂`;
-    }
-    return `Yo ${recipientName || "fam"}, you're trying me! But I respect the energy. Let's talk about what's really fire instead.`;
+  if (!process.env.AI_API_KEY) {
+    throw new Error("AI_API_KEY not found. Please configure your AI provider.");
   }
-  
-  if (mode === "hype") {
-    return `YO ${recipientName || "FAM"}! 🔥🔥🔥 THAT'S WHAT I'M TALKING ABOUT! You're absolutely locked in! This is the energy we need! More heat coming, stay tuned! 💥`;
-  }
-  
-  if (mode === "chill") {
-    return `Yo ${recipientName || "fam"}, all good. Just vibing here. What's on your mind? Let's keep it relaxed.`;
-  }
-  
-  if (mode === "motivational") {
-    return `Yo ${recipientName || "fam"}, keep pushing! You're doing your thing and that's what matters. Stay locked in, stay focused, and keep the energy high. You got this! 💪`;
-  }
-  
-  // Normal mode (default)
-  return `Yo ${recipientName || "fam"}, what's good? I'm here to help. What do you need?`;
+  // TODO: Implement actual AI provider call here
+  throw new Error("AI Ghost Mode Integration not fully implemented.");
 }
 
 function buildSystemPromptForMode(mode: AIToneMode): string {
   const basePrompt = "You are DJ Danny Hectic B. ";
-  
+
   switch (mode) {
     case "roast":
       return basePrompt + "You're in roast mode - be playful, witty, but still friendly. Light roasts only, keep it fun.";
@@ -119,7 +92,7 @@ export async function generateAICaption(
       "Just dropped a mix that's going to change everything! 💥",
     ],
   };
-  
+
   const options = captions[type] || captions.post;
   return options[Math.floor(Math.random() * options.length)];
 }

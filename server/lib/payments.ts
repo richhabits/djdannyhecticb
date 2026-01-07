@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import Stripe from "stripe";
@@ -16,7 +26,7 @@ export function getStripe(): Stripe | null {
   }
   if (!stripeInstance) {
     stripeInstance = new Stripe(ENV.stripeSecretKey, {
-      apiVersion: "2024-12-18.acacia",
+      apiVersion: "2025-02-24.acacia",
     });
   }
   return stripeInstance;
@@ -88,7 +98,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
   switch (event.type) {
     case "payment_intent.succeeded": {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      
+
       // Handle product purchases
       const purchaseId = parseInt(paymentIntent.metadata.purchaseId || "0");
       if (purchaseId) {
@@ -97,7 +107,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           transactionId: paymentIntent.id,
         });
       }
-      
+
       // Handle support/donations
       const supportEventId = parseInt(paymentIntent.metadata.supportEventId || "0");
       if (supportEventId) {
@@ -109,7 +119,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
     }
     case "payment_intent.payment_failed": {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      
+
       // Handle product purchases
       const purchaseId = parseInt(paymentIntent.metadata.purchaseId || "0");
       if (purchaseId) {
@@ -117,7 +127,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           status: "failed",
         });
       }
-      
+
       // Handle support/donations
       const supportEventId = parseInt(paymentIntent.metadata.supportEventId || "0");
       if (supportEventId) {

@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,7 +73,7 @@ export function HecticFeed({ includeVip = false }: { includeVip?: boolean }) {
     <div className="space-y-4">
       {posts.map((post) => {
         const reactions = JSON.parse(post.reactions || "{}");
-        const typeIcon = TYPE_ICONS[post.type] || <FileText className="w-5 h-5" />;
+        const typeIcon = TYPE_ICONS[post.type as keyof typeof TYPE_ICONS] || <FileText className="w-5 h-5" />;
 
         return (
           <Card key={post.id} className="glass">

@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 /**
@@ -118,6 +128,7 @@ export const mockShouts = [
     canReadOnAir: true,
     approved: true,
     readOnAir: true,
+    trackRequest: null,
     createdAt: new Date(Date.now() - 3600000),
     updatedAt: new Date(Date.now() - 3600000),
   },
@@ -128,6 +139,7 @@ export const mockTracks = [
     id: 1,
     title: "Re-Rewind",
     artist: "The Artful Dodger",
+    note: "Classic UKG banger",
     playedAt: new Date(),
   },
   {
@@ -217,7 +229,7 @@ export const mockIncidentBanners = [
   {
     id: 1,
     message: "Live from the studio soon! Lock in.",
-    type: "info",
+    severity: "info",
     isActive: true,
   }
 ];
@@ -256,3 +268,33 @@ export const moreMockFeedPosts = [
     createdAt: new Date(Date.now() - 172800000),
   }
 ];
+
+export const mockVideos = [
+  {
+    id: 1,
+    title: "Live from Ibiza",
+    description: "Sunset mix at Cafe Mambo",
+    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+    thumbnailUrl: "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb1?w=800&q=80",
+    duration: 3600,
+    views: 1200,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+];
+
+export const mockBlogPosts = [
+  {
+    id: 1,
+    title: "Top 10 Garage Tracks of 2024",
+    slug: "top-10-garage-2024",
+    excerpt: "Here are my picks for the year...",
+    content: "Full article content here...",
+    coverImageUrl: "https://images.unsplash.com/photo-1583795128727-6ec36d9ce2c6?w=800&q=80",
+    author: "Danny Hectic",
+    publishedAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+];
+

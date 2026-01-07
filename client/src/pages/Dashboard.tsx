@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -26,9 +36,9 @@ export default function Dashboard() {
     setChatMessages(prev => [...prev, { role: 'user', content }]);
     setIsChatLoading(true);
     setTimeout(() => {
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Thanks for your message! I can help you with DJ bookings, explore our mixes, check upcoming events, or answer questions about DJ Danny Hectic B services. What would you like to know?' 
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Thanks for your message! I can help you with DJ bookings, explore our mixes, check upcoming events, or answer questions about DJ Danny Hectic B services. What would you like to know?'
       }]);
       setIsChatLoading(false);
     }, 1000);
@@ -181,16 +191,15 @@ export default function Dashboard() {
                   {bookings.slice(0, 3).map((booking) => (
                     <div key={booking.id} className="flex items-center justify-between p-4 rounded-lg bg-card/50 border border-border">
                       <div>
-                        <p className="font-semibold">{booking.eventName}</p>
+                        <p className="font-semibold">{booking.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(booking.eventDate).toLocaleDateString()} • {booking.eventLocation}
+                          {new Date(booking.eventDate || new Date()).toLocaleDateString()} • {booking.location}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
-                        booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-gray-500/20 text-gray-400'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                          booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-gray-500/20 text-gray-400'
+                        }`}>
                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </span>
                     </div>

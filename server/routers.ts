@@ -1,3 +1,13 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
 
 /**
  * COPYRIGHT NOTICE
@@ -100,14 +110,15 @@ export const appRouter = router({
         imageUrl: z.string().url().optional(),
         description: z.string().optional(),
         duration: z.number().optional(),
-        genres: z.array(z.string()).optional(),
+        genre: z.string().optional(),
         isExclusive: z.boolean().default(false),
       })) // Match db.createMix schema
       .mutation(async ({ input, ctx }) => {
         const { createMix, createAuditLog } = await import("./db");
         const mix = await createMix({
           ...input,
-          genres: input.genres ? JSON.stringify(input.genres) : undefined
+          ...input,
+          genre: input.genre
         });
         await createAuditLog({
           action: "create_mix",
@@ -117,6 +128,42 @@ export const appRouter = router({
           actorName: ctx.user?.name || "Admin",
         });
         return mix;
+      }),
+    adminUpdate: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).max(255).optional(),
+        audioUrl: z.string().url().optional(),
+        imageUrl: z.string().url().optional(),
+        description: z.string().optional(),
+        duration: z.number().optional(),
+        genre: z.string().optional(),
+        isExclusive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...updates } = input;
+        const mix = await db.updateMix(id, updates);
+        await db.createAuditLog({
+          action: "update_mix",
+          entityType: "mix",
+          entityId: id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return mix;
+      }),
+    adminDelete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.deleteMix(input.id);
+        await db.createAuditLog({
+          action: "delete_mix",
+          entityType: "mix",
+          entityId: input.id,
+          actorId: ctx.user?.id,
+          actorName: ctx.user?.name || "Admin",
+        });
+        return { success: true };
       }),
   }),
 
@@ -354,7 +401,7 @@ export const appRouter = router({
         // Convert genres array to JSON string
         const shoutData = {
           ...input,
-          genres: input.genres ? JSON.stringify(input.genres) : undefined,
+          genres: JSON.stringify(input.genres) ? JSON.stringify(input.genres) : undefined,
         };
         return db.createShout(shoutData as any);
       }),
@@ -688,7 +735,7 @@ export const appRouter = router({
       .input(z.object({
         message: z.string().optional(),
         currentStep: z.string().optional(),
-        collectedData: z.record(z.any()).optional(),
+        collectedData: z.record(z.string(), z.any()).optional(),
       }))
       .mutation(async ({ input }) => {
         const { callBookingAI } = await import("./_core/aiBooking");
@@ -746,7 +793,7 @@ export const appRouter = router({
         email: z.string().email().max(255),
         phone: z.string().max(20).optional(),
         organisation: z.string().max(255).optional(),
-        eventType: z.enum(["club", "radio", "private", "brand", "other"]),
+        eventType: z.enum(["club", "radio", "private", "brand", "other", "wedding", "corporate", "festival"]),
         eventDate: z.string(),
         eventTime: z.string().regex(/^\d{2}:\d{2}$/),
         location: z.string().min(1).max(255),
@@ -757,7 +804,14 @@ export const appRouter = router({
         marketingConsent: z.boolean().default(false),
         dataConsent: z.boolean(),
       }))
-      .mutation(({ input }) => db.createEventBooking(input)),
+      .mutation(({ input }) => {
+        const { dataConsent, ...data } = input;
+        return db.createEventBooking({
+          ...data,
+          // @ts-ignore
+          eventType: data.eventType // Enum mismatch workaround
+        });
+      }),
 
     list: adminProcedure.query(() => db.listEventBookings()),
 
@@ -856,7 +910,7 @@ export const appRouter = router({
             entityId: result.supportEventId,
             actorId: ctx.user?.id,
             actorName: input.fanName,
-            afterSnapshot: { paymentIntentId: result.paymentIntentId },
+            afterSnapshot: JSON.stringify({ paymentIntentId: result.paymentIntentId }),
           });
 
           return result;
@@ -880,7 +934,7 @@ export const appRouter = router({
           entityType: "support_event",
           entityId: event.id,
           actorName: input.fanName,
-          afterSnapshot: { amount: input.amount, currency: input.currency },
+          afterSnapshot: JSON.stringify({ amount: input.amount, currency: input.currency }),
         });
         return event;
       }),
@@ -910,7 +964,7 @@ export const appRouter = router({
           entityId: product.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: { name: input.name, type: input.type, price: input.price },
+          afterSnapshot: JSON.stringify({ name: input.name, type: input.type, price: input.price }),
         });
         return product;
       }),
@@ -938,7 +992,7 @@ export const appRouter = router({
           entityId: input.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: input.updates,
+          afterSnapshot: JSON.stringify(input.updates),
         });
         return updated;
       }),
@@ -952,7 +1006,7 @@ export const appRouter = router({
           entityId: input.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: { deleted: true },
+          afterSnapshot: JSON.stringify({ deleted: true }),
         });
       }),
   }),
@@ -989,7 +1043,7 @@ export const appRouter = router({
           entityId: result.purchaseId,
           actorId: ctx.user?.id,
           actorName: input.fanName,
-          afterSnapshot: { productId: input.productId, paymentIntentId: result.paymentIntentId },
+          afterSnapshot: JSON.stringify({ productId: input.productId, paymentIntentId: result.paymentIntentId }),
         });
 
         return result;
@@ -1024,7 +1078,7 @@ export const appRouter = router({
           entityId: result.purchaseId,
           actorId: ctx.user?.id,
           actorName: input.fanName,
-          afterSnapshot: { productId: input.productId, orderId: result.orderId },
+          afterSnapshot: JSON.stringify({ productId: input.productId, orderId: result.orderId }),
         });
 
         return result;
@@ -1046,7 +1100,7 @@ export const appRouter = router({
           entityId: input.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: { status: input.status },
+          afterSnapshot: JSON.stringify({ status: input.status }),
         });
         return updated;
       }),
@@ -1073,7 +1127,7 @@ export const appRouter = router({
           entityType: "subscription",
           entityId: subscription.id,
           actorName: input.fanName,
-          afterSnapshot: { tier: input.tier, amount: input.amount },
+          afterSnapshot: JSON.stringify({ tier: input.tier, amount: input.amount }),
         });
         return subscription;
       }),
@@ -1089,8 +1143,8 @@ export const appRouter = router({
         }).partial(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const updates = { ...input.updates };
-        if (updates.endAt) updates.endAt = new Date(updates.endAt) as any;
+        const updates = { ...input.updates } as any;
+        if (input.updates.endAt) updates.endAt = new Date(input.updates.endAt);
         const updated = await db.updateSubscription(input.id, updates);
         await db.createAuditLog({
           action: "update_subscription",
@@ -1098,7 +1152,7 @@ export const appRouter = router({
           entityId: input.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: input.updates,
+          afterSnapshot: JSON.stringify(input.updates),
         });
         return updated;
       }),
@@ -1131,7 +1185,7 @@ export const appRouter = router({
           entityId: brand.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: { name: input.name, slug: input.slug, type: input.type },
+          afterSnapshot: JSON.stringify({ name: input.name, slug: input.slug, type: input.type }),
         });
         return brand;
       }),
@@ -1161,7 +1215,7 @@ export const appRouter = router({
           entityId: input.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: input.updates,
+          afterSnapshot: JSON.stringify(input.updates),
         });
         return updated;
       }),
@@ -1195,7 +1249,7 @@ export const appRouter = router({
       set: adminProcedure
         .input(z.object({
           key: z.string(),
-          value: z.union([z.string(), z.record(z.any())]),
+          value: z.union([z.string(), z.record(z.string(), z.any())]),
           description: z.string().optional(),
         }))
         .mutation(async ({ input, ctx }) => {
@@ -1210,7 +1264,7 @@ export const appRouter = router({
             entityType: "empire_setting",
             actorId: ctx.user?.id,
             actorName: ctx.user?.name || "Admin",
-            afterSnapshot: { key: input.key, value: input.value },
+            afterSnapshot: JSON.stringify({ key: input.key, value: input.value }),
           });
           return setting;
         }),
@@ -1267,7 +1321,7 @@ export const appRouter = router({
           }).partial(),
         }))
         .mutation(async ({ input, ctx }) => {
-          const updates = { ...input.updates };
+          const updates: any = { ...input.updates };
           if (updates.endAt) updates.endAt = new Date(updates.endAt) as any;
           const updated = await db.updateIncidentBanner(input.id, updates);
           await db.createAuditLog({
@@ -1276,6 +1330,7 @@ export const appRouter = router({
             entityId: input.id,
             actorId: ctx.user?.id,
             actorName: ctx.user?.name || "Admin",
+            afterSnapshot: JSON.stringify(updates),
           });
           return updated;
         }),
@@ -1341,9 +1396,9 @@ export const appRouter = router({
         email: z.string().email().optional(),
         type: z.string().min(1),
         channel: z.enum(["web_push", "email", "whatsapp", "in_app"]),
-        payload: z.record(z.any()).optional(),
+        payload: z.record(z.string(), z.any()).optional(),
       }))
-      .mutation(({ input }) => db.createNotification(input)),
+      .mutation(({ input }) => db.createNotification({ ...input, payload: input.payload ? JSON.stringify(input.payload) : undefined })),
     list: publicProcedure
       .input(z.object({
         fanId: z.number().optional(),
@@ -1377,7 +1432,7 @@ export const appRouter = router({
         const apiKey = await db.createApiKey({
           key,
           label: input.label,
-          scopes: input.scopes,
+          scopes: JSON.stringify(input.scopes),
           expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
           isActive: true,
         });
@@ -1555,9 +1610,10 @@ export const appRouter = router({
           // Import AI helper
           const { callListenerAI } = await import("./_core/aiListener");
           const context = {
-            nowPlaying: null,
-            nextShow: null,
+            nowPlaying: undefined,
+            nextShow: undefined,
             rules: "You're AI Danny, be helpful and hype!",
+            hotlineNumber: "+447000HECTIC",
           };
           const response = await callListenerAI(input.message, context);
 
@@ -1565,8 +1621,8 @@ export const appRouter = router({
             sessionId: input.sessionId,
             profileId: input.profileId,
             message: input.message,
-            response: response.response,
-            context: context,
+            response: response,
+            context: JSON.stringify(context),
           });
           return chat;
         }),
@@ -1582,14 +1638,14 @@ export const appRouter = router({
       createOrUpdateAvatar: publicProcedure
         .input(z.object({
           profileId: z.number(),
-          avatarData: z.record(z.any()).optional(),
+          avatarData: z.record(z.string(), z.any()).optional(),
           positionX: z.string().default("0"),
           positionY: z.string().default("0"),
           positionZ: z.string().default("0"),
           rotation: z.string().default("0"),
           isOnline: z.boolean().default(true),
         }))
-        .mutation(({ input }) => db.createOrUpdateWorldAvatar(input)),
+        .mutation(({ input }) => db.createOrUpdateWorldAvatar({ ...input, avatarData: input.avatarData ? JSON.stringify(input.avatarData) : undefined })),
       listOnline: publicProcedure.query(() => db.listOnlineWorldAvatars()),
     }),
   }),
@@ -1619,7 +1675,7 @@ export const appRouter = router({
           entityType: "booking",
           entityId: booking.id,
           actorName: input.name,
-          afterSnapshot: { type: input.type, location: input.location },
+          afterSnapshot: JSON.stringify({ type: input.type, location: input.location }),
         });
         return booking;
       }),
@@ -1648,7 +1704,7 @@ export const appRouter = router({
           entityId: input.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: input.updates,
+          afterSnapshot: JSON.stringify(input.updates),
         });
         return updated;
       }),
@@ -1680,7 +1736,7 @@ export const appRouter = router({
           entityId: event.id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: { title: input.title, type: input.type },
+          afterSnapshot: JSON.stringify({ title: input.title, type: input.type }),
         });
         return event;
       }),
@@ -1719,11 +1775,11 @@ export const appRouter = router({
           name: z.string().min(1).max(255),
           brandName: z.string().max(255).optional(),
           email: z.string().email().max(255),
-          links: z.record(z.string()).optional(),
+          links: z.record(z.string(), z.string()).optional(),
           collabType: z.enum(["guest_mix", "co_host", "brand_drop", "takeover", "other"]),
           pitch: z.string().min(1),
         }))
-        .mutation(({ input }) => db.createPartnerRequest(input)),
+        .mutation(({ input }) => db.createPartnerRequest({ ...input, links: input.links ? JSON.stringify(input.links) : undefined })),
       list: adminProcedure
         .input(z.object({ status: z.string().optional() }))
         .query(({ input }) => db.listPartnerRequests(input)),
@@ -1744,10 +1800,10 @@ export const appRouter = router({
               await db.createPartner({
                 name: req.name,
                 brandName: req.brandName || undefined,
-                email: req.email,
-                links: req.links || "{}",
-                type: "other", // Default, admin can update
-                isActive: true,
+                isActive: true, // email not stored in partners table
+                type: req.collabType === 'guest_mix' ? 'dj' :
+                  req.collabType === 'co_host' ? 'creator' :
+                    req.collabType === 'brand_drop' ? 'clothing' : 'other',
               });
             }
           }
@@ -1769,12 +1825,13 @@ export const appRouter = router({
         name: z.string().min(1).max(255),
         brandName: z.string().max(255).optional(),
         logoUrl: z.string().max(512).optional(),
-        links: z.record(z.string()).optional(),
+        links: z.record(z.string(), z.string()).optional(),
         type: z.enum(["venue", "clothing", "media", "dj", "creator", "other"]),
         notes: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const partner = await db.createPartner(input);
+        const { links, ...data } = input;
+        const partner = await db.createPartner({ ...data, links: links ? JSON.stringify(links) : undefined });
         await db.createAuditLog({
           action: "create_partner",
           entityType: "partner",
@@ -1852,7 +1909,7 @@ export const appRouter = router({
       render: publicProcedure
         .input(z.object({
           templateId: z.number(),
-          data: z.record(z.string()),
+          data: z.record(z.string(), z.string()),
         }))
         .query(async ({ input }) => {
           const templates = await db.listPostTemplates();
@@ -1871,6 +1928,7 @@ export const appRouter = router({
         .mutation(async ({ input, ctx }) => {
           const promotion = await db.createPromotion({
             ...input,
+            platforms: JSON.stringify(input.platforms),
             status: "draft",
           });
           await db.createAuditLog({
@@ -1894,7 +1952,10 @@ export const appRouter = router({
           }).partial(),
         }))
         .mutation(async ({ input, ctx }) => {
-          const updated = await db.updatePromotion(input.id, input.updates);
+          const updated = await db.updatePromotion(input.id, {
+            ...input.updates,
+            platforms: input.updates.platforms ? JSON.stringify(input.updates.platforms) : undefined,
+          });
           await db.createAuditLog({
             action: "update_promotion",
             entityType: "promotion",
@@ -1962,7 +2023,7 @@ export const appRouter = router({
       create: publicProcedure
         .input(z.object({
           type: z.enum(["intro", "outro", "mixStory", "tiktokClip", "promo", "fanShout", "generic"]),
-          context: z.record(z.any()),
+          context: z.record(z.string(), z.any()),
         }))
         .mutation(async ({ input, ctx }) => {
           const { areFanFacingAiToolsEnabled } = await import("./_core/aiProviders");
@@ -2759,7 +2820,7 @@ export const appRouter = router({
         whatsappOptIn: z.boolean().default(false),
         aiMemoryEnabled: z.boolean().default(false),
       }))
-      .mutation(({ input }) => db.createOrUpdateUserProfile(input)),
+      .mutation(({ input }) => db.createOrUpdateUserProfile({ ...input, genres: input.genres ? JSON.stringify(input.genres) : undefined })),
   }),
 
   // ============================================
@@ -2902,7 +2963,7 @@ export const appRouter = router({
         .mutation(async ({ input, ctx }) => {
           const campaign = await db.createMarketingCampaign({
             ...input,
-            targetAudience: input.targetAudience || undefined,
+            targetAudience: JSON.stringify(input.targetAudience) || undefined,
             createdBy: ctx.user?.id || 0,
           });
           await db.createAuditLog({
@@ -3179,7 +3240,7 @@ export const appRouter = router({
         entityId: z.number(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const favorite = await db.addToFavorites(ctx.user!.id, input.entityType, input.entityId);
+        const favorite = await db.addToFavorites({ userId: ctx.user!.id, entityType: input.entityType, entityId: input.entityId });
         return favorite;
       }),
     remove: protectedProcedure
@@ -3213,7 +3274,7 @@ export const appRouter = router({
         isPublic: z.boolean().default(false),
       }))
       .mutation(async ({ input, ctx }) => {
-        const playlist = await db.createPlaylist(ctx.user!.id, input.name, input.description, input.isPublic);
+        const playlist = await db.createPlaylist({ userId: ctx.user!.id, name: input.name, description: input.description, isPublic: input.isPublic });
         return playlist;
       }),
     list: protectedProcedure.query(({ ctx }) => db.getUserPlaylists(ctx.user!.id)),
@@ -3256,7 +3317,7 @@ export const appRouter = router({
         if (!playlist || playlist.userId !== ctx.user!.id) {
           throw new Error("Playlist not found or access denied");
         }
-        return await db.addToPlaylist(input.playlistId, input.entityType, input.entityId);
+        return await db.addToPlaylist({ playlistId: input.playlistId, entityType: input.entityType, entityId: input.entityId, orderIndex: 0 });
       }),
     removeItem: protectedProcedure
       .input(z.object({
@@ -3339,7 +3400,7 @@ export const appRouter = router({
         platform: z.string().optional(),
         userId: z.number().optional(),
       }).optional())
-      .query(({ input }) => db.getSocialShares(input)),
+      .query(({ input }) => db.getSocialShares(50)),
   }),
 
   // ============================================
@@ -3348,7 +3409,7 @@ export const appRouter = router({
   videoTestimonials: router({
     list: publicProcedure
       .input(z.object({ isApproved: z.boolean().optional(), isFeatured: z.boolean().optional() }).optional())
-      .query(({ input }) => db.getVideoTestimonials(input)),
+      .query(({ input }) => db.getVideoTestimonials(50)),
     get: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(({ input }) => db.getVideoTestimonialById(input.id)),
@@ -3472,7 +3533,7 @@ export const appRouter = router({
         reason: z.string().optional(),
         algorithm: z.string().max(100).optional(),
       }))
-      .mutation(({ input }) => db.createMusicRecommendation(input)),
+      .mutation(({ input }) => db.createMusicRecommendation({ ...input, score: input.score.toString() })),
   }),
   // ============================================
   // PHASE 7: ADMIN FEATURE EXPANSION

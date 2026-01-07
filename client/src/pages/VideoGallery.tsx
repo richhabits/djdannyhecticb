@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useState } from "react";
@@ -129,11 +139,13 @@ export default function VideoGallery() {
               <div className="bg-background rounded-lg overflow-hidden">
                 <div className="aspect-video bg-black">
                   <ReactPlayer
-                    url={selectedVideo.youtubeUrl}
-                    width="100%"
-                    height="100%"
-                    controls
-                    playing
+                    {...{
+                      url: selectedVideo.youtubeUrl,
+                      width: "100%",
+                      height: "100%",
+                      controls: true,
+                      playing: true,
+                    } as any}
                   />
                 </div>
                 <div className="p-6">

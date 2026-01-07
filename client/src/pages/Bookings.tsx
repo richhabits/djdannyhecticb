@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -89,15 +99,17 @@ export default function Bookings() {
       return;
     }
     createBookingMutation.mutate({
-      eventName: formData.eventName,
-      eventDate: new Date(formData.eventDate),
-      eventLocation: formData.eventLocation,
-      eventType: formData.eventType,
-      guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
-      budget: formData.budget,
-      description: formData.description + "\nGenres: " + selectedGenres.join(", "),
-      contactEmail: formData.contactEmail,
-      contactPhone: formData.contactPhone,
+      name: formData.eventName,
+      eventDate: formData.eventDate,
+      eventTime: "20:00",
+      location: formData.eventLocation,
+      eventType: formData.eventType as any,
+      // guestCount ignored by backend? Add to description
+      budgetRange: formData.budget,
+      extraNotes: formData.description + "\nGenres: " + selectedGenres.join(", ") + "\nGuests: " + formData.guestCount,
+      email: formData.contactEmail,
+      phone: formData.contactPhone,
+      dataConsent: true,
     });
   };
 
@@ -260,8 +272,8 @@ export default function Bookings() {
                             : [...prev, genre.id]
                         )}
                         className={`p-4 rounded-lg font-semibold transition-all transform hover:scale-105 ${selectedGenres.includes(genre.id)
-                            ? `bg-gradient-to-r ${genre.color} text-white shadow-lg`
-                            : 'bg-card border border-border hover:border-accent'
+                          ? `bg-gradient-to-r ${genre.color} text-white shadow-lg`
+                          : 'bg-card border border-border hover:border-accent'
                           }`}
                       >
                         <span className="text-xl mr-2">{genre.icon}</span>
@@ -407,21 +419,21 @@ export default function Bookings() {
                   <Card key={booking.id} className="p-6 hover:border-accent transition border-border/50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-2">{booking.eventName}</h3>
+                        <h3 className="text-xl font-bold mb-2">{booking.name}</h3>
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-orange-400" />
-                            {formatDate(new Date(booking.eventDate), 'EEEE, MMMM d, yyyy h:mm a')}
+                            {formatDate(new Date(booking.eventDate || new Date().toISOString()), 'EEEE, MMMM d, yyyy h:mm a')}
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4 text-amber-400" />
-                            {booking.eventLocation}
+                            {booking.location}
                           </div>
                         </div>
                       </div>
                       <span className={`px-4 py-2 rounded-full text-sm font-bold ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
-                          booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-gray-500/20 text-gray-400'
+                        booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-gray-500/20 text-gray-400'
                         }`}>
                         {booking.status.toUpperCase()}
                       </span>
@@ -459,8 +471,8 @@ export default function Bookings() {
             {chatMessages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender === 'user'
-                    ? 'bg-orange-600 text-white rounded-br-none'
-                    : 'bg-card border border-border text-foreground rounded-bl-none'
+                  ? 'bg-orange-600 text-white rounded-br-none'
+                  : 'bg-card border border-border text-foreground rounded-bl-none'
                   }`}>
                   <p className="text-sm">{msg.message}</p>
                   <p className="text-xs opacity-70 mt-1">{msg.time}</p>

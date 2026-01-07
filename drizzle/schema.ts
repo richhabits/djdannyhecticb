@@ -258,6 +258,7 @@ export const eventBookings = mysqlTable("event_bookings", {
   extraNotes: text("extraNotes"),
   marketingConsent: boolean("marketingConsent").default(false).notNull(),
   dataConsent: boolean("dataConsent").default(false).notNull(),
+  status: mysqlEnum("status", ["pending", "confirmed", "completed", "cancelled"]).default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

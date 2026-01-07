@@ -2,6 +2,16 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,18 +20,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { Trophy, Sparkles, Star } from "lucide-react";
-import { useState } from "react";
-
-const currentProfileId = 1; // TODO: Get from auth
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Vault() {
+  const { user } = useAuthContext();
+  const currentProfileId = user?.id;
   const { data: collectibles } = trpc.genz.collectibles.getUserCollectibles.useQuery(
-    { profileId: currentProfileId },
+    { profileId: currentProfileId ?? 0 },
     { enabled: !!currentProfileId }
   );
 
   const { data: achievements } = trpc.genz.achievements.getUserAchievements.useQuery(
-    { profileId: currentProfileId },
+    { profileId: currentProfileId ?? 0 },
     { enabled: !!currentProfileId }
   );
 

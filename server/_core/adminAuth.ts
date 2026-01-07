@@ -2,10 +2,20 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ * 
+ * This is proprietary software. Reverse engineering, decompilation, or 
+ * disassembly is strictly prohibited and may result in legal action.
+ */
+
+
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { ENV } from "./env";
 import { getDb } from "../db";
 import { adminCredentials, users } from "../../drizzle/schema";
@@ -128,7 +138,7 @@ export async function createSessionToken(
     userId,
     email,
     role,
-  } as AdminSessionPayload)
+  } as unknown as JWTPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt(now)
     .setExpirationTime(now + 60 * 60 * 24 * 7) // 7 days
