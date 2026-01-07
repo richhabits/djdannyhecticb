@@ -16,7 +16,12 @@ export async function runMigrations() {
 
     console.log("[Migration] Starting production database migration...");
 
-    const poolConnection = createPool(databaseUrl);
+    const connectionString = databaseUrl.includes('?')
+        ? `${databaseUrl}&multipleStatements=true`
+        : `${databaseUrl}?multipleStatements=true`;
+
+    const poolConnection = createPool(connectionString);
+
     const db = drizzle(poolConnection);
 
     try {
