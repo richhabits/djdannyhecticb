@@ -21,9 +21,10 @@ services:
     build: .
     env_file:
       - .env
-    volumes:
-      - ./dist/index.mjs:/app/dist/index.mjs
-      - ./dist/public:/app/dist/public
+    # volumes:
+    #   - ./dist/index.mjs:/app/dist/index.mjs
+    #   - ./dist/public:/app/dist/public
+
     ports:
       - "3000:3000"
     deploy:
