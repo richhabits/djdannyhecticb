@@ -73,7 +73,7 @@ RUN rm -rf /tmp/* /var/cache/apk/* /root/.npm /root/.cache && \
     find /app -name "*.spec.*" -delete && \
     find /app -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null || true && \
     # Set ownership to node user
-    RUN chown -R node:node /app
+    chown -R node:node /app
 USER node
 
 EXPOSE 3000
