@@ -77,15 +77,23 @@ export default function Home() {
             <h1 className="text-[15vw] leading-[0.8] font-black uppercase tracking-tighter text-white mix-blend-difference mb-4">
               HECTIC<br />EMPIRE
             </h1>
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-              <Link href="/mixes">
-                <Button className="bg-white text-black text-lg h-auto py-4 px-8 border border-black hover:bg-accent hover:text-white uppercase font-bold tracking-wider rounded-none">
-                  Start Listening
-                </Button>
-              </Link>
-              <p className="text-white text-sm md:text-base font-medium max-w-md bg-black/50 p-2 backdrop-blur-sm">
-                The underground isn't a place, it's a frequency. Lock in to 30 years of UK Garage & House culture.
+            <div className="mt-6 max-w-2xl">
+              <p className="text-xs tracking-[0.3em] text-white/60 uppercase mb-3">NEW CHAPTER</p>
+              <p className="text-white text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
+                Thirty years in music taught me what matters: control, sound, and truth. I'm not here to replay the past. This era is electro, pressure-tested, and built for rooms that want something real. Fewer distractions. Cleaner execution. Sharper energy. If you knew me before, you'll hear the difference. If you're new here — start with the story, then go straight to the mixes.
               </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/bio">
+                  <Button className="px-5 py-3 border border-white/20 hover:border-white/50 bg-transparent text-white uppercase font-bold tracking-wider rounded-none text-sm">
+                    READ THE BIO
+                  </Button>
+                </Link>
+                <Link href="/mixes">
+                  <Button className="px-5 py-3 bg-white text-black hover:opacity-90 uppercase font-bold tracking-wider rounded-none text-sm">
+                    LISTEN NOW
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>

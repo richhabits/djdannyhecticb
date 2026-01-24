@@ -82,6 +82,34 @@ export default function Bio() {
                                 </div>
                             </div>
 
+                            {/* New Chapter Section */}
+                            <div className="mt-16 pt-16 border-t border-white/10">
+                                <h2 className="text-4xl md:text-5xl font-bold magazine-heading mb-8">THE NEW CHAPTER</h2>
+                                <div className="prose prose-invert prose-lg text-gray-400 space-y-6 leading-relaxed font-light">
+                                    <p>
+                                        The truth is simple: I outgrew noise.
+                                    </p>
+                                    <p>
+                                        I've done the long road — learning rooms, reading crowds, building taste, making mistakes, rebuilding, and refining. That time wasn't wasted; it was training. But the version of me people remember from years back isn't the full picture anymore. Not because the roots changed — because the standards did.
+                                    </p>
+                                    <p>
+                                        This chapter is electro at the core: harder edges, tighter control, and intention in every move. I'm not chasing trends or playing safe. I'm building a sound that hits like a decision. The focus now is structure, pressure, and energy — the kind that holds a room without begging for attention.
+                                    </p>
+                                    <p>
+                                        What changed is discipline. I protect the craft. I protect the brand. I protect the moment. I'm more selective about where I play, who I work with, and what I put my name on. If it doesn't elevate the sound, it doesn't make the cut.
+                                    </p>
+                                    <p>
+                                        What stays is the experience: three decades of pattern recognition, timing, and musical memory. The instinct is still there. The range is still there. The difference is I'm not scattered anymore. This is lean, designed, and ruthless in the best way — built to last and built to travel.
+                                    </p>
+                                    <p>
+                                        What goes is the filler: the forced hype, the messy rollout, the "say yes to everything" era. That's not growth — that's distraction.
+                                    </p>
+                                    <p>
+                                        If you came here for nostalgia, you won't find a museum. If you came here for evolution — welcome. Press play. See you in the dark.
+                                    </p>
+                                </div>
+                            </div>
+
                             {/* Visuals / Logos */}
                             <div className="grid grid-cols-1 gap-8">
                                 <div className="relative group overflow-hidden sharp-edge aspect-[4/3] bg-black border border-white/10">
