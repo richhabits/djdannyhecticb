@@ -31,4 +31,5 @@ export const ENV = {
   paypalClientId: process.env.PAYPAL_CLIENT_ID ?? "",
   paypalClientSecret: process.env.PAYPAL_CLIENT_SECRET ?? "",
   paypalMode: process.env.PAYPAL_MODE ?? "sandbox", // sandbox or live
+  corsOrigins: process.env.CORS_ORIGINS?.split(",") ?? ["http://localhost:3000"],
 };

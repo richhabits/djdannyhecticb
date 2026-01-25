@@ -23,6 +23,8 @@ import { createServer } from "http";
 import net from "net";
 import cookieParser from "cookie-parser";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import helmet from "helmet";
+import cors from "cors";
 import { registerOAuthRoutes } from "./oauth";
 import { registerAdminAuthRoutes } from "./adminAuthRoutes";
 import { registerSEORoutes } from "../routes/seo";
@@ -30,6 +32,9 @@ import { registerPaymentRoutes } from "../routes/payments";
 import { registerUploadRoutes } from "../routes/upload";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { ENV } from "./env";
+import { requestIdMiddleware } from "./middleware/requestId";
+import { loggerMiddleware } from "./middleware/logger";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -55,6 +60,30 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
+  // Request ID and Logging (First)
+  app.use(requestIdMiddleware);
+  app.use(loggerMiddleware);
+
+  // Security headers and CORS
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com", "https://*.stripe.com"],
+        "connect-src": ["'self'", "https:", "https://*.stripe.com"],
+        "frame-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com"],
+        "img-src": ["'self'", "data:", "https:"],
+        "media-src": ["'self'", "https:", "http:", "blob:"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  }));
+
+  app.use(cors({
+    origin: ENV.corsOrigins,
+    credentials: true,
+  }));
+
   // Cookie parser for session management
   app.use(cookieParser());
 
@@ -66,19 +95,6 @@ async function startServer() {
   // Disable unnecessary features to save resources
   app.disable("x-powered-by");
   app.disable("etag"); // Let nginx handle caching
-
-  // Security headers (consolidated, no duplicate comment)
-  app.use((req, res, next) => {
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
-    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    res.setHeader(
-      "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://*.stripe.com; frame-src 'self' https://js.stripe.com https://*.stripe.com; media-src 'self' https: http: blob:;"
-    );
-    next();
-  });
 
   // OAuth callback under /api/oauth/callback (only if configured)
   try {
