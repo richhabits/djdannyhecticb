@@ -30,6 +30,7 @@ import {
   events,
 } from "../drizzle/schema";
 import { chatWithDanny } from "./lib/gemini";
+import { auditLog } from "./_core/audit";
 
 export const appRouter = router({
   system: systemRouter,
@@ -46,9 +47,9 @@ export const appRouter = router({
     }),
     register: publicProcedure
       .input(z.object({
-        email: z.string().email(),
-        password: z.string().min(8),
-        name: z.string().optional(),
+        email: z.string().email().max(320),
+        password: z.string().min(8).max(100),
+        name: z.string().max(255).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Implement logic to create user
@@ -120,12 +121,11 @@ export const appRouter = router({
           ...input,
           genre: input.genre
         });
-        await createAuditLog({
+        await auditLog(ctx, {
           action: "create_mix",
           entityType: "mix",
           entityId: mix.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
+          afterSnapshot: mix,
         });
         return mix;
       }),
@@ -143,12 +143,11 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const { id, ...updates } = input;
         const mix = await db.updateMix(id, updates);
-        await db.createAuditLog({
+        await auditLog(ctx, {
           action: "update_mix",
           entityType: "mix",
           entityId: id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
+          afterSnapshot: mix,
         });
         return mix;
       }),
@@ -156,12 +155,10 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         await db.deleteMix(input.id);
-        await db.createAuditLog({
+        await auditLog(ctx, {
           action: "delete_mix",
           entityType: "mix",
           entityId: input.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
         });
         return { success: true };
       }),
@@ -397,12 +394,25 @@ export const appRouter = router({
         whatsappOptIn: z.boolean().default(false),
         canReadOnAir: z.boolean().default(false),
       }))
-      .mutation(({ input }) => {
+      .mutation(async ({ input }) => {
+        const { filterAbuse, isSpammy } = await import("./lib/abuse");
+
+        if (isSpammy(input.message)) {
+          throw new Error("Message rejected as spam.");
+        }
+
+        const filteredMessage = filterAbuse(input.message);
+        const filteredTrackRequest = input.trackRequest ? filterAbuse(input.trackRequest) : null;
+
         // Convert genres array to JSON string
         const shoutData = {
           ...input,
-          genres: JSON.stringify(input.genres) ? JSON.stringify(input.genres) : undefined,
+          message: filteredMessage.filtered,
+          trackRequest: filteredTrackRequest?.filtered || input.trackRequest,
+          genres: input.genres ? JSON.stringify(input.genres) : null,
+          approved: false, // Explicitly safe-by-default
         };
+
         return db.createShout(shoutData as any);
       }),
 
@@ -733,8 +743,8 @@ export const appRouter = router({
 
     bookingAssistant: publicProcedure
       .input(z.object({
-        message: z.string().optional(),
-        currentStep: z.string().optional(),
+        message: z.string().max(1000).optional(),
+        currentStep: z.string().max(100).optional(),
         collectedData: z.record(z.string(), z.any()).optional(),
       }))
       .mutation(async ({ input }) => {
@@ -1639,10 +1649,10 @@ export const appRouter = router({
         .input(z.object({
           profileId: z.number(),
           avatarData: z.record(z.string(), z.any()).optional(),
-          positionX: z.string().default("0"),
-          positionY: z.string().default("0"),
-          positionZ: z.string().default("0"),
-          rotation: z.string().default("0"),
+          positionX: z.string().max(100).default("0"),
+          positionY: z.string().max(100).default("0"),
+          positionZ: z.string().max(100).default("0"),
+          rotation: z.string().max(100).default("0"),
           isOnline: z.boolean().default(true),
         }))
         .mutation(({ input }) => db.createOrUpdateWorldAvatar({ ...input, avatarData: input.avatarData ? JSON.stringify(input.avatarData) : undefined })),

@@ -35,6 +35,12 @@ import { createContext } from "./context";
 import { ENV } from "./env";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { loggerMiddleware } from "./middleware/logger";
+import {
+  publicRateLimit,
+  authRateLimit,
+  shoutboxRateLimit,
+  aiRateLimit
+} from "./middleware/rateLimit";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -84,6 +90,15 @@ async function startServer() {
     credentials: true,
   }));
 
+  // Rate Limiting (Targeted)
+  app.use("/api/admin/login", authRateLimit);
+  app.use("/api/admin/setup", authRateLimit);
+  app.use("/api/oauth", authRateLimit);
+  app.use("/api/trpc/shouts.create", shoutboxRateLimit);
+  app.use("/api/trpc/ai", aiRateLimit);
+  app.use("/api/trpc/danny.chat", aiRateLimit);
+  app.use("/api", publicRateLimit);
+
   // Cookie parser for session management
   app.use(cookieParser());
 
@@ -108,8 +123,17 @@ async function startServer() {
   // Admin authentication routes
   registerAdminAuthRoutes(app);
 
-  // Health Check (Self-Healing Sentinel)
+  // Health Checks (Self-Healing Sentinel)
   app.get("/api/health", (req, res) => res.status(200).send("ok"));
+  app.get("/api/ready", async (req, res) => {
+    const { isDatabaseAvailable } = await import("./dbHealth");
+    const isReady = await isDatabaseAvailable();
+    if (isReady) {
+      res.status(200).send("ready");
+    } else {
+      res.status(503).send("database_not_available");
+    }
+  });
 
   // SEO routes (sitemap, robots.txt)
   registerSEORoutes(app);
