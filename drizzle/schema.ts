@@ -6,7 +6,7 @@
  * Database schema and structure are proprietary intellectual property.
  */
 
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -2224,7 +2224,7 @@ export const supporterScores = mysqlTable("supporter_scores", {
  */
 export const ukEvents = mysqlTable("uk_events", {
   id: int("id").autoincrement().primaryKey(),
-  externalId: varchar("externalId", { length: 255 }).notNull(), // ID from source API
+  externalId: varchar("external_id", { length: 255 }).notNull(), // ID from source API
   source: mysqlEnum("source", ["ticketmaster", "stubhub", "eventbrite", "skiddle", "dice", "user_submission"]).notNull(),
 
   // Event Details
@@ -2235,40 +2235,40 @@ export const ukEvents = mysqlTable("uk_events", {
   genre: varchar("genre", { length: 100 }), // For music events
 
   // Location
-  venueName: varchar("venueName", { length: 255 }),
-  venueAddress: varchar("venueAddress", { length: 500 }),
+  venueName: varchar("venue_name", { length: 255 }),
+  venueAddress: varchar("venue_address", { length: 500 }),
   city: varchar("city", { length: 100 }).notNull(),
   postcode: varchar("postcode", { length: 20 }),
   latitude: varchar("latitude", { length: 20 }),
   longitude: varchar("longitude", { length: 20 }),
 
   // Timing
-  eventDate: timestamp("eventDate").notNull(),
-  eventEndDate: timestamp("eventEndDate"),
-  doorsTime: varchar("doorsTime", { length: 10 }),
+  eventDate: timestamp("event_date").notNull(),
+  eventEndDate: timestamp("event_end_date"),
+  doorsTime: varchar("doors_time", { length: 10 }),
 
   // Media
-  imageUrl: varchar("imageUrl", { length: 512 }),
-  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  imageUrl: varchar("image_url", { length: 512 }),
+  thumbnailUrl: varchar("thumbnail_url", { length: 512 }),
 
   // Tickets
-  ticketUrl: varchar("ticketUrl", { length: 512 }),
-  priceMin: decimal("priceMin", { precision: 10, scale: 2 }),
-  priceMax: decimal("priceMax", { precision: 10, scale: 2 }),
+  ticketUrl: varchar("ticket_url", { length: 512 }),
+  priceMin: varchar("price_min", { length: 50 }), // SQL used VARCHAR(50)
+  priceMax: varchar("price_max", { length: 50 }), // SQL used VARCHAR(50)
   currency: varchar("currency", { length: 10 }).default("GBP"),
-  ticketStatus: mysqlEnum("ticketStatus", ["available", "limited", "sold_out", "cancelled", "postponed"]).default("available"),
+  ticketStatus: mysqlEnum("ticket_status", ["available", "limited", "sold_out", "cancelled", "postponed"]).default("available"),
 
   // Metadata
-  artists: text("artists"), // JSON array of performing artists
-  ageRestriction: varchar("ageRestriction", { length: 50 }),
-  isFeatured: boolean("isFeatured").default(false).notNull(),
-  isVerified: boolean("isVerified").default(true).notNull(), // API events are auto-verified
-  viewCount: int("viewCount").default(0).notNull(),
+  artists: json("artists"), // SQL used JSON
+  ageRestriction: varchar("age_restriction", { length: 50 }),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  isVerified: boolean("is_verified").default(true).notNull(), // API events are auto-verified
+  viewCount: int("view_count").default(0).notNull(),
 
   // Sync tracking
-  lastSyncedAt: timestamp("lastSyncedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  lastSyncedAt: timestamp("last_synced_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
 
 export type UKEvent = typeof ukEvents.$inferSelect;
@@ -2391,14 +2391,14 @@ export type InsertEventRecommendation = typeof eventRecommendations.$inferInsert
  */
 export const eventSyncStatus = mysqlTable("event_sync_status", {
   id: int("id").autoincrement().primaryKey(),
-  source: mysqlEnum("source", ["ticketmaster", "stubhub", "eventbrite", "skiddle", "dice"]).notNull(),
-  lastSyncedAt: timestamp("lastSyncedAt").notNull(),
-  eventsFound: int("eventsFound").default(0).notNull(),
-  eventsAdded: int("eventsAdded").default(0).notNull(),
-  eventsUpdated: int("eventsUpdated").default(0).notNull(),
-  status: mysqlEnum("status", ["success", "partial", "failed"]).notNull(),
-  errorMessage: text("errorMessage"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  source: varchar("source", { length: 50 }).notNull(), // Changed from enum to match DB varchar
+  lastSyncedAt: timestamp("last_synced_at").notNull(),
+  eventsFound: int("events_found").default(0),
+  eventsAdded: int("events_added").default(0),
+  eventsUpdated: int("events_updated").default(0),
+  status: mysqlEnum("status", ["success", "partial", "failed"]).default('success'),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export type EventSyncStatus = typeof eventSyncStatus.$inferSelect;

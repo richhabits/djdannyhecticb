@@ -67,7 +67,7 @@ function EventCard({ event, index }: { event: any; index: number }) {
     };
 
     const ticketStatus = getTicketStatusBadge();
-    const artists = event.artists ? JSON.parse(event.artists) : [];
+    const artists = Array.isArray(event.artists) ? event.artists : [];
 
     return (
         <motion.div
@@ -195,7 +195,7 @@ function EventCard({ event, index }: { event: any; index: number }) {
 function FeaturedEventHero({ event }: { event: any }) {
     const category = CATEGORY_CONFIG[event.category as keyof typeof CATEGORY_CONFIG] || CATEGORY_CONFIG.other;
     const CategoryIcon = category.icon;
-    const artists = event.artists ? JSON.parse(event.artists) : [];
+    const artists = Array.isArray(event.artists) ? event.artists : [];
 
     return (
         <motion.div

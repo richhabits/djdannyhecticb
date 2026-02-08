@@ -6,6 +6,7 @@
  * Or schedule via cron/PM2/systemd
  */
 
+import 'dotenv/config';
 import { syncTicketmasterEvents } from './ukEventsService';
 
 async function runSync() {
@@ -40,8 +41,14 @@ async function runSync() {
     }
 }
 
+import { fileURLToPath } from 'url';
+import path from 'path';
+
 // Check if running directly
-if (require.main === module) {
+const __filename = fileURLToPath(import.meta.url);
+const entryFile = process.argv[1];
+
+if (entryFile === __filename) {
     runSync()
         .then(() => {
             console.log('[EventSync] Finished successfully');

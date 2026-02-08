@@ -173,7 +173,7 @@ function mapTicketmasterEvent(event: TicketmasterEvent): InsertUKEvent | null {
             priceMax: priceRange?.max?.toString() || null,
             currency: priceRange?.currency || 'GBP',
             ticketStatus,
-            artists: artists.length > 0 ? JSON.stringify(artists) : null,
+            artists: artists.length > 0 ? artists : null,
             ageRestriction: event.ageRestrictions?.legalAgeEnforced ? '18+' : null,
             isFeatured: false,
             isVerified: true,
@@ -211,7 +211,7 @@ async function fetchTicketmasterEvents(options: {
             size: (options.size || 50).toString(),
             page: (options.page || 0).toString(),
             sort: 'date,asc',
-            locale: 'en-gb', // UK locale for proper formatting
+            // locale: 'en-gb', // Removed as it filters out events
         });
 
         // Optional filters
@@ -279,8 +279,9 @@ export async function syncTicketmasterEvents(): Promise<{
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 3);
 
-        const startDateTime = startDate.toISOString().replace('Z', '');
-        const endDateTime = endDate.toISOString().replace('Z', '');
+        // Format: YYYY-MM-DDTHH:mm:ssZ (no milliseconds)
+        const startDateTime = startDate.toISOString().split('.')[0] + 'Z';
+        const endDateTime = endDate.toISOString().split('.')[0] + 'Z';
 
         // Fetch music events
         const categories = ['Music', 'Sports', 'Arts & Theatre'];
