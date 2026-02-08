@@ -10,7 +10,16 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "hygiene:local": "sh scripts/cleanup-local.sh",
+    "hygiene:server": "sh scripts/cleanup-server.sh",
+    "guard:binary": "sh scripts/binary-guard.sh",
+    "smoke-test": "sh scripts/smoke-test.sh",
+    "jobs:rollup:hourly": "tsx jobs/rollup-hourly.ts",
+    "jobs:rollup:daily": "tsx jobs/rollup-daily.ts",
+    "jobs:supporter:weekly": "tsx jobs/supporter-score-weekly.ts",
+    "jobs:sync:ticketmaster": "tsx jobs/sync-ticketmaster.ts",
+    "dev:offline": "OFFLINE_MODE=1 pnpm dev"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
@@ -87,6 +96,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "wouter": "^3.3.5",
+    "ws": "^8.19.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -99,6 +109,7 @@
     "@types/node": "^24.7.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.0.4",
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",

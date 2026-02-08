@@ -1,19 +1,3 @@
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- */
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,7 +83,7 @@ export default function SocialFeed() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(posts as any[]).map((post) => (
+                {posts.map((post) => (
                   <Card key={post.id} className="overflow-hidden hover:scale-[1.02] transition-transform">
                     <a href={post.url} target="_blank" rel="noopener noreferrer" className="block">
                       <div className="aspect-square bg-black relative">
@@ -125,19 +109,19 @@ export default function SocialFeed() {
                         )}
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-4">
-                            {(post.likes || 0) > 0 && (
+                            {post.likes > 0 && (
                               <span className="flex items-center gap-1">
                                 <Heart className="w-3 h-3" />
                                 {post.likes}
                               </span>
                             )}
-                            {(post.comments || 0) > 0 && (
+                            {post.comments > 0 && (
                               <span className="flex items-center gap-1">
                                 <MessageCircle className="w-3 h-3" />
                                 {post.comments}
                               </span>
                             )}
-                            {(post.shares || 0) > 0 && (
+                            {post.shares > 0 && (
                               <span className="flex items-center gap-1">
                                 <Share2 className="w-3 h-3" />
                                 {post.shares}

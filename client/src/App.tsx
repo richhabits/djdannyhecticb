@@ -2,16 +2,6 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { Toaster } from "@/components/ui/sonner";
@@ -21,7 +11,6 @@ import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import LiveChat from "./components/LiveChat";
-import { AnimatedBackground } from "./components/AnimatedBackground";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import History from "./pages/History";
@@ -49,10 +38,10 @@ import Analytics from "./pages/Analytics";
 import Integrations from "./pages/Integrations";
 import EPK from "./pages/EPK";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
 import Events from "./pages/Events";
+import UKEventsPage from "./pages/UKEventsPage";
 import Podcasts from "./pages/Podcasts";
 import LiveStudio from "./pages/LiveStudio";
 import Dashboard from "./pages/Dashboard";
@@ -86,15 +75,13 @@ import AdminAIVideo from "./pages/AdminAIVideo";
 import Wallet from "./pages/Wallet";
 import Rewards from "./pages/Rewards";
 import AdminEconomy from "./pages/AdminEconomy";
-import AdminVideos from "./pages/AdminVideos"; // New
-import AdminBlog from "./pages/AdminBlog"; // New
-import AdminMedia from "./pages/AdminMedia"; // New
 import ShowPage from "./pages/ShowPage";
 import ShowEpisodes from "./pages/ShowEpisodes";
 import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import AdminUKEvents from "./pages/AdminUKEvents";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -137,11 +124,9 @@ function Router() {
       <Route path={"/integrations"} component={Integrations} />
       <Route path={"/epk"} component={EPK} />
       <Route path={"/login"} component={Login} />
-      <Route path={"/signup"} component={Signup} />
-      <Route path={"/register"} component={Signup} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
-      <Route path={"/events"} component={Events} />
+      <Route path={"/events"} component={UKEventsPage} />
       <Route path={"/podcasts"} component={Podcasts} />
       <Route path={"/live-studio"} component={LiveStudio} />
       <Route path={"/dashboard"} component={Dashboard} />
@@ -171,7 +156,6 @@ function Router() {
       <Route path={"/world"} component={World} />
       <Route path={"/vault"} component={Vault} />
       <Route path={"/bookings"} component={BookingsPage} />
-      <Route path={"/events"} component={EventsPage} />
       <Route path={"/partners"} component={PartnersPage} />
       <Route path={"/backstage"} component={Backstage} />
       <Route path={"/ai-shout"} component={AIShout} />
@@ -186,11 +170,9 @@ function Router() {
       <Route path={"/show/episodes"} component={ShowEpisodes} />
       <Route path={"/show/episode/:slug"} component={ShowEpisodeDetail} />
       <Route path={"/admin/show-live"} component={AdminShowLive} />
-      <Route path={"/admin/videos"} component={AdminVideos} />
-      <Route path={"/admin/blog"} component={AdminBlog} />
-      <Route path={"/admin/media"} component={AdminMedia} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
+      <Route path={"/admin/uk-events"} component={AdminUKEvents} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -201,11 +183,8 @@ import { initGA, logPageView } from "./lib/analytics";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
-import { AuthProvider } from "./contexts/AuthContext";
-
 function App() {
   const [location] = useLocation();
-  console.log("App Component Rendering");
 
   useEffect(() => {
     initGA();
@@ -221,20 +200,19 @@ function App() {
         defaultTheme="dark"
       // switchable
       >
-        <AuthProvider>
-          <TooltipProvider>
-            <AnimatedBackground />
-            <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
+        <TooltipProvider>
+          <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
+          <div className="min-h-screen bg-black pirate-scanlines">
             <Toaster />
             <GlobalBanner />
             <GlobalNav />
             <Router />
             <LiveAudioPlayer />
             <AIDannyFloating />
-            {/* <HecticOnboarding /> */}
+            <HecticOnboarding />
             <SocialProofNotifications />
-          </TooltipProvider>
-        </AuthProvider>
+          </div>
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

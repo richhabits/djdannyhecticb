@@ -22,9 +22,13 @@ export const users = mysqlTable("users", {
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
+  displayName: varchar("displayName", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  avatarUrl: varchar("avatarUrl", { length: 512 }),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  isSupporter: boolean("isSupporter").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   passwordHash: varchar("passwordHash", { length: 255 }),
@@ -259,12 +263,109 @@ export const eventBookings = mysqlTable("event_bookings", {
   marketingConsent: boolean("marketingConsent").default(false).notNull(),
   dataConsent: boolean("dataConsent").default(false).notNull(),
   status: mysqlEnum("status", ["pending", "confirmed", "completed", "cancelled"]).default("pending").notNull(),
+
+  // Automated Revenue Ops Fields
+  totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }),
+  depositAmount: decimal("depositAmount", { precision: 10, scale: 2 }),
+  depositPaid: boolean("depositPaid").default(false).notNull(),
+  depositExpiresAt: timestamp("depositExpiresAt"),
+  paymentIntentId: varchar("paymentIntentId", { length: 255 }),
+  pricingBreakdown: text("pricingBreakdown"), // JSON breakdown of costs
+
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+/**
+ * Pricing Rules for automated quote generation
+ */
+export const pricingRules = mysqlTable("pricing_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  ruleType: mysqlEnum("ruleType", ["weekend_uplift", "short_notice", "location_band", "base_rate"]).notNull(),
+  ruleValue: decimal("ruleValue", { precision: 10, scale: 2 }).notNull(),
+  ruleStrategy: mysqlEnum("ruleStrategy", ["fixed", "percentage"]).default("fixed").notNull(),
+  conditions: text("conditions"), // JSON strings for specific rule logic
+  maxMultiplier: decimal("maxMultiplier", { precision: 10, scale: 2 }), // Cap for percentage rules
+  minTotal: decimal("minTotal", { precision: 10, scale: 2 }), // Minimum booking total for this rule to apply
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/**
+ * Immutable Audit Logs for Pricing Engine
+ */
+export const pricingAuditLogs = mysqlTable("pricing_audit_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId"),
+  baseRate: decimal("baseRate", { precision: 10, scale: 2 }).notNull(),
+  finalTotal: decimal("finalTotal", { precision: 10, scale: 2 }).notNull(),
+  rulesApplied: text("rulesApplied"), // JSON list of rule names/IDs applied
+  breakdown: text("breakdown"), // Full itemized JSON breakdown
+  conversionStatus: mysqlEnum("conversionStatus", ["quote_served", "payment_started", "deposit_paid", "expired"]).default("quote_served").notNull(),
+  geoContext: varchar("geoContext", { length: 255 }), // e.g. "IBIZA", "LONDON"
+  metadata: text("metadata"), // Flexible JSON for session IDs, device types, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * PHASE 5: OUTBOUND LEAD ENGINE (OLE)
+ */
+
+export const outboundLeads = mysqlTable("outbound_leads", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  organisation: varchar("organisation", { length: 255 }),
+  source: mysqlEnum("source", ["scraping", "social", "referral", "manual"]).default("manual").notNull(),
+  sourceFingerprint: varchar("sourceFingerprint", { length: 255 }), // URL or unique ID from source
+  geoContext: varchar("geoContext", { length: 255 }),
+  targetDate: varchar("targetDate", { length: 20 }), // YYYY-MM-DD
+  status: mysqlEnum("status", ["new", "qualified", "contacted", "converted", "dead"]).default("new").notNull(),
+  leadScore: int("leadScore").default(0).notNull(),
+  metadata: text("metadata"), // Source-specific signals
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const outboundInteractions = mysqlTable("outbound_interactions", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  type: mysqlEnum("type", ["email", "dm", "call", "automated_quote"]).notNull(),
+  content: text("content"),
+  outcome: varchar("outcome", { length: 255 }),
+  auditLogId: int("auditLogId"), // Link to specific quote
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OutboundLead = typeof outboundLeads.$inferSelect;
+export type InsertOutboundLead = typeof outboundLeads.$inferInsert;
+export type OutboundInteraction = typeof outboundInteractions.$inferSelect;
+export type InsertOutboundInteraction = typeof outboundInteractions.$inferInsert;
+
+export type PricingAuditLog = typeof pricingAuditLogs.$inferSelect;
+export type InsertPricingAuditLog = typeof pricingAuditLogs.$inferInsert;
+
+export type PricingRule = typeof pricingRules.$inferSelect;
+export type InsertPricingRule = typeof pricingRules.$inferInsert;
+
 export type EventBooking = typeof eventBookings.$inferSelect;
 export type InsertEventBooking = typeof eventBookings.$inferInsert;
+
+/**
+ * Booking Blockers table for manual availability management
+ * Allows DJ Danny to block off dates for holidays or private reasons
+ */
+export const bookingBlockers = mysqlTable("booking_blockers", {
+  id: int("id").autoincrement().primaryKey(),
+  blockedDate: varchar("blockedDate", { length: 20 }).notNull(), // YYYY-MM-DD
+  reason: varchar("reason", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BookingBlocker = typeof bookingBlockers.$inferSelect;
+export type InsertBookingBlocker = typeof bookingBlockers.$inferInsert;
 
 /**
  * Danny Status table for editable status states
@@ -707,6 +808,69 @@ export const incidentBanners = mysqlTable("incident_banners", {
 
 export type IncidentBanner = typeof incidentBanners.$inferSelect;
 export type InsertIncidentBanner = typeof incidentBanners.$inferInsert;
+
+/**
+ * Revenue Engine Governance & Fail-Safe
+ */
+export const revenueIncidents = mysqlTable("revenue_incidents", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["pricing_drift", "payment_mismatch", "inventory_deadlock", "manual_override"]).notNull(),
+  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).notNull(),
+  message: text("message").notNull(),
+  status: mysqlEnum("status", ["active", "investigating", "mitigated", "resolved"]).default("active").notNull(),
+  impactedQuotes: text("impactedQuotes"), // JSON list of quote IDs
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+});
+
+export const governanceLogs = mysqlTable("governance_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  actorId: int("actorId"), // null for system/ai
+  actorType: mysqlEnum("actorType", ["system", "admin", "ai_ops"]).notNull(),
+  action: varchar("action", { length: 255 }).notNull(), // e.g. "supporter_promote"
+  userId: int("userId"), // Target user if any
+  reason: text("reason"),
+  payload: text("payload"), // JSON
+  snapshot: text("snapshot"), // System state JSON
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RevenueIncident = typeof revenueIncidents.$inferSelect;
+export type InsertRevenueIncident = typeof revenueIncidents.$inferInsert;
+export type GovernanceLog = typeof governanceLogs.$inferSelect;
+export type InsertGovernanceLog = typeof governanceLogs.$inferInsert;
+
+/**
+ * PHASE 5: CONTRACTUAL AUTOMATION
+ */
+export const bookingContracts = mysqlTable("booking_contracts", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId").notNull(),
+  version: int("version").default(1).notNull(),
+  status: mysqlEnum("status", ["draft", "issued", "signed", "voided"]).default("draft").notNull(),
+  content: text("content").notNull(), // Full legal text
+  signedAt: timestamp("signedAt"),
+  signedBy: varchar("signedBy", { length: 255 }),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  metadata: text("metadata"), // JSON for templates/vars used
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const techRiders = mysqlTable("tech_riders", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId").notNull(),
+  version: int("version").default(1).notNull(),
+  requirements: text("requirements").notNull(), // JSON list of equipment/rider requirements
+  hospitality: text("hospitality"), // Specialized hospitality requirements
+  isApproved: boolean("isApproved").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BookingContract = typeof bookingContracts.$inferSelect;
+export type InsertBookingContract = typeof bookingContracts.$inferInsert;
+export type TechRider = typeof techRiders.$inferSelect;
+export type InsertTechRider = typeof techRiders.$inferInsert;
 
 /**
  * ============================================
@@ -1865,3 +2029,387 @@ export const musicRecommendations = mysqlTable("music_recommendations", {
 
 export type MusicRecommendation = typeof musicRecommendations.$inferSelect;
 export type InsertMusicRecommendation = typeof musicRecommendations.$inferInsert;
+
+/**
+ * ============================================
+ * PHASE B: IDENTITY GRAVITY & SIGNAL OWNERSHIP
+ * ============================================
+ */
+
+/**
+ * Saved Signals (Bookmarks)
+ * Allows users to save specific entities for retention
+ */
+export const savedSignals = mysqlTable("saved_signals", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  entityType: mysqlEnum("entityType", ["intel", "mix", "clip", "event", "track", "podcast"]).notNull(),
+  entityId: varchar("entityId", { length: 255 }).notNull(), // UUID or string IDs supported
+  metadata: text("metadata"), // JSON: platform info, category snapshots
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SavedSignal = typeof savedSignals.$inferSelect;
+export type InsertSavedSignal = typeof savedSignals.$inferInsert;
+
+/**
+ * User Signal Metrics (Implicit Interest Tracking)
+ * Tracks user interaction with specific categories/cities/genres
+ */
+export const userSignalMetrics = mysqlTable("user_signal_metrics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // e.g. "UKG", "London", "Ticket Alert"
+  city: varchar("city", { length: 100 }), // Scoped tracking for heatmaps
+  metricType: mysqlEnum("metricType", ["view", "save", "follow", "share"]).notNull(),
+  score: int("score").default(1).notNull(), // Weighted significance
+  lastInteractionAt: timestamp("lastInteractionAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserSignalMetric = typeof userSignalMetrics.$inferSelect;
+export type InsertUserSignalMetric = typeof userSignalMetrics.$inferInsert;
+
+/**
+ * City Lanes (Regional Context Factory)
+ */
+export const cityLanes = mysqlTable("city_lanes", {
+  id: int("id").autoincrement().primaryKey(),
+  city: varchar("city", { length: 100 }).notNull().unique(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(), // e.g. "london", "manchester"
+  genres: text("genres").notNull(), // JSON array of supported genres
+  isActive: boolean("isActive").default(true).notNull(),
+  config: text("config"), // Weights and thresholds
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CityLane = typeof cityLanes.$inferSelect;
+export type InsertCityLane = typeof cityLanes.$inferInsert;
+
+/**
+ * Intel Items (Persistent Intelligence)
+ * Now with full provenance and enrichment tracking
+ */
+export const intelItems = mysqlTable("intel_items", {
+  id: int("id").autoincrement().primaryKey(),
+  laneId: int("laneId"), // FK to city_lanes (optional, can be global)
+  category: mysqlEnum("category", ["ticket-alert", "event-intel", "set-release", "underground-news"]).notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  genre: varchar("genre", { length: 100 }).notNull(),
+  secondaryGenre: varchar("secondaryGenre", { length: 100 }),
+  tags: text("tags"), // JSON array
+
+  // Provenance (The "No Fake Shit" Layer)
+  sourceType: mysqlEnum("sourceType", ["ticketing_api", "rss", "venue_feed", "promoter_feed", "operator", "ai_synthesis"]).notNull(),
+  sourceName: varchar("sourceName", { length: 100 }).notNull(), // e.g. "Skiddle", "Ticketmaster"
+  sourceUrl: varchar("sourceUrl", { length: 512 }).notNull(),
+  sourceId: varchar("sourceId", { length: 255 }), // ID from the original provider
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).default("1.00"), // 0.00 to 1.00
+  metadata: text("metadata"), // JSON blob for provider-specific data
+
+  publishedAt: timestamp("publishedAt").notNull(),
+  fetchedAt: timestamp("fetchedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type IntelItem = typeof intelItems.$inferSelect;
+export type InsertIntelItem = typeof intelItems.$inferInsert;
+
+/**
+ * Data Connectors (Ingestion Registry)
+ */
+export const connectors = mysqlTable("connectors", {
+  id: int("id").autoincrement().primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // e.g. "ticketmaster", "skiddle", "rss"
+  name: varchar("name", { length: 100 }).notNull(),
+  config: text("config").notNull(), // Encrypted or sensitive JSON
+  isEnabled: boolean("isEnabled").default(false).notNull(),
+  lastSyncAt: timestamp("lastSyncAt"),
+  syncIntervalMs: int("syncIntervalMs").default(3600000).notNull(), // default 1h
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Connector = typeof connectors.$inferSelect;
+export type InsertConnector = typeof connectors.$inferInsert;
+
+/**
+ * Connector Sync Logs (Provenance Telemetry)
+ */
+export const connectorSyncLogs = mysqlTable("connector_sync_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  connectorId: int("connectorId").notNull(),
+  status: mysqlEnum("status", ["success", "error", "partial"]).notNull(),
+  itemsIngested: int("itemsIngested").default(0).notNull(),
+  errorMessage: text("errorMessage"),
+  durationMs: int("durationMs"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ConnectorSyncLog = typeof connectorSyncLogs.$inferSelect;
+export type InsertConnectorSyncLog = typeof connectorSyncLogs.$inferInsert;
+
+/**
+ * Invites (Growth Flywheel)
+ * Non-MLM referral system for community expansion
+ */
+export const invites = mysqlTable("invites", {
+  id: int("id").autoincrement().primaryKey(),
+  inviterId: int("inviterId").notNull(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  targetCity: varchar("targetCity", { length: 100 }), // Defaults to London for DnB lane
+  redeemedBy: int("redeemedBy"), // User ID of redeemer
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Invite = typeof invites.$inferSelect;
+export type InsertInvite = typeof invites.$inferInsert;
+
+/**
+ * Lane Daily Rollups (Analytics Optimization)
+ */
+export const laneDailyRollups = mysqlTable("lane_daily_rollups", {
+  laneId: varchar("laneId", { length: 100 }).notNull(), // slug
+  day: timestamp("day").notNull(),
+  views: int("views").default(0).notNull(),
+  saves: int("saves").default(0).notNull(),
+  alertEnables: int("alertEnables").default(0).notNull(),
+  signups: int("signups").default(0).notNull(),
+  inviteRedemptions: int("inviteRedemptions").default(0).notNull(),
+  avgConfidence: decimal("avgConfidence", { precision: 3, scale: 2 }).default("1.00"),
+}, (table) => {
+  return {
+    pk: { columns: [table.laneId, table.day] },
+  };
+});
+
+/**
+ * Source Daily Rollups (Provenance Auditing)
+ */
+export const sourceDailyRollups = mysqlTable("source_daily_rollups", {
+  sourceType: varchar("sourceType", { length: 50 }).notNull(),
+  day: timestamp("day").notNull(),
+  ingested: int("ingested").default(0).notNull(),
+  served: int("served").default(0).notNull(),
+  saved: int("saved").default(0).notNull(),
+  avgConfidence: decimal("avgConfidence", { precision: 3, scale: 2 }).default("1.00"),
+  failCount: int("failCount").default(0).notNull(),
+}, (table) => {
+  return {
+    pk: { columns: [table.sourceType, table.day] },
+  };
+});
+
+/**
+ * Supporter Scores (History of Growth Contributions)
+ */
+export const supporterScores = mysqlTable("supporter_scores", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  weekStart: timestamp("weekStart").notNull(),
+  score: int("score").notNull(),
+  breakdown: text("breakdown"), // JSON
+  computedAt: timestamp("computedAt").defaultNow().notNull(),
+});
+
+/**
+ * ============================================
+ * UK EVENTS DISCOVERY SYSTEM
+ * ============================================
+ */
+
+/**
+ * UK Events - Aggregated events from Ticketmaster, StubHub, etc.
+ */
+export const ukEvents = mysqlTable("uk_events", {
+  id: int("id").autoincrement().primaryKey(),
+  externalId: varchar("externalId", { length: 255 }).notNull(), // ID from source API
+  source: mysqlEnum("source", ["ticketmaster", "stubhub", "eventbrite", "skiddle", "dice", "user_submission"]).notNull(),
+
+  // Event Details
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  category: mysqlEnum("category", ["music", "festival", "boxing", "sports", "comedy", "theatre", "clubbing", "other"]).notNull(),
+  subcategory: varchar("subcategory", { length: 100 }), // e.g., "UK Garage", "House", "Boxing", etc.
+  genre: varchar("genre", { length: 100 }), // For music events
+
+  // Location
+  venueName: varchar("venueName", { length: 255 }),
+  venueAddress: varchar("venueAddress", { length: 500 }),
+  city: varchar("city", { length: 100 }).notNull(),
+  postcode: varchar("postcode", { length: 20 }),
+  latitude: varchar("latitude", { length: 20 }),
+  longitude: varchar("longitude", { length: 20 }),
+
+  // Timing
+  eventDate: timestamp("eventDate").notNull(),
+  eventEndDate: timestamp("eventEndDate"),
+  doorsTime: varchar("doorsTime", { length: 10 }),
+
+  // Media
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+
+  // Tickets
+  ticketUrl: varchar("ticketUrl", { length: 512 }),
+  priceMin: decimal("priceMin", { precision: 10, scale: 2 }),
+  priceMax: decimal("priceMax", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("GBP"),
+  ticketStatus: mysqlEnum("ticketStatus", ["available", "limited", "sold_out", "cancelled", "postponed"]).default("available"),
+
+  // Metadata
+  artists: text("artists"), // JSON array of performing artists
+  ageRestriction: varchar("ageRestriction", { length: 50 }),
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  isVerified: boolean("isVerified").default(true).notNull(), // API events are auto-verified
+  viewCount: int("viewCount").default(0).notNull(),
+
+  // Sync tracking
+  lastSyncedAt: timestamp("lastSyncedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UKEvent = typeof ukEvents.$inferSelect;
+export type InsertUKEvent = typeof ukEvents.$inferInsert;
+
+/**
+ * User Event Submissions - Events submitted by users/promoters awaiting approval
+ */
+export const userEventSubmissions = mysqlTable("user_event_submissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Optional: linked user if logged in
+
+  // Submitter Info
+  submitterName: varchar("submitterName", { length: 255 }).notNull(),
+  submitterEmail: varchar("submitterEmail", { length: 255 }).notNull(),
+  submitterPhone: varchar("submitterPhone", { length: 20 }),
+  isPromoter: boolean("isPromoter").default(false).notNull(),
+  promoterId: int("promoterId"), // Link to promoter profile if exists
+
+  // Event Details
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description").notNull(),
+  category: mysqlEnum("category", ["music", "festival", "boxing", "sports", "comedy", "theatre", "clubbing", "other"]).notNull(),
+  subcategory: varchar("subcategory", { length: 100 }),
+  genre: varchar("genre", { length: 100 }),
+
+  // Location
+  venueName: varchar("venueName", { length: 255 }).notNull(),
+  venueAddress: varchar("venueAddress", { length: 500 }),
+  city: varchar("city", { length: 100 }).notNull(),
+  postcode: varchar("postcode", { length: 20 }),
+
+  // Timing
+  eventDate: timestamp("eventDate").notNull(),
+  eventEndDate: timestamp("eventEndDate"),
+  doorsTime: varchar("doorsTime", { length: 10 }),
+
+  // Media & Tickets
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  ticketUrl: varchar("ticketUrl", { length: 512 }),
+  priceMin: varchar("priceMin", { length: 50 }),
+  priceMax: varchar("priceMax", { length: 50 }),
+
+  // Additional Info
+  artists: text("artists"), // Comma-separated or JSON
+  ageRestriction: varchar("ageRestriction", { length: 50 }),
+  additionalNotes: text("additionalNotes"),
+
+  // Approval Status
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "needs_info"]).default("pending").notNull(),
+  reviewedBy: int("reviewedBy"),
+  reviewedAt: timestamp("reviewedAt"),
+  rejectionReason: text("rejectionReason"),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserEventSubmission = typeof userEventSubmissions.$inferSelect;
+export type InsertUserEventSubmission = typeof userEventSubmissions.$inferInsert;
+
+/**
+ * Promoter Profiles - Verified promoters who can submit events
+ */
+export const promoterProfiles = mysqlTable("promoter_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Link to user account if registered
+
+  // Profile Info
+  name: varchar("name", { length: 255 }).notNull(),
+  companyName: varchar("companyName", { length: 255 }),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  website: varchar("website", { length: 512 }),
+
+  // Social Links
+  instagramHandle: varchar("instagramHandle", { length: 100 }),
+  twitterHandle: varchar("twitterHandle", { length: 100 }),
+  facebookUrl: varchar("facebookUrl", { length: 512 }),
+
+  // Verification
+  isVerified: boolean("isVerified").default(false).notNull(),
+  verifiedAt: timestamp("verifiedAt"),
+  verificationNotes: text("verificationNotes"),
+
+  // Stats
+  totalEventsSubmitted: int("totalEventsSubmitted").default(0).notNull(),
+  approvedEventsCount: int("approvedEventsCount").default(0).notNull(),
+
+  // Bio
+  bio: text("bio"),
+  logoUrl: varchar("logoUrl", { length: 512 }),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PromoterProfile = typeof promoterProfiles.$inferSelect;
+export type InsertPromoterProfile = typeof promoterProfiles.$inferInsert;
+
+/**
+ * Event Recommendations - User recommendations for events
+ */
+export const eventRecommendations = mysqlTable("event_recommendations", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  userId: int("userId"), // Optional
+  recommenderName: varchar("recommenderName", { length: 255 }),
+  recommenderEmail: varchar("recommenderEmail", { length: 255 }),
+  reason: text("reason").notNull(),
+  upvotes: int("upvotes").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EventRecommendation = typeof eventRecommendations.$inferSelect;
+export type InsertEventRecommendation = typeof eventRecommendations.$inferInsert;
+
+/**
+ * Event Sync Status - Track API sync runs
+ */
+export const eventSyncStatus = mysqlTable("event_sync_status", {
+  id: int("id").autoincrement().primaryKey(),
+  source: mysqlEnum("source", ["ticketmaster", "stubhub", "eventbrite", "skiddle", "dice"]).notNull(),
+  lastSyncedAt: timestamp("lastSyncedAt").notNull(),
+  eventsFound: int("eventsFound").default(0).notNull(),
+  eventsAdded: int("eventsAdded").default(0).notNull(),
+  eventsUpdated: int("eventsUpdated").default(0).notNull(),
+  status: mysqlEnum("status", ["success", "partial", "failed"]).notNull(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EventSyncStatus = typeof eventSyncStatus.$inferSelect;
+export type InsertEventSyncStatus = typeof eventSyncStatus.$inferInsert;
+
+/**
+ * Feature Flags (Kill Switches)
+ */
+export const featureFlags = mysqlTable("feature_flags", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});

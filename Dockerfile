@@ -46,13 +46,14 @@ RUN pnpm run build && \
 FROM node:20-alpine
 WORKDIR /app
 
-# Install only essential tools
+# Install only essential tools + PM2 globally
 RUN corepack enable && corepack prepare pnpm@10.4.1 --activate && \
+    npm install -g pm2 && \
     apk add --no-cache dumb-init && \
     rm -rf /var/cache/apk/* /tmp/*
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ecosystem.config.cjs ./
 COPY patches/ ./patches/
 
 # Install production dependencies only
@@ -64,16 +65,12 @@ RUN pnpm install --prod --frozen-lockfile --prefer-offline && \
 COPY --from=build-client /app/dist ./dist
 COPY --from=build-client /app/drizzle ./drizzle
 
-
-# Create minimal .env
-RUN touch .env
+# Create minimal .env and logs directory
+RUN touch .env && mkdir logs && chown -R node:node logs
 
 # Final cleanup - remove everything unnecessary
 RUN rm -rf /tmp/* /var/cache/apk/* /root/.npm /root/.cache && \
     find /app -name "*.map" -delete && \
-    find /app -name "*.test.*" -delete && \
-    find /app -name "*.spec.*" -delete && \
-    find /app -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null || true && \
     # Set ownership to node user
     chown -R node:node /app
 USER node
@@ -82,4 +79,4 @@ EXPOSE 3000
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.mjs"]
+CMD ["pm2-runtime", "ecosystem.config.cjs", "--env", "production"]

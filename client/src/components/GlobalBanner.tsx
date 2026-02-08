@@ -1,19 +1,3 @@
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- */
-
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -46,9 +30,10 @@ export function GlobalBanner() {
 
   const getIcon = () => {
     switch (activeBanner.severity) {
-      case "error":
+      case "critical":
+      case "high":
         return <XCircle className="h-4 w-4" />;
-      case "warning":
+      case "medium":
         return <AlertTriangle className="h-4 w-4" />;
       default:
         return <Info className="h-4 w-4" />;
@@ -57,9 +42,10 @@ export function GlobalBanner() {
 
   const getVariant = () => {
     switch (activeBanner.severity) {
-      case "error":
+      case "critical":
+      case "high":
         return "destructive";
-      case "warning":
+      case "medium":
         return "default";
       default:
         return "default";

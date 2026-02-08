@@ -30,9 +30,15 @@ export const systemRouter = router({
       timestamp: Date.now()
     })),
 
+  autonomousStatus: adminProcedure.query(async () => {
+    const { autonomousEngine } = await import("./autonomousEngine");
+    return autonomousEngine.getStatus();
+  }),
+
 
   stats: adminProcedure.query(async () => {
     try {
+      const { observability } = await import("./observability");
       // 1. Disk Usage (df -h /)
       // output format example: Filesystem Size Used Avail Capacity iused ifree %iused  Mounted on
       const { exec } = await import("child_process");
@@ -59,12 +65,12 @@ export const systemRouter = router({
       };
 
       // Parse Uptime
-      // "10:00  up 1 day, 20 mins, 2 users, load averages: 1.41 1.42 1.35"
       const uptimeStr = uptime.stdout.trim();
 
       return {
         disk: diskUsage,
         uptime: uptimeStr,
+        metrics: observability.getMetrics(),
         serverTime: new Date().toISOString(),
         platform: process.platform,
         ok: true,
@@ -74,6 +80,7 @@ export const systemRouter = router({
       return {
         disk: { total: "-", used: "-", free: "-", percent: "0%" },
         uptime: "Unavailable",
+        metrics: null,
         serverTime: new Date().toISOString(),
         platform: process.platform,
         ok: false,

@@ -67,6 +67,10 @@ async function startServer() {
   app.disable("x-powered-by");
   app.disable("etag"); // Let nginx handle caching
 
+  // Global Rate Limiting (DDoS Protection)
+  const { strictLimiter } = await import("./rateLimit");
+  app.use(strictLimiter);
+
   // Security headers (consolidated, no duplicate comment)
   app.use((req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -80,6 +84,9 @@ async function startServer() {
     next();
   });
 
+  // Authentication routes with specific rate limits
+  const { authLimiter, bookingLimiter, aiLimiter } = await import("./rateLimit");
+
   // OAuth callback under /api/oauth/callback (only if configured)
   try {
     registerOAuthRoutes(app);
@@ -89,7 +96,9 @@ async function startServer() {
       console.warn("[OAuth] Routes not registered:", error);
     }
   }
+
   // Admin authentication routes
+  app.use("/api/admin/auth", authLimiter);
   registerAdminAuthRoutes(app);
 
   // Health Check (Self-Healing Sentinel)
@@ -97,21 +106,55 @@ async function startServer() {
 
   // SEO routes (sitemap, robots.txt)
   registerSEORoutes(app);
+
   // Payment webhooks (Stripe, PayPal)
   registerPaymentRoutes(app);
+
   // File Uploads
   registerUploadRoutes(app);
+
+  // Procedure-specific rate limiting for tRPC
+  app.use("/api/trpc/danny.chat", aiLimiter);
+  app.use("/api/trpc/ai.listenerAssistant", aiLimiter);
+  app.use("/api/trpc/bookings.create", bookingLimiter);
+  app.use("/api/trpc/auth.register", authLimiter);
+
   // tRPC API
+  const { logger } = await import("./logger");
   app.use(
     "/api/trpc",
     createExpressMiddleware({
       router: appRouter,
       createContext,
       onError: ({ error, path, type }) => {
-        console.error(`[TRPC] Error on ${path} (${type}):`, error);
+        logger.error(`[TRPC] Error on ${path} (${type})`, {
+          code: error.code,
+          message: error.message,
+          path,
+          type,
+          ...(process.env.NODE_ENV !== "production" ? { stack: error.stack } : {}),
+        });
       },
     })
   );
+
+  // Global Error Handler (Must be after all other routes)
+  const { globalErrorHandler } = await import("./errors");
+  app.use(globalErrorHandler);
+
+  // Initialize Social Proof WebSocket Service
+  if (process.env.OFFLINE_MODE !== "1") {
+    const { socialProofService } = await import("./socialProof");
+    await socialProofService.initialize(server);
+
+    // Initialize Autonomous Ops Engine
+    const { autonomousEngine } = await import("./autonomousEngine");
+    setInterval(() => autonomousEngine.runCycle(), 60000);
+    autonomousEngine.runCycle(); // Initial run
+  } else {
+    console.log("⚠️ [DEV] OFFLINE_MODE active. Skipping SocialProof, AutonomousEngine, and DB-dependent services.");
+  }
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
