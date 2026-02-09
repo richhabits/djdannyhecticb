@@ -841,6 +841,27 @@ export type GovernanceLog = typeof governanceLogs.$inferSelect;
 export type InsertGovernanceLog = typeof governanceLogs.$inferInsert;
 
 /**
+ * ============================================
+ * ANALYTICS: Self-Hosted Click Tracking
+ * ============================================
+ * Sovereign analytics - no third-party tracking required.
+ * IP addresses are hashed with SERVER_SALT for privacy.
+ */
+export const analyticsEvents = mysqlTable("analytics_events", {
+  id: int("id").autoincrement().primaryKey(),
+  event: varchar("event", { length: 80 }).notNull(), // Event name, e.g., "home_event_card_click"
+  path: varchar("path", { length: 512 }), // Page path where event occurred
+  referrer: varchar("referrer", { length: 512 }), // HTTP referrer
+  userAgent: varchar("userAgent", { length: 512 }), // User agent string (truncated)
+  ipHash: varchar("ipHash", { length: 64 }), // SHA256 hash of IP + SERVER_SALT
+  props: text("props"), // JSON properties for the event
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
+/**
  * PHASE 5: CONTRACTUAL AUTOMATION
  */
 export const bookingContracts = mysqlTable("booking_contracts", {

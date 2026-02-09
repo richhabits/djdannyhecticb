@@ -170,6 +170,10 @@ async function startServer() {
   // File Uploads
   registerUploadRoutes(app);
 
+  // Analytics Tracking (self-hosted)
+  const { registerAnalyticsRoutes } = await import("./analytics");
+  registerAnalyticsRoutes(app);
+
   // Procedure-specific rate limiting for tRPC
   app.use("/api/trpc/danny.chat", aiLimiter);
   app.use("/api/trpc/ai.listenerAssistant", aiLimiter);

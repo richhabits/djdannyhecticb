@@ -18,7 +18,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Music, ArrowRight, Play, Disc } from "lucide-react";
+import { Music, ArrowRight, Play, Disc, Calendar } from "lucide-react";
 import { APP_LOGO } from "@/const";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -29,10 +29,22 @@ import { HeroVideo } from "@/components/HeroVideo";
 import { trpc } from "@/lib/trpc";
 import { SocialLinks } from "@/components/SocialLinks";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { track, trackSectionView } from "@/lib/analytics";
+import { useEffect } from "react";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, { retry: false });
+  const { data: upcomingEvents, isLoading: eventsLoading } = trpc.events.upcoming.useQuery();
+
+  // Track events section view (once per page load)
+  useEffect(() => {
+    if (!eventsLoading && upcomingEvents) {
+      return trackSectionView('events-section', 'home_events_section_view', {
+        count: upcomingEvents.length,
+      });
+    }
+  }, [eventsLoading, upcomingEvents]);
 
   return (
     <>
@@ -171,6 +183,125 @@ export default function Home() {
             </div>
           </div>
 
+        </section>
+
+        {/* UPCOMING EVENTS SECTION */}
+        <section id="events-section" className="p-6 md:p-12 bg-muted/50">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Live Schedule</h4>
+              <h2 className="text-4xl md:text-5xl font-black uppercase">Upcoming Events</h2>
+            </div>
+            <Link
+              href="/events"
+              onClick={() => track('home_events_view_all_click')}
+              className="border-b-2 border-foreground hover:border-accent hover:text-accent font-bold uppercase text-lg"
+            >
+              View All Events
+            </Link>
+          </div>
+
+          {/* Loading State */}
+          {eventsLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-background p-6 animate-pulse">
+                  <div className="aspect-video bg-muted mb-4" />
+                  <div className="h-4 bg-muted w-1/2 mb-2" />
+                  <div className="h-6 bg-muted w-3/4 mb-2" />
+                  <div className="h-4 bg-muted w-1/3" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!eventsLoading && (!upcomingEvents || upcomingEvents.length === 0) && (
+            <div className="text-center py-16 border-2 border-dashed border-muted">
+              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-xl font-bold uppercase text-muted-foreground mb-2">No Upcoming Events</p>
+              <p className="text-muted-foreground mb-4">Check back soon for the next live session</p>
+              <Link
+                href="/events"
+                onClick={() => track('home_events_view_all_click')}
+                className="inline-block border-b-2 border-accent text-accent font-bold uppercase"
+              >
+                View Past Events
+              </Link>
+            </div>
+          )}
+
+          {/* Events Grid */}
+          {!eventsLoading && upcomingEvents && upcomingEvents.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {upcomingEvents.map((event) => {
+                // URL scheme validation - only allow http/https
+                const isValidTicketUrl = event.ticketUrl &&
+                  (event.ticketUrl.startsWith('http://') || event.ticketUrl.startsWith('https://'));
+                const ticketUrlHost = isValidTicketUrl ? new URL(event.ticketUrl!).hostname : undefined;
+
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => track('home_event_card_click', { eventId: event.id })}
+                    className="bg-background p-6 group cursor-pointer hover:bg-accent/5 transition-colors"
+                  >
+                    {/* Event Image */}
+                    <div className="aspect-video bg-muted mb-4 overflow-hidden relative">
+                      {event.imageUrl ? (
+                        <img
+                          src={event.imageUrl}
+                          alt={event.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Disc className="w-12 h-12 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Event Details */}
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                      <Calendar className="w-4 h-4" />
+                      <span className="uppercase font-bold tracking-wide">
+                        {new Date(event.eventDate).toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-black uppercase mb-1 group-hover:text-accent transition-colors">
+                      {event.title}
+                    </h3>
+
+                    <p className="text-muted-foreground text-sm uppercase mb-4">
+                      {event.location}
+                    </p>
+
+                    {isValidTicketUrl && (
+                      <a
+                        href={event.ticketUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          track('home_event_get_tickets_click', { eventId: event.id, ticketUrlHost });
+                        }}
+                        className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2 font-bold uppercase text-sm hover:opacity-90"
+                      >
+                        Get Tickets <ArrowRight className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Footer Area - Brutalist List */}

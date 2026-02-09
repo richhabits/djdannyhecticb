@@ -64,6 +64,13 @@ export const RateLimitTiers = {
         maxRequests: 60, // 60 requests per minute
         name: "intel",
     },
+
+    // Analytics tracking (lightweight)
+    TRACK: {
+        windowMs: 60 * 1000, // 1 minute
+        maxRequests: 60, // 60 events per minute per user
+        name: "track",
+    },
 } as const;
 
 export type RateLimitTier = keyof typeof RateLimitTiers;
@@ -138,3 +145,5 @@ export const bookingLimiter = createRateLimiter("BOOKING");
 export const aiLimiter = createRateLimiter("AI");
 export const strictLimiter = createRateLimiter("STRICT");
 export const intelLimiter = createRateLimiter("INTEL");
+export const trackLimiter = createRateLimiter("TRACK");
+

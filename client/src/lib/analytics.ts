@@ -38,3 +38,80 @@ export const logMixDownload = (mixTitle: string) => {
 export const logShoutSend = () => {
     logEvent("Engagement", "Send Shout", "Shoutbox");
 };
+
+// ============================================
+// SELF-HOSTED ANALYTICS (Sovereign Data)
+// ============================================
+
+type TrackEventPayload = {
+    event: string;
+    props?: Record<string, unknown>;
+    path?: string;
+};
+
+/**
+ * Track an analytics event to self-hosted endpoint
+ * Best-effort: ignores errors silently
+ * 
+ * @param event - Event name (snake_case, max 80 chars)
+ * @param props - Optional properties object
+ * 
+ * @example
+ * track('home_event_card_click', { eventId: 123 })
+ */
+export function track(event: string, props?: Record<string, unknown>): void {
+    const payload: TrackEventPayload = {
+        event,
+        props,
+        path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    };
+
+    // Fire and forget
+    fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true, // Ensures request completes even on page navigation
+    }).catch(() => {
+        // Silently ignore - analytics should never break the app
+    });
+}
+
+/**
+ * Create a section view tracker using IntersectionObserver
+ * 
+ * @param sectionId - ID of the section to observe
+ * @param eventName - Event name to track when section is viewed
+ * @param props - Optional properties to include
+ * @returns Cleanup function to disconnect observer
+ */
+export function trackSectionView(
+    sectionId: string,
+    eventName: string,
+    props?: Record<string, unknown>
+): () => void {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+        return () => { };
+    }
+
+    let hasTracked = false;
+
+    const observer = new IntersectionObserver(
+        (entries) => {
+            const entry = entries[0];
+            if (entry?.isIntersecting && !hasTracked) {
+                hasTracked = true;
+                track(eventName, props);
+                observer.disconnect();
+            }
+        },
+        { threshold: 0.5 }
+    );
+
+    const element = document.getElementById(sectionId);
+    if (element) {
+        observer.observe(element);
+    }
+
+    return () => observer.disconnect();
+}
