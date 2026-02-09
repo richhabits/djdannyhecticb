@@ -3,7 +3,7 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { PricingService } from "../server/_core/pricing";
+import { PricingService } from "../_core/pricing";
 
 // Mock DB
 const mockRules = [
