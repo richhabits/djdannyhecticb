@@ -133,6 +133,82 @@ export default function Home() {
           </div>
         </section>
 
+        {/* UPCOMING EVENTS */}
+        {upcomingEvents && upcomingEvents.length > 0 && (
+          <section className="py-32 px-6 bg-neutral-950 border-y-4 border-white">
+            <div className="container mx-auto">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-l-8 border-white pl-8">
+                <div className="space-y-4">
+                  <span className="tape-strip bg-accent text-white border-white text-xs italic">LIVE SCHEDULE</span>
+                  <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none italic">
+                    UPCOMING<br />EVENTS
+                  </h2>
+                </div>
+                <Link href="/events">
+                  <button className="tape-strip bg-white text-black border-black px-10 py-4 text-xl hover:bg-accent hover:text-white">
+                    VIEW ALL
+                  </button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {upcomingEvents.slice(0, 6).map((event, idx) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-black border-2 border-white p-6 hover:border-accent transition-all group"
+                  >
+                    {event.imageUrl && (
+                      <div className="aspect-video bg-neutral-900 mb-6 overflow-hidden border border-white/20">
+                        <img
+                          src={event.imageUrl}
+                          alt={event.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-accent" />
+                        <span className="text-sm font-bold uppercase tracking-wider text-white/60">
+                          {new Date(event.eventDate).toLocaleDateString('en-GB', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+
+                      <h3 className="text-2xl font-black italic uppercase leading-tight group-hover:text-accent transition-colors">
+                        {event.title}
+                      </h3>
+
+                      <p className="text-sm text-white/50 font-medium uppercase tracking-wide">
+                        {event.location}
+                      </p>
+
+                      {event.ticketUrl && (
+                        <a
+                          href={event.ticketUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 tape-strip bg-accent text-white border-white text-sm hover:bg-white hover:text-black transition-all"
+                        >
+                          GET TICKETS <ArrowRight className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* BOOKING BRUTALISM */}
         <section className="py-40 bg-accent text-white px-6 border-y-4 border-black">
           <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
