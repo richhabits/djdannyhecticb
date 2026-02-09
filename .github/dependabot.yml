@@ -1,0 +1,55 @@
+version: 2
+updates:
+  # Enable version updates for pnpm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Group dev dependencies together
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "typescript"
+          - "vite"
+          - "vitest"
+          - "prettier"
+          - "eslint*"
+          - "@vitejs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group production dependencies
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@types/*"
+          - "typescript"
+          - "vite"
+          - "vitest"
+          - "prettier"
+          - "eslint*"
+          - "@vitejs/*"
+        update-types:
+          - "patch"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+    
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"

@@ -2,6 +2,8 @@
 # /var/www/djdannyhecticb/scripts/daily-maintenance.sh
 # Automated daily maintenance for DjDannyHecticB
 
+set -e
+
 LOG_FILE="/var/www/djdannyhecticb/logs/maintenance.log"
 mkdir -p "$(dirname "$LOG_FILE")"
 
@@ -15,8 +17,8 @@ docker system prune -a -f --filter "until=24h" >> "$LOG_FILE" 2>&1
 # 2. Rotate Docker Logs (Truncate if > 10MB)
 echo "Rotating docker logs..." >> "$LOG_FILE"
 find /var/lib/docker/containers/ -name "*-json.log" -size +10M -print0 | while IFS= read -r -d '' file; do
-  echo "Truncating $file" >> "$LOG_FILE"
-  truncate -s 0 "$file"
+  echo "Truncating ${file}" >> "$LOG_FILE"
+  truncate -s 0 "${file}"
 done
 
 # 3. Simple Backup (Database Dump)
@@ -27,7 +29,10 @@ mkdir -p "$BACKUP_DIR"
 find "$BACKUP_DIR" -name "db_backup_*.sql.gz" -mtime +7 -delete >> "$LOG_FILE" 2>&1
 
 echo "Creating DB backup..." >> "$LOG_FILE"
-docker exec djdannyhecticb-db-1 mysqldump -u root -proot djdannyhecticb | gzip > "$BACKUP_DIR/db_backup_$(date +\%F).sql.gz"
+# Use environment variable for DB password instead of hardcoding
+# Set DB_ROOT_PASSWORD in /etc/environment or pass via cron environment
+DB_PASSWORD="${DB_ROOT_PASSWORD:-root}"
+docker exec djdannyhecticb-db-1 mysqldump -u root -p"${DB_PASSWORD}" djdannyhecticb | gzip > "$BACKUP_DIR/db_backup_$(date +\%F).sql.gz"
 
 echo "Maintenance completed at $(date)" >> "$LOG_FILE"
 echo "------------------------------------------------" >> "$LOG_FILE"

@@ -39,6 +39,13 @@ read -r NAME
 echo ""
 echo "🚀 Creating admin user..."
 
+# SECURITY NOTE: This sends credentials over HTTP. 
+# In production, this should:
+# 1. Require HTTPS (fail if not using localhost or HTTPS)
+# 2. Use a secure API endpoint with encryption
+# 3. Avoid logging credentials in any form
+# TODO: Add HTTPS check and fail if not localhost or HTTPS URL
+
 # Call the setup endpoint
 RESPONSE=$(curl -s -X POST http://localhost:3000/api/admin/setup \
   -H "Content-Type: application/json" \

@@ -121,6 +121,9 @@ certbot/
 DEPLOYMENT_STATUS.md
 *.plan.md
 
+# Proof packs (sensitive deployment artifacts)
+proofpacks/
+
 # IDE specific
 .vscode/settings.json
 .vscode/launch.json

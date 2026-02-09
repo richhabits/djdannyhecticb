@@ -17,6 +17,13 @@
 /**
  * Auto Promo Engine - Generates promo clips, subtitles, thumbnails
  * 
+ * NOTE ON "HECTIC RADIO" REFERENCES:
+ * "Hectic Radio" mentions in this file are for brand association and promotional content.
+ * This is NOT a shared service integration. Hectic Radio is referenced as an external
+ * media provider that this site links to/embeds from (similar to mentioning YouTube or Spotify).
+ * 
+ * See BOUNDARY_POLICY.md for architectural rules.
+ * 
  * TODO: Replace with real AI provider call when ready
  */
 

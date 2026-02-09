@@ -1,6 +1,8 @@
 #!/bin/bash
 # Add copyright headers to all source files
 
+set -e
+
 COPYRIGHT_HEADER='/**
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
@@ -12,7 +14,7 @@ COPYRIGHT_HEADER='/**
 
 '
 
-find server client shared -type f \( -name "*.ts" -o -name "*.tsx" \) ! -name "*.d.ts" | while read file; do
+find server client shared -type f \( -name "*.ts" -o -name "*.tsx" \) ! -name "*.d.ts" | while read -r file; do
   # Check if file already has copyright header
   if ! head -n 1 "$file" | grep -q "COPYRIGHT NOTICE"; then
     # Create temp file with copyright + original content

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Configuration
 URL="https://djdannyhecticb.com/api/health"
 CONTAINER="djdannyhecticb-web-1"
@@ -21,8 +23,9 @@ if [ -z "$STATUS" ]; then
     # Let's simple restart for now, but check if we didn't just restart recently?
     # For now, just restart via docker compose to strict restart
     
-    echo "[$DATE] Restarting $CONTAINER..." >> "$LOG_FILE"
-    cd /var/www/djdannyhecticb && docker compose restart web
+    echo "[$DATE] Restarting ${CONTAINER}..." >> "$LOG_FILE"
+    cd /var/www/djdannyhecticb || exit 1
+    docker compose restart web
     
     # Wait for restart
     sleep 30
