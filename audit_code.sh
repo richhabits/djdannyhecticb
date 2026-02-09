@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 echo "=== AUDIT REPORT: IP PROTECTION & CODE CLEANLINESS ==="
 echo ""
 echo "## 1. IP Protection Check (Copyright Headers)"
