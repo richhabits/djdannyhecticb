@@ -1,5 +1,9 @@
 FROM nginx:alpine
 
-# HTTP-only configuration (no SSL overhead, faster loads)
+# Runtime config is volume-mounted from docker-compose.yml
+# This COPY serves as fallback if no volume mount is specified
+# In production: docker-compose.yml mounts nginx.conf (HTTPS)
+# For initial setup: mount nginx-http.conf (HTTP-only) or nginx-simple.conf
+
 COPY nginx-simple.conf /etc/nginx/nginx.conf
 
