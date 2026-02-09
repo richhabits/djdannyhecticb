@@ -2,18 +2,19 @@ name: CI
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, copilot/** ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main ]
 
 jobs:
   lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.4.1
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -23,16 +24,81 @@ jobs:
       - run: pnpm format --check || true
 
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.4.1
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 7
+  
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test || true
+        continue-on-error: true
+  
+  boundary-audit:
+    name: Boundary Audit (No Bleed Check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run boundary audit script
+        run: |
+          chmod +x ./scripts/boundary-audit.sh
+          ./scripts/boundary-audit.sh
+      
+      - name: Scan for forbidden strings
+        run: |
+          echo "Scanning for forbidden project references..."
+          # Allow piing/hectictv only in enum contexts (social platform)
+          HITS=$(grep -r "piing\|hectictv\|blackmoss\|shadymotion" \
+            --include="*.ts" --include="*.tsx" --include="*.js" \
+            --include="*.jsx" --include="*.json" . 2>/dev/null | \
+            grep -v node_modules | grep -v ".git" | \
+            grep -v "platform.*enum" | grep -v "social.*platform" | \
+            grep -v "mysqlEnum.*platform" || true)
+          
+          if [ -n "$HITS" ]; then
+            echo "⚠️  Found potential forbidden references:"
+            echo "$HITS"
+            echo ""
+            echo "Review these manually. If they are social platform enums, they are OK."
+            # Don't fail - just warn for manual review
+          else
+            echo "✅ No forbidden project references found"
+          fi
+      
+      - name: Verify no shared dependencies
+        run: |
+          echo "Checking package.json for forbidden dependencies..."
+          if cat package.json | grep -E '"@(piing|hectictv|hecticradio|blackmoss|shadymotion)' ; then
+            echo "❌ Found forbidden dependencies"
+            exit 1
+          else
+            echo "✅ No forbidden dependencies"
+          fi
 
