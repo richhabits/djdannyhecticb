@@ -8,6 +8,26 @@
 
 ---
 
+## 🛡️ Architectural Boundary Confirmation
+
+**VERIFIED:** djdannyhecticb.co.uk is a standalone, sovereign site.
+
+**Boundary Status:** ✅ **COMPLIANT**
+- No shared code with other Hectic properties
+- No shared infrastructure (databases, auth, services)
+- No shared Docker networks or containers
+- "Hectic Radio" references are legitimate (brand association, external streaming)
+- "piing" reference is only as social platform enum (not project code)
+
+**Integration Type:** Link-only (external media provider relationship)
+- Stream embeds via `VITE_HECTIC_RADIO_STREAM_URL` (external URL)
+- Brand references in copyright headers (legitimate)
+- Social media hashtags (promotional)
+
+**Policy Documentation:** See [BOUNDARY_POLICY.md](./BOUNDARY_POLICY.md)
+
+---
+
 ## 📊 Executive Summary
 
 ### Audit Scope

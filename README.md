@@ -2,6 +2,27 @@
 
 A modern web application for DJ Danny Hectic B featuring mixes, events, live studio, live radio streaming, and a fan shoutbox.
 
+---
+
+## 🛡️ Architectural Boundary Rule
+
+**⚠️ IMPORTANT: This is a standalone, sovereign site.**
+
+**djdannyhecticb.co.uk** operates independently with its own codebase, infrastructure, and services. The only permitted integration with other Hectic properties is **outbound linking or embedding** to hecticradio.co.uk for radio content.
+
+**What this means:**
+- ✅ Outbound links to Hectic Radio shows/streams
+- ✅ Audio stream embeds (iframe or direct URL)
+- ❌ **NO shared code, services, or infrastructure**
+- ❌ **NO shared databases, auth, or backend services**
+- ❌ **NO shared Docker containers or networks**
+
+**📖 Full policy:** See [BOUNDARY_POLICY.md](./BOUNDARY_POLICY.md) for complete architectural rules.
+
+This boundary ensures security independence, operational clarity, and long-term maintainability.
+
+---
+
 ## Prerequisites
 
 - **Node.js** (v18 or higher)

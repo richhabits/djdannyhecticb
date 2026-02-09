@@ -6,6 +6,21 @@
 
 ---
 
+## 🛡️ Architectural Boundary Verification
+
+**Before deploying, verify the architectural boundary is maintained:**
+
+- [ ] Reviewed [BOUNDARY_POLICY.md](./BOUNDARY_POLICY.md)
+- [ ] Confirmed no shared backend services with other Hectic properties
+- [ ] Confirmed no shared databases or auth systems
+- [ ] Confirmed `VITE_HECTIC_RADIO_STREAM_URL` is external URL only
+- [ ] Confirmed no Docker services shared with other properties
+- [ ] Confirmed docker-compose.yml contains only this property's services
+
+**This site is standalone. Any integration with Hectic Radio must be link-only (external media provider).**
+
+---
+
 ## ✅ Pre-Deployment Validation
 
 ### DNS Configuration
