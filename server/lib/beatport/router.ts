@@ -8,8 +8,9 @@
  */
 
 import { z } from "zod";
-import { publicProcedure, router } from "../../_core/trpc";
+import { publicProcedure, adminProcedure, router } from "../../_core/trpc";
 import { beatportGet } from "./client";
+import { beatportCache } from "./cache";
 import type {
   BeatportPaginatedResponse,
   BeatportGenre,
@@ -208,13 +209,49 @@ export const beatportRouter = router({
    * Health check endpoint
    */
   healthCheck: publicProcedure.query(async () => {
-    return beatportGet<BeatportHealthCheck>("/health-check/");
+    return beatportGet<BeatportHealthCheck>("/health-check/", undefined, {
+      useCache: false, // Don't cache health checks
+    });
   }),
 
   /**
    * Database health check endpoint
    */
   dbHealthCheck: publicProcedure.query(async () => {
-    return beatportGet<BeatportHealthCheck>("/db-health-check/");
+    return beatportGet<BeatportHealthCheck>("/db-health-check/", undefined, {
+      useCache: false, // Don't cache health checks
+    });
+  }),
+
+  /**
+   * Get cache statistics (admin only)
+   */
+  cacheStats: adminProcedure.query(() => {
+    return beatportCache.getStats();
+  }),
+
+  /**
+   * Clear cache (admin only)
+   */
+  clearCache: adminProcedure
+    .input(z.object({
+      pattern: z.string().optional(),
+    }).optional())
+    .mutation(({ input }) => {
+      if (input?.pattern) {
+        const count = beatportCache.invalidatePattern(input.pattern);
+        return { success: true, cleared: count };
+      } else {
+        beatportCache.clear();
+        return { success: true, cleared: "all" };
+      }
+    }),
+
+  /**
+   * Reset cache statistics (admin only)
+   */
+  resetCacheStats: adminProcedure.mutation(() => {
+    beatportCache.resetStats();
+    return { success: true };
   }),
 });
