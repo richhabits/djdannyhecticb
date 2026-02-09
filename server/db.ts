@@ -361,7 +361,7 @@ export async function createBooking(booking: any) {
 export async function getUpcomingEvents() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
+  return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate)).limit(6);
 }
 
 export async function getFeaturedEvents() {

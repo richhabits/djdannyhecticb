@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  const { data: upcomingEvents } = trpc.events.upcoming.useQuery();
+  const { data: upcomingEvents, isLoading: eventsLoading } = trpc.events.upcoming.useQuery();
 
   return (
     <>
@@ -134,80 +134,128 @@ export default function Home() {
         </section>
 
         {/* UPCOMING EVENTS */}
-        {upcomingEvents && upcomingEvents.length > 0 && (
-          <section className="py-32 px-6 bg-neutral-950 border-y-4 border-white">
-            <div className="container mx-auto">
-              <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-l-8 border-white pl-8">
-                <div className="space-y-4">
-                  <span className="tape-strip bg-accent text-white border-white text-xs italic">LIVE SCHEDULE</span>
-                  <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none italic">
-                    UPCOMING<br />EVENTS
-                  </h2>
-                </div>
+        <section className="py-32 px-6 bg-neutral-950 border-y-4 border-white">
+          <div className="container mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-l-8 border-white pl-8">
+              <div className="space-y-4">
+                <span className="tape-strip bg-accent text-white border-white text-xs italic">LIVE SCHEDULE</span>
+                <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none italic">
+                  UPCOMING<br />EVENTS
+                </h2>
+              </div>
+              <Link href="/events">
+                <button className="tape-strip bg-white text-black border-black px-10 py-4 text-xl hover:bg-accent hover:text-white">
+                  VIEW ALL
+                </button>
+              </Link>
+            </div>
+
+            {/* Loading State - Skeleton */}
+            {eventsLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-black border-2 border-white/20 p-6 animate-pulse">
+                    <div className="aspect-video bg-neutral-800 mb-6" />
+                    <div className="space-y-4">
+                      <div className="h-4 bg-neutral-800 w-1/2" />
+                      <div className="h-8 bg-neutral-800 w-3/4" />
+                      <div className="h-4 bg-neutral-800 w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!eventsLoading && (!upcomingEvents || upcomingEvents.length === 0) && (
+              <div className="text-center py-20 border-2 border-dashed border-white/20">
+                <Calendar className="w-16 h-16 text-white/20 mx-auto mb-6" />
+                <p className="text-2xl font-bold uppercase italic text-white/40 mb-4">
+                  NO UPCOMING EVENTS
+                </p>
+                <p className="text-white/30 uppercase text-sm mb-8">
+                  Check back soon for the next live session
+                </p>
                 <Link href="/events">
-                  <button className="tape-strip bg-white text-black border-black px-10 py-4 text-xl hover:bg-accent hover:text-white">
-                    VIEW ALL
+                  <button className="tape-strip bg-white/10 text-white border-white/30 px-8 py-3 text-sm hover:bg-accent hover:border-white">
+                    VIEW PAST EVENTS
                   </button>
                 </Link>
               </div>
+            )}
 
+            {/* Events Grid */}
+            {!eventsLoading && upcomingEvents && upcomingEvents.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {upcomingEvents.slice(0, 6).map((event, idx) => (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="bg-black border-2 border-white p-6 hover:border-accent transition-all group"
-                  >
-                    {event.imageUrl && (
-                      <div className="aspect-video bg-neutral-900 mb-6 overflow-hidden border border-white/20">
-                        <img
-                          src={event.imageUrl}
-                          alt={event.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                {upcomingEvents.map((event, idx) => {
+                  // URL scheme validation - only allow http/https
+                  const isValidTicketUrl = event.ticketUrl &&
+                    (event.ticketUrl.startsWith('http://') || event.ticketUrl.startsWith('https://'));
+
+                  return (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="bg-black border-2 border-white p-6 hover:border-accent transition-all group"
+                    >
+                      {/* Event Image or Fallback */}
+                      <div className="aspect-video bg-neutral-900 mb-6 overflow-hidden border border-white/20 relative">
+                        {event.imageUrl ? (
+                          <img
+                            src={event.imageUrl}
+                            alt={event.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Disc className="w-16 h-16 text-white/10" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
                       </div>
-                    )}
 
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Calendar className="w-5 h-5 text-accent" />
-                        <span className="text-sm font-bold uppercase tracking-wider text-white/60">
-                          {new Date(event.eventDate).toLocaleDateString('en-GB', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </span>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-5 h-5 text-accent" />
+                          <span className="text-sm font-bold uppercase tracking-wider text-white/60">
+                            {new Date(event.eventDate).toLocaleDateString('en-GB', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+
+                        <h3 className="text-2xl font-black italic uppercase leading-tight group-hover:text-accent transition-colors">
+                          {event.title}
+                        </h3>
+
+                        <p className="text-sm text-white/50 font-medium uppercase tracking-wide">
+                          {event.location}
+                        </p>
+
+                        {isValidTicketUrl && (
+                          <a
+                            href={event.ticketUrl!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 tape-strip bg-accent text-white border-white text-sm hover:bg-white hover:text-black transition-all"
+                          >
+                            GET TICKETS <ArrowRight className="w-4 h-4" />
+                          </a>
+                        )}
                       </div>
-
-                      <h3 className="text-2xl font-black italic uppercase leading-tight group-hover:text-accent transition-colors">
-                        {event.title}
-                      </h3>
-
-                      <p className="text-sm text-white/50 font-medium uppercase tracking-wide">
-                        {event.location}
-                      </p>
-
-                      {event.ticketUrl && (
-                        <a
-                          href={event.ticketUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 tape-strip bg-accent text-white border-white text-sm hover:bg-white hover:text-black transition-all"
-                        >
-                          GET TICKETS <ArrowRight className="w-4 h-4" />
-                        </a>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
-            </div>
-          </section>
-        )}
+            )}
+          </div>
+        </section>
 
         {/* BOOKING BRUTALISM */}
         <section className="py-40 bg-accent text-white px-6 border-y-4 border-black">
