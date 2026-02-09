@@ -3,6 +3,7 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
+import "dotenv/config";
 import * as db from "../server/db";
 import { IngestionEngine } from "../server/_core/ingestionEngine";
 import { SecretsManager } from "../server/_core/secrets.ts";

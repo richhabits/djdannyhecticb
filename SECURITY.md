@@ -65,5 +65,17 @@ We will respond within 48 hours and work with you to address the issue before pu
 - OAuth integration requires proper configuration
 - Stripe webhook signature verification required
 - Admin routes protected by role-based access control
-- Rate limiting recommended for production (not yet implemented)
+- ✅ Rate limiting implemented for all endpoints (tiered by endpoint type)
+- ✅ HSTS enabled in production
+- ✅ Permissions-Policy restricts browser features
+- ✅ Cookie SameSite set to 'lax' for CSRF protection
+
+## Recent Security Updates
+
+- **HSTS Header**: Enforces HTTPS in production with 1-year max-age
+- **Permissions-Policy**: Restricts camera, microphone, geolocation, and FLoC
+- **Environment Validation**: Critical env vars validated on startup
+- **Rate Limiting**: Tiered limits (PUBLIC, AUTH, BOOKING, AI, STRICT, INTEL)
+- **Cookie Security**: HttpOnly, Secure, SameSite=Lax
+
 

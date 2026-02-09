@@ -14,6 +14,8 @@ const TAG_LENGTH = 16;
  * Uses AES-256-GCM with a master key from environment.
  */
 export class SecretsManager {
+    private static devKeyWarned = false;
+
     private static getMasterKey(): Buffer {
         const key = process.env.INTEGRATIONS_MASTER_KEY;
         if (!key) {
@@ -21,7 +23,15 @@ export class SecretsManager {
             if (process.env.NODE_ENV === 'production') {
                 throw new Error("CRITICAL: INTEGRATIONS_MASTER_KEY not set in production");
             }
-            return Buffer.alloc(32, "hectic-empire-dev-master-key-32b");
+
+            // Warn once in development
+            if (!this.devKeyWarned) {
+                console.warn("[SecretsManager] WARNING: Using development fallback key. Set INTEGRATIONS_MASTER_KEY for production.");
+                this.devKeyWarned = true;
+            }
+
+            // Use a deterministic dev key (32 bytes for AES-256)
+            return Buffer.from("hectic-empire-dev-master-key!!", "utf8").subarray(0, 32);
         }
         return Buffer.from(key, 'base64');
     }

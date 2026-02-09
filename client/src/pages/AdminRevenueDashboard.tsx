@@ -233,7 +233,7 @@ export default function AdminRevenueDashboard() {
                     <div className="space-y-2">
                         <h3 className="text-lg font-black uppercase italic tracking-tighter">Conversion Toxicity Alert</h3>
                         <p className="text-sm text-gray-400 leading-relaxed font-medium">
-                  Multiple rules are stacking to create >50% uplift on generic locations.
+                            Multiple rules are stacking to create &gt;50% uplift on generic locations.
                             Short Notice + Weekend uplift combination currently shows a 42% drop in deposit intent compared to standard base-rate quotes.
                         </p>
                         <div className="pt-4">

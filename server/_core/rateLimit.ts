@@ -54,7 +54,7 @@ export const RateLimitTiers = {
     // DDoS protection (very strict)
     STRICT: {
         windowMs: 10 * 1000, // 10 seconds
-        maxRequests: 30, // 30 requests per 10 seconds
+        maxRequests: 300, // Reduced strictness for asset loading
         name: "strict",
     },
 
@@ -137,3 +137,4 @@ export const authLimiter = createRateLimiter("AUTH");
 export const bookingLimiter = createRateLimiter("BOOKING");
 export const aiLimiter = createRateLimiter("AI");
 export const strictLimiter = createRateLimiter("STRICT");
+export const intelLimiter = createRateLimiter("INTEL");

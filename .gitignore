@@ -3,6 +3,10 @@ node_modules/
 .pnpm-store/
 jspm_packages/
 
+# Ops automation (local reports)
+ops-reports/
+proofpacks/
+
 # Build outputs
 dist/
 build/
@@ -89,3 +93,12 @@ certbot/
 .node_repl_history
 package-lock.json
 yarn.lock
+.dev.log
+.dev.pid
+
+# Fixes
+client/node_modules/
+server/node_modules/
+shared/node_modules/
+*.tsbuildinfo
+.DS_Store

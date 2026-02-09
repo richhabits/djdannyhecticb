@@ -78,7 +78,7 @@ export default function AdminPricing() {
                                 <SelectContent>
                                     <SelectItem value="base_rate">Base Rate (Performance Fee)</SelectItem>
                                     <SelectItem value="weekend_uplift">Weekend Uplift (Fri-Sun)</SelectItem>
-                                    <SelectItem value="short_notice">Rapid Deployment (<14 Days)</SelectItem>
+                                    <SelectItem value="short_notice">Rapid Deployment (&lt;14 Days)</SelectItem>
                                     <SelectItem value="location_band">Premium City Uplift</SelectItem>
                                 </SelectContent>
                             </Select>
