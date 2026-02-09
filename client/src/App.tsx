@@ -27,6 +27,10 @@ import About from "./pages/About";
 import History from "./pages/History";
 import Testimonials from "./pages/Testimonials";
 import Shop from "./pages/Shop";
+import BeatportShop from "./pages/BeatportShop";
+import BeatportSearch from "./pages/BeatportSearch";
+import BeatportChart from "./pages/BeatportChart";
+import BeatportGenre from "./pages/BeatportGenre";
 import Checkout from "./pages/Checkout";
 import Pricing from "./pages/Pricing";
 import FAQ from "./pages/FAQ";
@@ -114,7 +118,10 @@ function Router() {
       <Route path={"/bio"} component={Bio} />
       <Route path={"/history"} component={History} />
       <Route path={"/testimonials"} component={Testimonials} />
-      <Route path={"/shop"} component={Shop} />
+      <Route path={"/shop"} component={BeatportShop} />
+      <Route path={"/shop/search"} component={BeatportSearch} />
+      <Route path={"/shop/charts/:id"} component={BeatportChart} />
+      <Route path={"/shop/genres/:slug"} component={BeatportGenre} />
       <Route path={"/checkout"} component={Checkout} />
       <Route path={"/pricing"} component={Pricing} />
       <Route path={"/faq"} component={FAQ} />
