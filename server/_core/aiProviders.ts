@@ -21,6 +21,8 @@
  * Supports multiple providers with fallback to mock
  */
 
+import { observability } from "./observability";
+
 export type AiModelType = "chat" | "tts" | "videoHost";
 export type AiProvider = "openai" | "elevenlabs" | "d-id" | "custom" | "mock" | "none" | "gemini" | "groq" | "huggingface" | "cohere" | "ollama";
 
@@ -115,30 +117,36 @@ export async function chatCompletion(
       const { chatCompletionOllama } = await import("./aiProvidersFree");
       return await chatCompletionOllama(request);
     case "mock":
-      return await chatCompletionMock(request);
+      const res = await chatCompletionMock(request);
+      observability.recordAiUsage("mock");
+      return res;
     default:
       // Try to use best available free provider
       try {
         const { getBestFreeProvider, chatCompletionGemini, chatCompletionGroq, chatCompletionHuggingFace, chatCompletionCohere, chatCompletionOllama } = await import("./aiProvidersFree");
         const bestProvider = await getBestFreeProvider();
+        let result;
         switch (bestProvider) {
           case "groq":
-            return await chatCompletionGroq(request);
+            result = await chatCompletionGroq(request); break;
           case "gemini":
-            return await chatCompletionGemini(request);
+            result = await chatCompletionGemini(request); break;
           case "huggingface":
-            return await chatCompletionHuggingFace(request);
+            result = await chatCompletionHuggingFace(request); break;
           case "cohere":
-            return await chatCompletionCohere(request);
+            result = await chatCompletionCohere(request); break;
           case "ollama":
-            return await chatCompletionOllama(request);
+            result = await chatCompletionOllama(request); break;
           default:
-            return await chatCompletionMock(request);
+            result = await chatCompletionMock(request);
         }
+        observability.recordAiUsage(bestProvider, true); // Mark as fallback
+        return result;
       } catch (error) {
         if (process.env.NODE_ENV === "development") {
           console.warn(`[AI] Provider ${provider} not implemented, using mock:`, error);
         }
+        observability.recordAiUsage("mock", true);
         return await chatCompletionMock(request);
       }
   }
@@ -193,7 +201,7 @@ async function chatCompletionOpenAI(
   // TODO: Implement real OpenAI API call
   // const apiKey = process.env.OPENAI_API_KEY;
   // if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
-  
+
   // For now, fallback to mock
   return await chatCompletionMock(request);
 }
@@ -236,7 +244,7 @@ async function ttsElevenLabs(request: TTSRequest): Promise<TTSResponse> {
   // TODO: Implement real ElevenLabs API call
   // const apiKey = process.env.ELEVENLABS_API_KEY;
   // if (!apiKey) throw new Error("ELEVENLABS_API_KEY not configured");
-  
+
   // For now, fallback to mock
   return await ttsMock(request);
 }
@@ -266,7 +274,7 @@ async function videoHostDID(request: VideoHostRequest): Promise<VideoHostRespons
   // TODO: Implement real D-ID API call
   // const apiKey = process.env.DID_API_KEY;
   // if (!apiKey) throw new Error("DID_API_KEY not configured");
-  
+
   // For now, fallback to mock
   return await videoHostMock(request);
 }

@@ -14,9 +14,11 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { asc, desc, eq, gt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
+import { asc, desc, eq, gt, lt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, InsertMix, bookings, events, InsertEvent, podcasts, InsertPodcast, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, adminCredentials, InsertAdminCredential, marketingLeads, InsertMarketingLead, marketingCampaigns, InsertMarketingCampaign, outreachActivities, InsertOutreachActivity, socialMediaPosts, InsertSocialMediaPost, venueScraperResults, InsertVenueScraperResult, userFavorites, InsertUserFavorite, userPlaylists, InsertUserPlaylist, userPlaylistItems, InsertUserPlaylistItem, trackIdRequests, InsertTrackIdRequest, socialShares, InsertSocialShare, videoTestimonials, InsertVideoTestimonial, socialProofNotifications, InsertSocialProofNotification, socialMediaFeedPosts, InsertSocialMediaFeedPost, musicRecommendations, InsertMusicRecommendation, videos, InsertVideo, articles, InsertArticle, mediaLibrary, InsertMediaItem } from "../drizzle/schema";
+import { InsertUser, users, mixes, InsertMix, bookings, events, InsertEvent, podcasts, InsertPodcast, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, pricingRules, InsertPricingRule, outboundLeads, InsertOutboundLead, outboundInteractions, InsertOutboundInteraction, pricingAuditLogs, InsertPricingAuditLog, revenueIncidents, InsertRevenueIncident, governanceLogs, InsertGovernanceLog, bookingBlockers, InsertBookingBlocker, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, adminCredentials, InsertAdminCredential, marketingLeads, InsertMarketingLead, marketingCampaigns, InsertMarketingCampaign, outreachActivities, InsertOutreachActivity, socialMediaPosts, InsertSocialMediaPost, venueScraperResults, InsertVenueScraperResult, userFavorites, InsertUserFavorite, userPlaylists, InsertUserPlaylist, userPlaylistItems, InsertUserPlaylistItem, trackIdRequests, InsertTrackIdRequest, socialShares, InsertSocialShare, videoTestimonials, InsertVideoTestimonial, socialProofNotifications, InsertSocialProofNotification, socialMediaFeedPosts, InsertSocialMediaFeedPost, musicRecommendations, InsertMusicRecommendation, videos, InsertVideo, articles, InsertArticle, mediaLibrary, InsertMediaItem, savedSignals, userSignalMetrics, invites, cityLanes, intelItems, connectors, connectorSyncLogs, laneDailyRollups, sourceDailyRollups, supporterScores, featureFlags } from "../drizzle/schema";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { ENV } from './_core/env';
 import { hasDatabaseConfig, getDatabaseErrorMessage } from './_core/dbHealth';
 
@@ -143,6 +145,206 @@ export async function getUserBookings(userId: number) {
   return await db.select().from(bookings).where(eq(bookings.userId, userId)).orderBy(desc(bookings.createdAt));
 }
 
+// User Identity & Signal Ownership
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result[0];
+}
+
+export async function createUserWithPassword(input: { email: string; password: string; name?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const passwordHash = await bcrypt.hash(input.password, 12);
+  const openId = `email-${input.email}-${Date.now()}`;
+
+  await db.insert(users).values({
+    openId,
+    email: input.email,
+    name: input.name || input.email.split("@")[0],
+    passwordHash,
+    role: "user",
+    loginMethod: "password",
+  });
+
+  const user = await getUserByEmail(input.email);
+  if (!user) throw new Error("Failed to create user");
+  return user;
+}
+
+export async function saveSignal(userId: number, entityType: any, entityId: string, metadata?: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(savedSignals).values({
+    userId,
+    entityType,
+    entityId,
+    metadata: metadata ? JSON.stringify(metadata) : null,
+  });
+}
+
+export async function getSavedSignals(userId: number, entityType?: any) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const query = db.select().from(savedSignals).where(eq(savedSignals.userId, userId));
+  if (entityType) {
+    return await db.select().from(savedSignals).where(and(eq(savedSignals.userId, userId), eq(savedSignals.entityType, entityType))).orderBy(desc(savedSignals.createdAt));
+  }
+  return await query.orderBy(desc(savedSignals.createdAt));
+}
+
+export async function recordSignalMetric(userId: number, category: string, metricType: any, score: number = 1, city?: string) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(userSignalMetrics).values({
+    userId,
+    category,
+    city,
+    metricType,
+    score
+  }).onDuplicateKeyUpdate({
+    set: {
+      score: sql`${userSignalMetrics.score} + ${score}`,
+      city: city || userSignalMetrics.city,
+      lastInteractionAt: new Date()
+    }
+  });
+}
+
+export async function getUserSignalMetrics(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(userSignalMetrics).where(eq(userSignalMetrics.userId, userId)).orderBy(desc(userSignalMetrics.score));
+}
+
+// Invite Mechanics
+export async function createInvite(userId: number, city?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const code = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars code
+
+  await db.insert(invites).values({
+    inviterId: userId,
+    code,
+    targetCity: city || "London"
+  });
+
+  return code;
+}
+
+export async function getInvitesByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(invites).where(eq(invites.inviterId, userId)).orderBy(desc(invites.createdAt));
+}
+
+export async function redeemInvite(code: string, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [invite] = await db.select().from(invites).where(eq(invites.code, code)).limit(1);
+  if (!invite) throw new Error("Invalid invite code");
+  if (invite.redeemedBy) throw new Error("Invite already redeemed");
+
+  await db.update(invites).set({ redeemedBy: userId }).where(eq(invites.id, invite.id));
+
+  // Auto-follow logic could be added here if needed
+  return invite;
+}
+
+// --- Lane Factory & Ingestion Logic ---
+
+export async function getCityLanes() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(cityLanes).where(eq(cityLanes.isActive, true));
+}
+
+export async function createCityLane(input: any) {
+  const db = await getDb();
+  if (!db) return;
+  return await db.insert(cityLanes).values(input);
+}
+
+export async function getIntelItems(options: {
+  laneId?: number,
+  city?: string,
+  genre?: string,
+  limit?: number
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(intelItems);
+  const conditions = [];
+
+  if (options.laneId) conditions.push(eq(intelItems.laneId, options.laneId));
+  if (options.city) conditions.push(eq(intelItems.city, options.city));
+  if (options.genre) conditions.push(eq(intelItems.genre, options.genre));
+
+  if (conditions.length > 0) {
+    // @ts-ignore
+    query = query.where(and(...conditions));
+  }
+
+  return await query.orderBy(desc(intelItems.publishedAt)).limit(options.limit || 50);
+}
+
+export async function upsertIntelItems(items: any[]) {
+  const db = await getDb();
+  if (!db) return;
+
+  for (const item of items) {
+    await db.insert(intelItems).values(item).onDuplicateKeyUpdate({
+      set: {
+        content: item.content,
+        confidence: item.confidence,
+        fetchedAt: new Date()
+      }
+    });
+  }
+}
+
+export async function getConnectors() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(connectors);
+}
+
+export async function createConnector(input: any) {
+  const db = await getDb();
+  if (!db) return;
+  return await db.insert(connectors).values(input);
+}
+
+export async function recordConnectorSync(log: any) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(connectorSyncLogs).values(log);
+  await db.update(connectors)
+    .set({ lastSyncAt: new Date() })
+    .where(eq(connectors.id, log.connectorId));
+}
+
+export async function getSyncLogs(connectorId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(connectorSyncLogs);
+  if (connectorId) {
+    query = query.where(eq(connectorSyncLogs.connectorId, connectorId)) as any;
+  }
+
+  return await query.orderBy(desc(connectorSyncLogs.createdAt)).limit(50);
+}
+
 export async function getAllBookings() {
   const db = await getDb();
   if (!db) return [];
@@ -159,7 +361,7 @@ export async function createBooking(booking: any) {
 export async function getUpcomingEvents() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate));
+  return await db.select().from(events).where(gt(events.eventDate, new Date())).orderBy(asc(events.eventDate)).limit(6);
 }
 
 export async function getFeaturedEvents() {
@@ -717,6 +919,36 @@ export async function getEventBooking(id: number) {
   if (!db) throw new Error("Database not available");
   const result = await db.select().from(eventBookings).where(eq(eventBookings.id, id)).limit(1);
   return result[0];
+}
+
+// Event Booking Blockers
+export async function listBookingBlockers() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(bookingBlockers).orderBy(desc(bookingBlockers.blockedDate));
+}
+
+export async function createBookingBlocker(blocker: InsertBookingBlocker) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(bookingBlockers).values(blocker);
+  return result[0].insertId;
+}
+
+export async function deleteBookingBlocker(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(bookingBlockers).where(eq(bookingBlockers.id, id));
+}
+
+export async function getConfirmedBookingDates() {
+  const db = await getDb();
+  if (!db) return [];
+  const confirmed = await db
+    .select({ date: eventBookings.eventDate })
+    .from(eventBookings)
+    .where(eq(eventBookings.status, "confirmed"));
+  return confirmed.map(c => c.date);
 }
 
 // Fan Badges queries
@@ -3984,29 +4216,6 @@ export async function getAllVideos() {
   return results;
 }
 
-// AUTH HELPERS
-export async function createUserWithPassword(user: { email: string; password?: string; name?: string }) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // Simple hash (In production use bcrypt/argon2)
-  // For now using simple string to demo "working" as requested.
-  // Ideally: const hash = await bcrypt.hash(user.password, 10);
-  const passwordHash = user.password ? `HASHED_${user.password}` : undefined;
-
-  const result = await db.insert(users).values({
-    email: user.email,
-    name: user.name || "New User",
-    openId: `email:${user.email}`, // Surrogate OpenID
-    loginMethod: "email",
-    passwordHash: passwordHash,
-    role: "user",
-  });
-
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(users).where(eq(users.id, insertedId)).limit(1);
-  return created[0];
-}
 
 export async function createVideo(video: InsertVideo) {
   console.log("[db.createVideo] Attempting to create video:", video);
@@ -4489,10 +4698,22 @@ export async function createVideoTestimonial(testimonial: InsertVideoTestimonial
   return await db.select().from(videoTestimonials).where(eq(videoTestimonials.id, insertedId)).limit(1).then(r => r[0]);
 }
 
-export async function getVideoTestimonials(limit: number = 10) {
+export async function getVideoTestimonials(filters?: { isApproved?: boolean, isFeatured?: boolean, limit?: number }) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(videoTestimonials).where(eq(videoTestimonials.isApproved, true)).orderBy(desc(videoTestimonials.createdAt)).limit(limit);
+
+  let query = db.select().from(videoTestimonials);
+  const conditions = [];
+
+  if (filters?.isApproved !== undefined) conditions.push(eq(videoTestimonials.isApproved, filters.isApproved));
+  if (filters?.isFeatured !== undefined) conditions.push(eq(videoTestimonials.isFeatured, filters.isFeatured));
+
+  let finalQuery: any = query;
+  if (conditions.length > 0) {
+    finalQuery = query.where(and(...conditions));
+  }
+
+  return await finalQuery.orderBy(desc(videoTestimonials.createdAt)).limit(filters?.limit || 50);
 }
 
 export async function getVideoTestimonialById(id: number) {
@@ -4525,3 +4746,268 @@ export async function createRecommendation(rec: InsertMusicRecommendation) {
 }
 
 
+// ============================================
+// Pricing Rules
+// ============================================
+export async function createPricingRule(rule: InsertPricingRule) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(pricingRules).values(rule);
+  return { ...rule, id: result[0].insertId };
+}
+
+export async function getPricingRules() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(pricingRules).where(eq(pricingRules.isActive, true));
+}
+
+export async function deletePricingRule(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(pricingRules).set({ isActive: false }).where(eq(pricingRules.id, id));
+}
+
+export async function expireUnpaidDeposits() {
+  const db = await getDb();
+  if (!db) return;
+  const now = new Date();
+
+  await db.update(eventBookings)
+    .set({ status: "cancelled", updatedAt: now })
+    .where(
+      and(
+        eq(eventBookings.status, "pending"),
+        eq(eventBookings.depositPaid, false),
+        lt(eventBookings.depositExpiresAt, now)
+      )
+    );
+}
+
+
+// ============================================
+// Pricing Audit Logs
+// ============================================
+export async function createPricingAuditLog(log: InsertPricingAuditLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(pricingAuditLogs).values(log);
+  return result[0].insertId;
+}
+
+export async function updatePricingAuditLogStatus(bookingId: number, status: "payment_started" | "deposit_paid" | "expired") {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(pricingAuditLogs)
+    .set({ conversionStatus: status })
+    .where(eq(pricingAuditLogs.bookingId, bookingId));
+}
+
+export async function updatePricingAuditLogBookingId(logId: number, bookingId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(pricingAuditLogs)
+    .set({ bookingId })
+    .where(eq(pricingAuditLogs.id, logId));
+}
+
+export async function getRevenueMetrics() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const logs = await db.select().from(pricingAuditLogs);
+  const rules = await db.select().from(pricingRules);
+
+  return {
+    logs,
+    rules
+  };
+}
+
+// ============================================
+// Outbound Lead Engine (OLE)
+// ============================================
+
+export async function createOutboundLead(lead: InsertOutboundLead) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(outboundLeads).values(lead);
+  return result[0].insertId;
+}
+
+export async function listOutboundLeads(status?: "new" | "qualified" | "contacted" | "converted") {
+  const db = await getDb();
+  if (!db) return [];
+  if (status) {
+    return await db.select().from(outboundLeads).where(eq(outboundLeads.status, status)).orderBy(desc(outboundLeads.leadScore));
+  }
+  return await db.select().from(outboundLeads).orderBy(desc(outboundLeads.createdAt));
+}
+
+export async function updateLeadScore(leadId: number, score: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(outboundLeads).set({ leadScore: score }).where(eq(outboundLeads.id, leadId));
+}
+
+export async function createOutboundInteraction(interaction: InsertOutboundInteraction) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(outboundInteractions).values(interaction);
+  return result[0].insertId;
+}
+
+export async function getLeadWithInteractions(leadId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const lead = await db.select().from(outboundLeads).where(eq(outboundLeads.id, leadId)).limit(1);
+  const interactions = await db.select().from(outboundInteractions).where(eq(outboundInteractions.leadId, leadId)).orderBy(desc(outboundInteractions.createdAt));
+  return { ...lead[0], interactions };
+}
+
+export async function expirePendingDeposits() {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const now = new Date();
+
+  // Find all pending bookings where depositExpiresAt < now
+  const result = await db.update(eventBookings)
+    .set({ status: "cancelled", extraNotes: sql`CONCAT(COALESCE(${eventBookings.extraNotes}, ''), '\n[Governance] System Auto-Expired: Deposit TTL reached.')` })
+    .where(and(
+      eq(eventBookings.status, "pending"),
+      eq(eventBookings.depositPaid, false),
+      lt(eventBookings.depositExpiresAt, now)
+    ));
+
+  return result[0].affectedRows;
+}
+
+// ============================================
+// Revenue Governance & Fail-Safe
+// ============================================
+
+export async function createRevenueIncident(incident: InsertRevenueIncident) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(revenueIncidents).values(incident);
+  return result[0].insertId;
+}
+
+export async function listActiveRevenueIncidents() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(revenueIncidents).where(eq(revenueIncidents.status, "active"));
+}
+
+export async function resolveRevenueIncident(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(revenueIncidents)
+    .set({ status: "resolved", resolvedAt: new Date() })
+    .where(eq(revenueIncidents.id, id));
+}
+
+export async function createGovernanceLog(log: InsertGovernanceLog) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(governanceLogs).values(log);
+}
+
+export async function listGovernanceLogs(limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(governanceLogs).orderBy(desc(governanceLogs.createdAt)).limit(limit);
+}
+
+// --- Governance & Feature Flags ---
+
+export async function checkFeatureFlag(key: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const [flag] = await db.select().from(featureFlags).where(eq(featureFlags.key, key));
+  return flag ? flag.isEnabled : true;
+}
+
+// --- Rollup Helpers ---
+
+export async function incrementLaneRollup(laneId: string, day: Date, metrics: Partial<{ views: number, saves: number, signups: number, redemptions: number }>) {
+  const db = await getDb();
+  if (!db) return;
+
+  const dateOnly = new Date(day.toISOString().split('T')[0]);
+
+  await db.insert(laneDailyRollups).values({
+    laneId,
+    day: dateOnly,
+    views: metrics.views || 0,
+    saves: metrics.saves || 0,
+    signups: metrics.signups || 0,
+    inviteRedemptions: metrics.redemptions || 0
+  }).onDuplicateKeyUpdate({
+    set: {
+      views: sql`${laneDailyRollups.views} + ${metrics.views || 0}`,
+      saves: sql`${laneDailyRollups.saves} + ${metrics.saves || 0}`,
+      signups: sql`${laneDailyRollups.signups} + ${metrics.signups || 0}`,
+      inviteRedemptions: sql`${laneDailyRollups.inviteRedemptions} + ${metrics.redemptions || 0}`
+    }
+  });
+}
+
+export async function incrementSourceRollup(sourceType: string, day: Date, metrics: { ingested?: number, served?: number, saved?: number, failed?: boolean }) {
+  const db = await getDb();
+  if (!db) return;
+
+  const dateOnly = new Date(day.toISOString().split('T')[0]);
+
+  await db.insert(sourceDailyRollups).values({
+    sourceType,
+    day: dateOnly,
+    ingested: metrics.ingested || 0,
+    served: metrics.served || 0,
+    saved: metrics.saved || 0,
+    failCount: metrics.failed ? 1 : 0
+  }).onDuplicateKeyUpdate({
+    set: {
+      ingested: sql`${sourceDailyRollups.ingested} + ${metrics.ingested || 0}`,
+      served: sql`${sourceDailyRollups.served} + ${metrics.served || 0}`,
+      saved: sql`${sourceDailyRollups.saved} + ${metrics.saved || 0}`,
+      failCount: sql`${sourceDailyRollups.failCount} + ${metrics.failed ? 1 : 0}`
+    }
+  });
+}
+
+// --- Supporter Management ---
+
+export async function promoteToSupporter(userId: number, reason: string, actorId?: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.update(users).set({ isSupporter: true }).where(eq(users.id, userId));
+  await createGovernanceLog({
+    actorId,
+    actorType: actorId ? "admin" : "system",
+    action: "supporter_promote",
+    userId,
+    reason,
+    payload: JSON.stringify({ promotedAt: new Date() })
+  });
+}
+
+export async function getSupporters() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(users).where(eq(users.isSupporter, true));
+}
+
+export async function recordSupporterScore(userId: number, weekStart: Date, score: number, breakdown: any) {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.insert(supporterScores).values({
+    userId,
+    weekStart,
+    score,
+    breakdown: JSON.stringify(breakdown)
+  });
+}

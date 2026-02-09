@@ -1,31 +1,16 @@
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- */
-
 import { useState, useEffect } from "react";
 import { Headphones } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export function LockedInCounter() {
   const { data: shouts } = trpc.shouts.list.useQuery({ limit: 100 }, { retry: false });
-
-  // Baseline activity + number of approved shouts
+  
+  // Base count + number of approved shouts (simple implementation)
+  // TODO: Replace with real analytics when available
   const baseCount = 42;
   const shoutCount = shouts?.length || 0;
   const [sessionCount, setSessionCount] = useState(0);
-
+  
   useEffect(() => {
     // Increment session count when shouts are loaded (simple session tracking)
     if (shouts && shouts.length > 0) {
@@ -37,9 +22,9 @@ export function LockedInCounter() {
       }
     }
   }, [shouts, shoutCount]);
-
+  
   const totalCount = baseCount + shoutCount + sessionCount;
-
+  
   return (
     <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-accent/50">
       <Headphones className="w-5 h-5 text-accent" />

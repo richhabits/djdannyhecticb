@@ -1,0 +1,130 @@
+# Hectic Empire - Docker Compose Production
+# Self-healing configuration with realistic resource limits
+#
+# Memory limits based on typical Node.js + static serving workload
+# Adjust based on actual profiling with `docker stats`
+#
+version: "3.8"
+
+services:
+  # Main application (Node.js)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hectic-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          # Node.js app: 1GB max (allows for spikes during cold start/ingestion)
+          memory: 1G
+        reservations:
+          # Normal operation baseline
+          memory: 384M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    labels:
+      - "com.hectic.service=web"
+      - "com.hectic.tier=production"
+      - "com.hectic.rollback=enabled"
+
+  # Nginx reverse proxy with HTTPS
+  nginx:
+    image: nginx:alpine
+    container_name: hectic-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "nginx", "-t" ]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+    deploy:
+      resources:
+        limits:
+          # Nginx: 256MB is generous for static + proxy
+          memory: 256M
+        reservations:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    labels:
+      - "com.hectic.service=nginx"
+      - "com.hectic.tier=production"
+
+  # Certbot for auto-renewal (runs periodically)
+  certbot:
+    image: certbot/certbot
+    container_name: hectic-certbot
+    restart: "no"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    # Run renewal check, then exit
+    command: renew --webroot -w /var/www/certbot --quiet
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    labels:
+      - "com.hectic.service=certbot"
+      - "com.hectic.tier=maintenance"
+
+networks:
+  default:
+    name: hectic-network
+
+# Optional: Add these services if needed
+#
+# Database (if using containerized DB):
+#   db:
+#     image: mysql:8
+#     container_name: hectic-db
+#     restart: unless-stopped
+#     deploy:
+#       resources:
+#         limits:
+#           memory: 2G
+#         reservations:
+#           memory: 512M
+#
+# Redis (if using caching):
+#   redis:
+#     image: redis:alpine
+#     container_name: hectic-redis
+#     restart: unless-stopped
+#     deploy:
+#       resources:
+#         limits:
+#           memory: 256M
+#         reservations:
+#           memory: 64M

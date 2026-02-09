@@ -1,19 +1,3 @@
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- */
-
 import { useAuth } from "@/_core/hooks/useAuth";
 import { DatabaseErrorBanner } from "@/components/DatabaseErrorBanner";
 import { Button } from "@/components/ui/button";
@@ -138,7 +122,7 @@ export default function AdminMixes() {
 
     const data = {
       ...formData,
-      duration: formData.duration ? parseInt(formData.duration as string, 10) : undefined,
+      duration: formData.duration ? Number(formData.duration) : undefined,
     };
 
     if (editingMix) {

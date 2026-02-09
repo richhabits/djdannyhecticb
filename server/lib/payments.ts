@@ -65,16 +65,19 @@ export async function createStripePaymentIntent(params: CreatePaymentIntentParam
   });
 
   // Create Stripe Payment Intent
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: params.amount,
-    currency: params.currency.toLowerCase(),
-    metadata: {
-      purchaseId: purchase.id.toString(),
-      productId: params.productId.toString(),
-      productName: product.name,
-      fanName: params.fanName,
-    },
-    description: `Purchase: ${product.name}`,
+  const { stripeBreaker } = await import("../_core/circuitBreaker");
+  const paymentIntent = await stripeBreaker.execute(async () => {
+    return await stripe.paymentIntents.create({
+      amount: params.amount,
+      currency: params.currency.toLowerCase(),
+      metadata: {
+        purchaseId: purchase.id.toString(),
+        productId: params.productId.toString(),
+        productName: product.name,
+        fanName: params.fanName,
+      },
+      description: `Purchase: ${product.name}`,
+    });
   });
 
   // Update purchase with payment intent ID
@@ -115,6 +118,13 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           status: "completed",
         });
       }
+
+      // Handle booking deposits
+      const bookingId = parseInt(paymentIntent.metadata.bookingId || "0");
+      if (bookingId && paymentIntent.metadata.type === "booking_deposit") {
+        const { revenueOps } = await import("../_core/revenueOps");
+        await revenueOps.confirmDeposit(bookingId, paymentIntent.id);
+      }
       break;
     }
     case "payment_intent.payment_failed": {
@@ -153,6 +163,36 @@ export async function handleStripeWebhook(event: Stripe.Event) {
   }
 }
 
+export async function createBookingDepositIntent(params: { bookingId: number, amount: number, currency: string }) {
+  const stripe = getStripe();
+  if (!stripe) throw new Error("Stripe is not configured");
+
+  const booking = await db.getEventBooking(params.bookingId);
+  if (!booking) throw new Error("Booking not found");
+
+  const { stripeBreaker } = await import("../_core/circuitBreaker");
+  const paymentIntent = await stripeBreaker.execute(async () => {
+    return await stripe.paymentIntents.create({
+      amount: params.amount,
+      currency: params.currency.toLowerCase(),
+      metadata: {
+        bookingId: params.bookingId.toString(),
+        type: "booking_deposit",
+      },
+      description: `Deposit for Booking: ${booking.name}`,
+    });
+  });
+
+  await db.updateEventBooking(params.bookingId, {
+    paymentIntentId: paymentIntent.id,
+  });
+
+  return {
+    paymentIntentId: paymentIntent.id,
+    clientSecret: paymentIntent.client_secret,
+  };
+}
+
 export interface CreateSupportPaymentIntentParams {
   amount: number; // in smallest currency unit (e.g., pence for GBP)
   currency: string;
@@ -180,15 +220,18 @@ export async function createSupportPaymentIntent(params: CreateSupportPaymentInt
   });
 
   // Create Stripe Payment Intent
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: params.amount,
-    currency: params.currency.toLowerCase(),
-    metadata: {
-      supportEventId: supportEvent.id.toString(),
-      fanName: params.fanName,
-      type: "support",
-    },
-    description: `Support: ${params.fanName}`,
+  const { stripeBreaker } = await import("../_core/circuitBreaker");
+  const paymentIntent = await stripeBreaker.execute(async () => {
+    return await stripe.paymentIntents.create({
+      amount: params.amount,
+      currency: params.currency.toLowerCase(),
+      metadata: {
+        supportEventId: supportEvent.id.toString(),
+        fanName: params.fanName,
+        type: "support",
+      },
+      description: `Support: ${params.fanName}`,
+    });
   });
 
   // Update support event with payment intent ID (we'll need to add this field)

@@ -47,14 +47,18 @@ export async function chatWithDanny(message: string, modelName: "gemini-pro" | "
     }
 
     try {
-        const model = genAI.getGenerativeModel({
-            model: modelName,
-            systemInstruction: SYSTEM_INSTRUCTION,
-        });
+        const { geminiBreaker } = await import("../_core/circuitBreaker");
 
-        const result = await model.generateContent(message);
-        const response = await result.response;
-        return response.text();
+        return await geminiBreaker.execute(async () => {
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                systemInstruction: SYSTEM_INSTRUCTION,
+            });
+
+            const result = await model.generateContent(message);
+            const response = await result.response;
+            return response.text();
+        }, "Hold tight, the signal is breaking up! Try again in a sec. 📉 (Circuit Breaker)");
     } catch (error) {
         console.error("Gemini Error:", error);
         return "Hold tight, the signal is breaking up! Try again in a sec. 📉";
