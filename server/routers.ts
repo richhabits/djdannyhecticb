@@ -31,9 +31,11 @@ import {
 } from "../drizzle/schema";
 import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
+import { beatportRouter } from "./lib/beatport/router";
 
 export const appRouter = router({
   system: systemRouter,
+  beatport: beatportRouter,
 
 
   auth: router({
