@@ -1,19 +1,3 @@
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- */
-
 import { Button } from "@/components/ui/button";
 import { Share2, Facebook, Twitter, Instagram, Linkedin, MessageCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -103,7 +87,7 @@ export function SocialShareButton({ entityType, entityId, url, title, userId }: 
           <MessageCircle className="w-4 h-4 mr-2" />
           WhatsApp
         </DropdownMenuItem>
-        {(navigator as any).share && (
+        {navigator.share && (
           <DropdownMenuItem onClick={() => handleShare("other")}>
             <Share2 className="w-4 h-4 mr-2" />
             More...

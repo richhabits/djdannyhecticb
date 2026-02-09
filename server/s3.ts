@@ -37,7 +37,10 @@ export async function getPresignedDownloadUrl(key: string) {
     });
 
     try {
-        return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        const { s3Breaker } = await import("./_core/circuitBreaker");
+        return await s3Breaker.execute(async () => {
+            return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        });
     } catch (error) {
         console.error("Error generating presigned URL", error);
         throw error;
@@ -65,7 +68,10 @@ export async function uploadFile(
     });
 
     try {
-        await s3Client.send(command);
+        const { s3Breaker } = await import("./_core/circuitBreaker");
+        await s3Breaker.execute(async () => {
+            await s3Client.send(command);
+        });
         // Return standard S3 URL
         return `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`;
     } catch (error) {

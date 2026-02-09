@@ -50,6 +50,27 @@
       "when": 1767660768433,
       "tag": "0006_clammy_namor",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1769477193719,
+      "tag": "0007_hard_charles_xavier",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1769483359320,
+      "tag": "0008_typical_mystique",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1770650457861,
+      "tag": "0009_icy_risque",
+      "breakpoints": true
     }
   ]
 }

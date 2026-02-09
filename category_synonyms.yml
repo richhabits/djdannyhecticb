@@ -1,0 +1,66 @@
+# Hectic Category Synonyms (editable)
+# Left side are common tags from directories; right side is your normalized category.
+
+pop: Pop
+top 40: Pop
+charts: Pop
+
+news: News
+talk: Talk
+speech: Talk
+
+rock: Rock
+classic rock: Rock
+alternative rock: Rock
+alt rock: Rock
+
+classical: Classical
+orchestral: Classical
+
+jazz: Jazz
+blues: Jazz
+
+dance: Dance
+edm: Dance
+house: Dance
+trance: Dance
+techno: Dance
+
+hiphop: Hip-Hop
+hip-hop: Hip-Hop
+rap: Hip-Hop
+
+rnb: R&B
+r&b: R&B
+soul: R&B
+
+community: Community
+local: Community
+
+sport: Sport
+sports: Sport
+
+country: Country
+folk: Folk
+
+ambient: Ambient
+chill: Ambient
+lofi: Lo-Fi
+lo-fi: Lo-Fi
+
+electronic: Electronic
+dubstep: Electronic
+drum and bass: Electronic
+dnb: Electronic
+
+reggae: Reggae
+ska: Reggae
+
+world: World
+afrobeats: Afrobeats
+latin: Latin
+
+christian: Christian
+gospel: Christian
+
+general: General
