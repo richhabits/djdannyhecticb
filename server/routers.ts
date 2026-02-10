@@ -32,10 +32,12 @@ import {
 import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
 import { beatportRouter } from "./lib/beatport/router";
+import { ukEventsRouter } from "./ukEventsRouter";
 
 export const appRouter = router({
   system: systemRouter,
   beatport: beatportRouter,
+  ukEvents: ukEventsRouter,
 
 
   auth: router({
