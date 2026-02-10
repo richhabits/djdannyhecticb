@@ -6,8 +6,10 @@
 
 import { useEffect } from "react";
 
+type JsonLd = { "@context": string; "@type"?: string; [k: string]: unknown };
+
 interface StructuredDataProps {
-  data: Record<string, any>;
+  data: JsonLd | Record<string, any>;
   type?: "Person" | "MusicAlbum" | "Event" | "PodcastEpisode" | "Organization" | "WebSite";
 }
 
