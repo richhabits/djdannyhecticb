@@ -3,50 +3,11 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { trpc } from "@/lib/trpc";
-import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Bell, Ticket, MapPin, ExternalLink, Shield, Activity, Bookmark, BookmarkCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { MetaTagsComponent } from "@/components/MetaTags";
-import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
 export default function RaveIntel() {
-    const [selectedCity, setSelectedCity] = useState<string>("London");
-    const [selectedGenre, setSelectedGenre] = useState<string | undefined>(undefined);
-
-    const { data: lanes } = trpc.lanes.list.useQuery();
-    const { data: intel, isLoading } = trpc.raveIntel.list.useQuery({
-        city: selectedCity,
-        genre: selectedGenre
-    }, {
-        refetchInterval: 60000,
-    });
-
-    const { data: user } = trpc.users.me.useQuery();
-    const saveSignal = trpc.signals.save.useMutation();
-    const trackInterest = trpc.signals.trackInterest.useMutation();
-    const { data: savedSignals } = trpc.signals.list.useQuery({ entityType: 'intel' }, { enabled: !!user });
-
-    const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-
-    useEffect(() => {
-        if (savedSignals) {
-            setSavedIds(new Set(savedSignals.map(s => s.entityId)));
-        }
-    }, [savedSignals]);
-
-    useEffect(() => {
-        if (user) {
-            trackInterest.mutate({
-                category: `${selectedCity} ${selectedGenre || 'Combined'} Lane`,
-                city: selectedCity,
-                metricType: "view",
-                score: 1
-            });
-        }
-    }, [user, selectedCity, selectedGenre]);
+    return <TemporarilyDisabled feature="Rave Intel" />;
+}
 
     const handleSave = (item: any) => {
         if (!user) {

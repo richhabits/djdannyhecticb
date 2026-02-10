@@ -3,31 +3,11 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { trpc } from "@/lib/trpc";
-import { motion } from "framer-motion";
-import { Shield, Users, Award, TrendingUp, Search, UserPlus, UserMinus, History } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { toast } from "sonner";
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
 export default function AdminSupporters() {
-    const { data: supporters, refetch } = trpc.admin.supporters.list.useQuery();
-    const promote = trpc.admin.supporters.promote.useMutation();
-    const demote = trpc.admin.supporters.demote.useMutation();
-
-    const [targetUserId, setTargetUserId] = useState("");
-    const [reason, setReason] = useState("");
-
-    const handlePromote = () => {
-        if (!targetUserId || !reason) {
-            toast.error("Target ID and Reason required for promotion.");
-            return;
-        }
-        toast.promise(promote.mutateAsync({ userId: parseInt(targetUserId), reason }), {
-            loading: "Scaling User Permissions...",
+    return <TemporarilyDisabled feature="Admin Supporters" />;
+}
             success: () => {
                 refetch();
                 setTargetUserId("");

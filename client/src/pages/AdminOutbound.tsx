@@ -4,30 +4,11 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { useState } from "react";
-import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-    Users,
-    Search,
-    ExternalLink,
-    Mail,
-    TrendingUp,
-    Zap,
-    CheckCircle2,
-    AlertCircle,
-    PlusCircle,
-    Copy,
-    ArrowUpRight
-} from "lucide-react";
-import { toast } from "sonner";
-import { format } from "date-fns";
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
 export default function AdminOutbound() {
-    const [filter, setFilter] = useState<any>({});
+    return <TemporarilyDisabled feature="Admin Outbound" />;
+}
     const { data: leads, isLoading, refetch } = trpc.outbound.listLeads.useQuery(filter);
     const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
     const { data: leadDetails } = trpc.outbound.getLead.useQuery({ id: selectedLeadId || 0 }, { enabled: !!selectedLeadId });

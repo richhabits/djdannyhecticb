@@ -3,31 +3,11 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { trpc } from "@/lib/trpc";
-import { motion } from "framer-motion";
-import { Link2, Shield, Settings, Activity, Terminal, Key } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { toast } from "sonner";
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
 export default function AdminConnectors() {
-    const { data: connectors, refetch } = trpc.admin.ingestion.connectors.useQuery();
-    const { data: logs } = trpc.admin.ingestion.syncLogs.useQuery({});
-    const runSync = trpc.admin.ingestion.runSync.useMutation();
-    const setKey = trpc.admin.ingestion.setKey.useMutation();
-
-    const [editingConnector, setEditingConnector] = useState<number | null>(null);
-    const [apiKey, setApiKey] = useState("");
-
-    const handleRunSync = () => {
-        toast.promise(runSync.mutateAsync(), {
-            loading: "Initiating Global Sync...",
-            success: "Network Synchronization Started",
-            error: "Sync Protocol Failed"
-        });
+    return <TemporarilyDisabled feature="Admin Connectors" />;
+}
     };
 
     const handleUpdateKey = (id: number) => {

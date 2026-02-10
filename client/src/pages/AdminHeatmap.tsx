@@ -3,31 +3,11 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { trpc } from "@/lib/trpc";
-import { motion } from "framer-motion";
-import { Activity, Shield, Users, BarChart3, Map, Zap } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
 export default function AdminHeatmap() {
-    const [days, setDays] = useState(7);
-    const { data: rollups, isLoading } = trpc.admin.analytics.heatmap.useQuery({ days });
-
-    const stats = rollups || [];
-
-    return (
-        <div className="min-h-screen bg-black text-white pt-32 pb-48 font-sans">
-            <div className="container space-y-12">
-
-                {/* ADMIN HEADER */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-12">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-500">Intelligence Operations</span>
-                        </div>
+    return <TemporarilyDisabled feature="Admin Heatmap" />;
+}
                         <h1 className="text-6xl font-black uppercase tracking-tighter">Signal Heatmap</h1>
                         <p className="text-white/40 max-w-xl font-medium">Real-time regional intelligence density and conversion rollups across the Hectic network.</p>
                     </div>

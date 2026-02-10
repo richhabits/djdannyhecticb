@@ -4,50 +4,11 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { useState } from "react";
-import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Calendar, MapPin, Zap, TrendingUp, Settings2 } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
 export default function AdminPricing() {
-    const { user, isAuthenticated } = useAuth();
-    const utils = trpc.useUtils();
-    const { data: rules, isLoading } = trpc.pricing.getRules.useQuery();
-
-    const [newRule, setNewRule] = useState({
-        ruleType: "base_rate" as any,
-        ruleValue: 0,
-        ruleStrategy: "fixed" as any,
-    });
-
-    const createMutation = trpc.pricing.createRule.useMutation({
-        onSuccess: () => {
-            toast.success("Pricing rule added to engine");
-            utils.pricing.getRules.invalidate();
-        },
-        onError: (err) => toast.error(err.message)
-    });
-
-    const deleteMutation = trpc.pricing.deleteRule.useMutation({
-        onSuccess: () => {
-            toast.success("Rule deactivated");
-            utils.pricing.getRules.invalidate();
-        }
-    });
-
-    if (!isAuthenticated || user?.role !== "admin") {
-        return <div className="p-20 text-center font-black uppercase tracking-widest text-muted-foreground">Command Clearance Required</div>;
-    }
-
-    return (
-        <div className="container mx-auto p-6 space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-6">
+    return <TemporarilyDisabled feature="Admin Pricing" />;
+}
                 <div>
                     <h1 className="text-4xl font-black uppercase tracking-tight flex items-center gap-3 italic">
                         <Settings2 className="h-8 w-8 text-orange-500" />

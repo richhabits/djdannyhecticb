@@ -33,19 +33,14 @@ export default function Signup() {
     const queryParams = new URLSearchParams(location.split("?")[1]);
     const refCode = queryParams.get("ref");
 
-    const redeemInvite = trpc.invites.redeem.useMutation();
+    // Note: invites.redeem router temporarily disabled
+    // const redeemInvite = trpc.invites.redeem.useMutation();
 
     const registerMutation = trpc.auth.register.useMutation({
         onSuccess: async () => {
             if (refCode) {
-                try {
-                    await redeemInvite.mutateAsync({ code: refCode });
-                    toast.success("Protocol Link Established", {
-                        description: "You've been assigned to the London DnB Lane."
-                    });
-                } catch (e) {
-                    console.error("Invite redemption failed", e);
-                }
+                // Invite redemption temporarily disabled
+                toast.success("Welcome! Invite system will be available soon.");
             }
             toast.success("Signal Established. Welcome to the Empire.");
             window.location.href = "/login";

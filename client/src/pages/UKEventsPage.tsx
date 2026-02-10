@@ -3,51 +3,12 @@
  * Real-time automated UK events from Ticketmaster, festivals, boxing, music & more
  * Pirate Radio Era Design System
  */
-import { useState, useMemo } from 'react';
-import { trpc } from '@/lib/trpc';
-import { MetaTagsComponent } from '@/components/MetaTags';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Calendar,
-    MapPin,
-    Ticket,
-    Music,
-    Search,
-    Filter,
-    ChevronDown,
-    ExternalLink,
-    Clock,
-    Users,
-    Zap,
-    Send,
-    X,
-    Plus,
-    Star,
-    Trophy,
-    Mic2,
-    Dumbbell,
-    PartyPopper,
-    Laugh,
-    Theater
-} from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { Link } from 'wouter';
 
-// Category icons and colors
-const CATEGORY_CONFIG = {
-    music: { icon: Music, label: 'Music', color: 'bg-orange-500' },
-    festival: { icon: PartyPopper, label: 'Festivals', color: 'bg-purple-500' },
-    boxing: { icon: Dumbbell, label: 'Boxing & MMA', color: 'bg-red-500' },
-    sports: { icon: Trophy, label: 'Sports', color: 'bg-green-500' },
-    comedy: { icon: Laugh, label: 'Comedy', color: 'bg-yellow-500' },
-    theatre: { icon: Theater, label: 'Theatre', color: 'bg-pink-500' },
-    clubbing: { icon: Zap, label: 'Clubbing', color: 'bg-cyan-500' },
-    other: { icon: Star, label: 'Other', color: 'bg-gray-500' },
-};
+import { TemporarilyDisabled } from "@/components/TemporarilyDisabled";
 
-// Event Card Component
-function EventCard({ event, index }: { event: any; index: number }) {
-    const category = CATEGORY_CONFIG[event.category as keyof typeof CATEGORY_CONFIG] || CATEGORY_CONFIG.other;
+export default function UKEventsPage() {
+    return <TemporarilyDisabled feature="UK Events" />;
+}
     const CategoryIcon = category.icon;
 
     const formatPrice = () => {
