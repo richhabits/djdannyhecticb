@@ -7,6 +7,14 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
+  router-drift-check:
+    name: Router Drift Check (REQUIRED)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for router drift
+        run: bash scripts/check-router-drift.sh
+
   typecheck:
     name: TypeScript Check (Non-Blocking)
     runs-on: ubuntu-latest
