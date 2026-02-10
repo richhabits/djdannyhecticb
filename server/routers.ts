@@ -3420,8 +3420,8 @@ export const appRouter = router({
   // ============================================
   videoTestimonials: router({
     list: publicProcedure
-      .input(z.object({ isApproved: z.boolean().optional(), isFeatured: z.boolean().optional() }).optional())
-      .query(({ input }) => db.getVideoTestimonials(50)),
+      .input(z.object({ isApproved: z.boolean().optional(), isFeatured: z.boolean().optional(), limit: z.number().optional() }).optional())
+      .query(({ input }) => db.getVideoTestimonials({ ...input, limit: 50 })),
     get: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(({ input }) => db.getVideoTestimonialById(input.id)),
