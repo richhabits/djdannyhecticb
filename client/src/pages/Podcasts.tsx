@@ -6,6 +6,8 @@ import { Link } from "wouter";
 import { formatDate } from "date-fns";
 import AudioPlayer from "@/components/AudioPlayer";
 
+import { useState, useEffect } from "react";
+
 export default function Podcasts() {
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const { data: podcasts, isLoading } = trpc.podcasts.list.useQuery();
@@ -159,7 +161,7 @@ export default function Podcasts() {
                       artist: "DJ Danny Hectic B",
                       duration: p.duration || 0,
                       url: p.audioUrl,
-                      coverArt: p.coverImageUrl,
+                      coverArt: p.coverImageUrl ?? undefined,
                     }))}
                     autoPlay
                   />

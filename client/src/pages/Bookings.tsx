@@ -67,15 +67,15 @@ export default function Bookings() {
       return;
     }
     createBookingMutation.mutate({
-      eventName: formData.eventName,
-      eventDate: new Date(formData.eventDate),
-      eventLocation: formData.eventLocation,
-      eventType: formData.eventType,
+      name: formData.eventName,
+      eventDate: formData.eventDate,
+      location: formData.eventLocation,
+      eventType: formData.eventType as "wedding" | "corporate" | "birthday" | "club" | "festival" | "private" | "other",
       guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
       budget: formData.budget,
       description: formData.description + "\nGenres: " + selectedGenres.join(", "),
-      contactEmail: formData.contactEmail,
-      contactPhone: formData.contactPhone,
+      email: formData.contactEmail,
+      phone: formData.contactPhone,
     });
   };
 
