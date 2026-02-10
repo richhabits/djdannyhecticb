@@ -2,6 +2,7 @@
 
 A modern web application for DJ Danny Hectic B featuring mixes, events, live studio, live radio streaming, and a fan shoutbox.
 
+
 ## Prerequisites
 
 - **Node.js** (v18 or higher)
