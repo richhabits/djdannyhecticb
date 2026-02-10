@@ -16,6 +16,7 @@ import { format, parseISO } from "date-fns";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
@@ -35,7 +36,7 @@ export default function BookingQuote() {
 
                 {/* Invoice Main Body */}
                 <div className="lg:col-span-2 space-y-8">
-                    <motion_div
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white text-black rounded-[40px] overflow-hidden shadow-2xl relative"
@@ -110,7 +111,7 @@ export default function BookingQuote() {
                                 </div>
                             </div>
                         </div>
-                    </motion_div>
+                    </motion.div>
                 </div>
 
                 {/* Action Sidebar */}
@@ -251,6 +252,3 @@ function DepositPaymentForm({ bookingId }: { bookingId: number }) {
         </form>
     );
 }
-
-// Helper to keep motion clean since I can't use framer-motion directly in this turn if not imported
-import { motion as motion_div } from "framer-motion";

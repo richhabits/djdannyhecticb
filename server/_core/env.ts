@@ -50,4 +50,7 @@ export const ENV = {
   paypalClientSecret: process.env.PAYPAL_CLIENT_SECRET ?? "",
   paypalMode: process.env.PAYPAL_MODE ?? "sandbox", // sandbox or live
   corsOrigins: process.env.CORS_ORIGINS?.split(",") ?? ["http://localhost:3000"],
+  beatportClientId: process.env.BEATPORT_CLIENT_ID ?? "",
+  beatportClientSecret: process.env.BEATPORT_CLIENT_SECRET ?? "",
+  beatportApiBase: process.env.BEATPORT_API_BASE ?? "https://api.beatport.com/v4",
 };
