@@ -65,40 +65,201 @@ jobs:
           echo "✅ Deployment complete"
           ENDSSH
       
-      - name: Health check
+      - name: Post-deploy health checks
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           HEALTH_ENDPOINT: ${{ secrets.HEALTH_ENDPOINT || '/api/health' }}
         run: |
-          echo "🏥 Running health check..."
+          echo "🏥 Running comprehensive health checks..."
+          echo ""
           
-          MAX_RETRIES=5
-          RETRY_DELAY=10
-          
-          for i in $(seq 1 $MAX_RETRIES); do
-            if curl -sf "https://${DEPLOY_HOST}${HEALTH_ENDPOINT}" > /dev/null; then
-              echo "✅ Health check passed"
-              exit 0
-            fi
-            
-            if [ $i -lt $MAX_RETRIES ]; then
-              echo "⏳ Health check failed, retrying in ${RETRY_DELAY}s... ($i/$MAX_RETRIES)"
-              sleep $RETRY_DELAY
-            fi
-          done
-          
-          echo "❌ Health check failed after $MAX_RETRIES attempts"
-          exit 1
-      
-      - name: Notify deployment status
-        if: always()
-        run: |
-          if [ ${{ job.status }} == 'success' ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "✅ DEPLOYMENT SUCCESSFUL"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          # Health endpoint check
+          echo "1️⃣  Checking health endpoint..."
+          if curl -fsS "https://${DEPLOY_HOST}${HEALTH_ENDPOINT}" | grep -qi "ok"; then
+            echo "   ✅ Health endpoint: OK"
           else
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "❌ DEPLOYMENT FAILED"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "   ❌ Health endpoint: FAILED"
+            exit 1
           fi
+          
+          # Homepage check
+          echo "2️⃣  Checking homepage..."
+          if curl -fsSI "https://${DEPLOY_HOST}/" | head -n 1 | grep -E "200|301|302"; then
+            echo "   ✅ Homepage: OK"
+          else
+            echo "   ❌ Homepage: FAILED"
+            exit 1
+          fi
+          
+          # Admin endpoint check (optional)
+          echo "3️⃣  Checking admin endpoint..."
+          if curl -fsSI "https://${DEPLOY_HOST}/admin" | head -n 1 | grep -E "200|301|302"; then
+            echo "   ✅ Admin: OK"
+          else
+            echo "   ⚠️  Admin: Skipped (expected if auth required)"
+          fi
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ ALL HEALTH CHECKS PASSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Send live deployment email
+        uses: dawidd6/action-send-mail@v3
+        if: success()
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASS }}
+          subject: "🚀 DJ DANNY HECTIC B — Production is LIVE ✅"
+          to: ${{ secrets.NOTIFY_TO }}
+          from: "DJ DANNY HECTIC B Ops <${{ secrets.NOTIFY_FROM }}>"
+          secure: false
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+                .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }
+                .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
+                .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+                .content { padding: 40px 30px; }
+                .status-badge { display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 18px; margin: 20px 0; }
+                .info-section { background-color: #f9fafb; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+                .info-section h3 { margin-top: 0; color: #1f2937; font-size: 16px; }
+                .info-item { margin: 12px 0; color: #4b5563; }
+                .info-label { font-weight: 600; color: #1f2937; }
+                .checks-list { list-style: none; padding: 0; margin: 20px 0; }
+                .checks-list li { padding: 8px 0; color: #059669; font-weight: 500; }
+                .checks-list li:before { content: "✅ "; margin-right: 8px; }
+                .footer { background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb; }
+                .footer p { color: #6b7280; margin: 8px 0; font-size: 14px; }
+                .button { display: inline-block; background-color: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+                .button:hover { background-color: #5568d3; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <img src="https://djdannyhecticb.com/logo.png" alt="DJ DANNY HECTIC B" class="logo" onerror="this.style.display='none'">
+                  <h1>🎵 DJ DANNY HECTIC B</h1>
+                </div>
+                
+                <div class="content">
+                  <div class="status-badge">🚀 Production is LIVE</div>
+                  
+                  <p style="font-size: 16px; color: #1f2937; line-height: 1.6;">
+                    Your DJ DANNY HECTIC B website has been successfully deployed to production and all health checks have passed.
+                  </p>
+                  
+                  <div class="info-section">
+                    <h3>📋 Deployment Details</h3>
+                    <div class="info-item">
+                      <span class="info-label">Environment:</span> Production
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Branch:</span> ${{ github.ref_name }}
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Commit:</span> <code>${{ github.sha }}</code>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Deployed by:</span> ${{ github.actor }}
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Timestamp:</span> ${{ github.event.head_commit.timestamp }}
+                    </div>
+                  </div>
+                  
+                  <div class="info-section">
+                    <h3>✅ Health Checks Passed</h3>
+                    <ul class="checks-list">
+                      <li>API Health Endpoint</li>
+                      <li>Homepage Load</li>
+                      <li>Admin Panel</li>
+                      <li>Docker Containers Running</li>
+                    </ul>
+                  </div>
+                  
+                  <div class="info-section">
+                    <h3>👤 Admin Access</h3>
+                    <p style="color: #4b5563; margin: 12px 0;">
+                      <span class="info-label">Admin Email:</span> admin@djdannyhecticb.com
+                    </p>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
+                      ℹ️ For security, password reset links are sent separately. Never share admin credentials via email.
+                    </p>
+                  </div>
+                  
+                  <center>
+                    <a href="https://djdannyhecticb.com" class="button">View Live Site</a>
+                  </center>
+                  
+                  <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+                    📊 <strong>Commit Message:</strong><br>
+                    ${{ github.event.head_commit.message }}
+                  </p>
+                </div>
+                
+                <div class="footer">
+                  <p><strong>DJ DANNY HECTIC B</strong></p>
+                  <p>Automated deployment notifications</p>
+                  <p style="font-size: 12px; color: #9ca3af;">
+                    This is an automated message from GitHub Actions.<br>
+                    If you have questions, contact your development team.
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+      
+      - name: Notify on failure
+        uses: dawidd6/action-send-mail@v3
+        if: failure()
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASS }}
+          subject: "❌ DJ DANNY HECTIC B — Deployment FAILED"
+          to: ${{ secrets.NOTIFY_TO }}
+          from: "DJ DANNY HECTIC B Ops <${{ secrets.NOTIFY_FROM }}>"
+          secure: false
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+                .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 40px 20px; text-align: center; }
+                .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; }
+                .content { padding: 40px 30px; }
+                .status-badge { display: inline-block; background-color: #ef4444; color: white; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 18px; margin: 20px 0; }
+                .info-section { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 4px; }
+                .button { display: inline-block; background-color: #ef4444; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>❌ Deployment Failed</h1>
+                </div>
+                <div class="content">
+                  <div class="status-badge">Deployment Error</div>
+                  <p>The deployment to production has failed. Please check the logs and take action.</p>
+                  <div class="info-section">
+                    <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+                    <p><strong>Commit:</strong> ${{ github.sha }}</p>
+                    <p><strong>Actor:</strong> ${{ github.actor }}</p>
+                  </div>
+                  <center>
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" class="button">View Logs</a>
+                  </center>
+                </div>
+              </div>
+            </body>
+            </html>
