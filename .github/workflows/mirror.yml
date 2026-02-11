@@ -1,0 +1,51 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  mirror:
+    name: Mirror to GitLab (Backup)
+    runs-on: ubuntu-latest
+    # Only run if GitLab secrets are configured
+    if: ${{ secrets.GITLAB_TOKEN != '' && secrets.GITLAB_REPO_URL != '' }}
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      
+      - name: Mirror to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO_URL: ${{ secrets.GITLAB_REPO_URL }}
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔄 Mirroring to GitLab..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          # Configure git
+          git config --global user.name "GitHub Mirror Bot"
+          git config --global user.email "bot@github.com"
+          
+          # Add GitLab remote (use token for auth)
+          GITLAB_URL_WITH_TOKEN=$(echo "$GITLAB_REPO_URL" | sed "s|https://|https://oauth2:${GITLAB_TOKEN}@|")
+          git remote add gitlab "$GITLAB_URL_WITH_TOKEN" || true
+          
+          # Push to GitLab
+          git push gitlab main --force
+          
+          echo "✅ Mirror complete"
+      
+      - name: Report status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ GitLab mirror synchronized"
+          else
+            echo "⚠️  GitLab mirror failed (non-blocking)"
+          fi

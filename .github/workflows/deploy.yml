@@ -1,0 +1,104 @@
+name: Auto-Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_run:
+    workflows: ["GREEN Gate"]
+    types: [ completed ]
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    # Only deploy if GREEN Gate passed
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH key
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/djdannyhecticb' }}
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🚀 Deploying to ${DEPLOY_HOST}..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${DEPLOY_USER}@${DEPLOY_HOST} << 'ENDSSH'
+          
+          set -e
+          
+          cd ${DEPLOY_PATH}
+          
+          echo "📥 Pulling latest code..."
+          git fetch origin
+          git reset --hard origin/main
+          
+          echo "📦 Installing dependencies..."
+          pnpm install --frozen-lockfile --prod
+          
+          echo "🏗️  Building application..."
+          pnpm build
+          
+          echo "🐳 Restarting Docker containers..."
+          docker compose up -d --build
+          
+          echo "⏳ Waiting for services to start..."
+          sleep 10
+          
+          echo "✅ Deployment complete"
+          ENDSSH
+      
+      - name: Health check
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          HEALTH_ENDPOINT: ${{ secrets.HEALTH_ENDPOINT || '/api/health' }}
+        run: |
+          echo "🏥 Running health check..."
+          
+          MAX_RETRIES=5
+          RETRY_DELAY=10
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            if curl -sf "https://${DEPLOY_HOST}${HEALTH_ENDPOINT}" > /dev/null; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "⏳ Health check failed, retrying in ${RETRY_DELAY}s... ($i/$MAX_RETRIES)"
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "✅ DEPLOYMENT SUCCESSFUL"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          else
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ DEPLOYMENT FAILED"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          fi
