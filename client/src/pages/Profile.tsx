@@ -85,7 +85,7 @@ export default function Profile() {
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <Avatar className="h-24 w-24 -mt-12 border-4 border-background">
-                <AvatarImage src={profile.avatarUrl} />
+                <AvatarImage src={profile.avatarUrl ?? undefined} />
                 <AvatarFallback>{profile.username[0].toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1">

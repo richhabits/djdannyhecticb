@@ -96,6 +96,15 @@ yarn.lock
 .dev.log
 .dev.pid
 
+# Zero-touch automation: block junk
+*.zip
+*.tar.gz
+*.tar.bz2
+proofpacks/
+verification-reports/
+ci-logs/
+deployment-logs/
+
 # Fixes
 client/node_modules/
 server/node_modules/

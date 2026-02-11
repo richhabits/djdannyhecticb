@@ -16,6 +16,10 @@ import About from "./pages/About";
 import History from "./pages/History";
 import Testimonials from "./pages/Testimonials";
 import Shop from "./pages/Shop";
+import BeatportShop from "./pages/BeatportShop";
+import BeatportSearch from "./pages/BeatportSearch";
+import BeatportChart from "./pages/BeatportChart";
+import BeatportGenre from "./pages/BeatportGenre";
 import Checkout from "./pages/Checkout";
 import Pricing from "./pages/Pricing";
 import FAQ from "./pages/FAQ";
@@ -75,6 +79,10 @@ import AdminAIVideo from "./pages/AdminAIVideo";
 import Wallet from "./pages/Wallet";
 import Rewards from "./pages/Rewards";
 import AdminEconomy from "./pages/AdminEconomy";
+import AdminVideos from "./pages/AdminVideos"; // New
+import AdminBlog from "./pages/AdminBlog"; // New
+import AdminBeatport from "./pages/AdminBeatport";
+import AdminMedia from "./pages/AdminMedia"; // New
 import ShowPage from "./pages/ShowPage";
 import ShowEpisodes from "./pages/ShowEpisodes";
 import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
@@ -101,7 +109,10 @@ function Router() {
       <Route path={"/bio"} component={Bio} />
       <Route path={"/history"} component={History} />
       <Route path={"/testimonials"} component={Testimonials} />
-      <Route path={"/shop"} component={Shop} />
+      <Route path={"/shop"} component={BeatportShop} />
+      <Route path={"/shop/search"} component={BeatportSearch} />
+      <Route path={"/shop/charts/:id"} component={BeatportChart} />
+      <Route path={"/shop/genres/:slug"} component={BeatportGenre} />
       <Route path={"/checkout"} component={Checkout} />
       <Route path={"/pricing"} component={Pricing} />
       <Route path={"/faq"} component={FAQ} />
@@ -170,6 +181,10 @@ function Router() {
       <Route path={"/show/episodes"} component={ShowEpisodes} />
       <Route path={"/show/episode/:slug"} component={ShowEpisodeDetail} />
       <Route path={"/admin/show-live"} component={AdminShowLive} />
+      <Route path={"/admin/videos"} component={AdminVideos} />
+      <Route path={"/admin/blog"} component={AdminBlog} />
+      <Route path={"/admin/beatport"} component={AdminBeatport} />
+      <Route path={"/admin/media"} component={AdminMedia} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
       <Route path={"/admin/uk-events"} component={AdminUKEvents} />

@@ -20,7 +20,7 @@ const trackEventSchema = z.object({
         .min(1, "Event name is required")
         .max(80, "Event name must be <= 80 characters")
         .regex(/^[a-z][a-z0-9_]*$/, "Event name must be snake_case"),
-    props: z.record(z.unknown())
+    props: z.record(z.string(), z.unknown())
         .optional()
         .refine(
             (props) => {

@@ -1,0 +1,5 @@
+# CODEOWNERS for djdannyhecticb repository
+# These files require review before changes can be merged
+
+# TypeScript error baseline - prevents accidental regression allowance
+.ts-error-baseline @richhabits

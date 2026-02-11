@@ -20,6 +20,12 @@ import { initCopyProtection, addCopyrightWatermark } from "./lib/copyProtection"
 initCopyProtection();
 addCopyrightWatermark();
 
+// Set document title from environment or default
+const appTitle = import.meta.env.VITE_APP_TITLE || 'DJ Danny Hectic B';
+if (typeof document !== 'undefined') {
+  document.title = appTitle;
+}
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {

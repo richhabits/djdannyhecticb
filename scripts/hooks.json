@@ -1,0 +1,43 @@
+[
+  {
+    "id": "deploy",
+    "execute-command": "/opt/djdannyhecticb/deploy.sh",
+    "command-working-directory": "/var/www/djdannyhecticb",
+    "response-message": "Deployment triggered successfully",
+    "response-headers": {
+      "Content-Type": "application/json"
+    },
+    "pass-arguments-to-command": [],
+    "pass-environment-to-command": [
+      {
+        "source": "string",
+        "name": "APP_DIR",
+        "envname": "APP_DIR"
+      }
+    ],
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "payload-hmac-sha256",
+            "secret": "YOUR_WEBHOOK_SECRET_HERE",
+            "parameter": {
+              "source": "header",
+              "name": "X-Hub-Signature-256"
+            }
+          }
+        },
+        {
+          "match": {
+            "type": "value",
+            "value": "refs/heads/main",
+            "parameter": {
+              "source": "payload",
+              "name": "ref"
+            }
+          }
+        }
+      ]
+    }
+  }
+]

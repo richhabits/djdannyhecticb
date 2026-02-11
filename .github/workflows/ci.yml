@@ -7,7 +7,8 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
-  lint:
+  router-drift-check:
+    name: Router Drift Check (REQUIRED)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +20,152 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm check
-      - run: pnpm format --check || true
+      - name: Check for router drift
+        run: bash scripts/check-router-drift.sh
+
+  typecheck:
+    name: TypeScript Check (REQUIRED)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run TypeScript check (must pass for 100% green)
+        run: pnpm check
+
+  format:
+    name: Code Format Check (Non-Blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Check code formatting
+        run: pnpm format --check
+        continue-on-error: true
+
+  ts-error-budget:
+    name: TypeScript Error Budget (REQUIRED)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run TypeScript error budget check
+        run: bash scripts/ts-error-budget.sh
+      - name: Upload error report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-errors-report
+          path: ts-errors-report.txt
+          retention-days: 7
+
+  baseline-guard:
+    name: Baseline Protection (REQUIRED)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if baseline increased
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Checking if .ts-error-baseline was modified..."
+          
+          # Check if baseline file changed
+          if git diff origin/${{ github.base_ref }} HEAD -- .ts-error-baseline | grep "^+[0-9]"; then
+            echo "⚠️  Baseline file increased. Checking for approval..."
+            
+            # Check for required label
+            LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
+            
+            if echo "$LABELS" | grep -q "allow-baseline-bump"; then
+              echo "✅ Label 'allow-baseline-bump' found. Baseline increase approved."
+              exit 0
+            else
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "❌ BASELINE INCREASE REQUIRES APPROVAL"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo ""
+              echo "The TypeScript error baseline has been increased."
+              echo "This requires manual review and approval."
+              echo ""
+              echo "To approve this change:"
+              echo "  1. Review the new errors in the PR"
+              echo "  2. Add label 'allow-baseline-bump' to this PR"
+              echo "  3. Re-run this check"
+              echo ""
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              exit 1
+            fi
+          else
+            echo "✅ Baseline not increased or not modified."
+            exit 0
+          fi
+
+  security:
+    name: Security Checks (REQUIRED)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Security audit (production dependencies)
+        run: pnpm audit --prod
+      - name: Check for leaked secrets
+        run: |
+          if grep -r "BEATPORT_CLIENT_SECRET\|BEATPORT_CLIENT_ID" client/src/ 2>/dev/null; then
+            echo "❌ SECURITY: Beatport secrets found in client code!"
+            exit 1
+          fi
+          echo "✅ No secrets found in client code"
+
+  test:
+    name: Tests (Non-Blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run tests
+        run: pnpm test
+        continue-on-error: true
 
   build:
+    name: Build (REQUIRED)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,4 +178,3 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-

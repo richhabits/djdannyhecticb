@@ -40,12 +40,14 @@ export function GlobalBanner() {
     }
   };
 
-  const getVariant = () => {
+  const getVariant = (): "default" | "destructive" => {
     switch (activeBanner.severity) {
       case "critical":
       case "high":
         return "destructive";
       case "medium":
+      case "low":
+      case "info":
         return "default";
       default:
         return "default";

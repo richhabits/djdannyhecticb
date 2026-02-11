@@ -21,6 +21,8 @@ interface SocialShareButtonProps {
 export function SocialShareButton({ entityType, entityId, url, title, userId }: SocialShareButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const recordShare = trpc.socialShares.record.useMutation();
+  
+  const canShare = typeof navigator !== "undefined" && "share" in navigator && typeof (navigator as any).share === "function";
 
   const handleShare = async (platform: string) => {
     const shareUrls: Record<string, string> = {
@@ -33,7 +35,7 @@ export function SocialShareButton({ entityType, entityId, url, title, userId }: 
     const shareUrl = shareUrls[platform];
     if (shareUrl) {
       window.open(shareUrl, "_blank", "width=600,height=400");
-    } else if (navigator.share) {
+    } else if (canShare) {
       // Use Web Share API for mobile
       try {
         await navigator.share({
@@ -87,7 +89,7 @@ export function SocialShareButton({ entityType, entityId, url, title, userId }: 
           <MessageCircle className="w-4 h-4 mr-2" />
           WhatsApp
         </DropdownMenuItem>
-        {navigator.share && (
+        {canShare && (
           <DropdownMenuItem onClick={() => handleShare("other")}>
             <Share2 className="w-4 h-4 mr-2" />
             More...
