@@ -1,0 +1,24 @@
+[Unit]
+Description=GitHub Webhook Listener for DJ DANNY HECTIC B
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/djdannyhecticb
+ExecStart=/usr/bin/webhook -hooks /opt/djdannyhecticb/hooks.json -port 9001 -verbose
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/webhook.log
+StandardError=append:/var/log/webhook-error.log
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/djdannyhecticb /var/log /opt/djdannyhecticb
+
+[Install]
+WantedBy=multi-user.target
