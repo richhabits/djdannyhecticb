@@ -2,6 +2,22 @@
 
 A modern web application for DJ Danny Hectic B featuring mixes, events, live studio, live radio streaming, and a fan shoutbox.
 
+## 🚀 Deployment
+
+**Production Deployment Guides:**
+- **[Quick Start Guide](QUICKSTART_DEPLOY.md)** - Fast reference for PM2 deployment
+- **[PM2 Deployment Guide](README_DEPLOY_PM2.md)** - Detailed step-by-step PM2 instructions  
+- **[Docker Deployment](README_DEPLOY.md)** - Docker-based deployment (alternative)
+
+**Build & Deploy:**
+```bash
+pnpm build              # Build for production
+./verify-build.sh       # Verify build output
+./deploy-pm2.sh         # Deploy to server (automated)
+```
+
+---
+
 ## Prerequisites
 
 - **Node.js** (v18 or higher)
