@@ -134,7 +134,7 @@ export default function Testimonials() {
           <div className="container">
             <h2 className="text-4xl font-bold mb-12 text-center">Video Testimonials</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videoTestimonials.map((testimonial: { id: number; videoUrl: string; thumbnailUrl?: string | null }) => (
+              {videoTestimonials.map((testimonial: { id: number; videoUrl: string; thumbnailUrl?: string | null; rating?: number; name?: string; role?: string; event?: string }) => (
                 <Card key={testimonial.id} className="overflow-hidden">
                   <div className="aspect-video bg-black relative">
                     {playingVideo === testimonial.id ? (

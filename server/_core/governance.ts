@@ -24,6 +24,7 @@ export class GovernanceService {
 
         await db.createGovernanceLog({
             action: active ? "REV_KILL_SWITCH_ACTIVATE" : "REV_KILL_SWITCH_DEACTIVATE",
+            actorType: 'admin',
             actorId,
             reason,
             snapshot: JSON.stringify({ timestamp: new Date().toISOString(), systemStatus: active ? "Locked" : "Operational" })
@@ -55,6 +56,7 @@ export class GovernanceService {
 
             await db.createGovernanceLog({
                 action: "DEPOSIT_HYGIENE_CLEANUP",
+                actorType: 'system',
                 reason: "System Scheduled TTL Enforcement",
                 snapshot: JSON.stringify({ releasedInventoryCount: expiredCount })
             });

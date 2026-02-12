@@ -61,6 +61,7 @@ type UKEvent = {
     imageUrl?: string | null;
     isFeatured?: boolean;
     artists?: string | string[] | null;
+    doorsTime?: string | null;
 };
 
 // Event Card Component
@@ -668,7 +669,7 @@ export default function UKEventsPage() {
 
     // Fetch events
     const { data: events, isLoading } = trpc.ukEvents.list.useQuery({
-        category: selectedCategory || undefined,
+        category: selectedCategory as "music" | "festival" | "boxing" | "sports" | "comedy" | "theatre" | "clubbing" | "other" | undefined,
         city: selectedCity || undefined,
         limit: 50,
     });
@@ -682,7 +683,7 @@ export default function UKEventsPage() {
 
     // Search results
     const { data: searchResults } = trpc.ukEvents.search.useQuery(
-        { query: searchQuery, category: selectedCategory || undefined, city: selectedCity || undefined },
+        { query: searchQuery, category: selectedCategory as "music" | "festival" | "boxing" | "sports" | "comedy" | "theatre" | "clubbing" | "other" | undefined, city: selectedCity || undefined },
         { enabled: searchQuery.length >= 2 }
     );
 

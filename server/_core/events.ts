@@ -18,5 +18,7 @@ export const appEvents = new AppEvents();
  */
 export const EVENTS = {
     BOOKING_CONFIRMED: "booking.confirmed",
+    NOTIFICATION_CREATED: "notification.created",
+    BOOKING_EXPIRED: "booking.expired",
     // Add more as needed
 } as const;
