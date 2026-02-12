@@ -2,6 +2,25 @@
 
 This guide covers deployment using PM2 (Node.js process manager) instead of Docker. This is the recommended approach for VPS/dedicated server deployments.
 
+## 🚨 Common Issues
+
+**Getting 403 Forbidden Error?**
+→ See [TROUBLESHOOTING_403.md](TROUBLESHOOTING_403.md) for diagnosis and fixes
+
+**Quick Fix Commands:**
+```bash
+# Diagnose the issue
+sudo ./scripts/diagnose-nginx.sh
+
+# Fix with reverse proxy (recommended)
+sudo ./scripts/fix-nginx-403.sh proxy
+
+# Or fix with static serving
+sudo ./scripts/fix-nginx-403.sh static
+```
+
+---
+
 ## 🎯 Overview
 
 The DJ Danny Hectic B site is a full-stack application:

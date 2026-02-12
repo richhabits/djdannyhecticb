@@ -9,11 +9,20 @@ A modern web application for DJ Danny Hectic B featuring mixes, events, live stu
 - **[PM2 Deployment Guide](README_DEPLOY_PM2.md)** - Detailed step-by-step PM2 instructions  
 - **[Docker Deployment](README_DEPLOY.md)** - Docker-based deployment (alternative)
 
+**Troubleshooting:**
+- **[403 Forbidden Error Fix](TROUBLESHOOTING_403.md)** - Diagnose and fix nginx 403 errors
+
 **Build & Deploy:**
 ```bash
 pnpm build              # Build for production
 ./verify-build.sh       # Verify build output
 ./deploy-pm2.sh         # Deploy to server (automated)
+```
+
+**Quick 403 Fix:**
+```bash
+sudo ./scripts/diagnose-nginx.sh          # Diagnose issue
+sudo ./scripts/fix-nginx-403.sh proxy    # Apply fix
 ```
 
 ---
