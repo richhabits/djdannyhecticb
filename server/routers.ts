@@ -18,6 +18,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { ukEventsRouter } from "./ukEventsRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -170,6 +171,9 @@ export const appRouter = router({
   getAllEvents: publicProcedure.query(() => db.getAllEvents()),
   getFeaturedEvents: publicProcedure.query(() => db.getFeaturedEvents()),
   getUpcomingEvents: publicProcedure.query(() => db.getUpcomingEvents()),
+
+  // UK Events Router (automated events discovery)
+  ukEvents: ukEventsRouter,
 
   events: router({
     upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
