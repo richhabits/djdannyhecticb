@@ -67,15 +67,20 @@ export default function Bookings() {
       return;
     }
     createBookingMutation.mutate({
-      eventName: formData.eventName,
-      eventDate: new Date(formData.eventDate),
-      eventLocation: formData.eventLocation,
-      eventType: formData.eventType,
-      guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
-      budget: formData.budget,
-      description: formData.description + "\nGenres: " + selectedGenres.join(", "),
-      contactEmail: formData.contactEmail,
-      contactPhone: formData.contactPhone,
+      name: formData.eventName,
+      email: formData.contactEmail,
+      phone: formData.contactPhone || undefined,
+      organisation: undefined,
+      eventType: formData.eventType as "club" | "radio" | "private" | "brand" | "other" | "wedding" | "corporate" | "festival",
+      eventDate: formData.eventDate,
+      eventTime: "18:00", // Default time, could be added to form
+      location: formData.eventLocation,
+      budgetRange: formData.budget || undefined,
+      setLength: undefined,
+      streamingRequired: false,
+      extraNotes: formData.description + "\nGenres: " + selectedGenres.join(", "),
+      marketingConsent: false,
+      dataConsent: true,
     });
   };
 
@@ -133,9 +138,9 @@ export default function Bookings() {
                   {bookings.map((booking) => (
                     <div key={booking.id} className="flyer-card p-6 flex justify-between items-center">
                       <div className="space-y-1">
-                        <h3 className="font-black italic text-xl uppercase">{booking.eventName}</h3>
+                        <h3 className="font-black italic text-xl uppercase">{booking.name}</h3>
                         <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">
-                          {formatDate(new Date(booking.eventDate), 'MMM d, yyyy')} | {booking.eventLocation}
+                          {formatDate(new Date(booking.eventDate), 'MMM d, yyyy')} | {booking.location}
                         </p>
                       </div>
                       <div className={`tape-strip text-[10px] ${booking.status === 'confirmed' ? 'bg-green-500' : 'bg-white text-black'}`}>
