@@ -141,7 +141,7 @@ export default function AdminRevenueDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {metrics.ruleMetrics.map((rule) => {
+                                                                {metrics.ruleMetrics.map((rule: any) => {
                                     const isToxic = rule.conversionStatus && rule.conversionRate < 10; // Simple toxicity threshold
                                     return (
                                         <tr key={rule.id} className="hover:bg-white/[0.02] transition-colors group">
@@ -203,7 +203,7 @@ export default function AdminRevenueDashboard() {
                                         labelStyle={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px' }}
                                     />
                                     <Bar dataKey="conversionRate" fill="#f97316" radius={[0, 4, 4, 0]}>
-                                        {metrics.geoMetrics.map((entry, index) => (
+                                                                                {metrics.geoMetrics.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Bar>
@@ -211,7 +211,7 @@ export default function AdminRevenueDashboard() {
                             </ResponsiveContainer>
                         </div>
                         <div className="mt-6 space-y-4">
-                            {metrics.geoMetrics.sort((a, b) => b.conversionRate - a.conversionRate).map((geo, i) => (
+                                                        {metrics.geoMetrics.sort((a: any, b: any) => b.conversionRate - a.conversionRate).map((geo: any, i: number) => (
                                 <div key={i} className="flex items-center justify-between text-xs pb-3 border-b border-white/5 last:border-0">
                                     <span className="font-black uppercase tracking-widest text-gray-500">{geo.name}</span>
                                     <span className="font-bold">£{Math.round(geo.avgTicket)} Avg</span>
@@ -249,7 +249,7 @@ export default function AdminRevenueDashboard() {
                     <div className="space-y-2">
                         <h3 className="text-lg font-black uppercase italic tracking-tighter">Revenue Opportunity Detected</h3>
                         <p className="text-sm text-gray-400 leading-relaxed font-medium">
-                            {metrics.geoMetrics.sort((a, b) => b.conversionRate - a.conversionRate)[0]?.name} region shows high price elasticity (35% conversion at £{Math.round(metrics.geoMetrics.sort((a, b) => b.conversionRate - a.conversionRate)[0]?.avgTicket)}).
+                                                        {metrics.geoMetrics.sort((a: any, b: any) => b.conversionRate - a.conversionRate)[0]?.name} region shows high price elasticity (35% conversion at £{Math.round(metrics.geoMetrics.sort((a: any, b: any) => b.conversionRate - a.conversionRate)[0]?.avgTicket)}).
                             Consider increasing the Geo Band multiplier by 5% for this tier.
                         </p>
                         <div className="pt-4">

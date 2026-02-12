@@ -33,7 +33,7 @@ export default function RaveIntel() {
 
     useEffect(() => {
         if (savedSignals) {
-            setSavedIds(new Set(savedSignals.map(s => s.entityId)));
+            setSavedIds(new Set(savedSignals.map((s: any) => s.entityId)));
         }
     }, [savedSignals]);
 
@@ -147,7 +147,7 @@ export default function RaveIntel() {
                                         <div key={i} className="h-64 glass-premium rounded-[3rem] animate-pulse border-white/5" />
                                     ))
                                 ) : (
-                                    intel?.map((item, idx) => (
+                                                                        intel?.map((item: any, idx: number) => (
                                         <motion.div
                                             key={item.id}
                                             initial={{ opacity: 0, x: -20 }}
@@ -199,7 +199,7 @@ export default function RaveIntel() {
                                                     </div>
 
                                                     <div className="flex flex-wrap items-center gap-6 pt-4">
-                                                        {item.tags.map(tag => (
+                                                                                                                {item.tags.map((tag: string) => (
                                                             <span key={tag} className="text-[10px] font-black uppercase tracking-widest text-white/20">#{tag}</span>
                                                         ))}
                                                     </div>

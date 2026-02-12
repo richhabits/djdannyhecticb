@@ -33,7 +33,7 @@ export default function AdminOutbound() {
     const { data: leadDetails } = trpc.outbound.getLead.useQuery({ id: selectedLeadId || 0 }, { enabled: !!selectedLeadId });
 
     const outreachGen = trpc.outbound.generateOutreach.useMutation({
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
             toast.success("Outreach package generated with indicative quote.");
         }
     });
@@ -93,7 +93,7 @@ export default function AdminOutbound() {
                         <div className="grid gap-4">
                             {isLoading ? (
                                 <div className="p-20 text-center animate-pulse text-gray-500 uppercase font-black tracking-widest">Scanning Signal Sources...</div>
-                            ) : leads?.map((lead) => (
+                            ) : leads?.map((lead: any) => (
                                 <Card
                                     key={lead.id}
                                     onClick={() => setSelectedLeadId(lead.id)}

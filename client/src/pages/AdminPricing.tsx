@@ -31,7 +31,7 @@ export default function AdminPricing() {
             toast.success("Pricing rule added to engine");
             utils.pricing.getRules.invalidate();
         },
-        onError: (err) => toast.error(err.message)
+        onError: (err: Error) => toast.error(err.message)
     });
 
     const deleteMutation = trpc.pricing.deleteRule.useMutation({
@@ -134,7 +134,7 @@ export default function AdminPricing() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {rules?.map((rule) => (
+                                                        {rules?.map((rule: any) => (
                                 <Card key={rule.id} className="bg-card/40 border-border/50 hover:border-orange-500/40 transition-all group relative overflow-hidden">
                                     <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button
