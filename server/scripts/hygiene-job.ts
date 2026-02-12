@@ -3,8 +3,8 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { governanceService } from "../server/_core/governance";
-import { logger } from "../server/_core/logger";
+import { governanceService } from "../_core/governance";
+import { logger } from "../_core/logger";
 
 async function main() {
     logger.info("[Cron] Starting Governance Hygiene Job...");
