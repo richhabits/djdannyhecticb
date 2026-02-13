@@ -11,6 +11,19 @@ This deployment approach builds on the server (not in GitHub Actions), providing
 - ✅ **Easy rollback** - One command to previous release
 - ✅ **Zero downtime** - Symlink flip is instant
 
+## Enterprise Features
+
+The deployment system includes production-grade features:
+
+1. **Deploy Lock** - flock-based prevents parallel builds
+2. **Auto-Prune** - Automatically keeps only last 5 releases
+3. **Health Check** - `/health.txt` endpoint for monitoring
+4. **Structured Logging** - All operations logged to `/var/log/djdannyhecticb/`
+5. **Fail-Fast Validation** - Validates build output before deploying
+6. **Validation Script** - 7-point deployment quality check
+
+See `VALIDATION_GUIDE.md` for complete validation documentation.
+
 ## Architecture
 
 ```
