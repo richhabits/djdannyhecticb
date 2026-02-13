@@ -18,6 +18,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { ukEventsRouter } from "./ukEventsRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -170,6 +171,9 @@ export const appRouter = router({
   getAllEvents: publicProcedure.query(() => db.getAllEvents()),
   getFeaturedEvents: publicProcedure.query(() => db.getFeaturedEvents()),
   getUpcomingEvents: publicProcedure.query(() => db.getUpcomingEvents()),
+
+  // UK Events Router (automated events discovery)
+  ukEvents: ukEventsRouter,
 
   events: router({
     upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
@@ -3601,6 +3605,46 @@ export const appRouter = router({
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.deleteMediaItem(input.id)),
+  }),
+
+  // Stub routers for features not fully implemented yet
+  admin: router({
+    getAnalytics: adminProcedure.query(() => ({ views: 0, saves: 0, totalRevenue: 0 })),
+    getConnections: adminProcedure.query(() => []),
+    syncConnectors: adminProcedure.mutation(() => ({ success: true })),
+    verifyConnection: adminProcedure.input(z.object({ id: z.number() })).mutation(() => ({ success: true })),
+  }),
+
+  pricing: router({
+    getRules: adminProcedure.query(() => []),
+    createRule: adminProcedure.input(z.object({ name: z.string(), amount: z.number() })).mutation(() => ({ id: 1, success: true })),
+    updateRule: adminProcedure.input(z.object({ id: z.number(), name: z.string().optional(), amount: z.number().optional() })).mutation(() => ({ success: true })),
+    deleteRule: adminProcedure.input(z.object({ id: z.number() })).mutation(() => ({ success: true })),
+    invalidate: adminProcedure.mutation(() => ({ success: true })),
+  }),
+
+  outbound: router({
+    getLeads: adminProcedure.query(() => []),
+    createLead: adminProcedure.input(z.object({ name: z.string(), email: z.string() })).mutation(() => ({ id: 1, success: true })),
+    updateLead: adminProcedure.input(z.object({ id: z.number(), status: z.string().optional() })).mutation(() => ({ success: true })),
+  }),
+
+  signals: router({
+    list: protectedProcedure.input(z.object({ entityType: z.string() })).query(() => []),
+    save: protectedProcedure.input(z.object({ entityId: z.string(), entityType: z.string() })).mutation(() => ({ success: true })),
+    trackInterest: protectedProcedure.input(z.object({ entityId: z.string(), entityType: z.string() })).mutation(() => ({ success: true })),
+  }),
+
+  lanes: router({
+    list: publicProcedure.query(() => []),
+  }),
+
+  raveIntel: router({
+    list: publicProcedure.input(z.object({ city: z.string().optional(), genre: z.string().optional() })).query(() => []),
+  }),
+
+  users: router({
+    me: publicProcedure.query(opts => opts.ctx.user),
   }),
 });
 

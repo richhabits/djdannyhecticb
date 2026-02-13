@@ -83,7 +83,7 @@ export default function SocialFeed() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {posts.map((post) => (
+                {posts.map((post: { id: number; url: string; thumbnailUrl?: string | null; caption?: string | null; platform: string }) => (
                   <Card key={post.id} className="overflow-hidden hover:scale-[1.02] transition-transform">
                     <a href={post.url} target="_blank" rel="noopener noreferrer" className="block">
                       <div className="aspect-square bg-black relative">

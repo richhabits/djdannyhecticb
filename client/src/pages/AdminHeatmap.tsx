@@ -49,9 +49,9 @@ export default function AdminHeatmap() {
                 {/* KPI GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {[
-                        { label: 'Total Intercepts', value: stats.reduce((acc, curr) => acc + curr.views, 0), icon: Activity, color: 'text-blue-500' },
-                        { label: 'Signal Saves', value: stats.reduce((acc, curr) => acc + curr.saves, 0), icon: Zap, color: 'text-orange-500' },
-                        { label: 'Conversion Rate', value: `${((stats.reduce((acc, curr) => acc + curr.saves, 0) / (stats.reduce((acc, curr) => acc + curr.views, 0) || 1)) * 100).toFixed(1)}%`, icon: Users, color: 'text-green-500' },
+                        { label: 'Total Intercepts', value: stats.reduce((acc: number, curr: any) => acc + curr.views, 0), icon: Activity, color: 'text-blue-500' },
+                        { label: 'Signal Saves', value: stats.reduce((acc: number, curr: any) => acc + curr.saves, 0), icon: Zap, color: 'text-orange-500' },
+                        { label: 'Conversion Rate', value: `${((stats.reduce((acc: number, curr: any) => acc + curr.saves, 0) / (stats.reduce((acc: number, curr: any) => acc + curr.views, 0) || 1)) * 100).toFixed(1)}%`, icon: Users, color: 'text-green-500' },
                         { label: 'Avg Confidence', value: '0.94', icon: Shield, color: 'text-purple-500' },
                     ].map((kpi, i) => (
                         <Card key={i} className="p-8 bg-white/[0.02] border-white/5 rounded-[2rem] space-y-4">
@@ -95,7 +95,7 @@ export default function AdminHeatmap() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/5">
-                                            {Object.entries(stats.reduce((acc: any, curr) => {
+                                            {Object.entries(stats.reduce((acc: {[key: string]: any}, curr: any) => {
                                                 if (!acc[curr.laneId]) acc[curr.laneId] = { views: 0, saves: 0 };
                                                 acc[curr.laneId].views += curr.views;
                                                 acc[curr.laneId].saves += curr.saves;

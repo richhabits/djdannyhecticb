@@ -2,6 +2,71 @@
 
 A modern web application for DJ Danny Hectic B featuring mixes, events, live studio, live radio streaming, and a fan shoutbox.
 
+## 🚀 Deployment & Verification
+
+### Operational Status
+
+📊 **[Deployment Status](DEPLOYMENT_STATUS_OPERATIONAL.md)** - Current operational reality
+
+### Deployment Methods
+
+**Automated (Recommended):**
+- **[Server-Side Deployment](DEPLOY_SERVER_SIDE.md)** - Build on server, automated ⭐
+- Push to `main` → GitHub Actions → Server builds/deploys → Verified
+
+**Manual:**
+- **[Deploy Now](DEPLOY_NOW.md)** - Immediate deployment (3 commands)
+- **[Quick Reference](DEPLOY_QUICK_REFERENCE.md)** - Common commands
+- **[PM2 Deployment](README_DEPLOY_PM2.md)** - Manual PM2-based
+
+### Verification Tools (Operational)
+
+**Post-Deployment Proof:**
+- **[Operational Proof](OPERATIONAL_DEPLOYMENT_PROOF.md)** - Tools for deployment proof ⭐
+
+```bash
+# After deployment, run these to PROVE deployment (not just document it):
+
+# 1. GO/NO-GO Checklist (executable)
+./scripts/go-nogo-checklist.sh https://djdannyhecticb.com
+# Exit 0 = GO, Exit 1 = NO-GO
+
+# 2. Live Smoke Test (tests actual domain)
+./scripts/live-smoke-test.sh https://djdannyhecticb.com
+# Tests: HTTP 200, health, assets, TLS
+
+# 3. Generate Deployment Proofpack
+./scripts/generate-deployment-proofpack.sh https://djdannyhecticb.com /tmp
+# Proof file with commit SHA, tests, links
+
+# 4. Send Deployment Notification
+./scripts/send-deployment-notification.sh https://djdannyhecticb.com romeo@richhabits.com
+# Notification with deployment details
+```
+
+### Troubleshooting
+
+- **[403 Errors](TROUBLESHOOTING_403.md)** - Fix nginx 403 errors
+- **[Quick Fix](QUICKFIX_403.md)** - One-page emergency fix
+
+### Quick Commands
+
+```bash
+# Deploy
+git push origin main              # Automatic (triggers GitHub Actions)
+
+# Verify (after deployment)
+./scripts/go-nogo-checklist.sh https://djdannyhecticb.com
+
+# Generate proof
+./scripts/generate-deployment-proofpack.sh https://djdannyhecticb.com /tmp
+
+# Rollback (if needed)
+ssh hectic@server "sudo /usr/local/bin/rollback-djdannyhecticb.sh"
+```
+
+---
+
 ## Prerequisites
 
 - **Node.js** (v18 or higher)

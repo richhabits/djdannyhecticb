@@ -45,8 +45,27 @@ const CATEGORY_CONFIG = {
     other: { icon: Star, label: 'Other', color: 'bg-gray-500' },
 };
 
+// Type definitions
+type UKEvent = {
+    id: number;
+    title: string;
+    description?: string;
+    category: keyof typeof CATEGORY_CONFIG;
+    venueName: string;
+    city: string;
+    eventDate: string | Date;
+    priceMin?: string | null;
+    priceMax?: string | null;
+    ticketStatus?: string | null;
+    ticketUrl?: string | null;
+    imageUrl?: string | null;
+    isFeatured?: boolean;
+    artists?: string | string[] | null;
+    doorsTime?: string | null;
+};
+
 // Event Card Component
-function EventCard({ event, index }: { event: any; index: number }) {
+function EventCard({ event, index }: { event: UKEvent; index: number }) {
     const category = CATEGORY_CONFIG[event.category as keyof typeof CATEGORY_CONFIG] || CATEGORY_CONFIG.other;
     const CategoryIcon = category.icon;
 
@@ -650,7 +669,7 @@ export default function UKEventsPage() {
 
     // Fetch events
     const { data: events, isLoading } = trpc.ukEvents.list.useQuery({
-        category: selectedCategory || undefined,
+        category: selectedCategory as "music" | "festival" | "boxing" | "sports" | "comedy" | "theatre" | "clubbing" | "other" | undefined,
         city: selectedCity || undefined,
         limit: 50,
     });
@@ -664,7 +683,7 @@ export default function UKEventsPage() {
 
     // Search results
     const { data: searchResults } = trpc.ukEvents.search.useQuery(
-        { query: searchQuery, category: selectedCategory || undefined, city: selectedCity || undefined },
+        { query: searchQuery, category: selectedCategory as "music" | "festival" | "boxing" | "sports" | "comedy" | "theatre" | "clubbing" | "other" | undefined, city: selectedCity || undefined },
         { enabled: searchQuery.length >= 2 }
     );
 
@@ -769,7 +788,7 @@ export default function UKEventsPage() {
                                                 className="bg-black border-2 border-white/30 p-3 focus:border-accent outline-none font-bold uppercase min-w-[200px]"
                                             >
                                                 <option value="">All Cities</option>
-                                                {cities?.map((city) => (
+                                                {cities?.map((city: string) => (
                                                     <option key={city} value={city}>{city}</option>
                                                 ))}
                                             </select>
@@ -807,7 +826,7 @@ export default function UKEventsPage() {
                                 ALL
                             </button>
                             {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
-                                const count = categories?.find(c => c.category === key)?.count || 0;
+                                const count = categories?.find((c: { category: string; count: number }) => c.category === key)?.count || 0;
                                 const Icon = config.icon;
                                 return (
                                     <button
@@ -880,7 +899,7 @@ export default function UKEventsPage() {
                         {/* Events Grid */}
                         {!isLoading && displayedEvents && displayedEvents.length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {displayedEvents.map((event, index) => (
+                                {displayedEvents.map((event: UKEvent, index: number) => (
                                     <EventCard key={event.id} event={event} index={index} />
                                 ))}
                             </div>

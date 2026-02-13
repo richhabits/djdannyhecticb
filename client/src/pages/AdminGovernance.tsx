@@ -37,13 +37,13 @@ export default function AdminGovernance() {
             setKillReason("");
             utils.pricing.getGovernanceStatus.invalidate();
         },
-        onError: (err) => {
+        onError: (err: Error) => {
             toast.error(`Transition Failed: ${err.message}`);
         }
     });
 
     const runHygiene = trpc.pricing.runHygiene.useMutation({
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
             toast.success(`Hygiene scan complete. Released ${data.expiredCount} dates.`);
         }
     });
@@ -197,7 +197,7 @@ export default function AdminGovernance() {
                         {govStatus.incidents.length > 0 && (
                             <div className="space-y-4">
                                 <p className="text-[10px] font-black uppercase text-orange-500 tracking-widest">Active System Anomalies</p>
-                                {govStatus.incidents.map(incident => (
+                                {govStatus.incidents.map((incident: any) => (
                                     <Card key={incident.id} className="bg-orange-500/5 border-orange-500/20 p-6 flex justify-between items-center">
                                         <div className="flex gap-4">
                                             <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0" />
@@ -219,7 +219,7 @@ export default function AdminGovernance() {
                                 <p className="text-[10px] font-black uppercase tracking-tighter text-gray-500">Immutable Governance Log</p>
                             </div>
                             <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
-                                {govStatus.latestLogs.map(log => (
+                                {govStatus.latestLogs.map((log: any) => (
                                     <div key={log.id} className="p-6 flex items-start justify-between group hover:bg-white/[0.02]">
                                         <div className="space-y-1">
                                             <p className="text-xs font-black uppercase tracking-widest text-white group-hover:text-blue-500 transition-colors">{log.action}</p>

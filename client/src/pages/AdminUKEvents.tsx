@@ -26,6 +26,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
+// Define types for the data we're working with
+type UserEventSubmission = {
+    id: number;
+    title: string;
+    description: string;
+    category: string;
+    venueName: string;
+    city: string;
+    eventDate: string | Date;
+    submitterName: string;
+    submitterEmail: string;
+    isPromoter: boolean;
+    ticketUrl?: string | null;
+    status: string;
+};
+
+type PromoterProfile = {
+    id: number;
+    name: string;
+    companyName?: string | null;
+    email: string;
+    phone?: string | null;
+    website?: string | null;
+    instagramHandle?: string | null;
+    isVerified: boolean;
+    totalEventsSubmitted: number;
+    approvedEventsCount: number;
+};
+
 export default function AdminUKEvents() {
     const [selectedTab, setSelectedTab] = useState('submissions');
 
@@ -41,7 +70,7 @@ export default function AdminUKEvents() {
             toast.success('Submission reviewed successfully');
             refetchSubmissions();
         },
-        onError: (error) => {
+        onError: (error: Error) => {
             toast.error(`Failed: ${error.message}`);
         },
     });
@@ -51,16 +80,16 @@ export default function AdminUKEvents() {
             toast.success('Promoter status updated');
             refetchPromoters();
         },
-        onError: (error) => {
+        onError: (error: Error) => {
             toast.error(`Failed: ${error.message}`);
         },
     });
 
     const syncMutation = trpc.ukEvents.adminSync.useMutation({
-        onSuccess: (result) => {
+        onSuccess: (result: { eventsAdded: number; eventsUpdated: number }) => {
             toast.success(`Sync complete: ${result.eventsAdded} added, ${result.eventsUpdated} updated`);
         },
-        onError: (error) => {
+        onError: (error: Error) => {
             toast.error(`Sync failed: ${error.message}`);
         },
     });
@@ -128,7 +157,7 @@ export default function AdminUKEvents() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-black">
-                                            {allSubmissions?.filter(s => s.status === 'approved').length || 0}
+                                            {allSubmissions?.filter((s: UserEventSubmission) => s.status === 'approved').length || 0}
                                         </p>
                                         <p className="text-sm text-muted-foreground">Approved</p>
                                     </div>
@@ -188,7 +217,7 @@ export default function AdminUKEvents() {
                         <TabsContent value="submissions" className="space-y-4">
                             {pendingSubmissions && pendingSubmissions.length > 0 ? (
                                 <div className="space-y-4">
-                                    {pendingSubmissions.map((submission) => (
+                                    {pendingSubmissions.map((submission: UserEventSubmission) => (
                                         <Card key={submission.id}>
                                             <CardContent className="pt-6">
                                                 <div className="flex items-start justify-between gap-4">
@@ -270,7 +299,7 @@ export default function AdminUKEvents() {
                         <TabsContent value="promoters" className="space-y-4">
                             {promoters && promoters.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {promoters.map((promoter) => (
+                                    {promoters.map((promoter: PromoterProfile) => (
                                         <Card key={promoter.id}>
                                             <CardContent className="pt-6">
                                                 <div className="flex items-start justify-between gap-4">

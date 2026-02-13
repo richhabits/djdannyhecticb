@@ -123,7 +123,7 @@ export default function AdminSupporters() {
                         </div>
 
                         <div className="space-y-4">
-                            {supporters?.map(user => (
+                                                        {supporters?.map((user: any) => (
                                 <div key={user.id} className="group flex flex-col md:flex-row items-center justify-between p-8 glass-dark border border-white/5 rounded-3xl hover:border-orange-500/30 transition-all gap-8">
                                     <div className="flex items-center gap-6">
                                         <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 font-black text-2xl">

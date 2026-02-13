@@ -60,7 +60,7 @@ export function VideoTestimonialsSection({ limit = 3, isFeatured }: VideoTestimo
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {testimonials.map((t) => (
+                                {testimonials.map((t: any) => (
                     <VideoTestimonialCard
                         key={t.id}
                         videoUrl={t.videoUrl}

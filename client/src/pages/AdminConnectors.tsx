@@ -73,7 +73,7 @@ export default function AdminConnectors() {
 
                     {/* ACTIVE CONNECTORS */}
                     <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {connectors?.map(conn => (
+                        {connectors?.map((conn: any) => (
                             <Card key={conn.id} className="p-8 bg-white/[0.02] border-white/5 rounded-[2.5rem] space-y-8 group hover:border-orange-500/30 transition-all">
                                 <div className="flex items-center justify-between">
                                     <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
@@ -134,7 +134,7 @@ export default function AdminConnectors() {
                         </div>
 
                         <div className="bg-black/50 rounded-2xl p-8 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto border border-white/5">
-                            {logs?.map(log => (
+                            {logs?.map((log: any) => (
                                 <div key={log.id} className="flex gap-4">
                                     <span className="text-white/20">[{new Date(log.createdAt).toLocaleTimeString()}]</span>
                                     <span className={log.status === 'success' ? 'text-green-500' : 'text-red-500'}>
