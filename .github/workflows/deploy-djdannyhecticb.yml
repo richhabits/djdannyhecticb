@@ -11,11 +11,14 @@ concurrency:
 
 jobs:
   deploy:
-    name: Trigger Server-Side Deploy
+    name: Deploy and Verify
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
+      - name: Checkout (for scripts)
+        uses: actions/checkout@v4
+
       - name: Deploy on server (build + deploy)
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -25,3 +28,43 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT || '22' }}
           script: |
             sudo /usr/local/bin/deploy-djdannyhecticb-static.sh main
+
+      - name: Wait for deployment
+        run: sleep 10
+
+      - name: Run GO/NO-GO Checklist
+        run: |
+          chmod +x scripts/go-nogo-checklist.sh
+          ./scripts/go-nogo-checklist.sh https://djdannyhecticb.com
+
+      - name: Generate Deployment Proofpack
+        if: success()
+        run: |
+          chmod +x scripts/generate-deployment-proofpack.sh scripts/live-smoke-test.sh
+          ./scripts/generate-deployment-proofpack.sh https://djdannyhecticb.com /tmp
+
+      - name: Upload Proofpack as Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-proofpack
+          path: /tmp/deployment-proofpack-*.txt
+          retention-days: 30
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Domain**: https://djdannyhecticb.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f /tmp/deployment-proofpack-*.txt ]; then
+            echo "**Status**: ✅ Deployment Verified" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Proofpack Generated" >> $GITHUB_STEP_SUMMARY
+            echo "See artifacts for deployment proofpack" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Status**: ⚠️ Verification incomplete" >> $GITHUB_STEP_SUMMARY
+          fi
