@@ -4,26 +4,32 @@ A modern web application for DJ Danny Hectic B featuring mixes, events, live stu
 
 ## 🚀 Deployment
 
-**Automated Production Deployment:**
-- **[GitHub Actions Deployment](DEPLOY_GITHUB_ACTIONS.md)** - Automated deployment on push to main ⭐ **Recommended**
+**Automated Server-Side Deployment (Recommended):**
+- **[Server-Side Deployment](DEPLOY_SERVER_SIDE.md)** - Build on server, automated deployment ⭐ **Enterprise approach**
 
-**Manual Deployment Guides:**
-- **[Quick Start Guide](QUICKSTART_DEPLOY.md)** - Fast reference for PM2 deployment
-- **[PM2 Deployment Guide](README_DEPLOY_PM2.md)** - Detailed step-by-step PM2 instructions  
-- **[Docker Deployment](README_DEPLOY.md)** - Docker-based deployment (alternative)
+Push to `main` → GitHub Actions triggers → Server builds and deploys → Live in 2-3 minutes
+
+**Manual/Alternative Deployment:**
+- **[Quick Reference](DEPLOY_QUICK_REFERENCE.md)** - Common deployment commands
+- **[PM2 Manual Deployment](README_DEPLOY_PM2.md)** - Manual PM2-based deployment
+- **[Docker Deployment](README_DEPLOY.md)** - Docker-based deployment (legacy)
 
 **Troubleshooting:**
-- **[403 Forbidden Error Fix](TROUBLESHOOTING_403.md)** - Diagnose and fix nginx 403 errors
+- **[403 Forbidden Errors](TROUBLESHOOTING_403.md)** - Diagnose and fix nginx 403 errors
+- **[Quick Fix](QUICKFIX_403.md)** - One-page 403 emergency fix
 
 **Quick Commands:**
 ```bash
-# Automated deployment (GitHub Actions)
-git push origin main              # Triggers automatic deployment
+# Automated deployment (GitHub Actions triggers server-side build)
+git push origin main              # Triggers deployment on server
 
-# Manual deployment
-pnpm build                        # Build for production
-./verify-build.sh                 # Verify build output
-./deploy-pm2.sh                   # Deploy to server (manual)
+# Server-side manual deploy
+ssh hectic@server
+sudo /usr/local/bin/deploy-djdannyhecticb-static.sh main
+
+# Rollback
+ssh hectic@server
+sudo /usr/local/bin/rollback-djdannyhecticb.sh
 
 # Troubleshooting
 sudo ./scripts/diagnose-nginx.sh          # Diagnose 403 errors
