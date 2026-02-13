@@ -4,7 +4,10 @@ A modern web application for DJ Danny Hectic B featuring mixes, events, live stu
 
 ## 🚀 Deployment
 
-**Production Deployment Guides:**
+**Automated Production Deployment:**
+- **[GitHub Actions Deployment](DEPLOY_GITHUB_ACTIONS.md)** - Automated deployment on push to main ⭐ **Recommended**
+
+**Manual Deployment Guides:**
 - **[Quick Start Guide](QUICKSTART_DEPLOY.md)** - Fast reference for PM2 deployment
 - **[PM2 Deployment Guide](README_DEPLOY_PM2.md)** - Detailed step-by-step PM2 instructions  
 - **[Docker Deployment](README_DEPLOY.md)** - Docker-based deployment (alternative)
@@ -12,17 +15,19 @@ A modern web application for DJ Danny Hectic B featuring mixes, events, live stu
 **Troubleshooting:**
 - **[403 Forbidden Error Fix](TROUBLESHOOTING_403.md)** - Diagnose and fix nginx 403 errors
 
-**Build & Deploy:**
+**Quick Commands:**
 ```bash
-pnpm build              # Build for production
-./verify-build.sh       # Verify build output
-./deploy-pm2.sh         # Deploy to server (automated)
-```
+# Automated deployment (GitHub Actions)
+git push origin main              # Triggers automatic deployment
 
-**Quick 403 Fix:**
-```bash
-sudo ./scripts/diagnose-nginx.sh          # Diagnose issue
-sudo ./scripts/fix-nginx-403.sh proxy    # Apply fix
+# Manual deployment
+pnpm build                        # Build for production
+./verify-build.sh                 # Verify build output
+./deploy-pm2.sh                   # Deploy to server (manual)
+
+# Troubleshooting
+sudo ./scripts/diagnose-nginx.sh          # Diagnose 403 errors
+sudo ./scripts/fix-nginx-403.sh proxy    # Apply 403 fix
 ```
 
 ---

@@ -1,0 +1,132 @@
+name: Deploy DJ Danny Hectic B
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist/public" ]; then
+            echo "❌ Error: dist/public directory not found after build"
+            echo "Build output should be in dist/public (configured in vite.config.ts)"
+            exit 1
+          fi
+          
+          if [ ! -f "dist/public/index.html" ]; then
+            echo "❌ Error: dist/public/index.html not found"
+            echo "Frontend build may have failed"
+            exit 1
+          fi
+          
+          echo "✅ Build verification passed"
+          echo "Frontend output: dist/public"
+          ls -lh dist/public/ | head -20
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to production (atomic release)
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT || 22 }}
+        run: |
+          # Create timestamped release directory
+          TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+          GITHUB_SHORT_SHA="${GITHUB_SHA::7}"
+          RELEASE_NAME="${TIMESTAMP}-${GITHUB_RUN_ID}-${GITHUB_SHORT_SHA}"
+          RELEASE_PATH="/srv/djdannyhecticb/releases/${RELEASE_NAME}"
+          
+          echo "📦 Deploying release: ${RELEASE_NAME}"
+          
+          # Create release directory on server
+          ssh -p "${PORT}" "${USER}@${HOST}" "mkdir -p '${RELEASE_PATH}/public'"
+          
+          # Upload build output (frontend static files)
+          echo "📤 Uploading static files to ${RELEASE_PATH}/public..."
+          rsync -avz --delete \
+            -e "ssh -p ${PORT}" \
+            "./dist/public/" \
+            "${USER}@${HOST}:${RELEASE_PATH}/public/"
+          
+          # Atomic symlink switch + nginx reload
+          echo "🔄 Switching symlink to new release..."
+          ssh -p "${PORT}" "${USER}@${HOST}" \
+            "ln -sfn '${RELEASE_PATH}' /srv/djdannyhecticb/current && \
+             sudo nginx -t && \
+             sudo systemctl reload nginx"
+          
+          echo "✅ Deployment complete!"
+          echo "Release: ${RELEASE_NAME}"
+          echo "Path: ${RELEASE_PATH}"
+          
+          # Cleanup old releases (keep last 5)
+          echo "🧹 Cleaning up old releases (keeping last 5)..."
+          ssh -p "${PORT}" "${USER}@${HOST}" \
+            "cd /srv/djdannyhecticb/releases && \
+             ls -t | tail -n +6 | xargs -r rm -rf"
+
+      - name: Verify deployment
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT || 22 }}
+        run: |
+          echo "🔍 Verifying deployment..."
+          
+          # Check symlink
+          ssh -p "${PORT}" "${USER}@${HOST}" \
+            "ls -la /srv/djdannyhecticb/current"
+          
+          # Check that files exist
+          ssh -p "${PORT}" "${USER}@${HOST}" \
+            "ls -lh /srv/djdannyhecticb/current/public/ | head -10"
+          
+          # Test local response
+          ssh -p "${PORT}" "${USER}@${HOST}" \
+            "curl -sI http://127.0.0.1/ | head -5"
+          
+          echo "✅ Verification complete"
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build**: Frontend static files (Vite)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Output**: dist/public → /srv/djdannyhecticb/current/public" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **Site**: https://djdannyhecticb.com" >> $GITHUB_STEP_SUMMARY
