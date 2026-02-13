@@ -30,6 +30,12 @@ export const systemRouter = router({
       timestamp: Date.now()
     })),
 
+  version: publicProcedure.query(() => ({
+    commit: process.env.COMMIT_SHA || process.env.GITHUB_SHA || "unknown",
+    buildTime: process.env.BUILD_TIME || new Date().toISOString(),
+    version: process.env.npm_package_version || "1.0.0",
+  })),
+
   autonomousStatus: adminProcedure.query(async () => {
     const { autonomousEngine } = await import("./autonomousEngine");
     return autonomousEngine.getStatus();

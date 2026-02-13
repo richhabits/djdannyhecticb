@@ -17,7 +17,7 @@ echo ""
 
 PASS_COUNT=0
 FAIL_COUNT=0
-TOTAL_CHECKS=10
+TOTAL_CHECKS=11
 
 check() {
     local name="$1"
@@ -53,6 +53,34 @@ echo ""
 echo "=== SECURITY CHECKS ==="
 check "HTTPS Working" "curl -sSL --max-time 5 '$DOMAIN/' > /dev/null"
 check "TLS Valid" "echo | openssl s_client -servername $(echo $DOMAIN | sed 's|https://||' | sed 's|/.*||') -connect $(echo $DOMAIN | sed 's|https://||' | sed 's|/.*||'):443 -brief 2>/dev/null | grep -q 'Verification: OK'"
+
+echo ""
+echo "=== DEPLOYMENT VERIFICATION ==="
+echo -n "[Commit SHA Match] "
+if VERSION_DATA=$(curl -sSL --max-time 5 "$DOMAIN/api/trpc/system.version" 2>/dev/null); then
+    DEPLOYED_SHA=$(echo "$VERSION_DATA" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+    if [ -n "$DEPLOYED_SHA" ] && [ "$DEPLOYED_SHA" != "unknown" ]; then
+        if command -v git &> /dev/null && [ -d .git ]; then
+            CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+            if [ "$DEPLOYED_SHA" = "$CURRENT_SHA" ]; then
+                echo "✅ GO (SHA: ${DEPLOYED_SHA:0:8})"
+                ((PASS_COUNT++))
+            else
+                echo "❌ NO-GO (Deployed: ${DEPLOYED_SHA:0:8}, Current: ${CURRENT_SHA:0:8})"
+                ((FAIL_COUNT++))
+            fi
+        else
+            echo "✅ GO (SHA present: ${DEPLOYED_SHA:0:8}, cannot verify match)"
+            ((PASS_COUNT++))
+        fi
+    else
+        echo "❌ NO-GO (No commit SHA)"
+        ((FAIL_COUNT++))
+    fi
+else
+    echo "❌ NO-GO (Version API unreachable)"
+    ((FAIL_COUNT++))
+fi
 
 echo ""
 echo "========================================="

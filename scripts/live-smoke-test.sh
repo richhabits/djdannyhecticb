@@ -108,11 +108,40 @@ test_header() {
 echo "=== Core Tests ==="
 test_url "Homepage" "$DOMAIN/" "200"
 test_url "Health" "$DOMAIN/health.txt" "200"
+test_url "Version API" "$DOMAIN/api/trpc/system.version" "200"
 
 echo ""
 echo "=== Content Tests ==="
 test_content "Vite Build" "$DOMAIN/" "<!doctype html"
 test_content "Assets" "$DOMAIN/" "/assets/index-"
+
+echo ""
+echo "=== Deployment Verification ==="
+echo -n "[Commit SHA] Checking deployed version ... "
+if VERSION_DATA=$(curl -sSL --max-time 10 "$DOMAIN/api/trpc/system.version" 2>/dev/null); then
+    DEPLOYED_SHA=$(echo "$VERSION_DATA" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+    if [ -n "$DEPLOYED_SHA" ] && [ "$DEPLOYED_SHA" != "unknown" ]; then
+        echo "✓ PASS"
+        echo "  Deployed SHA: $DEPLOYED_SHA"
+        ((PASS++))
+        
+        # If git is available, compare
+        if command -v git &> /dev/null && [ -d .git ]; then
+            CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+            if [ "$DEPLOYED_SHA" = "$CURRENT_SHA" ]; then
+                echo "  ✓ Matches current HEAD"
+            else
+                echo "  ⚠ Differs from current HEAD: $CURRENT_SHA"
+            fi
+        fi
+    else
+        echo "✗ FAIL (No commit SHA)"
+        ((FAIL++))
+    fi
+else
+    echo "✗ FAIL (Cannot fetch version)"
+    ((FAIL++))
+fi
 
 echo ""
 echo "=== Security Tests ==="

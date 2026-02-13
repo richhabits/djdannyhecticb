@@ -67,10 +67,15 @@ git reset --hard "origin/$BRANCH"
 
 # Clean install + build (pnpm only; npm will fail by design)
 log "Installing dependencies with pnpm..."
-pnpm install --frozen-lockfile
+COMMIT_SHA=$(git rev-parse HEAD)
+BUILD_TIME=$(date -Iseconds)
+log "Commit SHA: $COMMIT_SHA"
+log "Build time: $BUILD_TIME"
+
+COMMIT_SHA="$COMMIT_SHA" BUILD_TIME="$BUILD_TIME" pnpm install --frozen-lockfile
 
 log "Building application..."
-pnpm build
+COMMIT_SHA="$COMMIT_SHA" BUILD_TIME="$BUILD_TIME" pnpm build
 
 # Fail-fast: Assert output exists (vite outDir => dist/public)
 test -d "dist/public" || { log "ERROR: dist/public missing"; exit 1; }
