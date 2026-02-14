@@ -7,25 +7,76 @@ import { useState } from "react";
 import { AIChatBox } from "@/components/AIChatBox";
 import { trpc } from "@/lib/trpc";
 
+type ChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+const MAX_CHAT_HISTORY = 20;
+
+const SYSTEM_MESSAGE: ChatMessage = {
+  role: "system",
+  content:
+    "You are a helpful assistant for DJ Danny Hectic B website. Help users with bookings, mixes, events, and general inquiries.",
+};
+
+const enforceChatHistoryLimit = (messages: ChatMessage[]): ChatMessage[] => {
+  const systemMessage = messages.find(message => message.role === "system") ?? SYSTEM_MESSAGE;
+  const conversationalMessages = messages.filter(message => message.role !== "system").slice(-MAX_CHAT_HISTORY);
+  return [systemMessage, ...conversationalMessages];
+};
+
 export default function Dashboard() {
   const { user, logout, isAuthenticated } = useAuth();
   const [showChat, setShowChat] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Array<{ role: 'system' | 'user' | 'assistant'; content: string }>>([
-    { role: 'system', content: 'You are a helpful assistant for DJ Danny Hectic B website. Help users with bookings, mixes, events, and general inquiries.' }
-  ]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([SYSTEM_MESSAGE]);
   const { data: bookings } = trpc.bookings.list.useQuery(undefined, { enabled: isAuthenticated });
+  const aiChatMutation = trpc.ai.chat.useMutation({
+    onSuccess: data => {
+      setChatMessages(prev =>
+        enforceChatHistoryLimit([
+          ...prev,
+          {
+            role: "assistant",
+            content: data.message,
+          },
+        ])
+      );
+    },
+    onError: error => {
+      console.error("[AI] chat failed", error);
+      setChatMessages(prev =>
+        enforceChatHistoryLimit([
+          ...prev,
+          {
+            role: "assistant",
+            content: "I hit a snag trying to help. Please try again in a moment.",
+          },
+        ])
+      );
+    },
+  });
 
   const handleSendMessage = (content: string) => {
-    setChatMessages(prev => [...prev, { role: 'user', content }]);
-    setIsChatLoading(true);
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Thanks for your message! I can help you with DJ bookings, explore our mixes, check upcoming events, or answer questions about DJ Danny Hectic B services. What would you like to know?' 
-      }]);
-      setIsChatLoading(false);
-    }, 1000);
+    if (aiChatMutation.isPending) {
+      return;
+    }
+
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const nextMessages = enforceChatHistoryLimit([
+      ...chatMessages,
+      {
+        role: "user",
+        content: trimmed,
+      },
+    ]);
+
+    setChatMessages(nextMessages);
+    aiChatMutation.mutate({ messages: nextMessages });
   };
 
   if (!isAuthenticated) {
@@ -250,7 +301,7 @@ export default function Dashboard() {
             <AIChatBox
               messages={chatMessages}
               onSendMessage={handleSendMessage}
-              isLoading={isChatLoading}
+              isLoading={aiChatMutation.isPending}
               placeholder="Ask me anything..."
               height="100%"
             />
