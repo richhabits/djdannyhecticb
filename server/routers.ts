@@ -534,11 +534,15 @@ export const appRouter = router({
     chat: publicProcedure
       .input(z.object({
         message: z.string().min(1).max(500),
-        model: z.enum(["gemini-pro", "gemini-1.5-flash"]).optional().default("gemini-pro"), // Audit: Added "multiple" model support
+        provider: z.enum(["gemini", "groq", "cohere", "huggingface", "ollama", "auto"]).optional().default("auto"),
       }))
       .mutation(async ({ input }) => {
-        return { response: await chatWithDanny(input.message, input.model) };
+        return { response: await chatWithDanny(input.message, input.provider) };
       }),
+    providers: publicProcedure.query(async () => {
+      const { aiProvider } = await import("./_core/aiProvider");
+      return { available: aiProvider.getAvailableProviders() };
+    }),
     status: publicProcedure.query(() => db.getDannyStatus()),
     updateStatus: adminProcedure
       .input(z.object({
