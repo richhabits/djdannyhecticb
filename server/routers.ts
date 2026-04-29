@@ -13,6 +13,8 @@ import { z } from "zod";
 import * as db from "./db";
 import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
+import { JARVIS_SYSTEM_PROMPT, buildJarvisContext } from "./_core/jarvisPersona";
+import { HECTIC_SYSTEM_PROMPT, buildHecticContext } from "./_core/hecticPersona";
 
 export const appRouter = router({
   system: systemRouter,
@@ -3018,7 +3020,7 @@ export const appRouter = router({
         sessionId: z.string(),
       }))
       .mutation(async ({ input }) => {
-        // Load recent bookings for context
+        // Load business data for rich context
         const recentBookings = await db.query.eventBookings.findMany({
           limit: 10,
           orderBy: (t) => t.createdAt,
@@ -3026,46 +3028,49 @@ export const appRouter = router({
 
         const newLeads = await db.query.hecticLeads.findMany({
           where: (t) => t.status.eq("new"),
+          limit: 20,
+        });
+
+        const contactedLeads = await db.query.hecticLeads.findMany({
+          where: (t) => t.status.eq("contacted"),
           limit: 10,
         });
 
-        // Build business context
-        const context = `
-DANNY'S BUSINESS CONTEXT:
-Recent bookings: ${recentBookings.length}
-New leads: ${newLeads.length}
-Top cities: ${newLeads.map((l) => l.location).filter(Boolean).join(", ") || "N/A"}
+        // Analyze data for smarter context
+        const topCities = Array.from(
+          new Map(
+            newLeads
+              .filter((l) => l.location)
+              .map((l) => [l.location, 1])
+              .reduce((acc, [city, count]) => {
+                acc.set(city, (acc.get(city) || 0) + 1);
+                return acc;
+              }, new Map())
+          ).entries()
+        )
+          .sort(([, a], [, b]) => b - a)
+          .map(([city]) => city)
+          .slice(0, 5);
 
-Recent leads:
-${newLeads.map((l) => `- ${l.name} (${l.location}) - ${l.eventType} - Budget: ${l.budget}`).join("\n")}
-`;
+        // Build rich context
+        const jarvisContext = buildJarvisContext({
+          recentBookings: recentBookings.length,
+          newLeads: newLeads.length,
+          topCities,
+          pendingFollowups: contactedLeads.length,
+          eventTypeBreakdown: newLeads.reduce((acc, l) => {
+            if (l.eventType) acc[l.eventType] = (acc[l.eventType] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>),
+        });
 
-        const jarvisPrompt = `
-You are JARVIS — DJ Danny Hectic B's private admin intelligence system.
-You have full access to Danny's business data: bookings, leads, fan activity, revenue, events.
+        const leadsSnapshot = newLeads
+          .map((l) => `- ${l.name || "Unknown"} (${l.location || "N/A"}) - ${l.eventType || "unknown"} - Budget: ${l.budget || "TBD"}`)
+          .join("\n");
 
-YOUR CAPABILITIES:
-1. Booking Analysis: Surface patterns, identify high-value opportunities
-2. Venue Intelligence: Suggest specific clubs, bars, promoters in UK cities to approach
-3. Social Media: Write Instagram captions, TikTok hooks, X posts in Danny's voice
-4. Lead Follow-up: Draft personalised emails to booking leads
-5. Marketing Copy: Promo text for specific events, mix releases, shout-outs
-
-${context}
-
-RESPONSE FORMAT:
-- Be direct and actionable. Give names, suggest specific venues where you can.
-- When suggesting outreach: provide the actual DM/email text to copy.
-- UK music industry knowledge: Fabric, XOYO, EGG, Ministry of Sound,
-  Manchester: Warehouse Project, Sankeys,
-  Leeds: Wire, Mint Club,
-  Glasgow: SWG3, Sub Club,
-  Birmingham: Mama Roux's, Electric Ballroom
-`;
-
-        // Call Jarvis (use Groq if available for cost savings, fallback to Gemini Flash)
+        // Call Jarvis with full system prompt (use Groq if available for cost savings)
         const response = await aiProvider.chat(
-          `${jarvisPrompt}\n\nAdmin ask: ${input.message}`,
+          `${JARVIS_SYSTEM_PROMPT}\n\n${jarvisContext}\n\nRECENT LEADS:\n${leadsSnapshot}\n\nADMIN REQUEST:\n${input.message}`,
           process.env.GROQ_API_KEY ? "groq" : "gemini"
         );
 

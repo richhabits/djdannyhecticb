@@ -1,11 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, CheckCircle2, AlertCircle } from "lucide-react";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { AIChatBox, type Message } from "@/components/AIChatBox";
 
 function generateSessionId() {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -13,117 +20,236 @@ function generateSessionId() {
 
 export default function AIDanny() {
   const [sessionId] = useState(() => {
-    const stored = localStorage.getItem("ai-danny-session");
-    return stored || generateSessionId();
-    return stored || generateSessionId();
+    const stored = localStorage.getItem("hectic-session-id");
+    const newId = stored || generateSessionId();
+    if (!stored) localStorage.setItem("hectic-session-id", newId);
+    return newId;
   });
-  const [message, setMessage] = useState("");
-  const [localMessages, setLocalMessages] = useState<any[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content:
+        "Yo! I'm Hectic – Danny's AI assistant. I can help with bookings, answer music questions, or just vibe. What's on your mind?",
+    },
+  ]);
+
+  // Load conversation history
+  const { data: history } = trpc.hectic.history.useQuery({ sessionId });
 
   useEffect(() => {
-    localStorage.setItem("ai-danny-session", sessionId);
-  }, [sessionId]);
+    if (history && history.length > 0) {
+      const historyMessages = history.map((msg) => ({
+        role: msg.role as "user" | "assistant" | "system",
+        content: msg.content,
+      }));
+      // Filter out system messages and keep user/assistant
+      setMessages(
+        historyMessages.filter((m) => m.role !== "system")
+      );
+    }
+  }, [history]);
 
-  // We don't have a history endpoint on the danny router yet, so we'll skip initial history fetch or add it later.
-  // For now, let's just make the chat work for the current session.
-  // const { data: history, refetch } = trpc.genz.aiDanny.history.useQuery({ ... }); 
-
-  const chatMutation = trpc.danny.chat.useMutation({
+  const chatMutation = trpc.hectic.chat.useMutation({
     onSuccess: (data) => {
-      setMessage("");
-      // Add bot response to local state since we don't have history refetch yet
-      setLocalMessages(prev => [...prev, { id: Date.now().toString(), response: data.response }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.response },
+      ]);
+
+      // Show signup prompt if needed
+      if (data.shouldPromptSignup) {
+        toast.info(
+          "Create a free account to save your booking request! Takes 30 seconds.",
+          {
+            action: {
+              label: "Sign up",
+              onClick: () => (window.location.href = "/signup"),
+            },
+          }
+        );
+      }
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Failed to send message";
+      const message =
+        error instanceof Error ? error.message : "Failed to send message";
       toast.error(message);
     },
   });
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [history]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+  const handleSendMessage = (content: string) => {
+    // Optimistic update
+    setMessages((prev) => [...prev, { role: "user", content }]);
 
     chatMutation.mutate({
-      message: message.trim(), // API expects 'message' object
+      message: content,
+      sessionId,
     });
-    // Optimistic update
-    setLocalMessages(prev => [...prev, { id: Date.now().toString(), message: message.trim() }]);
   };
 
-  const messages = localMessages || [];
+  const extractedData = chatMutation.data?.extractedData;
 
   return (
     <>
       <MetaTagsComponent
-        title="AI Danny - Chat with Danny Hectic B"
-        description="Chat with AI Danny - get help, ask questions, or just vibe!"
+        title="Chat with Hectic - Book DJ Danny"
+        description="Chat with Hectic AI to book DJ Danny Hectic B or ask questions about music."
         url="/ai-danny"
       />
-      <div className="container mx-auto p-6 max-w-4xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">AI Danny</h1>
-          <p className="text-muted-foreground">Chat with Danny's AI assistant. Ask about tracks, shows, or just vibe!</p>
-        </div>
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="container mx-auto p-6 max-w-5xl">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+              <Bot className="h-8 w-8 text-orange-500" />
+              Hectic
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Danny's booking assistant. Tell me about your event and I'll lock
+              it in.
+            </p>
+          </div>
 
-        <Card className="h-[600px] flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              AI Danny Chat
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-              {messages.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Yo, it's Danny's AI – I can tell you what's playing, when the next show is, or how to get your shout on air.</p>
-                </div>
-              )}
-              {messages.map((msg) => (
-                <div key={msg.id} className="space-y-2">
-                  {msg.message && (
-                    <div className="flex items-start gap-2">
-                      <User className="h-5 w-5 mt-1 text-muted-foreground" />
-                      <div className="bg-muted rounded-lg p-3 max-w-[80%]">
-                        <p className="text-sm">{msg.message}</p>
-                      </div>
-                    </div>
-                  )}
-                  {msg.response && (
-                    <div className="flex items-start gap-2 justify-end">
-                      <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-[80%]">
-                        <p className="text-sm">{msg.response}</p>
-                      </div>
-                      <Bot className="h-5 w-5 mt-1 text-primary" />
-                    </div>
-                  )}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Chat */}
+            <div className="lg:col-span-3">
+              <Card className="h-[600px] flex flex-col">
+                <CardHeader>
+                  <CardTitle>Chat with Hectic</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col overflow-hidden">
+                  <AIChatBox
+                    messages={messages}
+                    onSendMessage={handleSendMessage}
+                    isLoading={chatMutation.isPending}
+                    placeholder="Tell me about your event, or just ask a question..."
+                    height="100%"
+                    suggestedPrompts={[
+                      "Book Danny for my event",
+                      "What's your pricing?",
+                      "Tell me about the music",
+                      "Listen to mixes",
+                    ]}
+                    emptyStateMessage="Start chatting to book or learn more about DJ Danny Hectic B"
+                  />
+                </CardContent>
+              </Card>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <Input
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
-                disabled={chatMutation.isPending}
-              />
-              <Button type="submit" disabled={chatMutation.isPending || !message.trim()}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            {/* Sidebar: Booking Progress & Info */}
+            <div className="space-y-4">
+              {/* Extracted Data Progress */}
+              {extractedData && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      Booking Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {extractedData.name && (
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-1 text-green-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Name</p>
+                          <p className="font-medium text-sm">
+                            {extractedData.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {extractedData.email && (
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-1 text-green-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Email
+                          </p>
+                          <p className="font-medium text-sm break-all">
+                            {extractedData.email}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {extractedData.location && (
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-1 text-orange-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Location
+                          </p>
+                          <p className="font-medium text-sm">
+                            {extractedData.location}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {extractedData.eventDate && (
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-1 text-orange-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Date</p>
+                          <p className="font-medium text-sm">
+                            {extractedData.eventDate}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {extractedData.budget && (
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-1 text-orange-500 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Budget
+                          </p>
+                          <p className="font-medium text-sm">
+                            £{extractedData.budget}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {!extractedData.email && (
+                      <div className="flex items-start gap-2 p-2 bg-yellow-500/10 rounded border border-yellow-500/20">
+                        <AlertCircle className="h-4 w-4 mt-0.5 text-yellow-600 flex-shrink-0" />
+                        <p className="text-xs text-yellow-700">
+                          Share your email to lock in your booking
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Quick Info Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">About Danny</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p>
+                    <strong>30+ years</strong> UK Garage, House, Jungle, Grime
+                  </p>
+                  <p>
+                    <strong>Clean DBS</strong> check & valid USA Visa
+                  </p>
+                  <p className="text-muted-foreground">
+                    Typical fees: Club £500-1500, Private £800-2500, Corporate
+                    £2000+
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-3"
+                    onClick={() => (window.location.href = "/bookings")}
+                  >
+                    Full Booking Form
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
 }
-

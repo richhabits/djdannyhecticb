@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,24 +7,62 @@ import { toast } from "sonner";
 import { MessageCircle, X, Minimize2, Loader2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function generateSessionId() {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 export function AIDannyFloating() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [sessionId] = useState(() => {
+    const stored = localStorage.getItem("hectic-session-id");
+    const newId = stored || generateSessionId();
+    if (!stored) localStorage.setItem("hectic-session-id", newId);
+    return newId;
+  });
+
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
     {
       role: "assistant",
-      content: "Yo! What's good? I'm Danny's AI – here to help with anything about the music, the shows, bookings, or just to vibe. What's on your mind?",
+      content: "Yo! I'm Hectic – Danny's booking assistant. Want to lock in a show or just ask about the music?",
     },
   ]);
   const [input, setInput] = useState("");
 
-  const assistant = trpc.ai.listenerAssistant.useMutation({
+  // Load messages from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(`hectic-messages-${sessionId}`);
+    if (stored) {
+      try {
+        setMessages(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to load messages:", e);
+      }
+    }
+  }, [sessionId]);
+
+  // Persist messages to localStorage
+  useEffect(() => {
+    localStorage.setItem(`hectic-messages-${sessionId}`, JSON.stringify(messages));
+  }, [messages, sessionId]);
+
+  const hectic = trpc.hectic.chat.useMutation({
     onSuccess: (data) => {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.response },
       ]);
       setInput("");
+
+      // Show signup prompt if needed
+      if (data.shouldPromptSignup) {
+        toast.info("Create a free account to save your booking request!", {
+          action: {
+            label: "Sign up",
+            onClick: () => (window.location.href = "/signup"),
+          },
+        });
+      }
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Failed to get response";
@@ -34,13 +72,13 @@ export function AIDannyFloating() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || assistant.isPending) return;
+    if (!input.trim() || hectic.isPending) return;
 
     const userMessage = input.trim();
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setInput("");
 
-    assistant.mutate({ message: userMessage });
+    hectic.mutate({ message: userMessage, sessionId });
   };
 
   if (!isOpen) {

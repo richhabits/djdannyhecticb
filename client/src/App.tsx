@@ -79,6 +79,8 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
+import AdminJarvis from "./pages/AdminJarvis";
+import AdminMarketing from "./pages/AdminMarketing";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -169,6 +171,8 @@ function Router() {
       <Route path={"/admin/show-live"} component={AdminShowLive} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
+      <Route path={"/admin/jarvis"} component={AdminJarvis} />
+      <Route path={"/admin/marketing"} component={AdminMarketing} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -20,6 +20,9 @@
     "jobs:rollup:daily": "node --import tsx jobs/rollup-daily.ts",
     "jobs:supporter:weekly": "node --import tsx jobs/supporter-score-weekly.ts",
     "jobs:sync:ticketmaster": "node --import tsx jobs/sync-ticketmaster.ts",
+    "jobs:hectic:followup": "node --import tsx jobs/hectic-lead-followup.ts",
+    "jobs:jarvis:insights": "node --import tsx jobs/jarvis-daily-insights.ts",
+    "jobs:booking:reminders": "node --import tsx jobs/booking-reminders.ts",
     "dev:offline": "OFFLINE_MODE=1 pnpm dev"
   },
   "dependencies": {

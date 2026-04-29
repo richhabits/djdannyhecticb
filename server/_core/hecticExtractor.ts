@@ -24,6 +24,8 @@ export async function extractBookingData(
   extractEventDate(message, extracted);
   extractBudget(message, extracted);
   extractLocation(message, extracted);
+  extractEventType(message, extracted);
+  extractIntent(message, extracted);
 
   // If we got most fields, return. Only use LLM if key fields still missing
   const completeness = Object.values(extracted).filter(Boolean).length;
@@ -78,14 +80,31 @@ function extractEventDate(message: string, extracted: Partial<ExtractedBookingDa
 
 function extractBudget(message: string, extracted: Partial<ExtractedBookingData>) {
   if (extracted.budget) return;
-  // Patterns: "£500-1500", "$2000", "budget is £800", "between 1500 and 2000"
-  const budgetMatch = message.match(
+  // Patterns: "£500-1500", "$2000", "budget is £800", "between 1500 and 2000", "2k", "3 grand"
+
+  // Try currency + numbers first
+  let budgetMatch = message.match(
     /(?:budget[:\s]+)?(?:[£$]|pounds?|dollars?|euros?|EUR|GBP|USD)\s*(\d{1,5})(?:\s*[-–]\s*(?:[£$])?(\d{1,5}))?/i
   );
   if (budgetMatch) {
     const min = budgetMatch[1];
     const max = budgetMatch[2];
-    extracted.budget = max ? `${min}-${max}` : min;
+    extracted.budget = max ? `£${min}-£${max}` : `£${min}`;
+    return;
+  }
+
+  // Try "Xk" or "X grand" patterns
+  budgetMatch = message.match(/(\d{1,2})\s*(?:k|grand|k?|thousands?)/i);
+  if (budgetMatch) {
+    const amount = parseInt(budgetMatch[1]) * 1000;
+    extracted.budget = `£${amount}`;
+    return;
+  }
+
+  // Try "between X and Y" pattern
+  budgetMatch = message.match(/between\s+[£$]?(\d{1,5})\s+and\s+[£$]?(\d{1,5})/i);
+  if (budgetMatch) {
+    extracted.budget = `£${budgetMatch[1]}-£${budgetMatch[2]}`;
   }
 }
 
@@ -93,14 +112,44 @@ function extractLocation(message: string, extracted: Partial<ExtractedBookingDat
   if (extracted.location) return;
   // UK cities/venues (simplified - would be extended in production)
   const venues = [
-    "London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Bristol",
+    "London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Bristol", "Edinburgh",
     "Fabric", "XOYO", "Warehouse Project", "Egg", "Ministry of Sound",
-    "SWG3", "Sub Club", "Wire", "Sankeys", "Electric Ballroom", "Mama Rouxs"
+    "SWG3", "Sub Club", "Wire", "Sankeys", "Electric Ballroom", "Mama Rouxs",
+    "Printworks", "EGG", "Gorilla", "Headrow House", "Motion", "Digital",
+    "Exchange", "Hï Ibiza", "Glastonbury", "Reading", "Leeds Festival"
   ];
   const locationMatch = message.match(
     new RegExp(`\\b(${venues.join("|")})\\b`, "i")
   );
   if (locationMatch) extracted.location = locationMatch[1];
+}
+
+function extractEventType(message: string, extracted: Partial<ExtractedBookingData>) {
+  if (extracted.eventType) return;
+  // Detect event type from keywords
+  const msg = message.toLowerCase();
+  if (msg.match(/\b(club|nightclub|dj set|dance|rave|house|techno)\b/))
+    extracted.eventType = "club";
+  else if (msg.match(/\b(private|party|wedding|birthday|corporate|company|brand|product launch|event)\b/))
+    extracted.eventType = "private";
+  else if (msg.match(/\b(radio|broadcast|show|live stream|podcast)\b/))
+    extracted.eventType = "radio";
+  else if (msg.match(/\b(corporate|conference|client|sponsor|brand|marketing)\b/))
+    extracted.eventType = "brand";
+}
+
+function extractIntent(message: string, extracted: Partial<ExtractedBookingData>) {
+  if (extracted.intent) return;
+  const msg = message.toLowerCase();
+  // High-signal booking keywords
+  if (msg.match(/\b(book|booking|gig|hire|feature|event|want you to play|need a dj|looking for)\b/))
+    extracted.intent = "booking";
+  else if (msg.match(/\b(question|ask|curious|wondering|how much|rates|price|cost)\b/))
+    extracted.intent = "inquiry";
+  else if (msg.match(/\b(fan|love your work|listening|mixes|radio|huge fan|respect)\b/))
+    extracted.intent = "fan";
+  else if (msg.match(/\b(media|interview|press|feature|article|podcast|journalist)\b/))
+    extracted.intent = "media";
 }
 
 /**

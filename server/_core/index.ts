@@ -20,6 +20,8 @@ import { registerAdminAuthRoutes } from "./adminAuthRoutes";
 import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
 import { registerUploadRoutes } from "../routes/upload";
+import { registerWebhookRoutes } from "../routes/webhooks";
+import { registerCronRoutes } from "../routes/cron";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { ENV } from "./env";
@@ -169,6 +171,12 @@ async function startServer() {
   // Analytics Tracking (self-hosted)
   const { registerAnalyticsRoutes } = await import("./analytics");
   registerAnalyticsRoutes(app);
+
+  // Webhook Routes (Telnyx, Vapi)
+  registerWebhookRoutes(app);
+
+  // Cron Job Routes
+  registerCronRoutes(app);
 
   // Rate limiting is handled globally by express-rate-limit middleware
 
