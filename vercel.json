@@ -5,7 +5,6 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "envPrefix": "@",
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 60
@@ -61,12 +60,6 @@
       ]
     }
   ],
-  "buildCache": {
-    "source": ".next/**",
-    "paths": [
-      "node_modules/**"
-    ]
-  },
   "crons": [
     {
       "path": "/api/cron/hourly",
