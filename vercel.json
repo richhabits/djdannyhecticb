@@ -51,7 +51,7 @@
       ]
     },
     {
-      "source": "/dist/public/**",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
