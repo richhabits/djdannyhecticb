@@ -175,9 +175,9 @@ export default function Dashboard() {
                   {bookings.slice(0, 3).map((booking) => (
                     <div key={booking.id} className="flex items-center justify-between p-4 rounded-lg bg-card/50 border border-border">
                       <div>
-                        <p className="font-semibold">{booking.eventName}</p>
+                        <p className="font-semibold">{booking.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(booking.eventDate).toLocaleDateString()} • {booking.eventLocation}
+                          {new Date(booking.eventDate).toLocaleDateString()} • {booking.location}
                         </p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold ${

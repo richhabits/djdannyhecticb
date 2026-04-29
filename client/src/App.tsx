@@ -26,7 +26,7 @@ import Awards from "./pages/Awards";
 import Press from "./pages/Press";
 import Portfolio from "./pages/Portfolio";
 import TrackID from "./pages/TrackID";
-import SocialFeed from "./pages/SocialFeed";
+// DELETED: import SocialFeed from "./pages/SocialFeed"; // Deleted router: socialFeed
 import Gallery from "./pages/Gallery";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
@@ -38,9 +38,10 @@ import Analytics from "./pages/Analytics";
 import Integrations from "./pages/Integrations";
 import EPK from "./pages/EPK";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Mixes from "./pages/Mixes";
 import Bookings from "./pages/Bookings";
-import Events from "./pages/Events";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 import UKEventsPage from "./pages/UKEventsPage";
 import Podcasts from "./pages/Podcasts";
 import LiveStudio from "./pages/LiveStudio";
@@ -55,7 +56,6 @@ import AdminTracks from "./pages/AdminTracks";
 import AdminBookings from "./pages/AdminBookings";
 import AdminPodcasts from "./pages/AdminPodcasts";
 import AdminStreamingLinks from "./pages/AdminStreamingLinks";
-import AdminMarketingHub from "./pages/AdminMarketingHub";
 import ListenerLeaderboard from "./pages/ListenerLeaderboard";
 import Live from "./pages/Live";
 import BookDanny from "./pages/BookDanny";
@@ -63,8 +63,6 @@ import AIDanny from "./pages/AIDanny";
 import Profile from "./pages/Profile";
 import World from "./pages/World";
 import Vault from "./pages/Vault";
-import BookingsPage from "./pages/BookingsPage";
-import EventsPage from "./pages/EventsPage";
 import PartnersPage from "./pages/PartnersPage";
 import Backstage from "./pages/Backstage";
 import AIShout from "./pages/AIShout";
@@ -81,15 +79,13 @@ import ShowEpisodeDetail from "./pages/ShowEpisodeDetail";
 import AdminShowLive from "./pages/AdminShowLive";
 import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
-import AdminUKEvents from "./pages/AdminUKEvents";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
 import { HecticOnboarding } from "./components/HecticOnboarding";
 import { GlobalSearch } from "./components/GlobalSearch";
-import { SocialProofNotifications } from "./components/SocialProofNotifications";
+// DELETED: import { SocialProofNotifications } from "./components/SocialProofNotifications"; // Deleted router: socialProof
 import { GlobalNav } from "./components/GlobalNav";
-
 import Bio from "./pages/Bio";
 import Support from "./pages/Support";
 
@@ -103,6 +99,7 @@ function Router() {
       <Route path={"/testimonials"} component={Testimonials} />
       <Route path={"/shop"} component={Shop} />
       <Route path={"/checkout"} component={Checkout} />
+      <Route path={"/checkout/success"} component={CheckoutSuccess} />
       <Route path={"/pricing"} component={Pricing} />
       <Route path={"/faq"} component={FAQ} />
       <Route path={"/videos"} component={VideoGallery} />
@@ -112,7 +109,8 @@ function Router() {
       <Route path={"/press"} component={Press} />
       <Route path={"/portfolio"} component={Portfolio} />
       <Route path={"/track-id"} component={TrackID} />
-      <Route path={"/social-feed"} component={SocialFeed} />
+      {/* DELETED ROUTE: /social-feed - deleted router: socialFeed */}
+      {/* <Route path={"/social-feed"} component={SocialFeed} /> */}
       <Route path={"/gallery"} component={Gallery} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/contact"} component={Contact} />
@@ -124,6 +122,7 @@ function Router() {
       <Route path={"/integrations"} component={Integrations} />
       <Route path={"/epk"} component={EPK} />
       <Route path={"/login"} component={Login} />
+      <Route path={"/signup"} component={Signup} />
       <Route path={"/mixes"} component={Mixes} />
       <Route path={"/bookings"} component={Bookings} />
       <Route path={"/events"} component={UKEventsPage} />
@@ -148,14 +147,12 @@ function Router() {
       <Route path={"/admin/bookings"} component={AdminBookings} />
       <Route path={"/admin/podcasts"} component={AdminPodcasts} />
       <Route path={"/admin/streaming-links"} component={AdminStreamingLinks} />
-      <Route path={"/admin/marketing"} component={AdminMarketingHub} />
       <Route path={"/admin/empire"} component={AdminEmpire} />
       <Route path={"/support"} component={Support} />
       <Route path={"/ai-danny"} component={AIDanny} />
       <Route path={"/profile/:username"} component={Profile} />
       <Route path={"/world"} component={World} />
       <Route path={"/vault"} component={Vault} />
-      <Route path={"/bookings"} component={BookingsPage} />
       <Route path={"/partners"} component={PartnersPage} />
       <Route path={"/backstage"} component={Backstage} />
       <Route path={"/ai-shout"} component={AIShout} />
@@ -172,7 +169,6 @@ function Router() {
       <Route path={"/admin/show-live"} component={AdminShowLive} />
       <Route path={"/admin/control"} component={AdminControlTower} />
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
-      <Route path={"/admin/uk-events"} component={AdminUKEvents} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -210,7 +206,8 @@ function App() {
             <LiveAudioPlayer />
             <AIDannyFloating />
             <HecticOnboarding />
-            <SocialProofNotifications />
+            {/* DELETED COMPONENT: SocialProofNotifications - deleted router: socialProof */}
+            {/* <SocialProofNotifications /> */}
           </div>
         </TooltipProvider>
       </ThemeProvider>

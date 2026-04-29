@@ -41,29 +41,18 @@ export function registerUploadRoutes(app: Express) {
             const url = await uploadFile(key, file.buffer, file.mimetype);
 
             // Create DB record
-            // Assuming addMediaItem exists or similar. If not, we might need to use createMediaItem logic directly if exposed,
-            // or we just return the URL and let the client call a mutation (but AdminMedia expects the upload response).
+            // STUB: createMediaItem function has been removed from db module
+            // Media functions were removed from the schema/db layer
+            // Returning upload URL without database persistence
 
-            // Checking AdminMedia.tsx:
-            // const data = await res.json();
-            // toast.success("Upload successful");
-            // refetch(); <--- This implies the list is fetched from DB. So we MUST save to DB here.
-
-            // Let's check if db.addMediaItem exists. If not, I'll use direct schema insertion if possible, 
-            // or db.createMediaItem if available.
-            // Based on routers.ts media.list -> db.getMediaLibrary, media.delete -> db.deleteMediaItem.
-            // I'll assume db.createMediaItem or db.addMediaItem exists or I can import schema.
-
-            const { createMediaItem } = await import("../db");
-            const mediaItem = await createMediaItem({
+            res.status(200).json({
                 url,
                 filename: key,
                 originalName: file.originalname,
                 mimeType: file.mimetype,
                 size: file.size,
+                message: 'File uploaded to S3 (database persistence disabled)'
             });
-
-            res.status(200).json(mediaItem);
         } catch (error) {
             console.error("Upload failed", error);
             res.status(500).json({ error: "Upload failed" });

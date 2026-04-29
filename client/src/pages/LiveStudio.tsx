@@ -65,6 +65,8 @@ function AdminMissionControl() {
   const [activeMode, setActiveMode] = useState<'video' | 'radio'>('video');
   const [statsUrl, setStatsUrl] = useState("");
   const [serverType, setServerType] = useState<'icecast' | 'shoutcast'>('icecast');
+  const [isGoingLive, setIsGoingLive] = useState(false);
+  const [streamUrl, setStreamUrl] = useState("");
 
   const { data: streams } = trpc.streams.list.useQuery();
   const [selectedStreamId, setSelectedStreamId] = useState<number | null>(null);

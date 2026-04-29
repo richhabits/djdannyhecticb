@@ -22,7 +22,7 @@
 
 import { textToSpeech, TTSRequest } from "./aiProviders";
 import * as db from "../db";
-import { InsertAIVoiceJob } from "../../drizzle/schema";
+// Removed: InsertAIVoiceJob (type doesn't exist in schema)
 
 export type VoiceProfile = "hectic_main" | "hectic_soft" | "hectic_shouty";
 

@@ -1,6 +1,6 @@
-import { drizzle } from "drizzle-orm/mysql2";
-import { migrate } from "drizzle-orm/mysql2/migrator";
-import { createPool } from "mysql2/promise";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -16,11 +16,7 @@ export async function runMigrations() {
 
     console.log("[Migration] Starting production database migration...");
 
-    const connectionString = databaseUrl.includes('?')
-        ? `${databaseUrl}&multipleStatements=true`
-        : `${databaseUrl}?multipleStatements=true`;
-
-    const poolConnection = createPool(connectionString);
+    const poolConnection = postgres(databaseUrl);
 
     const db = drizzle(poolConnection);
 
@@ -35,6 +31,6 @@ export async function runMigrations() {
         console.error("[Migration] CRITICAL FAILURE:", error);
         // Don't exit process here, let the server try to start (might partially work)
     } finally {
-        await poolConnection.end();
+        await poolConnection.end({ timeout: 5 });
     }
 }

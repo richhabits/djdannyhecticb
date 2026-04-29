@@ -40,12 +40,12 @@ export default function AdminBookings() {
   const [viewingBooking, setViewingBooking] = useState<any>(null);
 
   const utils = trpc.useUtils();
-  const { data: bookings, isLoading } = trpc.bookings.list.useQuery();
+  const { data: bookings, isLoading } = trpc.eventBookings.list.useQuery();
 
-  const updateBooking = trpc.bookings.update.useMutation({
+  const updateBooking = trpc.eventBookings.update.useMutation({
     onSuccess: () => {
       toast.success("Booking updated");
-      utils.bookings.list.invalidate();
+      utils.eventBookings.list.invalidate();
       setEditingBooking(null);
     },
     onError: (error: unknown) => {
@@ -54,10 +54,10 @@ export default function AdminBookings() {
     },
   });
 
-  const deleteBooking = trpc.bookings.delete.useMutation({
+  const deleteBooking = trpc.eventBookings.delete.useMutation({
     onSuccess: () => {
       toast.success("Booking deleted");
-      utils.bookings.list.invalidate();
+      utils.eventBookings.list.invalidate();
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Failed to delete booking";
@@ -140,7 +140,7 @@ export default function AdminBookings() {
                     bookings.map((booking) => (
                       <TableRow key={booking.id}>
                         <TableCell>
-                          <div className="font-medium">{booking.eventName || booking.name}</div>
+                          <div className="font-medium">{booking.name}</div>
                           {booking.organisation && (
                             <div className="text-sm text-muted-foreground">
                               {booking.organisation}
@@ -151,12 +151,12 @@ export default function AdminBookings() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-1 text-sm">
                               <Mail className="w-3 h-3" />
-                              {booking.contactEmail || booking.email}
+                              {booking.email}
                             </div>
-                            {booking.contactPhone || booking.phone && (
+                            {booking.phone && (
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Phone className="w-3 h-3" />
-                                {booking.contactPhone || booking.phone}
+                                {booking.phone}
                               </div>
                             )}
                           </div>
@@ -171,7 +171,7 @@ export default function AdminBookings() {
                             </div>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <MapPin className="w-3 h-3" />
-                              {booking.eventLocation || booking.location}
+                              {booking.location}
                             </div>
                           </div>
                         </TableCell>
@@ -246,16 +246,16 @@ export default function AdminBookings() {
               <div className="space-y-4 py-4">
                 <div>
                   <Label className="text-sm text-muted-foreground">Event Name</Label>
-                  <div className="font-medium">{viewingBooking.eventName || viewingBooking.name}</div>
+                  <div className="font-medium">{viewingBooking.name}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm text-muted-foreground">Contact Email</Label>
-                    <div>{viewingBooking.contactEmail || viewingBooking.email}</div>
+                    <div>{viewingBooking.email}</div>
                   </div>
                   <div>
                     <Label className="text-sm text-muted-foreground">Phone</Label>
-                    <div>{viewingBooking.contactPhone || viewingBooking.phone || "-"}</div>
+                    <div>{viewingBooking.phone || "-"}</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -274,7 +274,7 @@ export default function AdminBookings() {
                 </div>
                 <div>
                   <Label className="text-sm text-muted-foreground">Location</Label>
-                  <div>{viewingBooking.eventLocation || viewingBooking.location}</div>
+                  <div>{viewingBooking.location}</div>
                 </div>
                 {viewingBooking.budgetRange && (
                   <div>

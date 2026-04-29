@@ -45,9 +45,9 @@ function SupportPaymentForm({ amount, name, email, message, onSuccess }: {
         amount,
         currency: "GBP",
         fanName: name,
-        email: email || user?.email,
+        email: email ?? user?.email ?? "",
         message,
-        fanId: user?.id,
+        fanId: user?.id ?? 0,
       });
     }
   }, [name, amount, email, message, user?.id, user?.email]);

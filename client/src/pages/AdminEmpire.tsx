@@ -57,7 +57,7 @@ export default function AdminEmpire() {
   const toggleKillSwitch = (key: string, currentValue: boolean) => {
     setSetting.mutate({
       key,
-      value: !currentValue,
+      value: String(!currentValue),
       description: `Kill switch for ${key}`,
     });
   };

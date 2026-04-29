@@ -2,39 +2,21 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
- * This is proprietary software. Reverse engineering, decompilation, or 
- * disassembly is strictly prohibited and may result in legal action.
- */
-
-
-
-/**
- * COPYRIGHT NOTICE
- * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
- * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { ukEventsRouter } from "./ukEventsRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
-import { eq, desc, and, sql, gt } from "drizzle-orm";
-// Only import schema tables that are actually used in this file
-import {
-  streams,
-  shouts,
-  shows,
-  events,
-} from "../drizzle/schema";
 import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
 
 export const appRouter = router({
   system: systemRouter,
-
+  ukEvents: ukEventsRouter,
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -77,19 +59,6 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
-
-  // Mixes
-  getAllMixes: publicProcedure.query(() => db.getAllMixes()),
-  getFreeMixes: publicProcedure.query(() => db.getFreeMixes()),
-  getMixById: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      const mix = await db.getMixById(input.id);
-      if (!mix || !mix.audioUrl) throw new Error("Mix not found");
-      const key = mix.audioUrl.split("/").pop() || "";
-      const { getPresignedDownloadUrl } = await import("./s3");
-      return { url: await getPresignedDownloadUrl(key) };
-    }),
 
   mixes: router({
     list: publicProcedure.query(() => db.getAllMixes()),
@@ -164,12 +133,61 @@ export const appRouter = router({
       }),
   }),
 
-  // Old bookings router removed - using new eventBookings system
-
-  // Events
-  getAllEvents: publicProcedure.query(() => db.getAllEvents()),
-  getFeaturedEvents: publicProcedure.query(() => db.getFeaturedEvents()),
-  getUpcomingEvents: publicProcedure.query(() => db.getUpcomingEvents()),
+  eventBookings: router({
+    list: protectedProcedure.query(() => db.listEventBookings()),
+    create: publicProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        email: z.string().email().max(255),
+        phone: z.string().max(20).optional(),
+        organisation: z.string().max(255).optional(),
+        eventType: z.enum(["club", "radio", "private", "brand", "other"]),
+        eventDate: z.string(),
+        eventTime: z.string().optional(),
+        location: z.string().min(1).max(255),
+        budgetRange: z.string().max(100).optional(),
+        extraNotes: z.string().optional(),
+        streamingRequired: z.boolean().default(false),
+        marketingConsent: z.boolean().default(false),
+        dataConsent: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const booking = await db.createEventBooking({
+          ...input,
+          status: "pending",
+          userId: ctx.user?.id,
+        });
+        return booking;
+      }),
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
+        extraNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...updates } = input;
+        const booking = await db.updateEventBooking(id, updates);
+        await auditLog(ctx, {
+          action: "update_booking",
+          entityType: "booking",
+          entityId: id,
+          afterSnapshot: booking,
+        });
+        return booking;
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.deleteEventBooking(input.id);
+        await auditLog(ctx, {
+          action: "delete_booking",
+          entityType: "booking",
+          entityId: input.id,
+        });
+        return { success: true };
+      }),
+  }),
 
   events: router({
     upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
@@ -372,11 +390,6 @@ export const appRouter = router({
       }),
   }),
 
-  // Shouts
-  getAllShouts: publicProcedure
-    .input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional())
-    .query(({ input }) => db.getApprovedShouts(input?.limit ?? 20)),
-
   shouts: router({
     create: publicProcedure
       .input(z.object({
@@ -439,10 +452,6 @@ export const appRouter = router({
         return db.updateShoutStatus(id, updates);
       }),
   }),
-
-  // Streams
-  getAllStreams: publicProcedure.query(() => db.listStreams()),
-  getActiveStream: publicProcedure.query(() => db.getActiveStream()),
 
   streams: router({
     active: publicProcedure.query(() => db.getActiveStream()),
@@ -520,9 +529,6 @@ export const appRouter = router({
         return getStreamStatus(stream);
       }),
   }),
-
-  // Danny Status
-  getDannyStatus: publicProcedure.query(() => db.getDannyStatus()),
 
   danny: router({
     chat: publicProcedure
@@ -631,9 +637,6 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
-
-  // Shows
-  getAllShows: publicProcedure.query(() => db.listShows()),
 
   shows: router({
     list: publicProcedure.query(() => db.listShows()),
@@ -2833,406 +2836,6 @@ export const appRouter = router({
       .mutation(({ input }) => db.createOrUpdateUserProfile({ ...input, genres: input.genres ? JSON.stringify(input.genres) : undefined })),
   }),
 
-  // ============================================
-  // MARKETING HUB
-  // ============================================
-  marketing: router({
-    // Marketing Leads
-    leads: router({
-      list: adminProcedure
-        .input(
-          z
-            .object({
-              status: z.string().optional(),
-              type: z.string().optional(),
-              location: z.string().optional(),
-              assignedTo: z.number().optional(),
-            })
-            .optional()
-        )
-        .query(({ input }) => db.getAllMarketingLeads(input)),
-
-      get: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .query(({ input }) => db.getMarketingLeadById(input.id)),
-
-      create: adminProcedure
-        .input(
-          z.object({
-            name: z.string().min(1).max(255),
-            type: z.enum(["club", "bar", "venue", "festival", "event", "radio", "other"]),
-            location: z.string().min(1).max(255),
-            address: z.string().optional(),
-            email: z.string().email().max(320).optional(),
-            phone: z.string().max(20).optional(),
-            website: z.string().url().max(512).optional(),
-            socialMedia: z.string().optional(), // JSON string
-            capacity: z.number().optional(),
-            genre: z.string().max(255).optional(),
-            notes: z.string().optional(),
-            status: z.enum(["new", "contacted", "interested", "quoted", "booked", "declined", "archived"]).optional(),
-            source: z.string().max(255).optional(),
-            assignedTo: z.number().optional(),
-            nextFollowUp: z.date().optional(),
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const lead = await db.createMarketingLead({
-            ...input,
-            socialMedia: input.socialMedia || undefined,
-          });
-          await db.createAuditLog({
-            action: "create_marketing_lead",
-            entityType: "marketing_lead",
-            entityId: lead.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return lead;
-        }),
-
-      update: adminProcedure
-        .input(
-          z.object({
-            id: z.number(),
-            name: z.string().min(1).max(255).optional(),
-            type: z.enum(["club", "bar", "venue", "festival", "event", "radio", "other"]).optional(),
-            location: z.string().min(1).max(255).optional(),
-            address: z.string().optional(),
-            email: z.string().email().max(320).optional(),
-            phone: z.string().max(20).optional(),
-            website: z.string().url().max(512).optional(),
-            socialMedia: z.string().optional(),
-            capacity: z.number().optional(),
-            genre: z.string().max(255).optional(),
-            notes: z.string().optional(),
-            status: z.enum(["new", "contacted", "interested", "quoted", "booked", "declined", "archived"]).optional(),
-            assignedTo: z.number().optional(),
-            lastContacted: z.date().optional(),
-            nextFollowUp: z.date().optional(),
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const { id, ...updates } = input;
-          const lead = await db.updateMarketingLead(id, updates);
-          await db.createAuditLog({
-            action: "update_marketing_lead",
-            entityType: "marketing_lead",
-            entityId: id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return lead;
-        }),
-
-      delete: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .mutation(async ({ input, ctx }) => {
-          await db.deleteMarketingLead(input.id);
-          await db.createAuditLog({
-            action: "delete_marketing_lead",
-            entityType: "marketing_lead",
-            entityId: input.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return { success: true };
-        }),
-    }),
-
-    // Marketing Campaigns
-    campaigns: router({
-      list: adminProcedure
-        .input(
-          z
-            .object({
-              status: z.string().optional(),
-              type: z.string().optional(),
-            })
-            .optional()
-        )
-        .query(({ input }) => db.getAllMarketingCampaigns(input)),
-
-      get: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .query(({ input }) => db.getMarketingCampaignById(input.id)),
-
-      create: adminProcedure
-        .input(
-          z.object({
-            name: z.string().min(1).max(255),
-            description: z.string().optional(),
-            type: z.enum(["outreach", "social", "email", "advertising", "partnership", "other"]),
-            targetAudience: z.string().optional(), // JSON string
-            startDate: z.date().optional(),
-            endDate: z.date().optional(),
-            budget: z.string().optional(),
-            status: z.enum(["draft", "active", "paused", "completed", "cancelled"]).optional(),
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const campaign = await db.createMarketingCampaign({
-            ...input,
-            targetAudience: JSON.stringify(input.targetAudience) || undefined,
-            createdBy: ctx.user?.id || 0,
-          });
-          await db.createAuditLog({
-            action: "create_marketing_campaign",
-            entityType: "marketing_campaign",
-            entityId: campaign.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return campaign;
-        }),
-
-      update: adminProcedure
-        .input(
-          z.object({
-            id: z.number(),
-            name: z.string().min(1).max(255).optional(),
-            description: z.string().optional(),
-            type: z.enum(["outreach", "social", "email", "advertising", "partnership", "other"]).optional(),
-            targetAudience: z.string().optional(),
-            startDate: z.date().optional(),
-            endDate: z.date().optional(),
-            budget: z.string().optional(),
-            status: z.enum(["draft", "active", "paused", "completed", "cancelled"]).optional(),
-            metrics: z.string().optional(), // JSON string
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const { id, ...updates } = input;
-          const campaign = await db.updateMarketingCampaign(id, updates);
-          await db.createAuditLog({
-            action: "update_marketing_campaign",
-            entityType: "marketing_campaign",
-            entityId: id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return campaign;
-        }),
-
-      delete: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .mutation(async ({ input, ctx }) => {
-          await db.deleteMarketingCampaign(input.id);
-          await db.createAuditLog({
-            action: "delete_marketing_campaign",
-            entityType: "marketing_campaign",
-            entityId: input.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return { success: true };
-        }),
-    }),
-
-    // Outreach Activities
-    outreach: router({
-      listByLead: adminProcedure
-        .input(z.object({ leadId: z.number() }))
-        .query(({ input }) => db.getOutreachActivitiesByLeadId(input.leadId)),
-
-      create: adminProcedure
-        .input(
-          z.object({
-            leadId: z.number(),
-            campaignId: z.number().optional(),
-            type: z.enum(["email", "phone", "social", "in_person", "other"]),
-            subject: z.string().max(255).optional(),
-            message: z.string().optional(),
-            response: z.string().optional(),
-            status: z.enum(["sent", "delivered", "opened", "replied", "bounced", "failed"]).optional(),
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const activity = await db.createOutreachActivity({
-            ...input,
-            performedBy: ctx.user?.id || 0,
-            performedAt: new Date(),
-          });
-
-          // Update lead's lastContacted
-          await db.updateMarketingLead(input.leadId, {
-            lastContacted: new Date(),
-          });
-
-          await db.createAuditLog({
-            action: "create_outreach_activity",
-            entityType: "outreach_activity",
-            entityId: activity.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return activity;
-        }),
-    }),
-
-    // Social Media Posts
-    socialPosts: router({
-      list: adminProcedure
-        .input(
-          z
-            .object({
-              platform: z.string().optional(),
-              status: z.string().optional(),
-              createdBy: z.number().optional(),
-            })
-            .optional()
-        )
-        .query(({ input }) => db.getAllSocialMediaPosts(input)),
-
-      get: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .query(({ input }) => db.getSocialMediaPostById(input.id)),
-
-      create: adminProcedure
-        .input(
-          z.object({
-            contentQueueId: z.number().optional(),
-            platform: z.enum(["instagram", "tiktok", "youtube", "twitter", "facebook", "linkedin", "threads", "other"]),
-            type: z.enum(["post", "story", "reel", "video", "carousel", "live", "other"]),
-            caption: z.string().optional(),
-            mediaUrls: z.string().optional(), // JSON array
-            hashtags: z.string().optional(), // JSON array or comma-separated
-            mentions: z.string().optional(), // JSON array
-            location: z.string().max(255).optional(),
-            status: z.enum(["draft", "scheduled", "posted", "failed", "archived"]).optional(),
-            scheduledAt: z.date().optional(),
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const post = await db.createSocialMediaPost({
-            ...input,
-            mediaUrls: input.mediaUrls || undefined,
-            hashtags: input.hashtags || undefined,
-            mentions: input.mentions || undefined,
-            createdBy: ctx.user?.id || 0,
-          });
-          await db.createAuditLog({
-            action: "create_social_media_post",
-            entityType: "social_media_post",
-            entityId: post.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return post;
-        }),
-
-      update: adminProcedure
-        .input(
-          z.object({
-            id: z.number(),
-            platform: z.enum(["instagram", "tiktok", "youtube", "twitter", "facebook", "linkedin", "threads", "other"]).optional(),
-            type: z.enum(["post", "story", "reel", "video", "carousel", "live", "other"]).optional(),
-            caption: z.string().optional(),
-            mediaUrls: z.string().optional(),
-            hashtags: z.string().optional(),
-            mentions: z.string().optional(),
-            location: z.string().max(255).optional(),
-            status: z.enum(["draft", "scheduled", "posted", "failed", "archived"]).optional(),
-            scheduledAt: z.date().optional(),
-            metrics: z.string().optional(), // JSON string
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const { id, ...updates } = input;
-          const post = await db.updateSocialMediaPost(id, updates);
-          await db.createAuditLog({
-            action: "update_social_media_post",
-            entityType: "social_media_post",
-            entityId: id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return post;
-        }),
-
-      delete: adminProcedure
-        .input(z.object({ id: z.number() }))
-        .mutation(async ({ input, ctx }) => {
-          await db.deleteSocialMediaPost(input.id);
-          await db.createAuditLog({
-            action: "delete_social_media_post",
-            entityType: "social_media_post",
-            entityId: input.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return { success: true };
-        }),
-    }),
-
-    // Venue Scraper
-    scraper: router({
-      search: adminProcedure
-        .input(
-          z.object({
-            query: z.string().min(1),
-            location: z.string().optional(),
-            radius: z.number().optional(),
-            type: z.enum(["club", "bar", "venue", "festival"]).optional(),
-            source: z.enum(["google", "manual"]).default("google"),
-          })
-        )
-        .mutation(async ({ input }) => {
-          const { searchAndSaveVenues } = await import("./lib/venueScraper");
-          const { query, location, type, source } = input;
-          const searchQuery = type ? `${type} ${query}` : query;
-          const result = await searchAndSaveVenues(
-            {
-              query: searchQuery,
-              location,
-              type,
-            },
-            source
-          );
-          return result;
-        }),
-
-      listResults: adminProcedure
-        .input(
-          z
-            .object({
-              processed: z.boolean().optional(),
-              convertedToLead: z.boolean().optional(),
-            })
-            .optional()
-        )
-        .query(({ input }) => db.getAllVenueScraperResults(input)),
-
-      convertToLead: adminProcedure
-        .input(
-          z.object({
-            scraperResultId: z.number(),
-            email: z.string().email().optional(),
-            phone: z.string().optional(),
-            notes: z.string().optional(),
-            assignedTo: z.number().optional(),
-          })
-        )
-        .mutation(async ({ input, ctx }) => {
-          const { convertVenueToLead } = await import("./lib/venueScraper");
-          const lead = await convertVenueToLead(input.scraperResultId, {
-            email: input.email,
-            phone: input.phone,
-            notes: input.notes,
-            assignedTo: input.assignedTo,
-          });
-          await db.createAuditLog({
-            action: "convert_scraper_to_lead",
-            entityType: "marketing_lead",
-            entityId: lead.id,
-            actorId: ctx.user?.id,
-            actorName: ctx.user?.name || "Admin",
-          });
-          return lead;
-        }),
-    }),
-  }),
-
   // Site-wide search
   search: router({
     all: publicProcedure
@@ -3241,367 +2844,9 @@ export const appRouter = router({
   }),
 
   // ============================================
-  // USER FAVORITES / WISHLIST
-  // ============================================
-  favorites: router({
-    add: protectedProcedure
-      .input(z.object({
-        entityType: z.enum(["mix", "track", "event", "podcast"]),
-        entityId: z.number(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const favorite = await db.addToFavorites({ userId: ctx.user!.id, entityType: input.entityType, entityId: input.entityId });
-        return favorite;
-      }),
-    remove: protectedProcedure
-      .input(z.object({
-        entityType: z.enum(["mix", "track", "event", "podcast"]),
-        entityId: z.number(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        await db.removeFromFavorites(ctx.user!.id, input.entityType, input.entityId);
-        return { success: true };
-      }),
-    list: protectedProcedure
-      .input(z.object({ entityType: z.enum(["mix", "track", "event", "podcast"]).optional() }))
-      .query(({ input, ctx }) => db.getUserFavorites(ctx.user!.id, input.entityType)),
-    isFavorited: protectedProcedure
-      .input(z.object({
-        entityType: z.enum(["mix", "track", "event", "podcast"]),
-        entityId: z.number(),
-      }))
-      .query(({ input, ctx }) => db.isFavorited(ctx.user!.id, input.entityType, input.entityId)),
-  }),
-
-  // ============================================
-  // USER PLAYLISTS
-  // ============================================
-  playlists: router({
-    create: protectedProcedure
-      .input(z.object({
-        name: z.string().min(1).max(255),
-        description: z.string().optional(),
-        isPublic: z.boolean().default(false),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const playlist = await db.createPlaylist({ userId: ctx.user!.id, name: input.name, description: input.description, isPublic: input.isPublic });
-        return playlist;
-      }),
-    list: protectedProcedure.query(({ ctx }) => db.getUserPlaylists(ctx.user!.id)),
-    get: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .query(({ input }) => db.getPlaylistById(input.id)),
-    update: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().min(1).max(255).optional(),
-        description: z.string().optional(),
-        isPublic: z.boolean().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { id, ...updates } = input;
-        const playlist = await db.getPlaylistById(id);
-        if (!playlist || playlist.userId !== ctx.user!.id) {
-          throw new Error("Playlist not found or access denied");
-        }
-        return await db.updatePlaylist(id, updates);
-      }),
-    delete: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
-        const playlist = await db.getPlaylistById(input.id);
-        if (!playlist || playlist.userId !== ctx.user!.id) {
-          throw new Error("Playlist not found or access denied");
-        }
-        await db.deletePlaylist(input.id);
-        return { success: true };
-      }),
-    addItem: protectedProcedure
-      .input(z.object({
-        playlistId: z.number(),
-        entityType: z.enum(["mix", "track", "event", "podcast"]),
-        entityId: z.number(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const playlist = await db.getPlaylistById(input.playlistId);
-        if (!playlist || playlist.userId !== ctx.user!.id) {
-          throw new Error("Playlist not found or access denied");
-        }
-        return await db.addToPlaylist({ playlistId: input.playlistId, entityType: input.entityType, entityId: input.entityId, orderIndex: 0 });
-      }),
-    removeItem: protectedProcedure
-      .input(z.object({
-        playlistId: z.number(),
-        itemId: z.number(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const playlist = await db.getPlaylistById(input.playlistId);
-        if (!playlist || playlist.userId !== ctx.user!.id) {
-          throw new Error("Playlist not found or access denied");
-        }
-        await db.removeFromPlaylist(input.playlistId, input.itemId);
-        return { success: true };
-      }),
-    getItems: protectedProcedure
-      .input(z.object({ playlistId: z.number() }))
-      .query(({ input }) => db.getPlaylistItems(input.playlistId)),
-  }),
-
-  // ============================================
-  // TRACK ID REQUESTS
-  // ============================================
-  trackIdRequests: router({
-    create: publicProcedure
-      .input(z.object({
-        userId: z.number().optional(),
-        userName: z.string().optional(),
-        email: z.string().email().optional(),
-        trackDescription: z.string().min(1),
-        audioUrl: z.string().url().optional(),
-        timestamp: z.string().optional(),
-        source: z.string().optional(),
-      }))
-      .mutation(({ input }) => db.createTrackIdRequest(input)),
-    list: protectedProcedure
-      .input(z.object({ status: z.string().optional() }).optional())
-      .query(({ input, ctx }) => db.getTrackIdRequests({ ...input, userId: ctx.user?.id })),
-    get: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .query(({ input }) => db.getTrackIdRequestById(input.id)),
-    adminList: adminProcedure
-      .input(z.object({ status: z.string().optional() }).optional())
-      .query(({ input }) => db.getTrackIdRequests(input)),
-    adminUpdate: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        status: z.enum(["pending", "identified", "not_found", "archived"]).optional(),
-        identifiedTrack: z.string().optional(),
-        adminNotes: z.string().optional(),
-      }))
-      .mutation(({ input }) => {
-        const { id, ...updates } = input;
-        return db.updateTrackIdRequest(id, updates);
-      }),
-  }),
-
-  // ============================================
-  // SOCIAL SHARING ANALYTICS
-  // ============================================
-  socialShares: router({
-    record: publicProcedure
-      .input(z.object({
-        entityType: z.enum(["mix", "track", "event", "podcast", "video", "blog"]),
-        entityId: z.number(),
-        platform: z.enum(["facebook", "twitter", "instagram", "tiktok", "youtube", "linkedin", "whatsapp", "other"]),
-        userId: z.number().optional(),
-        shareUrl: z.string().url().optional(),
-      }))
-      .mutation(({ input }) => db.recordSocialShare(input)),
-    getStats: publicProcedure
-      .input(z.object({
-        entityType: z.enum(["mix", "track", "event", "podcast", "video", "blog"]),
-        entityId: z.number(),
-      }))
-      .query(({ input }) => db.getShareStats(input.entityType, input.entityId)),
-    list: adminProcedure
-      .input(z.object({
-        entityType: z.string().optional(),
-        entityId: z.number().optional(),
-        platform: z.string().optional(),
-        userId: z.number().optional(),
-      }).optional())
-      .query(({ input }) => db.getSocialShares(50)),
-  }),
-
-  // ============================================
-  // VIDEO TESTIMONIALS
-  // ============================================
-  videoTestimonials: router({
-    list: publicProcedure
-      .input(z.object({ isApproved: z.boolean().optional(), isFeatured: z.boolean().optional() }).optional())
-      .query(({ input }) => db.getVideoTestimonials(50)),
-    get: publicProcedure
-      .input(z.object({ id: z.number() }))
-      .query(({ input }) => db.getVideoTestimonialById(input.id)),
-    create: publicProcedure
-      .input(z.object({
-        name: z.string().min(1).max(255),
-        role: z.string().max(255).optional(),
-        event: z.string().max(255).optional(),
-        videoUrl: z.string().url().min(1),
-        thumbnailUrl: z.string().url().optional(),
-        transcript: z.string().optional(),
-        rating: z.number().min(1).max(5).optional(),
-      }))
-      .mutation(({ input }) => db.createVideoTestimonial({ ...input, isApproved: false, isFeatured: false })),
-    adminList: adminProcedure.query(() => db.getVideoTestimonials()),
-    adminUpdate: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        isApproved: z.boolean().optional(),
-        isFeatured: z.boolean().optional(),
-        transcript: z.string().optional(),
-      }))
-      .mutation(({ input }) => {
-        const { id, ...updates } = input;
-        return db.updateVideoTestimonial(id, updates);
-      }),
-    adminDelete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(({ input }) => {
-        db.deleteVideoTestimonial(input.id);
-        return { success: true };
-      }),
-  }),
-
-  // ============================================
-  // SOCIAL PROOF NOTIFICATIONS
-  // ============================================
-  socialProof: router({
-    getActive: publicProcedure
-      .input(z.object({ limit: z.number().optional().default(10) }))
-      .query(({ input }) => db.getActiveSocialProofNotifications(input.limit)),
-    create: adminProcedure
-      .input(z.object({
-        type: z.enum(["booking", "purchase", "favorite", "share", "comment", "view"]),
-        entityType: z.enum(["mix", "track", "event", "podcast", "product", "booking"]),
-        entityId: z.number(),
-        message: z.string().max(255).optional(),
-        userId: z.number().optional(),
-        userName: z.string().max(255).optional(),
-        expiresAt: z.date().optional(),
-      }))
-      .mutation(({ input }) => db.createSocialProofNotification(input)),
-    expire: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(({ input }) => {
-        db.expireSocialProofNotification(input.id);
-        return { success: true };
-      }),
-  }),
-
-  // ============================================
-  // SOCIAL MEDIA FEED INTEGRATION
-  // ============================================
-  socialFeed: router({
-    list: publicProcedure
-      .input(z.object({
-        platform: z.enum(["instagram", "tiktok", "youtube", "twitter", "facebook"]).optional(),
-        limit: z.number().optional().default(20),
-      }))
-      .query(({ input }) => db.getSocialMediaFeedPosts({ ...input, isActive: true })),
-    adminCreate: adminProcedure
-      .input(z.object({
-        platform: z.enum(["instagram", "tiktok", "youtube", "twitter", "facebook"]),
-        postId: z.string().min(1).max(255),
-        url: z.string().url(),
-        mediaUrl: z.string().url().optional(),
-        thumbnailUrl: z.string().url().optional(),
-        caption: z.string().optional(),
-        author: z.string().max(255).optional(),
-        authorAvatar: z.string().url().optional(),
-        likes: z.number().default(0),
-        comments: z.number().default(0),
-        shares: z.number().default(0),
-        postedAt: z.date(),
-      }))
-      .mutation(({ input }) => db.createSocialMediaFeedPost(input)),
-    adminUpdate: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        isActive: z.boolean().optional(),
-        likes: z.number().optional(),
-        comments: z.number().optional(),
-        shares: z.number().optional(),
-      }))
-      .mutation(({ input }) => {
-        const { id, ...updates } = input;
-        return db.updateSocialMediaFeedPost(id, updates);
-      }),
-  }),
-
-  // ============================================
-  // MUSIC DISCOVERY / RECOMMENDATIONS
-  // ============================================
-  recommendations: router({
-    forUser: protectedProcedure
-      .input(z.object({ limit: z.number().optional().default(10) }))
-      .query(({ input, ctx }) => db.getMusicRecommendations(ctx.user!.id, input.limit)),
-    forEntity: publicProcedure
-      .input(z.object({
-        entityType: z.enum(["mix", "track", "event", "podcast"]),
-        entityId: z.number(),
-        limit: z.number().optional().default(5),
-      }))
-      .query(({ input }) => db.getRecommendationsForEntity(input.entityType, input.entityId, input.limit)),
-    create: adminProcedure
-      .input(z.object({
-        userId: z.number().optional(),
-        entityType: z.enum(["mix", "track", "event", "podcast"]),
-        entityId: z.number(),
-        score: z.number().min(0).max(1),
-        reason: z.string().optional(),
-        algorithm: z.string().max(100).optional(),
-      }))
-      .mutation(({ input }) => db.createMusicRecommendation({ ...input, score: input.score.toString() })),
-  }),
-  // ============================================
   // PHASE 7: ADMIN FEATURE EXPANSION
   // ============================================
 
-  videos: router({
-    list: publicProcedure.query(() => db.getAllVideos()),
-    create: adminProcedure
-      .input(z.object({
-        title: z.string().min(1).max(255),
-        youtubeUrl: z.string().url(),
-        category: z.string().min(1).max(100),
-        description: z.string().optional(),
-        thumbnailUrl: z.string().url().optional(),
-        isFeatured: z.boolean().default(false),
-      }))
-      .mutation(({ input }) => db.createVideo(input)),
-    delete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(({ input }) => db.deleteVideo(input.id)),
-  }),
-
-  articles: router({
-    list: publicProcedure.query(() => db.getAllArticles(true)),
-    adminList: adminProcedure.query(() => db.getAllArticles(false)),
-    getBySlug: publicProcedure.input(z.string()).query(({ input }) => db.getArticleBySlug(input)),
-    create: adminProcedure
-      .input(z.object({
-        title: z.string().min(1).max(255),
-        slug: z.string().min(1).max(255),
-        content: z.string(),
-        excerpt: z.string().optional(),
-        category: z.string().optional(),
-        coverImageUrl: z.string().url().optional(),
-        authorId: z.number().optional(),
-        isPublished: z.boolean().default(false),
-      }))
-      .mutation(({ input }) => db.createArticle(input)),
-    update: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        title: z.string().optional(),
-        slug: z.string().optional(),
-        content: z.string().optional(),
-        isPublished: z.boolean().optional(),
-      }))
-      .mutation(({ input }) => db.updateArticle(input.id, input)),
-    delete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(({ input }) => db.deleteArticle(input.id)),
-  }),
-
-  media: router({
-    list: adminProcedure.query(() => db.getMediaLibrary()),
-    delete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(({ input }) => db.deleteMediaItem(input.id)),
-  }),
 });
 
 export type AppRouter = typeof appRouter;

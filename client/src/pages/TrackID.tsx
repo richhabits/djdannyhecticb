@@ -20,15 +20,24 @@ export default function TrackID() {
     source: "",
   });
 
-  const createRequest = trpc.trackIdRequests.create.useMutation({
+  // DELETED ROUTER: trackIdRequests - commented out pending migration
+  // const createRequest = trpc.trackIdRequests.create.useMutation({
+  const createRequest = {
+    mutate: () => toast.error("Track ID requests are temporarily disabled"),
+    isPending: false
+  } as any; // Stub for deleted router
+  /*
+  {
     onSuccess: () => {
       toast.success("Track ID request submitted! We'll get back to you soon.");
       setFormData({ trackDescription: "", audioUrl: "", timestamp: "", source: "" });
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to submit request");
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to submit request";
+      toast.error(message);
     },
-  });
+  };
+  */
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +46,9 @@ export default function TrackID() {
       return;
     }
     createRequest.mutate({
-      userId: user?.id,
-      userName: user?.name,
-      email: user?.email,
+      userId: user?.id ?? 0,
+      userName: user?.name ?? "",
+      email: user?.email ?? "",
       ...formData,
     });
   };

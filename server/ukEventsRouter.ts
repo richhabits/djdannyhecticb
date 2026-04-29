@@ -7,16 +7,16 @@ import { z } from 'zod';
 import { router, publicProcedure, protectedProcedure, adminProcedure } from './_core/trpc';
 import { getDb } from './db';
 import {
-    ukEvents,
-    userEventSubmissions,
-    promoterProfiles,
-    eventRecommendations,
-    InsertUserEventSubmission,
-    InsertPromoterProfile,
-    InsertEventRecommendation
+    events,
 } from '../drizzle/schema';
 import { eq, and, gt, desc, asc, sql, like, or } from 'drizzle-orm';
 import * as ukEventsService from './_core/ukEventsService';
+
+/**
+ * NOTE: ukEvents, userEventSubmissions, promoterProfiles, and eventRecommendations tables
+ * have been removed from schema. Functionality has been stubbed out.
+ * InsertUserEventSubmission, InsertPromoterProfile, and InsertEventRecommendation types removed.
+ */
 
 export const ukEventsRouter = router({
     /**
@@ -94,6 +94,7 @@ export const ukEventsRouter = router({
 
     /**
      * Public: Submit an event for approval
+     * STUBBED OUT: userEventSubmissions table has been removed from schema
      */
     submit: publicProcedure
         .input(z.object({
@@ -133,28 +134,17 @@ export const ukEventsRouter = router({
             additionalNotes: z.string().max(2000).optional(),
         }))
         .mutation(async ({ input }) => {
-            const db = await getDb();
-            if (!db) throw new Error('Database not available');
-
-            const submission: InsertUserEventSubmission = {
-                ...input,
-                eventDate: new Date(input.eventDate),
-                eventEndDate: input.eventEndDate ? new Date(input.eventEndDate) : null,
-                status: 'pending',
-            };
-
-            const result = await db.insert(userEventSubmissions).values(submission);
-            const insertedId = result[0].insertId;
-
+            // STUB: userEventSubmissions table removed
             return {
-                success: true,
-                id: insertedId,
-                message: 'Event submitted successfully! It will be reviewed and appear once approved.'
+                success: false,
+                id: null,
+                message: 'Event submission temporarily unavailable - functionality has been removed from schema.'
             };
         }),
 
     /**
      * Public: Recommend an event
+     * STUBBED OUT: eventRecommendations table has been removed from schema
      */
     recommend: publicProcedure
         .input(z.object({
@@ -164,24 +154,13 @@ export const ukEventsRouter = router({
             reason: z.string().min(10).max(1000),
         }))
         .mutation(async ({ input }) => {
-            const db = await getDb();
-            if (!db) throw new Error('Database not available');
-
-            const recommendation: InsertEventRecommendation = {
-                eventId: input.eventId,
-                recommenderName: input.recommenderName || null,
-                recommenderEmail: input.recommenderEmail || null,
-                reason: input.reason,
-                upvotes: 0,
-            };
-
-            await db.insert(eventRecommendations).values(recommendation);
-
-            return { success: true, message: 'Thanks for recommending this event!' };
+            // STUB: eventRecommendations table removed
+            return { success: false, message: 'Event recommendations temporarily unavailable - functionality has been removed from schema.' };
         }),
 
     /**
      * Public: Register as a promoter
+     * STUBBED OUT: promoterProfiles table has been removed from schema
      */
     registerPromoter: publicProcedure
         .input(z.object({
@@ -197,41 +176,11 @@ export const ukEventsRouter = router({
             logoUrl: z.string().url().max(512).optional(),
         }))
         .mutation(async ({ input }) => {
-            const db = await getDb();
-            if (!db) throw new Error('Database not available');
-
-            // Check if email already registered
-            const existing = await db.select()
-                .from(promoterProfiles)
-                .where(eq(promoterProfiles.email, input.email))
-                .limit(1);
-
-            if (existing.length > 0) {
-                throw new Error('A promoter with this email already exists');
-            }
-
-            const profile: InsertPromoterProfile = {
-                name: input.name,
-                companyName: input.companyName || null,
-                email: input.email,
-                phone: input.phone || null,
-                website: input.website || null,
-                instagramHandle: input.instagramHandle || null,
-                twitterHandle: input.twitterHandle || null,
-                facebookUrl: input.facebookUrl || null,
-                bio: input.bio || null,
-                logoUrl: input.logoUrl || null,
-                isVerified: false,
-                totalEventsSubmitted: 0,
-                approvedEventsCount: 0,
-            };
-
-            const result = await db.insert(promoterProfiles).values(profile);
-
+            // STUB: promoterProfiles table removed
             return {
-                success: true,
-                id: result[0].insertId,
-                message: 'Promoter registration submitted! You will be notified once verified.'
+                success: false,
+                id: null,
+                message: 'Promoter registration temporarily unavailable - functionality has been removed from schema.'
             };
         }),
 
@@ -245,6 +194,7 @@ export const ukEventsRouter = router({
 
     /**
      * Admin: List pending event submissions
+     * STUBBED OUT: userEventSubmissions table has been removed from schema
      */
     adminSubmissions: adminProcedure
         .input(z.object({
@@ -252,22 +202,13 @@ export const ukEventsRouter = router({
             limit: z.number().min(1).max(100).default(20),
         }).optional())
         .query(async ({ input }) => {
-            const db = await getDb();
-            if (!db) return [];
-
-            let query = db.select().from(userEventSubmissions);
-
-            if (input?.status) {
-                query = query.where(eq(userEventSubmissions.status, input.status)) as any;
-            }
-
-            return await query
-                .orderBy(desc(userEventSubmissions.createdAt))
-                .limit(input?.limit || 20);
+            // STUB: userEventSubmissions table removed
+            return [];
         }),
 
     /**
      * Admin: Approve/reject event submission
+     * STUBBED OUT: userEventSubmissions and promoterProfiles tables have been removed from schema
      */
     adminReviewSubmission: adminProcedure
         .input(z.object({
@@ -276,70 +217,13 @@ export const ukEventsRouter = router({
             rejectionReason: z.string().max(1000).optional(),
         }))
         .mutation(async ({ input, ctx }) => {
-            const db = await getDb();
-            if (!db) throw new Error('Database not available');
-
-            const [submission] = await db.select()
-                .from(userEventSubmissions)
-                .where(eq(userEventSubmissions.id, input.id))
-                .limit(1);
-
-            if (!submission) {
-                throw new Error('Submission not found');
-            }
-
-            await db.update(userEventSubmissions)
-                .set({
-                    status: input.status,
-                    reviewedBy: ctx.user?.id,
-                    reviewedAt: new Date(),
-                    rejectionReason: input.rejectionReason || null,
-                })
-                .where(eq(userEventSubmissions.id, input.id));
-
-            // If approved, add to UK events
-            if (input.status === 'approved') {
-                await db.insert(ukEvents).values({
-                    externalId: `submission-${submission.id}`,
-                    source: 'user_submission',
-                    title: submission.title,
-                    description: submission.description,
-                    category: submission.category,
-                    subcategory: submission.subcategory,
-                    genre: submission.genre,
-                    venueName: submission.venueName,
-                    venueAddress: submission.venueAddress,
-                    city: submission.city,
-                    postcode: submission.postcode,
-                    eventDate: submission.eventDate,
-                    eventEndDate: submission.eventEndDate,
-                    doorsTime: submission.doorsTime,
-                    imageUrl: submission.imageUrl,
-                    ticketUrl: submission.ticketUrl,
-                    priceMin: submission.priceMin,
-                    priceMax: submission.priceMax,
-                    artists: submission.artists,
-                    ageRestriction: submission.ageRestriction,
-                    isFeatured: false,
-                    isVerified: true,
-                    viewCount: 0,
-                });
-
-                // Update promoter stats if applicable
-                if (submission.promoterId) {
-                    await db.update(promoterProfiles)
-                        .set({
-                            approvedEventsCount: sql`${promoterProfiles.approvedEventsCount} + 1`,
-                        })
-                        .where(eq(promoterProfiles.id, submission.promoterId));
-                }
-            }
-
-            return { success: true };
+            // STUB: userEventSubmissions and promoterProfiles tables removed
+            throw new Error('Event submission review temporarily unavailable - functionality has been removed from schema.');
         }),
 
     /**
      * Admin: List promoters
+     * STUBBED OUT: promoterProfiles table has been removed from schema
      */
     adminPromoters: adminProcedure
         .input(z.object({
@@ -347,22 +231,13 @@ export const ukEventsRouter = router({
             limit: z.number().min(1).max(100).default(20),
         }).optional())
         .query(async ({ input }) => {
-            const db = await getDb();
-            if (!db) return [];
-
-            let query = db.select().from(promoterProfiles);
-
-            if (input?.verified !== undefined) {
-                query = query.where(eq(promoterProfiles.isVerified, input.verified)) as any;
-            }
-
-            return await query
-                .orderBy(desc(promoterProfiles.createdAt))
-                .limit(input?.limit || 20);
+            // STUB: promoterProfiles table removed
+            return [];
         }),
 
     /**
      * Admin: Verify promoter
+     * STUBBED OUT: promoterProfiles table has been removed from schema
      */
     adminVerifyPromoter: adminProcedure
         .input(z.object({
@@ -371,22 +246,13 @@ export const ukEventsRouter = router({
             notes: z.string().max(1000).optional(),
         }))
         .mutation(async ({ input }) => {
-            const db = await getDb();
-            if (!db) throw new Error('Database not available');
-
-            await db.update(promoterProfiles)
-                .set({
-                    isVerified: input.verified,
-                    verifiedAt: input.verified ? new Date() : null,
-                    verificationNotes: input.notes || null,
-                })
-                .where(eq(promoterProfiles.id, input.id));
-
-            return { success: true };
+            // STUB: promoterProfiles table removed
+            throw new Error('Promoter verification temporarily unavailable - functionality has been removed from schema.');
         }),
 
     /**
      * Admin: Feature/unfeature an event
+     * Now uses 'events' table instead of 'ukEvents' which has been removed
      */
     adminFeature: adminProcedure
         .input(z.object({
@@ -397,9 +263,10 @@ export const ukEventsRouter = router({
             const db = await getDb();
             if (!db) throw new Error('Database not available');
 
-            await db.update(ukEvents)
+            // Using events table instead of removed ukEvents table
+            await db.update(events)
                 .set({ isFeatured: input.featured })
-                .where(eq(ukEvents.id, input.id));
+                .where(eq(events.id, input.id));
 
             return { success: true };
         }),

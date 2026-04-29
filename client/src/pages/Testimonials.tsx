@@ -7,7 +7,9 @@ import ReactPlayer from "react-player";
 import { useState } from "react";
 
 export default function Testimonials() {
-  const { data: videoTestimonials = [] } = trpc.videoTestimonials.list.useQuery({ isApproved: true });
+  // DELETED ROUTER: videoTestimonials - commented out pending migration
+  // const { data: videoTestimonials = [] } = trpc.videoTestimonials.list.useQuery({ isApproved: true });
+  const videoTestimonials: any[] = []; // Stub for deleted router
   const [playingVideo, setPlayingVideo] = useState<number | null>(null);
 
   const testimonials = [

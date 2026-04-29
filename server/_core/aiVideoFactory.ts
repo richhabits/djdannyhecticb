@@ -22,7 +22,7 @@
 
 import { generateVideoHost, VideoHostRequest } from "./aiProviders";
 import * as db from "../db";
-import { InsertAIVideoJob } from "../../drizzle/schema";
+// Removed: InsertAIVideoJob (type doesn't exist in schema)
 
 export type StylePreset = "verticalShort" | "squareClip" | "horizontalHost";
 

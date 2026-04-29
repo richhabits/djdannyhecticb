@@ -30,11 +30,11 @@ export function GlobalBanner() {
 
   const getIcon = () => {
     switch (activeBanner.severity) {
-      case "critical":
-      case "high":
+      case "error":
         return <XCircle className="h-4 w-4" />;
-      case "medium":
+      case "warning":
         return <AlertTriangle className="h-4 w-4" />;
+      case "info":
       default:
         return <Info className="h-4 w-4" />;
     }
@@ -42,11 +42,10 @@ export function GlobalBanner() {
 
   const getVariant = () => {
     switch (activeBanner.severity) {
-      case "critical":
-      case "high":
+      case "error":
         return "destructive";
-      case "medium":
-        return "default";
+      case "warning":
+      case "info":
       default:
         return "default";
     }

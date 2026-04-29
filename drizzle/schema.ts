@@ -2,24 +2,66 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
- * 
+ *
  * Database schema and structure are proprietary intellectual property.
  */
 
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json } from "drizzle-orm/mysql-core";
+import { boolean, integer, pgEnum, pgTable, text, timestamp, varchar, numeric, json, serial } from "drizzle-orm/pg-core";
+
+/**
+ * ============================================
+ * ENUMS - Define all enums before tables
+ * ============================================
+ */
+export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
+export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "completed", "cancelled"]);
+export const trackStatusEnum = pgEnum("track_status", ["pending", "queued", "played"]);
+export const streamTypeEnum = pgEnum("stream_type", ["shoutcast", "icecast", "custom"]);
+export const eventTypeEnum = pgEnum("event_type", ["club", "radio", "private", "brand", "other"]);
+export const eventBookingStatusEnum = pgEnum("event_booking_status", ["pending", "confirmed", "completed", "cancelled"]);
+export const pricingRuleTypeEnum = pgEnum("pricing_rule_type", ["weekend_uplift", "short_notice", "location_band", "base_rate"]);
+export const pricingStrategyEnum = pgEnum("pricing_strategy", ["fixed", "percentage"]);
+export const conversionStatusEnum = pgEnum("conversion_status", ["quote_served", "payment_started", "deposit_paid", "expired"]);
+export const outboundSourceEnum = pgEnum("outbound_source", ["scraping", "social", "referral", "manual"]);
+export const outboundStatusEnum = pgEnum("outbound_status", ["new", "qualified", "contacted", "converted", "dead"]);
+export const outboundInteractionTypeEnum = pgEnum("outbound_interaction_type", ["email", "dm", "call", "automated_quote"]);
+export const feedPostTypeEnum = pgEnum("feed_post_type", ["post", "photo", "clip", "mix"]);
+export const fanBadgeTierEnum = pgEnum("fan_badge_tier", ["rookie", "regular", "veteran", "royalty"]);
+export const dannyReactTypeEnum = pgEnum("danny_react_type", ["video", "meme", "track"]);
+export const dannyReactStatusEnum = pgEnum("danny_react_status", ["pending", "reacted", "published"]);
+export const personalizedShoutoutTypeEnum = pgEnum("personalized_shoutout_type", ["birthday", "roast", "motivational", "breakup", "custom"]);
+export const djBattleStatusEnum = pgEnum("dj_battle_status", ["pending", "reviewed", "published"]);
+export const promoTypeEnum = pgEnum("promo_type", ["clip", "subtitle", "thumbnail", "post"]);
+export const promoSourceTypeEnum = pgEnum("promo_source_type", ["mix", "show", "shout", "reaction"]);
+export const promoStatusEnum = pgEnum("promo_status", ["pending", "generated", "published"]);
+export const superfanTierEnum = pgEnum("superfan_tier", ["bronze", "silver", "gold", "platinum"]);
+export const supportEventStatusEnum = pgEnum("support_event_status", ["pending", "completed", "failed"]);
+export const productTypeEnum = pgEnum("product_type", ["drop", "soundpack", "preset", "course", "bundle", "other"]);
+export const purchaseStatusEnum = pgEnum("purchase_status", ["pending", "completed", "refunded", "failed", "cancelled"]);
+export const paymentProviderEnum = pgEnum("payment_provider", ["stripe", "paypal", "manual"]);
+export const subscriptionTierEnum = pgEnum("subscription_tier", ["hectic_regular", "hectic_royalty", "inner_circle"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "cancelled", "expired"]);
+export const brandTypeEnum = pgEnum("brand_type", ["personality", "station", "clothing", "pets", "other"]);
+export const brandArchetypeEnum = pgEnum("brand_archetype", ["dj", "podcaster", "creator", "brand", "station"]);
+export const errorSeverityEnum = pgEnum("error_severity", ["low", "medium", "high", "critical"]);
+export const incidentSeverityEnum = pgEnum("incident_severity", ["info", "warning", "error"]);
+export const revenueIncidentTypeEnum = pgEnum("revenue_incident_type", ["pricing_drift", "payment_mismatch", "inventory_deadlock", "manual_override"]);
+export const revenueIncidentSeverityEnum = pgEnum("revenue_incident_severity", ["low", "medium", "high", "critical"]);
+export const revenueIncidentStatusEnum = pgEnum("revenue_incident_status", ["active", "investigating", "mitigated", "resolved"]);
+export const governanceActorTypeEnum = pgEnum("governance_actor_type", ["system", "admin", "ai_ops"]);
+export const notificationChannelEnum = pgEnum("notification_channel", ["web_push", "email", "whatsapp", "in_app"]);
+export const notificationStatusEnum = pgEnum("notification_status", ["pending", "sent", "failed", "read"]);
+export const bookingContractStatusEnum = pgEnum("booking_contract_status", ["draft", "issued", "signed", "voided"]);
+export const userPostTypeEnum = pgEnum("user_post_type", ["text", "image", "video", "audio", "clip"]);
+export const collectibleTypeEnum = pgEnum("collectible_type", ["badge", "nft", "trophy", "item", "skin"]);
+export const collectibleRarityEnum = pgEnum("collectible_rarity", ["common", "rare", "epic", "legendary"]);
+export const achievementRarityEnum = pgEnum("achievement_rarity", ["common", "rare", "epic", "legendary"]);
 
 /**
  * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
  */
-export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
-  id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   displayName: varchar("displayName", { length: 255 }),
@@ -27,10 +69,10 @@ export const users = mysqlTable("users", {
   avatarUrl: varchar("avatarUrl", { length: 512 }),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: userRoleEnum("role").default("user").notNull(),
   isSupporter: boolean("isSupporter").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   passwordHash: varchar("passwordHash", { length: 255 }),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
@@ -41,16 +83,16 @@ export type InsertUser = typeof users.$inferInsert;
 /**
  * Admin credentials for password-based authentication
  */
-export const adminCredentials = mysqlTable("admin_credentials", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(), // FK to users table
+export const adminCredentials = pgTable("admin_credentials", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
   email: varchar("email", { length: 320 }).notNull().unique(),
-  passwordHash: varchar("passwordHash", { length: 255 }).notNull(), // bcrypt hash
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
   lastLoginAt: timestamp("lastLoginAt"),
-  failedLoginAttempts: int("failedLoginAttempts").default(0).notNull(),
-  lockedUntil: timestamp("lockedUntil"), // Account lockout after failed attempts
+  failedLoginAttempts: integer("failedLoginAttempts").default(0).notNull(),
+  lockedUntil: timestamp("lockedUntil"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type AdminCredential = typeof adminCredentials.$inferSelect;
@@ -59,18 +101,18 @@ export type InsertAdminCredential = typeof adminCredentials.$inferInsert;
 /**
  * Mixes table for storing DJ mixes
  */
-export const mixes = mysqlTable("mixes", {
-  id: int("id").autoincrement().primaryKey(),
+export const mixes = pgTable("mixes", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   audioUrl: varchar("audioUrl", { length: 512 }).notNull(),
   coverImageUrl: varchar("coverImageUrl", { length: 512 }),
-  duration: int("duration"), // in seconds
+  duration: integer("duration"),
   genre: varchar("genre", { length: 100 }),
   isFree: boolean("isFree").default(true).notNull(),
   downloadUrl: varchar("downloadUrl", { length: 512 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Mix = typeof mixes.$inferSelect;
@@ -79,21 +121,21 @@ export type InsertMix = typeof mixes.$inferInsert;
 /**
  * Bookings table for DJ service bookings
  */
-export const bookings = mysqlTable("bookings", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const bookings = pgTable("bookings", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
   eventName: varchar("eventName", { length: 255 }).notNull(),
   eventDate: timestamp("eventDate").notNull(),
   eventLocation: varchar("eventLocation", { length: 255 }).notNull(),
-  eventType: varchar("eventType", { length: 100 }).notNull(), // wedding, club, private, etc
-  guestCount: int("guestCount"),
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  guestCount: integer("guestCount"),
   budget: varchar("budget", { length: 100 }),
   description: text("description"),
   contactEmail: varchar("contactEmail", { length: 320 }).notNull(),
   contactPhone: varchar("contactPhone", { length: 20 }),
-  status: mysqlEnum("status", ["pending", "confirmed", "completed", "cancelled"]).default("pending").notNull(),
+  status: bookingStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Booking = typeof bookings.$inferSelect;
@@ -102,8 +144,8 @@ export type InsertBooking = typeof bookings.$inferInsert;
 /**
  * Events table for DJ events and performances
  */
-export const events = mysqlTable("events", {
-  id: int("id").autoincrement().primaryKey(),
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   eventDate: timestamp("eventDate").notNull(),
@@ -113,7 +155,7 @@ export const events = mysqlTable("events", {
   price: varchar("price", { length: 100 }),
   isFeatured: boolean("isFeatured").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Event = typeof events.$inferSelect;
@@ -122,19 +164,19 @@ export type InsertEvent = typeof events.$inferInsert;
 /**
  * Podcasts table for podcast episodes
  */
-export const podcasts = mysqlTable("podcasts", {
-  id: int("id").autoincrement().primaryKey(),
+export const podcasts = pgTable("podcasts", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  episodeNumber: int("episodeNumber"),
+  episodeNumber: integer("episodeNumber"),
   audioUrl: varchar("audioUrl", { length: 512 }).notNull(),
   coverImageUrl: varchar("coverImageUrl", { length: 512 }),
-  duration: int("duration"), // in seconds
+  duration: integer("duration"),
   spotifyUrl: varchar("spotifyUrl", { length: 512 }),
   applePodcastsUrl: varchar("applePodcastsUrl", { length: 512 }),
   youtubeUrl: varchar("youtubeUrl", { length: 512 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Podcast = typeof podcasts.$inferSelect;
@@ -143,15 +185,15 @@ export type InsertPodcast = typeof podcasts.$inferInsert;
 /**
  * Streaming Links table for music platforms
  */
-export const streamingLinks = mysqlTable("streamingLinks", {
-  id: int("id").autoincrement().primaryKey(),
-  platform: varchar("platform", { length: 100 }).notNull(), // spotify, apple-music, soundcloud, etc
+export const streamingLinks = pgTable("streamingLinks", {
+  id: serial("id").primaryKey(),
+  platform: varchar("platform", { length: 100 }).notNull(),
   url: varchar("url", { length: 512 }).notNull(),
   displayName: varchar("displayName", { length: 255 }),
-  icon: varchar("icon", { length: 255 }), // icon name or url
-  order: int("order").default(0).notNull(),
+  icon: varchar("icon", { length: 255 }),
+  order: integer("order").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type StreamingLink = typeof streamingLinks.$inferSelect;
@@ -160,8 +202,8 @@ export type InsertStreamingLink = typeof streamingLinks.$inferInsert;
 /**
  * Shouts table for fan messages and track requests
  */
-export const shouts = mysqlTable("shouts", {
-  id: int("id").autoincrement().primaryKey(),
+export const shouts = pgTable("shouts", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   location: varchar("location", { length: 255 }),
   message: text("message").notNull(),
@@ -169,18 +211,18 @@ export const shouts = mysqlTable("shouts", {
   isTrackRequest: boolean("isTrackRequest").default(false).notNull(),
   trackTitle: varchar("trackTitle", { length: 255 }),
   trackArtist: varchar("trackArtist", { length: 255 }),
-  votes: int("votes").default(0).notNull(),
-  trackStatus: mysqlEnum("trackStatus", ["pending", "queued", "played"]).default("pending"),
+  votes: integer("votes").default(0).notNull(),
+  trackStatus: trackStatusEnum("trackStatus").default("pending"),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 255 }),
   heardFrom: varchar("heardFrom", { length: 255 }),
-  genres: text("genres"), // JSON array as string
+  genres: text("genres"),
   whatsappOptIn: boolean("whatsappOptIn").default(false).notNull(),
   canReadOnAir: boolean("canReadOnAir").default(false).notNull(),
   approved: boolean("approved").default(false).notNull(),
   readOnAir: boolean("readOnAir").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Shout = typeof shouts.$inferSelect;
@@ -189,22 +231,22 @@ export type InsertShout = typeof shouts.$inferInsert;
 /**
  * Streams table for managing Shoutcast/Icecast stream configurations
  */
-export const streams = mysqlTable("streams", {
-  id: int("id").autoincrement().primaryKey(),
+export const streams = pgTable("streams", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  type: mysqlEnum("type", ["shoutcast", "icecast", "custom"]).notNull(),
+  type: streamTypeEnum("type").notNull(),
   publicUrl: varchar("publicUrl", { length: 512 }).notNull(),
   sourceHost: varchar("sourceHost", { length: 255 }),
-  sourcePort: int("sourcePort"),
+  sourcePort: integer("sourcePort"),
   mount: varchar("mount", { length: 255 }),
-  statsUrl: varchar("statsUrl", { length: 512 }), // URL for JSON stats
-  streamId: int("streamId"), // SID for Shoutcast
+  statsUrl: varchar("statsUrl", { length: 512 }),
+  streamId: integer("streamId"),
   adminApiUrl: varchar("adminApiUrl", { length: 512 }),
   adminUser: varchar("adminUser", { length: 255 }),
   adminPassword: varchar("adminPassword", { length: 255 }),
   isActive: boolean("isActive").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Stream = typeof streams.$inferSelect;
@@ -213,8 +255,8 @@ export type InsertStream = typeof streams.$inferInsert;
 /**
  * Tracks table for now playing and track history
  */
-export const tracks = mysqlTable("tracks", {
-  id: int("id").autoincrement().primaryKey(),
+export const tracks = pgTable("tracks", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   artist: varchar("artist", { length: 255 }).notNull(),
   note: text("note"),
@@ -227,17 +269,17 @@ export type InsertTrack = typeof tracks.$inferInsert;
 /**
  * Shows table for weekly schedule
  */
-export const shows = mysqlTable("shows", {
-  id: int("id").autoincrement().primaryKey(),
+export const shows = pgTable("shows", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   host: varchar("host", { length: 255 }),
   description: text("description"),
-  dayOfWeek: int("dayOfWeek").notNull(), // 0 = Sunday, 1 = Monday, etc.
-  startTime: varchar("startTime", { length: 10 }).notNull(), // HH:MM format
-  endTime: varchar("endTime", { length: 10 }).notNull(), // HH:MM format
+  dayOfWeek: integer("dayOfWeek").notNull(),
+  startTime: varchar("startTime", { length: 10 }).notNull(),
+  endTime: varchar("endTime", { length: 10 }).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Show = typeof shows.$inferSelect;
@@ -246,15 +288,15 @@ export type InsertShow = typeof shows.$inferInsert;
 /**
  * Event Bookings table for DJ service bookings (new simplified version)
  */
-export const eventBookings = mysqlTable("event_bookings", {
-  id: int("id").autoincrement().primaryKey(),
+export const eventBookings = pgTable("event_bookings", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 20 }),
   organisation: varchar("organisation", { length: 255 }),
-  eventType: mysqlEnum("eventType", ["club", "radio", "private", "brand", "other"]).notNull(),
-  eventDate: varchar("eventDate", { length: 20 }).notNull(), // YYYY-MM-DD format
-  eventTime: varchar("eventTime", { length: 10 }).notNull(), // HH:MM format
+  eventType: eventTypeEnum("eventType").notNull(),
+  eventDate: varchar("eventDate", { length: 20 }).notNull(),
+  eventTime: varchar("eventTime", { length: 10 }).notNull(),
   location: varchar("location", { length: 255 }).notNull(),
   budgetRange: varchar("budgetRange", { length: 100 }),
   setLength: varchar("setLength", { length: 100 }),
@@ -262,104 +304,101 @@ export const eventBookings = mysqlTable("event_bookings", {
   extraNotes: text("extraNotes"),
   marketingConsent: boolean("marketingConsent").default(false).notNull(),
   dataConsent: boolean("dataConsent").default(false).notNull(),
-  status: mysqlEnum("status", ["pending", "confirmed", "completed", "cancelled"]).default("pending").notNull(),
-
-  // Automated Revenue Ops Fields
-  totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }),
-  depositAmount: decimal("depositAmount", { precision: 10, scale: 2 }),
+  status: eventBookingStatusEnum("status").default("pending").notNull(),
+  totalAmount: numeric("totalAmount", { precision: 10, scale: 2 }),
+  depositAmount: numeric("depositAmount", { precision: 10, scale: 2 }),
   depositPaid: boolean("depositPaid").default(false).notNull(),
   depositExpiresAt: timestamp("depositExpiresAt"),
   paymentIntentId: varchar("paymentIntentId", { length: 255 }),
-  pricingBreakdown: text("pricingBreakdown"), // JSON breakdown of costs
-
+  pricingBreakdown: text("pricingBreakdown"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
-
-/**
- * Pricing Rules for automated quote generation
- */
-export const pricingRules = mysqlTable("pricing_rules", {
-  id: int("id").autoincrement().primaryKey(),
-  ruleType: mysqlEnum("ruleType", ["weekend_uplift", "short_notice", "location_band", "base_rate"]).notNull(),
-  ruleValue: decimal("ruleValue", { precision: 10, scale: 2 }).notNull(),
-  ruleStrategy: mysqlEnum("ruleStrategy", ["fixed", "percentage"]).default("fixed").notNull(),
-  conditions: text("conditions"), // JSON strings for specific rule logic
-  maxMultiplier: decimal("maxMultiplier", { precision: 10, scale: 2 }), // Cap for percentage rules
-  minTotal: decimal("minTotal", { precision: 10, scale: 2 }), // Minimum booking total for this rule to apply
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-/**
- * Immutable Audit Logs for Pricing Engine
- */
-export const pricingAuditLogs = mysqlTable("pricing_audit_logs", {
-  id: int("id").autoincrement().primaryKey(),
-  bookingId: int("bookingId"),
-  baseRate: decimal("baseRate", { precision: 10, scale: 2 }).notNull(),
-  finalTotal: decimal("finalTotal", { precision: 10, scale: 2 }).notNull(),
-  rulesApplied: text("rulesApplied"), // JSON list of rule names/IDs applied
-  breakdown: text("breakdown"), // Full itemized JSON breakdown
-  conversionStatus: mysqlEnum("conversionStatus", ["quote_served", "payment_started", "deposit_paid", "expired"]).default("quote_served").notNull(),
-  geoContext: varchar("geoContext", { length: 255 }), // e.g. "IBIZA", "LONDON"
-  metadata: text("metadata"), // Flexible JSON for session IDs, device types, etc.
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-/**
- * PHASE 5: OUTBOUND LEAD ENGINE (OLE)
- */
-
-export const outboundLeads = mysqlTable("outbound_leads", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }),
-  email: varchar("email", { length: 255 }),
-  phone: varchar("phone", { length: 20 }),
-  organisation: varchar("organisation", { length: 255 }),
-  source: mysqlEnum("source", ["scraping", "social", "referral", "manual"]).default("manual").notNull(),
-  sourceFingerprint: varchar("sourceFingerprint", { length: 255 }), // URL or unique ID from source
-  geoContext: varchar("geoContext", { length: 255 }),
-  targetDate: varchar("targetDate", { length: 20 }), // YYYY-MM-DD
-  status: mysqlEnum("status", ["new", "qualified", "contacted", "converted", "dead"]).default("new").notNull(),
-  leadScore: int("leadScore").default(0).notNull(),
-  metadata: text("metadata"), // Source-specific signals
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export const outboundInteractions = mysqlTable("outbound_interactions", {
-  id: int("id").autoincrement().primaryKey(),
-  leadId: int("leadId").notNull(),
-  type: mysqlEnum("type", ["email", "dm", "call", "automated_quote"]).notNull(),
-  content: text("content"),
-  outcome: varchar("outcome", { length: 255 }),
-  auditLogId: int("auditLogId"), // Link to specific quote
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type OutboundLead = typeof outboundLeads.$inferSelect;
-export type InsertOutboundLead = typeof outboundLeads.$inferInsert;
-export type OutboundInteraction = typeof outboundInteractions.$inferSelect;
-export type InsertOutboundInteraction = typeof outboundInteractions.$inferInsert;
-
-export type PricingAuditLog = typeof pricingAuditLogs.$inferSelect;
-export type InsertPricingAuditLog = typeof pricingAuditLogs.$inferInsert;
-
-export type PricingRule = typeof pricingRules.$inferSelect;
-export type InsertPricingRule = typeof pricingRules.$inferInsert;
 
 export type EventBooking = typeof eventBookings.$inferSelect;
 export type InsertEventBooking = typeof eventBookings.$inferInsert;
 
 /**
- * Booking Blockers table for manual availability management
- * Allows DJ Danny to block off dates for holidays or private reasons
+ * Pricing Rules for automated quote generation
  */
-export const bookingBlockers = mysqlTable("booking_blockers", {
-  id: int("id").autoincrement().primaryKey(),
-  blockedDate: varchar("blockedDate", { length: 20 }).notNull(), // YYYY-MM-DD
+export const pricingRules = pgTable("pricing_rules", {
+  id: serial("id").primaryKey(),
+  ruleType: pricingRuleTypeEnum("ruleType").notNull(),
+  ruleValue: numeric("ruleValue", { precision: 10, scale: 2 }).notNull(),
+  ruleStrategy: pricingStrategyEnum("ruleStrategy").default("fixed").notNull(),
+  conditions: text("conditions"),
+  maxMultiplier: numeric("maxMultiplier", { precision: 10, scale: 2 }),
+  minTotal: numeric("minTotal", { precision: 10, scale: 2 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PricingRule = typeof pricingRules.$inferSelect;
+export type InsertPricingRule = typeof pricingRules.$inferInsert;
+
+/**
+ * Immutable Audit Logs for Pricing Engine
+ */
+export const pricingAuditLogs = pgTable("pricing_audit_logs", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("bookingId"),
+  baseRate: numeric("baseRate", { precision: 10, scale: 2 }).notNull(),
+  finalTotal: numeric("finalTotal", { precision: 10, scale: 2 }).notNull(),
+  rulesApplied: text("rulesApplied"),
+  breakdown: text("breakdown"),
+  conversionStatus: conversionStatusEnum("conversionStatus").default("quote_served").notNull(),
+  geoContext: varchar("geoContext", { length: 255 }),
+  metadata: text("metadata"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type PricingAuditLog = typeof pricingAuditLogs.$inferSelect;
+export type InsertPricingAuditLog = typeof pricingAuditLogs.$inferInsert;
+
+/**
+ * PHASE 5: OUTBOUND LEAD ENGINE (OLE)
+ */
+
+export const outboundLeads = pgTable("outbound_leads", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  organisation: varchar("organisation", { length: 255 }),
+  source: outboundSourceEnum("source").default("manual").notNull(),
+  sourceFingerprint: varchar("sourceFingerprint", { length: 255 }),
+  geoContext: varchar("geoContext", { length: 255 }),
+  targetDate: varchar("targetDate", { length: 20 }),
+  status: outboundStatusEnum("status").default("new").notNull(),
+  leadScore: integer("leadScore").default(0).notNull(),
+  metadata: text("metadata"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type OutboundLead = typeof outboundLeads.$inferSelect;
+export type InsertOutboundLead = typeof outboundLeads.$inferInsert;
+
+export const outboundInteractions = pgTable("outbound_interactions", {
+  id: serial("id").primaryKey(),
+  leadId: integer("leadId").notNull(),
+  type: outboundInteractionTypeEnum("type").notNull(),
+  content: text("content"),
+  outcome: varchar("outcome", { length: 255 }),
+  auditLogId: integer("auditLogId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OutboundInteraction = typeof outboundInteractions.$inferSelect;
+export type InsertOutboundInteraction = typeof outboundInteractions.$inferInsert;
+
+/**
+ * Booking Blockers table for manual availability management
+ */
+export const bookingBlockers = pgTable("booking_blockers", {
+  id: serial("id").primaryKey(),
+  blockedDate: varchar("blockedDate", { length: 20 }).notNull(),
   reason: varchar("reason", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -370,13 +409,13 @@ export type InsertBookingBlocker = typeof bookingBlockers.$inferInsert;
 /**
  * Danny Status table for editable status states
  */
-export const dannyStatus = mysqlTable("danny_status", {
-  id: int("id").autoincrement().primaryKey(),
-  status: varchar("status", { length: 100 }).notNull(), // e.g., "On Air", "In Studio", "Chilling"
-  message: text("message"), // Custom message
+export const dannyStatus = pgTable("danny_status", {
+  id: serial("id").primaryKey(),
+  status: varchar("status", { length: 100 }).notNull(),
+  message: text("message"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type DannyStatus = typeof dannyStatus.$inferSelect;
@@ -385,19 +424,19 @@ export type InsertDannyStatus = typeof dannyStatus.$inferInsert;
 /**
  * Hectic Feed posts
  */
-export const feedPosts = mysqlTable("feed_posts", {
-  id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["post", "photo", "clip", "mix"]).notNull(),
+export const feedPosts = pgTable("feed_posts", {
+  id: serial("id").primaryKey(),
+  type: feedPostTypeEnum("type").notNull(),
   title: varchar("title", { length: 255 }),
   content: text("content"),
   mediaUrl: varchar("mediaUrl", { length: 512 }),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
-  aiCaption: text("aiCaption"), // AI-generated caption
-  reactions: text("reactions"), // JSON: { "🔥": 5, "💥": 3 }
+  aiCaption: text("aiCaption"),
+  reactions: text("reactions"),
   isPublic: boolean("isPublic").default(true).notNull(),
   isVipOnly: boolean("isVipOnly").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type FeedPost = typeof feedPosts.$inferSelect;
@@ -406,19 +445,19 @@ export type InsertFeedPost = typeof feedPosts.$inferInsert;
 /**
  * User profiles with expanded fan data
  */
-export const userProfiles = mysqlTable("user_profiles", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Link to users table if exists
-  name: varchar("name", { length: 255 }).notNull(), // From shouts or signup
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
+  name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  genres: text("genres"), // JSON array
-  personalityTags: text("personalityTags"), // JSON array: ["Day One", "Vibe Master", etc.]
-  shoutFrequency: int("shoutFrequency").default(0).notNull(),
-  vibeLevel: int("vibeLevel").default(1).notNull(), // 1-10
+  genres: text("genres"),
+  personalityTags: text("personalityTags"),
+  shoutFrequency: integer("shoutFrequency").default(0).notNull(),
+  vibeLevel: integer("vibeLevel").default(1).notNull(),
   whatsappOptIn: boolean("whatsappOptIn").default(false).notNull(),
   aiMemoryEnabled: boolean("aiMemoryEnabled").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type UserProfile = typeof userProfiles.$inferSelect;
@@ -427,17 +466,17 @@ export type InsertUserProfile = typeof userProfiles.$inferInsert;
 /**
  * Fan Badge Tiers
  */
-export const fanBadges = mysqlTable("fan_badges", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Link to userProfiles
-  name: varchar("name", { length: 255 }).notNull(), // From userProfiles
-  tier: mysqlEnum("tier", ["rookie", "regular", "veteran", "royalty"]).notNull(),
-  points: int("points").default(0).notNull(),
-  onlineTime: int("onlineTime").default(0).notNull(), // Minutes
-  shoutCount: int("shoutCount").default(0).notNull(),
+export const fanBadges = pgTable("fan_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
+  name: varchar("name", { length: 255 }).notNull(),
+  tier: fanBadgeTierEnum("tier").notNull(),
+  points: integer("points").default(0).notNull(),
+  onlineTime: integer("onlineTime").default(0).notNull(),
+  shoutCount: integer("shoutCount").default(0).notNull(),
   lastActive: timestamp("lastActive").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type FanBadge = typeof fanBadges.$inferSelect;
@@ -446,14 +485,14 @@ export type InsertFanBadge = typeof fanBadges.$inferInsert;
 /**
  * AI Generated Mixes
  */
-export const aiMixes = mysqlTable("ai_mixes", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Optional: who requested it (nullable by default)
+export const aiMixes = pgTable("ai_mixes", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
   mood: varchar("mood", { length: 100 }).notNull(),
-  bpm: int("bpm"),
-  genres: text("genres").notNull(), // JSON array
-  setlist: text("setlist").notNull(), // JSON array of tracks
-  narrative: text("narrative"), // AI-generated mix story
+  bpm: integer("bpm"),
+  genres: text("genres").notNull(),
+  setlist: text("setlist").notNull(),
+  narrative: text("narrative"),
   title: varchar("title", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -464,18 +503,18 @@ export type InsertAIMix = typeof aiMixes.$inferInsert;
 /**
  * Danny Reacts submissions
  */
-export const dannyReacts = mysqlTable("danny_reacts", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
+export const dannyReacts = pgTable("danny_reacts", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
   name: varchar("name", { length: 255 }).notNull(),
-  type: mysqlEnum("type", ["video", "meme", "track"]).notNull(),
+  type: dannyReactTypeEnum("type").notNull(),
   mediaUrl: varchar("mediaUrl", { length: 512 }).notNull(),
   title: varchar("title", { length: 255 }),
-  aiReaction: text("aiReaction"), // AI-generated reaction
-  aiRating: int("aiRating"), // 1-10
-  status: mysqlEnum("status", ["pending", "reacted", "published"]).default("pending").notNull(),
+  aiReaction: text("aiReaction"),
+  aiRating: integer("aiRating"),
+  status: dannyReactStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type DannyReact = typeof dannyReacts.$inferSelect;
@@ -484,12 +523,12 @@ export type InsertDannyReact = typeof dannyReacts.$inferInsert;
 /**
  * Personalized Shoutouts
  */
-export const personalizedShoutouts = mysqlTable("personalized_shoutouts", {
-  id: int("id").autoincrement().primaryKey(),
+export const personalizedShoutouts = pgTable("personalized_shoutouts", {
+  id: serial("id").primaryKey(),
   recipientName: varchar("recipientName", { length: 255 }).notNull(),
   recipientEmail: varchar("recipientEmail", { length: 255 }),
-  type: mysqlEnum("type", ["birthday", "roast", "motivational", "breakup", "custom"]).notNull(),
-  message: text("message").notNull(), // AI-generated
+  type: personalizedShoutoutTypeEnum("type").notNull(),
+  message: text("message").notNull(),
   delivered: boolean("delivered").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -500,18 +539,18 @@ export type InsertPersonalizedShoutout = typeof personalizedShoutouts.$inferInse
 /**
  * DJ Battle submissions
  */
-export const djBattles = mysqlTable("dj_battles", {
-  id: int("id").autoincrement().primaryKey(),
+export const djBattles = pgTable("dj_battles", {
+  id: serial("id").primaryKey(),
   djName: varchar("djName", { length: 255 }).notNull(),
   djEmail: varchar("djEmail", { length: 255 }),
   mixUrl: varchar("mixUrl", { length: 512 }).notNull(),
   mixTitle: varchar("mixTitle", { length: 255 }),
-  aiCritique: text("aiCritique"), // AI-generated critique
-  aiScore: int("aiScore"), // 1-100
-  aiImprovements: text("aiImprovements"), // JSON array of suggestions
-  status: mysqlEnum("status", ["pending", "reviewed", "published"]).default("pending").notNull(),
+  aiCritique: text("aiCritique"),
+  aiScore: integer("aiScore"),
+  aiImprovements: text("aiImprovements"),
+  status: djBattleStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type DJBattle = typeof djBattles.$inferSelect;
@@ -520,14 +559,14 @@ export type InsertDJBattle = typeof djBattles.$inferInsert;
 /**
  * Listener locations for heatmap
  */
-export const listenerLocations = mysqlTable("listener_locations", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(), // From shout or profile
+export const listenerLocations = pgTable("listener_locations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
   city: varchar("city", { length: 255 }),
   country: varchar("country", { length: 255 }),
   latitude: varchar("latitude", { length: 20 }),
   longitude: varchar("longitude", { length: 20 }),
-  fanTier: mysqlEnum("fanTier", ["rookie", "regular", "veteran", "royalty"]),
+  fanTier: fanBadgeTierEnum("fanTier"),
   lastSeen: timestamp("lastSeen").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -538,15 +577,15 @@ export type InsertListenerLocation = typeof listenerLocations.$inferInsert;
 /**
  * Auto-generated promo content
  */
-export const promoContent = mysqlTable("promo_content", {
-  id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["clip", "subtitle", "thumbnail", "post"]).notNull(),
-  sourceType: mysqlEnum("sourceType", ["mix", "show", "shout", "reaction"]).notNull(),
-  sourceId: int("sourceId"), // ID of source (mix, show, etc.)
-  content: text("content"), // Generated content
+export const promoContent = pgTable("promo_content", {
+  id: serial("id").primaryKey(),
+  type: promoTypeEnum("type").notNull(),
+  sourceType: promoSourceTypeEnum("sourceType").notNull(),
+  sourceId: integer("sourceId"),
+  content: text("content"),
   mediaUrl: varchar("mediaUrl", { length: 512 }),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
-  status: mysqlEnum("status", ["pending", "generated", "published"]).default("pending").notNull(),
+  status: promoStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -556,14 +595,14 @@ export type InsertPromoContent = typeof promoContent.$inferInsert;
 /**
  * Identity Quiz results
  */
-export const identityQuizzes = mysqlTable("identity_quizzes", {
-  id: int("id").autoincrement().primaryKey(),
+export const identityQuizzes = pgTable("identity_quizzes", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  identityType: varchar("identityType", { length: 100 }).notNull(), // e.g., "Vibe Master", "Day One"
-  playlist: text("playlist"), // JSON array of recommended tracks
-  welcomeMessage: text("welcomeMessage"), // AI-generated
-  answers: text("answers"), // JSON of quiz answers
+  identityType: varchar("identityType", { length: 100 }).notNull(),
+  playlist: text("playlist"),
+  welcomeMessage: text("welcomeMessage"),
+  answers: text("answers"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -573,16 +612,16 @@ export type InsertIdentityQuiz = typeof identityQuizzes.$inferInsert;
 /**
  * Superfan memberships
  */
-export const superfans = mysqlTable("superfans", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
+export const superfans = pgTable("superfans", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  tier: mysqlEnum("tier", ["bronze", "silver", "gold", "platinum"]).notNull(),
-  perks: text("perks"), // JSON array
+  tier: superfanTierEnum("tier").notNull(),
+  perks: text("perks"),
   expiresAt: timestamp("expiresAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Superfan = typeof superfans.$inferSelect;
@@ -591,41 +630,50 @@ export type InsertSuperfan = typeof superfans.$inferInsert;
 /**
  * Loyalty tracking
  */
-export const loyaltyTracking = mysqlTable("loyalty_tracking", {
-  id: int("id").autoincrement().primaryKey(),
+export const loyaltyTracking = pgTable("loyalty_tracking", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  totalOnlineTime: int("totalOnlineTime").default(0).notNull(), // Minutes
-  totalShouts: int("totalShouts").default(0).notNull(),
-  streakDays: int("streakDays").default(0).notNull(),
+  totalOnlineTime: integer("totalOnlineTime").default(0).notNull(),
+  totalShouts: integer("totalShouts").default(0).notNull(),
+  streakDays: integer("streakDays").default(0).notNull(),
   lastActive: timestamp("lastActive").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type LoyaltyTracking = typeof loyaltyTracking.$inferSelect;
 export type InsertLoyaltyTracking = typeof loyaltyTracking.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - REVENUE STACK
- * ============================================
+ * Supporter Scores - Weekly meritocracy tracking
  */
+export const supporterScores = pgTable("supporter_scores", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  weekStart: timestamp("weekStart").notNull(),
+  score: integer("score").default(0).notNull(),
+  breakdown: text("breakdown"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SupporterScore = typeof supporterScores.$inferSelect;
+export type InsertSupporterScore = typeof supporterScores.$inferInsert;
 
 /**
  * Support events (tips/donations)
  */
-export const supportEvents = mysqlTable("support_events", {
-  id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId"), // Link to userProfiles or users
+export const supportEvents = pgTable("support_events", {
+  id: serial("id").primaryKey(),
+  fanId: integer("fanId"),
   fanName: varchar("fanName", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  amount: varchar("amount", { length: 50 }).notNull(), // Store as string to support various currencies
+  amount: varchar("amount", { length: 50 }).notNull(),
   currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
   message: text("message"),
-  status: mysqlEnum("status", ["pending", "completed", "failed"]).default("pending").notNull(),
+  status: supportEventStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type SupportEvent = typeof supportEvents.$inferSelect;
@@ -634,18 +682,18 @@ export type InsertSupportEvent = typeof supportEvents.$inferInsert;
 /**
  * Digital products (drops, soundpacks, presets, etc.)
  */
-export const products = mysqlTable("products", {
-  id: int("id").autoincrement().primaryKey(),
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  type: mysqlEnum("type", ["drop", "soundpack", "preset", "course", "bundle", "other"]).notNull(),
+  type: productTypeEnum("type").notNull(),
   price: varchar("price", { length: 50 }).notNull(),
   currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
   downloadUrl: varchar("downloadUrl", { length: 512 }),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Product = typeof products.$inferSelect;
@@ -654,22 +702,22 @@ export type InsertProduct = typeof products.$inferInsert;
 /**
  * Purchases of digital products
  */
-export const purchases = mysqlTable("purchases", {
-  id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId"),
+export const purchases = pgTable("purchases", {
+  id: serial("id").primaryKey(),
+  fanId: integer("fanId"),
   fanName: varchar("fanName", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  productId: int("productId").notNull(),
+  productId: integer("productId").notNull(),
   amount: varchar("amount", { length: 50 }).notNull(),
   currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
-  status: mysqlEnum("status", ["pending", "completed", "refunded", "failed", "cancelled"]).default("pending").notNull(),
-  paymentProvider: mysqlEnum("paymentProvider", ["stripe", "paypal", "manual"]),
-  paymentIntentId: varchar("paymentIntentId", { length: 255 }), // Stripe Payment Intent ID
-  paypalOrderId: varchar("paypalOrderId", { length: 255 }), // PayPal Order ID
-  transactionId: varchar("transactionId", { length: 255 }), // Generic transaction ID
-  metadata: text("metadata"), // JSON metadata for payment details
+  status: purchaseStatusEnum("status").default("pending").notNull(),
+  paymentProvider: paymentProviderEnum("paymentProvider"),
+  paymentIntentId: varchar("paymentIntentId", { length: 255 }),
+  paypalOrderId: varchar("paypalOrderId", { length: 255 }),
+  transactionId: varchar("transactionId", { length: 255 }),
+  metadata: text("metadata"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Purchase = typeof purchases.$inferSelect;
@@ -678,71 +726,59 @@ export type InsertPurchase = typeof purchases.$inferInsert;
 /**
  * Subscriptions (VIP tiers)
  */
-export const subscriptions = mysqlTable("subscriptions", {
-  id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId"),
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  fanId: integer("fanId"),
   fanName: varchar("fanName", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
-  tier: mysqlEnum("tier", ["hectic_regular", "hectic_royalty", "inner_circle"]).notNull(),
+  tier: subscriptionTierEnum("tier").notNull(),
   amount: varchar("amount", { length: 50 }).notNull(),
   currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
   startAt: timestamp("startAt").defaultNow().notNull(),
   endAt: timestamp("endAt"),
-  status: mysqlEnum("status", ["active", "cancelled", "expired"]).default("active").notNull(),
+  status: subscriptionStatusEnum("status").default("active").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = typeof subscriptions.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - BRAND LAYER
- * ============================================
- */
-
-/**
  * Brands table for multi-brand support
  */
-export const brands = mysqlTable("brands", {
-  id: int("id").autoincrement().primaryKey(),
+export const brands = pgTable("brands", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 100 }).notNull().unique(),
-  type: mysqlEnum("type", ["personality", "station", "clothing", "pets", "other"]).notNull(),
-  archetype: mysqlEnum("archetype", ["dj", "podcaster", "creator", "brand", "station"]), // Phase 7: Franchise mode
+  type: brandTypeEnum("type").notNull(),
+  archetype: brandArchetypeEnum("archetype"),
   primaryColor: varchar("primaryColor", { length: 20 }),
   secondaryColor: varchar("secondaryColor", { length: 20 }),
   logoUrl: varchar("logoUrl", { length: 512 }),
   domain: varchar("domain", { length: 255 }),
-  defaultFeatureFlags: text("defaultFeatureFlags"), // JSON blob - Phase 7: Franchise mode
+  defaultFeatureFlags: text("defaultFeatureFlags"),
   isActive: boolean("isActive").default(true).notNull(),
   isDefault: boolean("isDefault").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Brand = typeof brands.$inferSelect;
 export type InsertBrand = typeof brands.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - SAFETY & REPUTATION
- * ============================================
- */
-
-/**
  * Audit logs for tracking admin actions
  */
-export const auditLogs = mysqlTable("audit_logs", {
-  id: int("id").autoincrement().primaryKey(),
-  actorId: int("actorId"), // User ID who performed action
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  actorId: integer("actorId"),
   actorName: varchar("actorName", { length: 255 }),
-  action: varchar("action", { length: 100 }).notNull(), // e.g., "create_shout", "update_stream"
-  entityType: varchar("entityType", { length: 100 }), // e.g., "shout", "stream"
-  entityId: int("entityId"),
-  beforeSnapshot: text("beforeSnapshot"), // JSON snapshot before change
-  afterSnapshot: text("afterSnapshot"), // JSON snapshot after change
+  action: varchar("action", { length: 100 }).notNull(),
+  entityType: varchar("entityType", { length: 100 }),
+  entityId: integer("entityId"),
+  beforeSnapshot: text("beforeSnapshot"),
+  afterSnapshot: text("afterSnapshot"),
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: text("userAgent"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -754,35 +790,29 @@ export type InsertAuditLog = typeof auditLogs.$inferInsert;
 /**
  * Empire settings (kill switches, feature toggles)
  */
-export const empireSettings = mysqlTable("empire_settings", {
-  id: int("id").autoincrement().primaryKey(),
-  key: varchar("key", { length: 100 }).notNull().unique(), // e.g., "ai_posting_enabled", "ai_hosting_enabled"
-  value: text("value"), // JSON or string value
+export const empireSettings = pgTable("empire_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
   description: text("description"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  updatedBy: int("updatedBy"),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedBy: integer("updatedBy"),
 });
 
 export type EmpireSetting = typeof empireSettings.$inferSelect;
 export type InsertEmpireSetting = typeof empireSettings.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - OBSERVABILITY
- * ============================================
- */
-
-/**
  * Error logs for tracking application errors
  */
-export const errorLogs = mysqlTable("error_logs", {
-  id: int("id").autoincrement().primaryKey(),
+export const errorLogs = pgTable("error_logs", {
+  id: serial("id").primaryKey(),
   route: varchar("route", { length: 255 }),
   method: varchar("method", { length: 10 }),
   stackSnippet: text("stackSnippet"),
   message: text("message"),
-  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).default("medium").notNull(),
-  userId: int("userId"),
+  severity: errorSeverityEnum("severity").default("medium").notNull(),
+  userId: integer("userId"),
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: text("userAgent"),
   resolved: boolean("resolved").default(false).notNull(),
@@ -795,15 +825,15 @@ export type InsertErrorLog = typeof errorLogs.$inferInsert;
 /**
  * Incident banner messages
  */
-export const incidentBanners = mysqlTable("incident_banners", {
-  id: int("id").autoincrement().primaryKey(),
+export const incidentBanners = pgTable("incident_banners", {
+  id: serial("id").primaryKey(),
   message: text("message").notNull(),
-  severity: mysqlEnum("severity", ["info", "warning", "error"]).default("info").notNull(),
+  severity: incidentSeverityEnum("severity").default("info").notNull(),
   isActive: boolean("isActive").default(false).notNull(),
   startAt: timestamp("startAt").defaultNow().notNull(),
   endAt: timestamp("endAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type IncidentBanner = typeof incidentBanners.$inferSelect;
@@ -812,49 +842,46 @@ export type InsertIncidentBanner = typeof incidentBanners.$inferInsert;
 /**
  * Revenue Engine Governance & Fail-Safe
  */
-export const revenueIncidents = mysqlTable("revenue_incidents", {
-  id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["pricing_drift", "payment_mismatch", "inventory_deadlock", "manual_override"]).notNull(),
-  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).notNull(),
+export const revenueIncidents = pgTable("revenue_incidents", {
+  id: serial("id").primaryKey(),
+  type: revenueIncidentTypeEnum("type").notNull(),
+  severity: revenueIncidentSeverityEnum("severity").notNull(),
   message: text("message").notNull(),
-  status: mysqlEnum("status", ["active", "investigating", "mitigated", "resolved"]).default("active").notNull(),
-  impactedQuotes: text("impactedQuotes"), // JSON list of quote IDs
+  status: revenueIncidentStatusEnum("status").default("active").notNull(),
+  impactedQuotes: text("impactedQuotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   resolvedAt: timestamp("resolvedAt"),
 });
 
-export const governanceLogs = mysqlTable("governance_logs", {
-  id: int("id").autoincrement().primaryKey(),
-  actorId: int("actorId"), // null for system/ai
-  actorType: mysqlEnum("actorType", ["system", "admin", "ai_ops"]).notNull(),
-  action: varchar("action", { length: 255 }).notNull(), // e.g. "supporter_promote"
-  userId: int("userId"), // Target user if any
+export type RevenueIncident = typeof revenueIncidents.$inferSelect;
+export type InsertRevenueIncident = typeof revenueIncidents.$inferInsert;
+
+export const governanceLogs = pgTable("governance_logs", {
+  id: serial("id").primaryKey(),
+  actorId: integer("actorId"),
+  actorType: governanceActorTypeEnum("actorType").notNull(),
+  action: varchar("action", { length: 255 }).notNull(),
+  userId: integer("userId"),
   reason: text("reason"),
-  payload: text("payload"), // JSON
-  snapshot: text("snapshot"), // System state JSON
+  payload: text("payload"),
+  snapshot: text("snapshot"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
-export type RevenueIncident = typeof revenueIncidents.$inferSelect;
-export type InsertRevenueIncident = typeof revenueIncidents.$inferInsert;
 export type GovernanceLog = typeof governanceLogs.$inferSelect;
 export type InsertGovernanceLog = typeof governanceLogs.$inferInsert;
 
 /**
- * ============================================
- * ANALYTICS: Self-Hosted Click Tracking
- * ============================================
- * Sovereign analytics - no third-party tracking required.
- * IP addresses are hashed with SERVER_SALT for privacy.
+ * Analytics Events - Self-Hosted Click Tracking
  */
-export const analyticsEvents = mysqlTable("analytics_events", {
-  id: int("id").autoincrement().primaryKey(),
-  event: varchar("event", { length: 80 }).notNull(), // Event name, e.g., "home_event_card_click"
-  path: varchar("path", { length: 512 }), // Page path where event occurred
-  referrer: varchar("referrer", { length: 512 }), // HTTP referrer
-  userAgent: varchar("userAgent", { length: 512 }), // User agent string (truncated)
-  ipHash: varchar("ipHash", { length: 64 }), // SHA256 hash of IP + SERVER_SALT
-  props: text("props"), // JSON properties for the event
+export const analyticsEvents = pgTable("analytics_events", {
+  id: serial("id").primaryKey(),
+  event: varchar("event", { length: 80 }).notNull(),
+  path: varchar("path", { length: 512 }),
+  referrer: varchar("referrer", { length: 512 }),
+  userAgent: varchar("userAgent", { length: 512 }),
+  ipHash: varchar("ipHash", { length: 64 }),
+  props: text("props"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -862,54 +889,49 @@ export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
 
 /**
- * PHASE 5: CONTRACTUAL AUTOMATION
+ * Booking Contracts
  */
-export const bookingContracts = mysqlTable("booking_contracts", {
-  id: int("id").autoincrement().primaryKey(),
-  bookingId: int("bookingId").notNull(),
-  version: int("version").default(1).notNull(),
-  status: mysqlEnum("status", ["draft", "issued", "signed", "voided"]).default("draft").notNull(),
-  content: text("content").notNull(), // Full legal text
+export const bookingContracts = pgTable("booking_contracts", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("bookingId").notNull(),
+  version: integer("version").default(1).notNull(),
+  status: bookingContractStatusEnum("status").default("draft").notNull(),
+  content: text("content").notNull(),
   signedAt: timestamp("signedAt"),
   signedBy: varchar("signedBy", { length: 255 }),
   ipAddress: varchar("ipAddress", { length: 45 }),
-  metadata: text("metadata"), // JSON for templates/vars used
+  metadata: text("metadata"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export const techRiders = mysqlTable("tech_riders", {
-  id: int("id").autoincrement().primaryKey(),
-  bookingId: int("bookingId").notNull(),
-  version: int("version").default(1).notNull(),
-  requirements: text("requirements").notNull(), // JSON list of equipment/rider requirements
-  hospitality: text("hospitality"), // Specialized hospitality requirements
-  isApproved: boolean("isApproved").default(false).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type BookingContract = typeof bookingContracts.$inferSelect;
 export type InsertBookingContract = typeof bookingContracts.$inferInsert;
+
+export const techRiders = pgTable("tech_riders", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("bookingId").notNull(),
+  version: integer("version").default(1).notNull(),
+  requirements: text("requirements").notNull(),
+  hospitality: text("hospitality"),
+  isApproved: boolean("isApproved").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type TechRider = typeof techRiders.$inferSelect;
 export type InsertTechRider = typeof techRiders.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - BACKUP & RECOVERY
- * ============================================
+ * Backups
  */
-
-/**
- * Backups table
- */
-export const backups = mysqlTable("backups", {
-  id: int("id").autoincrement().primaryKey(),
+export const backups = pgTable("backups", {
+  id: serial("id").primaryKey(),
   label: varchar("label", { length: 255 }).notNull(),
   description: text("description"),
-  dataBlob: text("dataBlob"), // JSON serialized backup data
-  checksum: varchar("checksum", { length: 64 }), // SHA-256 checksum
-  sizeBytes: int("sizeBytes"),
-  createdBy: int("createdBy"),
+  dataBlob: text("dataBlob"),
+  checksum: varchar("checksum", { length: 64 }),
+  sizeBytes: integer("sizeBytes"),
+  createdBy: integer("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -917,23 +939,17 @@ export type Backup = typeof backups.$inferSelect;
 export type InsertBackup = typeof backups.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - NOTIFICATION ORCHESTRATOR
- * ============================================
+ * Unified notifications
  */
-
-/**
- * Unified notifications table
- */
-export const notifications = mysqlTable("notifications", {
-  id: int("id").autoincrement().primaryKey(),
-  fanId: int("fanId"),
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  fanId: integer("fanId"),
   fanName: varchar("fanName", { length: 255 }),
   email: varchar("email", { length: 255 }),
-  type: varchar("type", { length: 100 }).notNull(), // e.g., "danny_live", "track_request", "mission_available"
-  channel: mysqlEnum("channel", ["web_push", "email", "whatsapp", "in_app"]).notNull(),
-  payload: text("payload"), // JSON payload
-  status: mysqlEnum("status", ["pending", "sent", "failed", "read"]).default("pending").notNull(),
+  type: varchar("type", { length: 100 }).notNull(),
+  channel: notificationChannelEnum("channel").notNull(),
+  payload: text("payload"),
+  status: notificationStatusEnum("status").default("pending").notNull(),
   sentAt: timestamp("sentAt"),
   readAt: timestamp("readAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -943,41 +959,29 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 
 /**
- * ============================================
- * PHASE 5: EMPIRE MODE - EMPIRE API
- * ============================================
- */
-
-/**
  * API keys for external access
  */
-export const apiKeys = mysqlTable("api_keys", {
-  id: int("id").autoincrement().primaryKey(),
-  key: varchar("key", { length: 64 }).notNull().unique(), // API key hash
+export const apiKeys = pgTable("api_keys", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 64 }).notNull().unique(),
   label: varchar("label", { length: 255 }).notNull(),
-  scopes: text("scopes"), // JSON array of allowed scopes
+  scopes: text("scopes"),
   lastUsedAt: timestamp("lastUsedAt"),
   expiresAt: timestamp("expiresAt"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type InsertApiKey = typeof apiKeys.$inferInsert;
 
 /**
- * ============================================
- * PHASE 6: GEN-Z DOMINATION LAYER
- * ============================================
+ * Gen-Z Profiles
  */
-
-/**
- * User profiles with Gen-Z features
- */
-export const genZProfiles = mysqlTable("genz_profiles", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
+export const genZProfiles = pgTable("genz_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
   username: varchar("username", { length: 50 }).notNull().unique(),
   displayName: varchar("displayName", { length: 255 }),
   bio: text("bio"),
@@ -985,81 +989,75 @@ export const genZProfiles = mysqlTable("genz_profiles", {
   bannerUrl: varchar("bannerUrl", { length: 512 }),
   location: varchar("location", { length: 255 }),
   website: varchar("website", { length: 255 }),
-  streakDays: int("streakDays").default(0).notNull(),
-  totalPoints: int("totalPoints").default(0).notNull(),
-  level: int("level").default(1).notNull(),
-  followersCount: int("followersCount").default(0).notNull(),
-  followingCount: int("followingCount").default(0).notNull(),
+  streakDays: integer("streakDays").default(0).notNull(),
+  totalPoints: integer("totalPoints").default(0).notNull(),
+  level: integer("level").default(1).notNull(),
+  followersCount: integer("followersCount").default(0).notNull(),
+  followingCount: integer("followingCount").default(0).notNull(),
   isVerified: boolean("isVerified").default(false).notNull(),
   isPublic: boolean("isPublic").default(true).notNull(),
   lastActive: timestamp("lastActive").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type GenZProfile = typeof genZProfiles.$inferSelect;
 export type InsertGenZProfile = typeof genZProfiles.$inferInsert;
 
 /**
- * ============================================
- * PHASE 7: ADMIN FEATURE EXPANSION (VIDEOS, BLOG, MEDIA)
- * ============================================
+ * Videos
  */
-
-/**
- * Videos table for YouTube/External video management
- */
-export const videos = mysqlTable("videos", {
-  id: int("id").autoincrement().primaryKey(),
+export const videos = pgTable("videos", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   youtubeUrl: varchar("youtubeUrl", { length: 512 }).notNull(),
-  category: varchar("category", { length: 100 }).notNull(), // Live Set, Mix, Interview, etc.
+  category: varchar("category", { length: 100 }).notNull(),
   description: text("description"),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
   isFeatured: boolean("isFeatured").default(false).notNull(),
-  views: int("views").default(0).notNull(), // Manual override or synced
-  duration: varchar("duration", { length: 20 }), // e.g., "1:23:45"
+  views: integer("views").default(0).notNull(),
+  duration: varchar("duration", { length: 20 }),
   publishedAt: timestamp("publishedAt").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Video = typeof videos.$inferSelect;
 export type InsertVideo = typeof videos.$inferInsert;
 
 /**
- * Articles table for Blog/News
+ * Articles
  */
-export const articles = mysqlTable("articles", {
-  id: int("id").autoincrement().primaryKey(),
+export const articles = pgTable("articles", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
-  content: text("content").notNull(), // Rich text / HTML
+  content: text("content").notNull(),
   excerpt: text("excerpt"),
   category: varchar("category", { length: 100 }),
   coverImageUrl: varchar("coverImageUrl", { length: 512 }),
-  authorId: int("authorId"), // Link to user
-  authorName: varchar("authorName", { length: 255 }), // Snapshot of author name
+  authorId: integer("authorId"),
+  authorName: varchar("authorName", { length: 255 }),
   isPublished: boolean("isPublished").default(false).notNull(),
   publishedAt: timestamp("publishedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Article = typeof articles.$inferSelect;
 export type InsertArticle = typeof articles.$inferInsert;
 
 /**
- * Media Library table for uploads
+ * Media Library
  */
-export const mediaLibrary = mysqlTable("media_library", {
-  id: int("id").autoincrement().primaryKey(),
+export const mediaLibrary = pgTable("media_library", {
+  id: serial("id").primaryKey(),
   filename: varchar("filename", { length: 255 }).notNull(),
   originalName: varchar("originalName", { length: 255 }).notNull(),
   mimeType: varchar("mimeType", { length: 100 }).notNull(),
-  size: int("size").notNull(),
+  size: integer("size").notNull(),
   url: varchar("url", { length: 512 }).notNull(),
-  uploadedBy: int("uploadedBy"), // User ID
+  uploadedBy: integer("uploadedBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -1069,10 +1067,10 @@ export type InsertMediaItem = typeof mediaLibrary.$inferInsert;
 /**
  * Follow relationships
  */
-export const follows = mysqlTable("follows", {
-  id: int("id").autoincrement().primaryKey(),
-  followerId: int("followerId").notNull(), // Profile ID
-  followingId: int("followingId").notNull(), // Profile ID
+export const follows = pgTable("follows", {
+  id: serial("id").primaryKey(),
+  followerId: integer("followerId").notNull(),
+  followingId: integer("followingId").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -1080,35 +1078,35 @@ export type Follow = typeof follows.$inferSelect;
 export type InsertFollow = typeof follows.$inferInsert;
 
 /**
- * User posts (TikTok/Instagram style)
+ * User posts
  */
-export const userPosts = mysqlTable("user_posts", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
-  type: mysqlEnum("type", ["text", "image", "video", "audio", "clip"]).notNull(),
+export const userPosts = pgTable("user_posts", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profileId").notNull(),
+  type: userPostTypeEnum("type").notNull(),
   content: text("content"),
   mediaUrl: varchar("mediaUrl", { length: 512 }),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
-  likesCount: int("likesCount").default(0).notNull(),
-  commentsCount: int("commentsCount").default(0).notNull(),
-  sharesCount: int("sharesCount").default(0).notNull(),
-  viewsCount: int("viewsCount").default(0).notNull(),
+  likesCount: integer("likesCount").default(0).notNull(),
+  commentsCount: integer("commentsCount").default(0).notNull(),
+  sharesCount: integer("sharesCount").default(0).notNull(),
+  viewsCount: integer("viewsCount").default(0).notNull(),
   isPublic: boolean("isPublic").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type UserPost = typeof userPosts.$inferSelect;
 export type InsertUserPost = typeof userPosts.$inferInsert;
 
 /**
- * Post reactions (likes, etc.)
+ * Post reactions
  */
-export const postReactions = mysqlTable("post_reactions", {
-  id: int("id").autoincrement().primaryKey(),
-  postId: int("postId").notNull(),
-  profileId: int("profileId").notNull(),
-  reactionType: varchar("reactionType", { length: 20 }).default("like").notNull(), // like, fire, heart, etc.
+export const postReactions = pgTable("post_reactions", {
+  id: serial("id").primaryKey(),
+  postId: integer("postId").notNull(),
+  profileId: integer("profileId").notNull(),
+  reactionType: varchar("reactionType", { length: 20 }).default("like").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -1116,16 +1114,16 @@ export type PostReaction = typeof postReactions.$inferSelect;
 export type InsertPostReaction = typeof postReactions.$inferInsert;
 
 /**
- * Collectibles/Vault items
+ * Collectibles
  */
-export const collectibles = mysqlTable("collectibles", {
-  id: int("id").autoincrement().primaryKey(),
+export const collectibles = pgTable("collectibles", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  type: mysqlEnum("type", ["badge", "nft", "trophy", "item", "skin"]).notNull(),
-  rarity: mysqlEnum("rarity", ["common", "rare", "epic", "legendary"]).default("common").notNull(),
+  type: collectibleTypeEnum("type").notNull(),
+  rarity: collectibleRarityEnum("rarity").default("common").notNull(),
   imageUrl: varchar("imageUrl", { length: 512 }),
-  metadata: text("metadata"), // JSON
+  metadata: text("metadata"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -1134,12 +1132,12 @@ export type Collectible = typeof collectibles.$inferSelect;
 export type InsertCollectible = typeof collectibles.$inferInsert;
 
 /**
- * User collectibles (ownership)
+ * User collectibles
  */
-export const userCollectibles = mysqlTable("user_collectibles", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
-  collectibleId: int("collectibleId").notNull(),
+export const userCollectibles = pgTable("user_collectibles", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profileId").notNull(),
+  collectibleId: integer("collectibleId").notNull(),
   acquiredAt: timestamp("acquiredAt").defaultNow().notNull(),
   isEquipped: boolean("isEquipped").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -1151,14 +1149,14 @@ export type InsertUserCollectible = typeof userCollectibles.$inferInsert;
 /**
  * Achievements
  */
-export const achievements = mysqlTable("achievements", {
-  id: int("id").autoincrement().primaryKey(),
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   iconUrl: varchar("iconUrl", { length: 512 }),
-  pointsReward: int("pointsReward").default(0).notNull(),
-  rarity: mysqlEnum("rarity", ["common", "rare", "epic", "legendary"]).default("common").notNull(),
-  criteria: text("criteria"), // JSON - what unlocks this
+  pointsReward: integer("pointsReward").default(0).notNull(),
+  rarity: achievementRarityEnum("rarity").default("common").notNull(),
+  criteria: text("criteria"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -1167,12 +1165,12 @@ export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = typeof achievements.$inferInsert;
 
 /**
- * User achievements (unlocked)
+ * User achievements
  */
-export const userAchievements = mysqlTable("user_achievements", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
-  achievementId: int("achievementId").notNull(),
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profileId").notNull(),
+  achievementId: integer("achievementId").notNull(),
   unlockedAt: timestamp("unlockedAt").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -1183,1254 +1181,15 @@ export type InsertUserAchievement = typeof userAchievements.$inferInsert;
 /**
  * Chat messages with AI Danny
  */
-export const aiDannyChats = mysqlTable("ai_danny_chats", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId"),
-  sessionId: varchar("sessionId", { length: 64 }).notNull(), // For anonymous users
+export const aiDannyChats = pgTable("ai_danny_chats", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profileId"),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
   message: text("message").notNull(),
   response: text("response"),
-  context: text("context"), // JSON - context used for response
+  context: text("context"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type AIDannyChat = typeof aiDannyChats.$inferSelect;
 export type InsertAIDannyChat = typeof aiDannyChats.$inferInsert;
-
-/**
- * World/3D avatars and positions
- */
-export const worldAvatars = mysqlTable("world_avatars", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
-  avatarData: text("avatarData"), // JSON - 3D model data
-  positionX: varchar("positionX", { length: 20 }).default("0"),
-  positionY: varchar("positionY", { length: 20 }).default("0"),
-  positionZ: varchar("positionZ", { length: 20 }).default("0"),
-  rotation: varchar("rotation", { length: 20 }).default("0"),
-  isOnline: boolean("isOnline").default(false).notNull(),
-  lastSeen: timestamp("lastSeen").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type WorldAvatar = typeof worldAvatars.$inferSelect;
-export type InsertWorldAvatar = typeof worldAvatars.$inferInsert;
-
-/**
- * ============================================
- * PHASE 7: GLOBAL CULT MODE
- * ============================================
- */
-
-/**
- * Bookings table (enhanced for Phase 7)
- * Note: If bookings table already exists, this extends it
- */
-export const bookingsPhase7 = mysqlTable("bookings_phase7", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  org: varchar("org", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 20 }),
-  type: mysqlEnum("type", ["club", "radio", "private", "corporate", "podcast", "other"]).notNull(),
-  location: varchar("location", { length: 255 }).notNull(),
-  date: varchar("date", { length: 20 }).notNull(), // YYYY-MM-DD
-  time: varchar("time", { length: 10 }), // HH:MM
-  budgetMin: varchar("budgetMin", { length: 50 }),
-  budgetMax: varchar("budgetMax", { length: 50 }),
-  source: varchar("source", { length: 255 }), // How they found you
-  status: mysqlEnum("status", ["new", "reviewing", "accepted", "declined", "completed"]).default("new").notNull(),
-  internalNotes: text("internalNotes"),
-  brandId: int("brandId"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type BookingPhase7 = typeof bookingsPhase7.$inferSelect;
-export type InsertBookingPhase7 = typeof bookingsPhase7.$inferInsert;
-
-/**
- * Events table (enhanced for Phase 7)
- * Note: If events table already exists, this extends it
- */
-export const eventsPhase7 = mysqlTable("events_phase7", {
-  id: int("id").autoincrement().primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  type: mysqlEnum("type", ["stream", "club", "private", "online_collab", "festival", "takeover"]).notNull(),
-  location: varchar("location", { length: 255 }),
-  dateTimeStart: timestamp("dateTimeStart").notNull(),
-  dateTimeEnd: timestamp("dateTimeEnd"),
-  isPublic: boolean("isPublic").default(true).notNull(),
-  ticketsUrl: varchar("ticketsUrl", { length: 512 }),
-  status: mysqlEnum("status", ["upcoming", "live", "completed", "cancelled"]).default("upcoming").notNull(),
-  brandId: int("brandId"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type EventPhase7 = typeof eventsPhase7.$inferSelect;
-export type InsertEventPhase7 = typeof eventsPhase7.$inferInsert;
-
-/**
- * Partner requests
- */
-export const partnerRequests = mysqlTable("partner_requests", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  brandName: varchar("brandName", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull(),
-  links: text("links"), // JSON - IG, TikTok, etc.
-  collabType: mysqlEnum("collabType", ["guest_mix", "co_host", "brand_drop", "takeover", "other"]).notNull(),
-  pitch: text("pitch").notNull(),
-  status: mysqlEnum("status", ["new", "reviewing", "accepted", "declined"]).default("new").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type PartnerRequest = typeof partnerRequests.$inferSelect;
-export type InsertPartnerRequest = typeof partnerRequests.$inferInsert;
-
-/**
- * Approved partners
- */
-export const partners = mysqlTable("partners", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  brandName: varchar("brandName", { length: 255 }),
-  logoUrl: varchar("logoUrl", { length: 512 }),
-  links: text("links"), // JSON
-  type: mysqlEnum("type", ["venue", "clothing", "media", "dj", "creator", "other"]).notNull(),
-  notes: text("notes"),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Partner = typeof partners.$inferSelect;
-export type InsertPartner = typeof partners.$inferInsert;
-
-/**
- * Social profiles
- */
-export const socialProfiles = mysqlTable("social_profiles", {
-  id: int("id").autoincrement().primaryKey(),
-  platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "spotify", "mixcloud", "snapchat", "telegram", "piing", "twitter", "facebook", "other"]).notNull(),
-  url: varchar("url", { length: 512 }).notNull(),
-  handle: varchar("handle", { length: 255 }),
-  brandId: int("brandId"),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SocialProfile = typeof socialProfiles.$inferSelect;
-export type InsertSocialProfile = typeof socialProfiles.$inferInsert;
-
-/**
- * Post templates
- */
-export const postTemplates = mysqlTable("post_templates", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "spotify", "mixcloud", "snapchat", "telegram", "piing", "twitter", "facebook", "all"]).notNull(),
-  templateType: mysqlEnum("templateType", ["nowPlaying", "eventAnnouncement", "newMix", "shoutHighlight", "quote", "clipDrop"]).notNull(),
-  templateText: text("templateText").notNull(), // With placeholder tokens like {track}, {event}, {date}
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type PostTemplate = typeof postTemplates.$inferSelect;
-export type InsertPostTemplate = typeof postTemplates.$inferInsert;
-
-/**
- * Promotions
- */
-export const promotions = mysqlTable("promotions", {
-  id: int("id").autoincrement().primaryKey(),
-  entityType: mysqlEnum("entityType", ["event", "mix", "clip", "show", "achievement", "milestone"]).notNull(),
-  entityId: int("entityId").notNull(),
-  platforms: text("platforms"), // JSON array
-  status: mysqlEnum("status", ["draft", "ready", "scheduled", "sent"]).default("draft").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Promotion = typeof promotions.$inferSelect;
-export type InsertPromotion = typeof promotions.$inferInsert;
-
-/**
- * Traffic events (for analytics)
- */
-export const trafficEvents = mysqlTable("traffic_events", {
-  id: int("id").autoincrement().primaryKey(),
-  route: varchar("route", { length: 255 }),
-  utmSource: varchar("utmSource", { length: 100 }),
-  utmMedium: varchar("utmMedium", { length: 100 }),
-  utmCampaign: varchar("utmCampaign", { length: 100 }),
-  referrer: varchar("referrer", { length: 512 }),
-  userAgent: text("userAgent"),
-  ipAddress: varchar("ipAddress", { length: 45 }),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
-
-export type TrafficEvent = typeof trafficEvents.$inferSelect;
-export type InsertTrafficEvent = typeof trafficEvents.$inferInsert;
-
-/**
- * Inner Circle eligibility
- */
-export const innerCircle = mysqlTable("inner_circle", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId").notNull(),
-  isEligible: boolean("isEligible").default(false).notNull(),
-  eligibilityReason: varchar("eligibilityReason", { length: 255 }), // xp_threshold, subscription, manual
-  unlockedAt: timestamp("unlockedAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type InnerCircle = typeof innerCircle.$inferSelect;
-export type InsertInnerCircle = typeof innerCircle.$inferInsert;
-
-/**
- * ============================================
- * PHASE 8: HECTIC AI STUDIO
- * ============================================
- */
-
-/**
- * AI Script Jobs
- */
-export const aiScriptJobs = mysqlTable("ai_script_jobs", {
-  id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["intro", "outro", "mixStory", "tiktokClip", "promo", "fanShout", "generic"]).notNull(),
-  inputContext: text("inputContext"), // JSON
-  requestedByUserId: int("requestedByUserId"),
-  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
-  resultText: text("resultText"),
-  errorMessage: text("errorMessage"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AIScriptJob = typeof aiScriptJobs.$inferSelect;
-export type InsertAIScriptJob = typeof aiScriptJobs.$inferInsert;
-
-/**
- * AI Voice Jobs (TTS)
- */
-export const aiVoiceJobs = mysqlTable("ai_voice_jobs", {
-  id: int("id").autoincrement().primaryKey(),
-  scriptJobId: int("scriptJobId"), // FK to aiScriptJobs
-  rawText: text("rawText"),
-  voiceProfile: varchar("voiceProfile", { length: 100 }).default("hectic_main").notNull(), // hectic_main, hectic_soft, hectic_shouty
-  requestedByUserId: int("requestedByUserId"),
-  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
-  audioUrl: varchar("audioUrl", { length: 512 }),
-  errorMessage: text("errorMessage"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AIVoiceJob = typeof aiVoiceJobs.$inferSelect;
-export type InsertAIVoiceJob = typeof aiVoiceJobs.$inferInsert;
-
-/**
- * AI Video Jobs
- */
-export const aiVideoJobs = mysqlTable("ai_video_jobs", {
-  id: int("id").autoincrement().primaryKey(),
-  scriptJobId: int("scriptJobId"), // FK to aiScriptJobs
-  stylePreset: mysqlEnum("stylePreset", ["verticalShort", "squareClip", "horizontalHost"]).notNull(),
-  requestedByUserId: int("requestedByUserId"),
-  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
-  videoUrl: varchar("videoUrl", { length: 512 }),
-  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
-  errorMessage: text("errorMessage"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type AIVideoJob = typeof aiVideoJobs.$inferSelect;
-export type InsertAIVideoJob = typeof aiVideoJobs.$inferInsert;
-
-/**
- * User consents (extend existing or create new)
- */
-export const userConsents = mysqlTable("user_consents", {
-  id: int("id").autoincrement().primaryKey(),
-  profileId: int("profileId"),
-  userId: int("userId"),
-  email: varchar("email", { length: 255 }), // For anonymous users
-  aiContentConsent: boolean("aiContentConsent").default(false).notNull(),
-  marketingConsent: boolean("marketingConsent").default(false).notNull(),
-  dataShareConsent: boolean("dataShareConsent").default(false).notNull(),
-  lastUpdatedAt: timestamp("lastUpdatedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type UserConsent = typeof userConsents.$inferSelect;
-export type InsertUserConsent = typeof userConsents.$inferInsert;
-
-/**
- * ============================================
- * PHASE 9: HECTIC ECONOMY + THE HECTIC SHOW
- * ============================================
- */
-
-/**
- * ============================================
- * PHASE 9A: HECTIC ECONOMY
- * ============================================
- */
-
-/**
- * Wallets for HecticCoins
- */
-export const wallets = mysqlTable("wallets", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(), // FK to users
-  balanceCoins: int("balanceCoins").default(0).notNull(),
-  lifetimeCoinsEarned: int("lifetimeCoinsEarned").default(0).notNull(),
-  lifetimeCoinsSpent: int("lifetimeCoinsSpent").default(0).notNull(),
-  lastUpdatedAt: timestamp("lastUpdatedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type Wallet = typeof wallets.$inferSelect;
-export type InsertWallet = typeof wallets.$inferInsert;
-
-/**
- * Coin transactions
- */
-export const coinTransactions = mysqlTable("coin_transactions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  walletId: int("walletId").notNull(),
-  amount: int("amount").notNull(), // Positive for earn, negative for spend
-  type: mysqlEnum("type", ["earn", "spend", "adjust"]).notNull(),
-  source: mysqlEnum("source", ["mission", "loginStreak", "shout", "trackVote", "confession", "eventAttend", "referral", "adminAdjust", "rewardRedeem"]).notNull(),
-  referenceId: int("referenceId"), // FK to missionId, eventId, referralId, rewardId
-  description: text("description"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type CoinTransaction = typeof coinTransactions.$inferSelect;
-export type InsertCoinTransaction = typeof coinTransactions.$inferInsert;
-
-/**
- * Rewards catalogue
- */
-export const rewards = mysqlTable("rewards", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  costCoins: int("costCoins").notNull(),
-  type: mysqlEnum("type", ["digital", "physical", "access", "aiAsset", "other"]).notNull(),
-  fulfillmentType: mysqlEnum("fulfillmentType", ["manual", "autoEmail", "autoLink", "aiScript", "aiVoice", "aiVideo"]).notNull(),
-  fulfillmentPayload: text("fulfillmentPayload"), // JSON
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Reward = typeof rewards.$inferSelect;
-export type InsertReward = typeof rewards.$inferInsert;
-
-/**
- * Redemptions
- */
-export const redemptions = mysqlTable("redemptions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  rewardId: int("rewardId").notNull(),
-  status: mysqlEnum("status", ["pending", "approved", "rejected", "fulfilled"]).default("pending").notNull(),
-  coinsSpent: int("coinsSpent").notNull(),
-  notesAdmin: text("notesAdmin"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Redemption = typeof redemptions.$inferSelect;
-export type InsertRedemption = typeof redemptions.$inferInsert;
-
-/**
- * Referral codes
- */
-export const referralCodes = mysqlTable("referral_codes", {
-  id: int("id").autoincrement().primaryKey(),
-  code: varchar("code", { length: 50 }).notNull().unique(),
-  ownerUserId: int("ownerUserId").notNull(),
-  maxUses: int("maxUses"),
-  expiresAt: timestamp("expiresAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ReferralCode = typeof referralCodes.$inferSelect;
-export type InsertReferralCode = typeof referralCodes.$inferInsert;
-
-/**
- * Referral uses
- */
-export const referralUses = mysqlTable("referral_uses", {
-  id: int("id").autoincrement().primaryKey(),
-  codeId: int("codeId").notNull(),
-  referredUserId: int("referredUserId").notNull(),
-  rewardCoins: int("rewardCoins").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ReferralUse = typeof referralUses.$inferSelect;
-export type InsertReferralUse = typeof referralUses.$inferInsert;
-
-/**
- * ============================================
- * PHASE 9B: THE HECTIC SHOW
- * ============================================
- */
-
-/**
- * Shows (extend existing shows table or create new)
- * Note: If shows table exists, we'll extend it
- */
-export const showsPhase9 = mysqlTable("shows_phase9", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 100 }).notNull().unique(),
-  description: text("description"),
-  hostName: varchar("hostName", { length: 255 }),
-  isPrimaryShow: boolean("isPrimaryShow").default(false).notNull(),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ShowPhase9 = typeof showsPhase9.$inferSelect;
-export type InsertShowPhase9 = typeof showsPhase9.$inferInsert;
-
-/**
- * Show episodes
- */
-export const showEpisodes = mysqlTable("show_episodes", {
-  id: int("id").autoincrement().primaryKey(),
-  showId: int("showId").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 100 }).notNull().unique(),
-  description: text("description"),
-  status: mysqlEnum("status", ["planned", "recorded", "live", "published", "archived"]).default("planned").notNull(),
-  scheduledAt: timestamp("scheduledAt"),
-  recordedAt: timestamp("recordedAt"),
-  publishedAt: timestamp("publishedAt"),
-  recordingUrl: varchar("recordingUrl", { length: 512 }),
-  coverImageUrl: varchar("coverImageUrl", { length: 512 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ShowEpisode = typeof showEpisodes.$inferSelect;
-export type InsertShowEpisode = typeof showEpisodes.$inferInsert;
-
-/**
- * Show segments
- */
-export const showSegments = mysqlTable("show_segments", {
-  id: int("id").autoincrement().primaryKey(),
-  episodeId: int("episodeId").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  type: mysqlEnum("type", ["intro", "topic", "interview", "confession", "dilemma", "shoutBlock", "musicBlock", "freestyle", "rant", "outro", "other"]).notNull(),
-  orderIndex: int("orderIndex").default(0).notNull(),
-  notes: text("notes"),
-  aiScriptJobId: int("aiScriptJobId"), // Link to AI Studio
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ShowSegment = typeof showSegments.$inferSelect;
-export type InsertShowSegment = typeof showSegments.$inferInsert;
-
-/**
- * Live show sessions
- */
-export const showLiveSessions = mysqlTable("show_live_sessions", {
-  id: int("id").autoincrement().primaryKey(),
-  showId: int("showId").notNull(),
-  episodeId: int("episodeId"), // May become an episode later
-  startedAt: timestamp("startedAt").defaultNow().notNull(),
-  endedAt: timestamp("endedAt"),
-  status: mysqlEnum("status", ["upcoming", "live", "ended"]).default("upcoming").notNull(),
-  concurrentListenersEstimate: int("concurrentListenersEstimate"),
-  livePlatform: mysqlEnum("livePlatform", ["site", "youtube", "tiktok", "twitch", "other"]).default("site").notNull(),
-  liveUrl: varchar("liveUrl", { length: 512 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ShowLiveSession = typeof showLiveSessions.$inferSelect;
-export type InsertShowLiveSession = typeof showLiveSessions.$inferInsert;
-
-/**
- * Show cues (for live producer control)
- */
-export const showCues = mysqlTable("show_cues", {
-  id: int("id").autoincrement().primaryKey(),
-  liveSessionId: int("liveSessionId").notNull(),
-  type: mysqlEnum("type", ["playTrack", "readShout", "playConfession", "askQuestion", "adBreak", "topicIntro", "callToAction", "custom"]).notNull(),
-  payload: text("payload"), // JSON - references track, shout, confession, script, etc.
-  orderIndex: int("orderIndex").default(0).notNull(),
-  status: mysqlEnum("status", ["pending", "done", "skipped"]).default("pending").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ShowCue = typeof showCues.$inferSelect;
-export type InsertShowCue = typeof showCues.$inferInsert;
-
-/**
- * Show assets (optional)
- */
-export const showAssets = mysqlTable("show_assets", {
-  id: int("id").autoincrement().primaryKey(),
-  episodeId: int("episodeId").notNull(),
-  type: mysqlEnum("type", ["script", "voiceDrop", "clip", "socialPack"]).notNull(),
-  aiScriptJobId: int("aiScriptJobId"),
-  aiVoiceJobId: int("aiVoiceJobId"),
-  aiVideoJobId: int("aiVideoJobId"),
-  externalUrl: varchar("externalUrl", { length: 512 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ShowAsset = typeof showAssets.$inferSelect;
-export type InsertShowAsset = typeof showAssets.$inferInsert;
-
-/**
- * ============================================
- * PHASE 10: HECTICOPS CONTROL TOWER
- * ============================================
- */
-
-/**
- * Social Integrations
- */
-export const socialIntegrations = mysqlTable("social_integrations", {
-  id: int("id").autoincrement().primaryKey(),
-  platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "twitch", "twitter", "facebook", "other"]).notNull(),
-  handle: varchar("handle", { length: 255 }),
-  url: varchar("url", { length: 512 }).notNull(),
-  apiKeyName: varchar("apiKeyName", { length: 255 }), // Reference to env variable name
-  isPrimary: boolean("isPrimary").default(false).notNull(),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SocialIntegration = typeof socialIntegrations.$inferSelect;
-export type InsertSocialIntegration = typeof socialIntegrations.$inferInsert;
-
-/**
- * Content Queue
- */
-export const contentQueue = mysqlTable("content_queue", {
-  id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["clip", "post", "story", "short", "liveAnnouncement", "other"]).notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  targetPlatform: mysqlEnum("targetPlatform", ["instagram", "tiktok", "youtube", "whatsapp", "telegram", "multi"]).notNull(),
-  source: mysqlEnum("source", ["episode", "liveSession", "aiJob", "manual"]).notNull(),
-  sourceId: int("sourceId"), // FK to episode, liveSession, aiJob, etc.
-  status: mysqlEnum("status", ["draft", "ready", "scheduled", "posted", "failed"]).default("draft").notNull(),
-  scheduledAt: timestamp("scheduledAt"),
-  postedAt: timestamp("postedAt"),
-  externalUrl: varchar("externalUrl", { length: 512 }), // Link to final post
-  payload: text("payload"), // JSON: caption, hashtags, notes
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type ContentQueueItem = typeof contentQueue.$inferSelect;
-export type InsertContentQueueItem = typeof contentQueue.$inferInsert;
-
-/**
- * Webhooks
- */
-export const webhooks = mysqlTable("webhooks", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  url: varchar("url", { length: 512 }).notNull(),
-  secret: varchar("secret", { length: 255 }), // Optional webhook secret
-  eventType: mysqlEnum("eventType", ["newShout", "newEpisodePublished", "newRedemption", "newFollower", "other"]).notNull(),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type Webhook = typeof webhooks.$inferSelect;
-export type InsertWebhook = typeof webhooks.$inferInsert;
-
-/**
- * Marketing Leads/Venues table for tracking clubs, bars, and venues
- */
-export const marketingLeads = mysqlTable("marketing_leads", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  type: mysqlEnum("type", ["club", "bar", "venue", "festival", "event", "radio", "other"]).notNull(),
-  location: varchar("location", { length: 255 }).notNull(), // City, Country
-  address: text("address"),
-  email: varchar("email", { length: 320 }),
-  phone: varchar("phone", { length: 20 }),
-  website: varchar("website", { length: 512 }),
-  socialMedia: text("socialMedia"), // JSON: {instagram: "...", facebook: "...", etc}
-  capacity: int("capacity"), // Venue capacity
-  genre: varchar("genre", { length: 255 }), // Preferred music genre
-  notes: text("notes"),
-  status: mysqlEnum("status", ["new", "contacted", "interested", "quoted", "booked", "declined", "archived"]).default("new").notNull(),
-  source: varchar("source", { length: 255 }), // "scraper", "manual", "referral", etc
-  assignedTo: int("assignedTo"), // User ID of marketing team member
-  lastContacted: timestamp("lastContacted"),
-  nextFollowUp: timestamp("nextFollowUp"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type MarketingLead = typeof marketingLeads.$inferSelect;
-export type InsertMarketingLead = typeof marketingLeads.$inferInsert;
-
-/**
- * Marketing Campaigns table
- */
-export const marketingCampaigns = mysqlTable("marketing_campaigns", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  type: mysqlEnum("type", ["outreach", "social", "email", "advertising", "partnership", "other"]).notNull(),
-  targetAudience: text("targetAudience"), // JSON array
-  startDate: timestamp("startDate"),
-  endDate: timestamp("endDate"),
-  budget: decimal("budget", { precision: 10, scale: 2 }),
-  status: mysqlEnum("status", ["draft", "active", "paused", "completed", "cancelled"]).default("draft").notNull(),
-  metrics: text("metrics"), // JSON: {leads: 0, conversions: 0, etc}
-  createdBy: int("createdBy").notNull(), // User ID
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
-export type InsertMarketingCampaign = typeof marketingCampaigns.$inferInsert;
-
-/**
- * Outreach Activities table (tracks contact attempts and responses)
- */
-export const outreachActivities = mysqlTable("outreach_activities", {
-  id: int("id").autoincrement().primaryKey(),
-  leadId: int("leadId").notNull(), // FK to marketing_leads
-  campaignId: int("campaignId"), // FK to marketing_campaigns
-  type: mysqlEnum("type", ["email", "phone", "social", "in_person", "other"]).notNull(),
-  subject: varchar("subject", { length: 255 }),
-  message: text("message"),
-  response: text("response"),
-  status: mysqlEnum("status", ["sent", "delivered", "opened", "replied", "bounced", "failed"]).default("sent").notNull(),
-  performedBy: int("performedBy").notNull(), // User ID
-  performedAt: timestamp("performedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type OutreachActivity = typeof outreachActivities.$inferSelect;
-export type InsertOutreachActivity = typeof outreachActivities.$inferInsert;
-
-/**
- * Social Media Posts table (extends contentQueue with more marketing features)
- */
-export const socialMediaPosts = mysqlTable("social_media_posts", {
-  id: int("id").autoincrement().primaryKey(),
-  contentQueueId: int("contentQueueId"), // FK to content_queue (optional)
-  platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "twitter", "facebook", "linkedin", "threads", "other"]).notNull(),
-  type: mysqlEnum("type", ["post", "story", "reel", "video", "carousel", "live", "other"]).notNull(),
-  caption: text("caption"),
-  mediaUrls: text("mediaUrls"), // JSON array of media URLs
-  hashtags: text("hashtags"), // JSON array or comma-separated
-  mentions: text("mentions"), // JSON array of @mentions
-  location: varchar("location", { length: 255 }), // Location tag
-  status: mysqlEnum("status", ["draft", "scheduled", "posted", "failed", "archived"]).default("draft").notNull(),
-  scheduledAt: timestamp("scheduledAt"),
-  postedAt: timestamp("postedAt"),
-  externalPostId: varchar("externalPostId", { length: 255 }), // ID from platform
-  externalUrl: varchar("externalUrl", { length: 512 }), // URL to post on platform
-  metrics: text("metrics"), // JSON: {likes: 0, comments: 0, shares: 0, views: 0}
-  createdBy: int("createdBy").notNull(), // User ID
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SocialMediaPost = typeof socialMediaPosts.$inferSelect;
-export type InsertSocialMediaPost = typeof socialMediaPosts.$inferInsert;
-
-/**
- * Venue Scraper Results table (stores scraped venue data)
- */
-export const venueScraperResults = mysqlTable("venue_scraper_results", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  location: varchar("location", { length: 255 }).notNull(),
-  source: varchar("source", { length: 255 }).notNull(), // "google", "yelp", "facebook", etc
-  sourceUrl: varchar("sourceUrl", { length: 512 }),
-  rawData: text("rawData"), // JSON of scraped data
-  processed: boolean("processed").default(false).notNull(),
-  convertedToLead: boolean("convertedToLead").default(false).notNull(),
-  leadId: int("leadId"), // FK to marketing_leads if converted
-  scrapedAt: timestamp("scrapedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type VenueScraperResult = typeof venueScraperResults.$inferSelect;
-export type InsertVenueScraperResult = typeof venueScraperResults.$inferInsert;
-
-/**
- * User Favorites/Wishlist table
- */
-export const userFavorites = mysqlTable("user_favorites", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  entityType: mysqlEnum("entityType", ["mix", "track", "event", "podcast"]).notNull(),
-  entityId: int("entityId").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type UserFavorite = typeof userFavorites.$inferSelect;
-export type InsertUserFavorite = typeof userFavorites.$inferInsert;
-
-/**
- * User Playlists table
- */
-export const userPlaylists = mysqlTable("user_playlists", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  isPublic: boolean("isPublic").default(false).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type UserPlaylist = typeof userPlaylists.$inferSelect;
-export type InsertUserPlaylist = typeof userPlaylists.$inferInsert;
-
-/**
- * User Playlist Items table
- */
-export const userPlaylistItems = mysqlTable("user_playlist_items", {
-  id: int("id").autoincrement().primaryKey(),
-  playlistId: int("playlistId").notNull(),
-  entityType: mysqlEnum("entityType", ["mix", "track", "event", "podcast"]).notNull(),
-  entityId: int("entityId").notNull(),
-  orderIndex: int("orderIndex").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type UserPlaylistItem = typeof userPlaylistItems.$inferSelect;
-export type InsertUserPlaylistItem = typeof userPlaylistItems.$inferInsert;
-
-/**
- * Track ID Requests table
- */
-export const trackIdRequests = mysqlTable("track_id_requests", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
-  userName: varchar("userName", { length: 255 }),
-  email: varchar("email", { length: 255 }),
-  trackDescription: text("trackDescription").notNull(),
-  audioUrl: varchar("audioUrl", { length: 512 }),
-  timestamp: varchar("timestamp", { length: 100 }),
-  source: varchar("source", { length: 255 }), // mix, live, radio, etc
-  status: mysqlEnum("status", ["pending", "identified", "not_found", "archived"]).default("pending").notNull(),
-  identifiedTrack: text("identifiedTrack"), // JSON with track info if identified
-  adminNotes: text("adminNotes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type TrackIdRequest = typeof trackIdRequests.$inferSelect;
-export type InsertTrackIdRequest = typeof trackIdRequests.$inferInsert;
-
-/**
- * Social Sharing Analytics table
- */
-export const socialShares = mysqlTable("social_shares", {
-  id: int("id").autoincrement().primaryKey(),
-  entityType: mysqlEnum("entityType", ["mix", "track", "event", "podcast", "video", "blog"]).notNull(),
-  entityId: int("entityId").notNull(),
-  platform: mysqlEnum("platform", ["facebook", "twitter", "instagram", "tiktok", "youtube", "linkedin", "whatsapp", "other"]).notNull(),
-  userId: int("userId"),
-  shareUrl: varchar("shareUrl", { length: 512 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type SocialShare = typeof socialShares.$inferSelect;
-export type InsertSocialShare = typeof socialShares.$inferInsert;
-
-/**
- * Video Testimonials table
- */
-export const videoTestimonials = mysqlTable("video_testimonials", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  role: varchar("role", { length: 255 }),
-  event: varchar("event", { length: 255 }),
-  videoUrl: varchar("videoUrl", { length: 512 }).notNull(),
-  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
-  transcript: text("transcript"),
-  rating: int("rating"), // 1-5
-  isFeatured: boolean("isFeatured").default(false).notNull(),
-  isApproved: boolean("isApproved").default(false).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type VideoTestimonial = typeof videoTestimonials.$inferSelect;
-export type InsertVideoTestimonial = typeof videoTestimonials.$inferInsert;
-
-/**
- * Social Proof Notifications table
- */
-export const socialProofNotifications = mysqlTable("social_proof_notifications", {
-  id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["booking", "purchase", "favorite", "share", "comment", "view"]).notNull(),
-  entityType: mysqlEnum("entityType", ["mix", "track", "event", "podcast", "product", "booking"]).notNull(),
-  entityId: int("entityId").notNull(),
-  message: varchar("message", { length: 255 }),
-  userId: int("userId"),
-  userName: varchar("userName", { length: 255 }),
-  isActive: boolean("isActive").default(true).notNull(),
-  expiresAt: timestamp("expiresAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type SocialProofNotification = typeof socialProofNotifications.$inferSelect;
-export type InsertSocialProofNotification = typeof socialProofNotifications.$inferInsert;
-
-/**
- * Social Media Feed Posts table (for Instagram/TikTok integration)
- */
-export const socialMediaFeedPosts = mysqlTable("social_media_feed_posts", {
-  id: int("id").autoincrement().primaryKey(),
-  platform: mysqlEnum("platform", ["instagram", "tiktok", "youtube", "twitter", "facebook"]).notNull(),
-  postId: varchar("postId", { length: 255 }).notNull(), // External platform post ID
-  url: varchar("url", { length: 512 }).notNull(),
-  mediaUrl: varchar("mediaUrl", { length: 512 }),
-  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
-  caption: text("caption"),
-  author: varchar("author", { length: 255 }),
-  authorAvatar: varchar("authorAvatar", { length: 512 }),
-  likes: int("likes").default(0),
-  comments: int("comments").default(0),
-  shares: int("shares").default(0),
-  postedAt: timestamp("postedAt").notNull(),
-  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
-  isActive: boolean("isActive").default(true).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SocialMediaFeedPost = typeof socialMediaFeedPosts.$inferSelect;
-export type InsertSocialMediaFeedPost = typeof socialMediaFeedPosts.$inferInsert;
-
-/**
- * Music Recommendations table (AI-powered)
- */
-export const musicRecommendations = mysqlTable("music_recommendations", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
-  entityType: mysqlEnum("entityType", ["mix", "track", "event", "podcast"]).notNull(),
-  entityId: int("entityId").notNull(),
-  score: decimal("score", { precision: 5, scale: 2 }), // 0-1 recommendation score
-  reason: text("reason"), // Why this was recommended
-  algorithm: varchar("algorithm", { length: 100 }), // "collaborative", "content-based", "hybrid"
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type MusicRecommendation = typeof musicRecommendations.$inferSelect;
-export type InsertMusicRecommendation = typeof musicRecommendations.$inferInsert;
-
-/**
- * ============================================
- * PHASE B: IDENTITY GRAVITY & SIGNAL OWNERSHIP
- * ============================================
- */
-
-/**
- * Saved Signals (Bookmarks)
- * Allows users to save specific entities for retention
- */
-export const savedSignals = mysqlTable("saved_signals", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  entityType: mysqlEnum("entityType", ["intel", "mix", "clip", "event", "track", "podcast"]).notNull(),
-  entityId: varchar("entityId", { length: 255 }).notNull(), // UUID or string IDs supported
-  metadata: text("metadata"), // JSON: platform info, category snapshots
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type SavedSignal = typeof savedSignals.$inferSelect;
-export type InsertSavedSignal = typeof savedSignals.$inferInsert;
-
-/**
- * User Signal Metrics (Implicit Interest Tracking)
- * Tracks user interaction with specific categories/cities/genres
- */
-export const userSignalMetrics = mysqlTable("user_signal_metrics", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  category: varchar("category", { length: 100 }).notNull(), // e.g. "UKG", "London", "Ticket Alert"
-  city: varchar("city", { length: 100 }), // Scoped tracking for heatmaps
-  metricType: mysqlEnum("metricType", ["view", "save", "follow", "share"]).notNull(),
-  score: int("score").default(1).notNull(), // Weighted significance
-  lastInteractionAt: timestamp("lastInteractionAt").defaultNow().onUpdateNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type UserSignalMetric = typeof userSignalMetrics.$inferSelect;
-export type InsertUserSignalMetric = typeof userSignalMetrics.$inferInsert;
-
-/**
- * City Lanes (Regional Context Factory)
- */
-export const cityLanes = mysqlTable("city_lanes", {
-  id: int("id").autoincrement().primaryKey(),
-  city: varchar("city", { length: 100 }).notNull().unique(),
-  slug: varchar("slug", { length: 100 }).notNull().unique(), // e.g. "london", "manchester"
-  genres: text("genres").notNull(), // JSON array of supported genres
-  isActive: boolean("isActive").default(true).notNull(),
-  config: text("config"), // Weights and thresholds
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type CityLane = typeof cityLanes.$inferSelect;
-export type InsertCityLane = typeof cityLanes.$inferInsert;
-
-/**
- * Intel Items (Persistent Intelligence)
- * Now with full provenance and enrichment tracking
- */
-export const intelItems = mysqlTable("intel_items", {
-  id: int("id").autoincrement().primaryKey(),
-  laneId: int("laneId"), // FK to city_lanes (optional, can be global)
-  category: mysqlEnum("category", ["ticket-alert", "event-intel", "set-release", "underground-news"]).notNull(),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  city: varchar("city", { length: 100 }).notNull(),
-  genre: varchar("genre", { length: 100 }).notNull(),
-  secondaryGenre: varchar("secondaryGenre", { length: 100 }),
-  tags: text("tags"), // JSON array
-
-  // Provenance (The "No Fake Shit" Layer)
-  sourceType: mysqlEnum("sourceType", ["ticketing_api", "rss", "venue_feed", "promoter_feed", "operator", "ai_synthesis"]).notNull(),
-  sourceName: varchar("sourceName", { length: 100 }).notNull(), // e.g. "Skiddle", "Ticketmaster"
-  sourceUrl: varchar("sourceUrl", { length: 512 }).notNull(),
-  sourceId: varchar("sourceId", { length: 255 }), // ID from the original provider
-  confidence: decimal("confidence", { precision: 3, scale: 2 }).default("1.00"), // 0.00 to 1.00
-  metadata: text("metadata"), // JSON blob for provider-specific data
-
-  publishedAt: timestamp("publishedAt").notNull(),
-  fetchedAt: timestamp("fetchedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type IntelItem = typeof intelItems.$inferSelect;
-export type InsertIntelItem = typeof intelItems.$inferInsert;
-
-/**
- * Data Connectors (Ingestion Registry)
- */
-export const connectors = mysqlTable("connectors", {
-  id: int("id").autoincrement().primaryKey(),
-  type: varchar("type", { length: 50 }).notNull(), // e.g. "ticketmaster", "skiddle", "rss"
-  name: varchar("name", { length: 100 }).notNull(),
-  config: text("config").notNull(), // Encrypted or sensitive JSON
-  isEnabled: boolean("isEnabled").default(false).notNull(),
-  lastSyncAt: timestamp("lastSyncAt"),
-  syncIntervalMs: int("syncIntervalMs").default(3600000).notNull(), // default 1h
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type Connector = typeof connectors.$inferSelect;
-export type InsertConnector = typeof connectors.$inferInsert;
-
-/**
- * Connector Sync Logs (Provenance Telemetry)
- */
-export const connectorSyncLogs = mysqlTable("connector_sync_logs", {
-  id: int("id").autoincrement().primaryKey(),
-  connectorId: int("connectorId").notNull(),
-  status: mysqlEnum("status", ["success", "error", "partial"]).notNull(),
-  itemsIngested: int("itemsIngested").default(0).notNull(),
-  errorMessage: text("errorMessage"),
-  durationMs: int("durationMs"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type ConnectorSyncLog = typeof connectorSyncLogs.$inferSelect;
-export type InsertConnectorSyncLog = typeof connectorSyncLogs.$inferInsert;
-
-/**
- * Invites (Growth Flywheel)
- * Non-MLM referral system for community expansion
- */
-export const invites = mysqlTable("invites", {
-  id: int("id").autoincrement().primaryKey(),
-  inviterId: int("inviterId").notNull(),
-  code: varchar("code", { length: 20 }).notNull().unique(),
-  targetCity: varchar("targetCity", { length: 100 }), // Defaults to London for DnB lane
-  redeemedBy: int("redeemedBy"), // User ID of redeemer
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type Invite = typeof invites.$inferSelect;
-export type InsertInvite = typeof invites.$inferInsert;
-
-/**
- * Lane Daily Rollups (Analytics Optimization)
- */
-export const laneDailyRollups = mysqlTable("lane_daily_rollups", {
-  laneId: varchar("laneId", { length: 100 }).notNull(), // slug
-  day: timestamp("day").notNull(),
-  views: int("views").default(0).notNull(),
-  saves: int("saves").default(0).notNull(),
-  alertEnables: int("alertEnables").default(0).notNull(),
-  signups: int("signups").default(0).notNull(),
-  inviteRedemptions: int("inviteRedemptions").default(0).notNull(),
-  avgConfidence: decimal("avgConfidence", { precision: 3, scale: 2 }).default("1.00"),
-}, (table) => {
-  return {
-    pk: { columns: [table.laneId, table.day] },
-  };
-});
-
-/**
- * Source Daily Rollups (Provenance Auditing)
- */
-export const sourceDailyRollups = mysqlTable("source_daily_rollups", {
-  sourceType: varchar("sourceType", { length: 50 }).notNull(),
-  day: timestamp("day").notNull(),
-  ingested: int("ingested").default(0).notNull(),
-  served: int("served").default(0).notNull(),
-  saved: int("saved").default(0).notNull(),
-  avgConfidence: decimal("avgConfidence", { precision: 3, scale: 2 }).default("1.00"),
-  failCount: int("failCount").default(0).notNull(),
-}, (table) => {
-  return {
-    pk: { columns: [table.sourceType, table.day] },
-  };
-});
-
-/**
- * Supporter Scores (History of Growth Contributions)
- */
-export const supporterScores = mysqlTable("supporter_scores", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  weekStart: timestamp("weekStart").notNull(),
-  score: int("score").notNull(),
-  breakdown: text("breakdown"), // JSON
-  computedAt: timestamp("computedAt").defaultNow().notNull(),
-});
-
-/**
- * ============================================
- * UK EVENTS DISCOVERY SYSTEM
- * ============================================
- */
-
-/**
- * UK Events - Aggregated events from Ticketmaster, StubHub, etc.
- */
-export const ukEvents = mysqlTable("uk_events", {
-  id: int("id").autoincrement().primaryKey(),
-  externalId: varchar("external_id", { length: 255 }).notNull(), // ID from source API
-  source: mysqlEnum("source", ["ticketmaster", "stubhub", "eventbrite", "skiddle", "dice", "user_submission"]).notNull(),
-
-  // Event Details
-  title: varchar("title", { length: 500 }).notNull(),
-  description: text("description"),
-  category: mysqlEnum("category", ["music", "festival", "boxing", "sports", "comedy", "theatre", "clubbing", "other"]).notNull(),
-  subcategory: varchar("subcategory", { length: 100 }), // e.g., "UK Garage", "House", "Boxing", etc.
-  genre: varchar("genre", { length: 100 }), // For music events
-
-  // Location
-  venueName: varchar("venue_name", { length: 255 }),
-  venueAddress: varchar("venue_address", { length: 500 }),
-  city: varchar("city", { length: 100 }).notNull(),
-  postcode: varchar("postcode", { length: 20 }),
-  latitude: varchar("latitude", { length: 20 }),
-  longitude: varchar("longitude", { length: 20 }),
-
-  // Timing
-  eventDate: timestamp("event_date").notNull(),
-  eventEndDate: timestamp("event_end_date"),
-  doorsTime: varchar("doors_time", { length: 10 }),
-
-  // Media
-  imageUrl: varchar("image_url", { length: 512 }),
-  thumbnailUrl: varchar("thumbnail_url", { length: 512 }),
-
-  // Tickets
-  ticketUrl: varchar("ticket_url", { length: 512 }),
-  priceMin: varchar("price_min", { length: 50 }), // SQL used VARCHAR(50)
-  priceMax: varchar("price_max", { length: 50 }), // SQL used VARCHAR(50)
-  currency: varchar("currency", { length: 10 }).default("GBP"),
-  ticketStatus: mysqlEnum("ticket_status", ["available", "limited", "sold_out", "cancelled", "postponed"]).default("available"),
-
-  // Metadata
-  artists: json("artists"), // SQL used JSON
-  ageRestriction: varchar("age_restriction", { length: 50 }),
-  isFeatured: boolean("is_featured").default(false).notNull(),
-  isVerified: boolean("is_verified").default(true).notNull(), // API events are auto-verified
-  viewCount: int("view_count").default(0).notNull(),
-
-  // Sync tracking
-  lastSyncedAt: timestamp("last_synced_at").defaultNow().notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-});
-
-export type UKEvent = typeof ukEvents.$inferSelect;
-export type InsertUKEvent = typeof ukEvents.$inferInsert;
-
-/**
- * User Event Submissions - Events submitted by users/promoters awaiting approval
- */
-export const userEventSubmissions = mysqlTable("user_event_submissions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Optional: linked user if logged in
-
-  // Submitter Info
-  submitterName: varchar("submitterName", { length: 255 }).notNull(),
-  submitterEmail: varchar("submitterEmail", { length: 255 }).notNull(),
-  submitterPhone: varchar("submitterPhone", { length: 20 }),
-  isPromoter: boolean("isPromoter").default(false).notNull(),
-  promoterId: int("promoterId"), // Link to promoter profile if exists
-
-  // Event Details
-  title: varchar("title", { length: 500 }).notNull(),
-  description: text("description").notNull(),
-  category: mysqlEnum("category", ["music", "festival", "boxing", "sports", "comedy", "theatre", "clubbing", "other"]).notNull(),
-  subcategory: varchar("subcategory", { length: 100 }),
-  genre: varchar("genre", { length: 100 }),
-
-  // Location
-  venueName: varchar("venueName", { length: 255 }).notNull(),
-  venueAddress: varchar("venueAddress", { length: 500 }),
-  city: varchar("city", { length: 100 }).notNull(),
-  postcode: varchar("postcode", { length: 20 }),
-
-  // Timing
-  eventDate: timestamp("eventDate").notNull(),
-  eventEndDate: timestamp("eventEndDate"),
-  doorsTime: varchar("doorsTime", { length: 10 }),
-
-  // Media & Tickets
-  imageUrl: varchar("imageUrl", { length: 512 }),
-  ticketUrl: varchar("ticketUrl", { length: 512 }),
-  priceMin: varchar("priceMin", { length: 50 }),
-  priceMax: varchar("priceMax", { length: 50 }),
-
-  // Additional Info
-  artists: text("artists"), // Comma-separated or JSON
-  ageRestriction: varchar("ageRestriction", { length: 50 }),
-  additionalNotes: text("additionalNotes"),
-
-  // Approval Status
-  status: mysqlEnum("status", ["pending", "approved", "rejected", "needs_info"]).default("pending").notNull(),
-  reviewedBy: int("reviewedBy"),
-  reviewedAt: timestamp("reviewedAt"),
-  rejectionReason: text("rejectionReason"),
-
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type UserEventSubmission = typeof userEventSubmissions.$inferSelect;
-export type InsertUserEventSubmission = typeof userEventSubmissions.$inferInsert;
-
-/**
- * Promoter Profiles - Verified promoters who can submit events
- */
-export const promoterProfiles = mysqlTable("promoter_profiles", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Link to user account if registered
-
-  // Profile Info
-  name: varchar("name", { length: 255 }).notNull(),
-  companyName: varchar("companyName", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 20 }),
-  website: varchar("website", { length: 512 }),
-
-  // Social Links
-  instagramHandle: varchar("instagramHandle", { length: 100 }),
-  twitterHandle: varchar("twitterHandle", { length: 100 }),
-  facebookUrl: varchar("facebookUrl", { length: 512 }),
-
-  // Verification
-  isVerified: boolean("isVerified").default(false).notNull(),
-  verifiedAt: timestamp("verifiedAt"),
-  verificationNotes: text("verificationNotes"),
-
-  // Stats
-  totalEventsSubmitted: int("totalEventsSubmitted").default(0).notNull(),
-  approvedEventsCount: int("approvedEventsCount").default(0).notNull(),
-
-  // Bio
-  bio: text("bio"),
-  logoUrl: varchar("logoUrl", { length: 512 }),
-
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type PromoterProfile = typeof promoterProfiles.$inferSelect;
-export type InsertPromoterProfile = typeof promoterProfiles.$inferInsert;
-
-/**
- * Event Recommendations - User recommendations for events
- */
-export const eventRecommendations = mysqlTable("event_recommendations", {
-  id: int("id").autoincrement().primaryKey(),
-  eventId: int("eventId").notNull(),
-  userId: int("userId"), // Optional
-  recommenderName: varchar("recommenderName", { length: 255 }),
-  recommenderEmail: varchar("recommenderEmail", { length: 255 }),
-  reason: text("reason").notNull(),
-  upvotes: int("upvotes").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type EventRecommendation = typeof eventRecommendations.$inferSelect;
-export type InsertEventRecommendation = typeof eventRecommendations.$inferInsert;
-
-/**
- * Event Sync Status - Track API sync runs
- */
-export const eventSyncStatus = mysqlTable("event_sync_status", {
-  id: int("id").autoincrement().primaryKey(),
-  source: varchar("source", { length: 50 }).notNull(), // Changed from enum to match DB varchar
-  lastSyncedAt: timestamp("last_synced_at").notNull(),
-  eventsFound: int("events_found").default(0),
-  eventsAdded: int("events_added").default(0),
-  eventsUpdated: int("events_updated").default(0),
-  status: mysqlEnum("status", ["success", "partial", "failed"]).default('success'),
-  errorMessage: text("error_message"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export type EventSyncStatus = typeof eventSyncStatus.$inferSelect;
-export type InsertEventSyncStatus = typeof eventSyncStatus.$inferInsert;
-
-/**
- * Feature Flags (Kill Switches)
- */
-export const featureFlags = mysqlTable("feature_flags", {
-  key: varchar("key", { length: 64 }).primaryKey(),
-  isEnabled: boolean("isEnabled").default(true).notNull(),
-  description: text("description"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});

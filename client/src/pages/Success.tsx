@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ArrowRight, Instagram, Music2, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { VideoTestimonialsSection } from "@/components/VideoTestimonialsSection";
+// DELETED: import { VideoTestimonialsSection } from "@/components/VideoTestimonialsSection"; // Deleted router: videoTestimonials
 
 export default function Success() {
     const [location] = useLocation();
@@ -73,12 +73,13 @@ export default function Success() {
                     </div>
                 </motion.div>
 
-                <div className="mt-24">
+                {/* DELETED COMPONENT: VideoTestimonialsSection - deleted router: videoTestimonials */}
+                {/* <div className="mt-24">
                     <div className="text-center mb-12">
                         <h2 className="text-2xl font-bold uppercase tracking-widest text-muted-foreground">While You Wait...</h2>
                     </div>
                     <VideoTestimonialsSection limit={3} isFeatured />
-                </div>
+                </div> */}
             </div>
         </div>
     );

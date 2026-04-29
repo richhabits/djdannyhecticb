@@ -23,8 +23,9 @@ export class GovernanceService {
         await db.setEmpireSetting("revenue_kill_switch", active ? "true" : "false", `Revenue Kill-Switch: ${reason}`, actorId);
 
         await db.createGovernanceLog({
-            action: active ? "REV_KILL_SWITCH_ACTIVATE" : "REV_KILL_SWITCH_DEACTIVATE",
+            actorType: "admin",
             actorId,
+            action: active ? "REV_KILL_SWITCH_ACTIVATE" : "REV_KILL_SWITCH_DEACTIVATE",
             reason,
             snapshot: JSON.stringify({ timestamp: new Date().toISOString(), systemStatus: active ? "Locked" : "Operational" })
         });
@@ -54,16 +55,18 @@ export class GovernanceService {
             logger.warn(`[Governance] Hygiene scan completed. Released ${expiredCount} expired booking dates.`);
 
             await db.createGovernanceLog({
+                actorType: "system",
                 action: "DEPOSIT_HYGIENE_CLEANUP",
                 reason: "System Scheduled TTL Enforcement",
                 snapshot: JSON.stringify({ releasedInventoryCount: expiredCount })
             });
 
-            // Emit event for real-time admin notification
-            appEvents.emit(EVENTS.NOTIFICATION_CREATED, {
-                type: "governance_cleanup",
-                message: `Released ${expiredCount} expired booking dates to public inventory.`
-            });
+            // TODO: NOTIFICATION_CREATED event not yet defined in events.ts
+            // Stub: Real-time notification would be emitted here when event is added
+            // appEvents.emit(EVENTS.NOTIFICATION_CREATED, {
+            //     type: "governance_cleanup",
+            //     message: `Released ${expiredCount} expired booking dates to public inventory.`
+            // });
         } else {
             logger.info("[Governance] Hygiene scan: No expired deposits found.");
         }

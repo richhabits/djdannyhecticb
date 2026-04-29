@@ -5,7 +5,7 @@
  */
 
 import { getDb } from '../db';
-import { ukEvents, eventSyncStatus, InsertUKEvent, InsertEventSyncStatus } from '../../drizzle/schema';
+// Removed: ukEvents, eventSyncStatus, InsertUKEvent, InsertEventSyncStatus (types don't exist in schema)
 import { eq, and, gt, desc, sql } from 'drizzle-orm';
 
 // Ticketmaster API Configuration
@@ -93,8 +93,9 @@ interface TicketmasterResponse {
 
 /**
  * Map Ticketmaster event to our schema
+ * NOTE: Disabled - InsertUKEvent type doesn't exist in schema
  */
-function mapTicketmasterEvent(event: TicketmasterEvent): InsertUKEvent | null {
+function mapTicketmasterEvent(event: TicketmasterEvent): any | null {
     try {
         const venue = event._embedded?.venues?.[0];
         const classification = event.classifications?.[0];
@@ -255,6 +256,7 @@ async function fetchTicketmasterEvents(options: {
 
 /**
  * Sync UK events from Ticketmaster
+ * NOTE: Disabled - ukEvents and eventSyncStatus tables don't exist in schema
  */
 export async function syncTicketmasterEvents(): Promise<{
     success: boolean;
@@ -263,6 +265,16 @@ export async function syncTicketmasterEvents(): Promise<{
     eventsUpdated: number;
     error?: string;
 }> {
+    // Disabled: Tables ukEvents and eventSyncStatus don't exist in schema
+    return {
+        success: false,
+        eventsFound: 0,
+        eventsAdded: 0,
+        eventsUpdated: 0,
+        error: 'ukEvents and eventSyncStatus tables not found in schema'
+    };
+
+    /* Original implementation (disabled due to missing schema tables):
     const db = await getDb();
     if (!db) {
         return { success: false, eventsFound: 0, eventsAdded: 0, eventsUpdated: 0, error: 'Database not available' };
@@ -363,10 +375,12 @@ export async function syncTicketmasterEvents(): Promise<{
 
         return { success: false, eventsFound, eventsAdded, eventsUpdated, error: errorMessage };
     }
+    */
 }
 
 /**
  * Get upcoming UK events with filters
+ * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getUKEvents(options: {
     category?: string;
@@ -376,188 +390,55 @@ export async function getUKEvents(options: {
     offset?: number;
     featured?: boolean;
 }): Promise<any[]> {
-    const db = await getDb();
-    if (!db) return [];
-
-    try {
-        let query = db.select().from(ukEvents);
-        const conditions = [];
-
-        // Only future events
-        conditions.push(gt(ukEvents.eventDate, new Date()));
-
-        if (options.category) {
-            conditions.push(eq(ukEvents.category, options.category as any));
-        }
-
-        if (options.city) {
-            conditions.push(eq(ukEvents.city, options.city));
-        }
-
-        if (options.genre) {
-            conditions.push(eq(ukEvents.genre, options.genre));
-        }
-
-        if (options.featured) {
-            conditions.push(eq(ukEvents.isFeatured, true));
-        }
-
-        if (conditions.length > 0) {
-            query = query.where(and(...conditions)) as any;
-        }
-
-        return await query
-            .orderBy(ukEvents.eventDate)
-            .limit(options.limit || 50)
-            .offset(options.offset || 0);
-    } catch (error) {
-        console.error('[UKEvents] Failed to get events:', error);
-        return [];
-    }
+    console.warn('[UKEvents] getUKEvents disabled - table not found in schema');
+    return [];
 }
 
 /**
  * Get event by ID
+ * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getUKEventById(id: number): Promise<any | null> {
-    const db = await getDb();
-    if (!db) return null;
-
-    try {
-        const result = await db.select()
-            .from(ukEvents)
-            .where(eq(ukEvents.id, id))
-            .limit(1);
-
-        if (result.length > 0) {
-            // Increment view count
-            await db.update(ukEvents)
-                .set({ viewCount: sql`${ukEvents.viewCount} + 1` })
-                .where(eq(ukEvents.id, id));
-        }
-
-        return result[0] || null;
-    } catch (error) {
-        console.error('[UKEvents] Failed to get event:', error);
-        return null;
-    }
+    console.warn('[UKEvents] getUKEventById disabled - table not found in schema');
+    return null;
 }
 
 /**
  * Get featured events
+ * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getFeaturedUKEvents(limit: number = 6): Promise<any[]> {
-    const db = await getDb();
-    if (!db) return [];
-
-    try {
-        // First try featured events
-        let events = await db.select()
-            .from(ukEvents)
-            .where(and(
-                gt(ukEvents.eventDate, new Date()),
-                eq(ukEvents.isFeatured, true)
-            ))
-            .orderBy(ukEvents.eventDate)
-            .limit(limit);
-
-        // If not enough featured, add popular events
-        if (events.length < limit) {
-            const remaining = limit - events.length;
-            const popularEvents = await db.select()
-                .from(ukEvents)
-                .where(and(
-                    gt(ukEvents.eventDate, new Date()),
-                    eq(ukEvents.isFeatured, false)
-                ))
-                .orderBy(desc(ukEvents.viewCount))
-                .limit(remaining);
-
-            events = [...events, ...popularEvents];
-        }
-
-        return events;
-    } catch (error) {
-        console.error('[UKEvents] Failed to get featured events:', error);
-        return [];
-    }
+    console.warn('[UKEvents] getFeaturedUKEvents disabled - table not found in schema');
+    return [];
 }
 
 /**
  * Search UK events
+ * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function searchUKEvents(query: string, options: {
     category?: string;
     city?: string;
     limit?: number;
 }): Promise<any[]> {
-    const db = await getDb();
-    if (!db) return [];
-
-    try {
-        const searchPattern = `%${query}%`;
-        const conditions = [
-            gt(ukEvents.eventDate, new Date()),
-            sql`(${ukEvents.title} LIKE ${searchPattern} OR ${ukEvents.venueName} LIKE ${searchPattern} OR ${ukEvents.artists} LIKE ${searchPattern})`
-        ];
-
-        if (options.category) {
-            conditions.push(eq(ukEvents.category, options.category as any));
-        }
-
-        if (options.city) {
-            conditions.push(eq(ukEvents.city, options.city));
-        }
-
-        return await db.select()
-            .from(ukEvents)
-            .where(and(...conditions))
-            .orderBy(ukEvents.eventDate)
-            .limit(options.limit || 20);
-    } catch (error) {
-        console.error('[UKEvents] Failed to search events:', error);
-        return [];
-    }
+    console.warn('[UKEvents] searchUKEvents disabled - table not found in schema');
+    return [];
 }
 
 /**
  * Get unique cities with events
+ * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getEventCities(): Promise<string[]> {
-    const db = await getDb();
-    if (!db) return [];
-
-    try {
-        const result = await db.selectDistinct({ city: ukEvents.city })
-            .from(ukEvents)
-            .where(gt(ukEvents.eventDate, new Date()));
-
-        return result.map(r => r.city).filter(Boolean).sort();
-    } catch (error) {
-        console.error('[UKEvents] Failed to get cities:', error);
-        return [];
-    }
+    console.warn('[UKEvents] getEventCities disabled - table not found in schema');
+    return [];
 }
 
 /**
  * Get event categories with counts
+ * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getEventCategories(): Promise<Array<{ category: string; count: number }>> {
-    const db = await getDb();
-    if (!db) return [];
-
-    try {
-        const result = await db.select({
-            category: ukEvents.category,
-            count: sql<number>`count(*)`,
-        })
-            .from(ukEvents)
-            .where(gt(ukEvents.eventDate, new Date()))
-            .groupBy(ukEvents.category);
-
-        return result;
-    } catch (error) {
-        console.error('[UKEvents] Failed to get categories:', error);
-        return [];
-    }
+    console.warn('[UKEvents] getEventCategories disabled - table not found in schema');
+    return [];
 }

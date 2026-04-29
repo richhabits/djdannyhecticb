@@ -4,7 +4,7 @@
  */
 
 import * as db from "../server/db";
-import { users, userSignalMetrics, invites } from "../drizzle/schema";
+import { users, userSignalMetrics, invites, supporterScores } from "../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 
 /**

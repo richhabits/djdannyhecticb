@@ -15,8 +15,8 @@
  */
 
 import { asc, desc, eq, gt, lt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, mixes, InsertMix, bookings, events, InsertEvent, podcasts, InsertPodcast, streamingLinks, InsertStreamingLink, shouts, InsertShout, streams, InsertStream, tracks, InsertTrack, shows, InsertShow, eventBookings, InsertEventBooking, pricingRules, InsertPricingRule, outboundLeads, InsertOutboundLead, outboundInteractions, InsertOutboundInteraction, pricingAuditLogs, InsertPricingAuditLog, revenueIncidents, InsertRevenueIncident, governanceLogs, InsertGovernanceLog, bookingBlockers, InsertBookingBlocker, dannyStatus, InsertDannyStatus, feedPosts, InsertFeedPost, userProfiles, InsertUserProfile, fanBadges, InsertFanBadge, aiMixes, InsertAIMix, dannyReacts, InsertDannyReact, personalizedShoutouts, InsertPersonalizedShoutout, djBattles, InsertDJBattle, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supportEvents, InsertSupportEvent, products, InsertProduct, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, auditLogs, InsertAuditLog, empireSettings, InsertEmpireSetting, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, notifications, InsertNotification, apiKeys, InsertApiKey, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, achievements, InsertAchievement, userAchievements, InsertUserAchievement, aiDannyChats, InsertAIDannyChat, worldAvatars, InsertWorldAvatar, bookingsPhase7, InsertBookingPhase7, eventsPhase7, InsertEventPhase7, partnerRequests, InsertPartnerRequest, partners, InsertPartner, socialProfiles, InsertSocialProfile, postTemplates, InsertPostTemplate, promotions, InsertPromotion, trafficEvents, InsertTrafficEvent, innerCircle, InsertInnerCircle, aiScriptJobs, InsertAIScriptJob, aiVoiceJobs, InsertAIVoiceJob, aiVideoJobs, InsertAIVideoJob, userConsents, InsertUserConsent, wallets, InsertWallet, coinTransactions, InsertCoinTransaction, rewards, InsertReward, redemptions, InsertRedemption, referralCodes, InsertReferralCode, referralUses, InsertReferralUse, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, showSegments, InsertShowSegment, showLiveSessions, InsertShowLiveSession, showCues, InsertShowCue, showAssets, InsertShowAsset, socialIntegrations, InsertSocialIntegration, contentQueue, InsertContentQueueItem, webhooks, InsertWebhook, adminCredentials, InsertAdminCredential, marketingLeads, InsertMarketingLead, marketingCampaigns, InsertMarketingCampaign, outreachActivities, InsertOutreachActivity, socialMediaPosts, InsertSocialMediaPost, venueScraperResults, InsertVenueScraperResult, userFavorites, InsertUserFavorite, userPlaylists, InsertUserPlaylist, userPlaylistItems, InsertUserPlaylistItem, trackIdRequests, InsertTrackIdRequest, socialShares, InsertSocialShare, videoTestimonials, InsertVideoTestimonial, socialProofNotifications, InsertSocialProofNotification, socialMediaFeedPosts, InsertSocialMediaFeedPost, musicRecommendations, InsertMusicRecommendation, videos, InsertVideo, articles, InsertArticle, mediaLibrary, InsertMediaItem, savedSignals, userSignalMetrics, invites, cityLanes, intelItems, connectors, connectorSyncLogs, laneDailyRollups, sourceDailyRollups, supporterScores, featureFlags } from "../drizzle/schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo } from "../drizzle/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ENV } from './_core/env';
@@ -113,237 +113,32 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 }
 
-export async function getUserByOpenId(openId: string) {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
-}
 
 // Mixes queries
-export async function getAllMixes() {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  return await db.select().from(mixes).orderBy(desc(mixes.createdAt));
-}
 
-export async function getFreeMixes() {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  return await db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(desc(mixes.createdAt));
-}
 
 // Bookings queries
-export async function getUserBookings(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(bookings).where(eq(bookings.userId, userId)).orderBy(desc(bookings.createdAt));
-}
 
 // User Identity & Signal Ownership
-export async function getUserByEmail(email: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  return result[0];
-}
 
-export async function createUserWithPassword(input: { email: string; password: string; name?: string }) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const passwordHash = await bcrypt.hash(input.password, 12);
-  const openId = `email-${input.email}-${Date.now()}`;
 
-  await db.insert(users).values({
-    openId,
-    email: input.email,
-    name: input.name || input.email.split("@")[0],
-    passwordHash,
-    role: "user",
-    loginMethod: "password",
-  });
 
-  const user = await getUserByEmail(input.email);
-  if (!user) throw new Error("Failed to create user");
-  return user;
-}
 
-export async function saveSignal(userId: number, entityType: any, entityId: string, metadata?: any) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  return await db.insert(savedSignals).values({
-    userId,
-    entityType,
-    entityId,
-    metadata: metadata ? JSON.stringify(metadata) : null,
-  });
-}
-
-export async function getSavedSignals(userId: number, entityType?: any) {
-  const db = await getDb();
-  if (!db) return [];
-
-  const query = db.select().from(savedSignals).where(eq(savedSignals.userId, userId));
-  if (entityType) {
-    return await db.select().from(savedSignals).where(and(eq(savedSignals.userId, userId), eq(savedSignals.entityType, entityType))).orderBy(desc(savedSignals.createdAt));
-  }
-  return await query.orderBy(desc(savedSignals.createdAt));
-}
-
-export async function recordSignalMetric(userId: number, category: string, metricType: any, score: number = 1, city?: string) {
-  const db = await getDb();
-  if (!db) return;
-
-  await db.insert(userSignalMetrics).values({
-    userId,
-    category,
-    city,
-    metricType,
-    score
-  }).onDuplicateKeyUpdate({
-    set: {
-      score: sql`${userSignalMetrics.score} + ${score}`,
-      city: city || userSignalMetrics.city,
-      lastInteractionAt: new Date()
-    }
-  });
-}
-
-export async function getUserSignalMetrics(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(userSignalMetrics).where(eq(userSignalMetrics.userId, userId)).orderBy(desc(userSignalMetrics.score));
-}
 
 // Invite Mechanics
-export async function createInvite(userId: number, city?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const code = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars code
 
-  await db.insert(invites).values({
-    inviterId: userId,
-    code,
-    targetCity: city || "London"
-  });
-
-  return code;
-}
-
-export async function getInvitesByUser(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(invites).where(eq(invites.inviterId, userId)).orderBy(desc(invites.createdAt));
-}
-
-export async function redeemInvite(code: string, userId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const [invite] = await db.select().from(invites).where(eq(invites.code, code)).limit(1);
-  if (!invite) throw new Error("Invalid invite code");
-  if (invite.redeemedBy) throw new Error("Invite already redeemed");
-
-  await db.update(invites).set({ redeemedBy: userId }).where(eq(invites.id, invite.id));
-
-  // Auto-follow logic could be added here if needed
-  return invite;
-}
 
 // --- Lane Factory & Ingestion Logic ---
 
-export async function getCityLanes() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(cityLanes).where(eq(cityLanes.isActive, true));
-}
 
-export async function createCityLane(input: any) {
-  const db = await getDb();
-  if (!db) return;
-  return await db.insert(cityLanes).values(input);
-}
 
-export async function getIntelItems(options: {
-  laneId?: number,
-  city?: string,
-  genre?: string,
-  limit?: number
-}) {
-  const db = await getDb();
-  if (!db) return [];
 
-  let query = db.select().from(intelItems);
-  const conditions = [];
 
-  if (options.laneId) conditions.push(eq(intelItems.laneId, options.laneId));
-  if (options.city) conditions.push(eq(intelItems.city, options.city));
-  if (options.genre) conditions.push(eq(intelItems.genre, options.genre));
 
-  if (conditions.length > 0) {
-    // @ts-ignore
-    query = query.where(and(...conditions));
-  }
 
-  return await query.orderBy(desc(intelItems.publishedAt)).limit(options.limit || 50);
-}
 
-export async function upsertIntelItems(items: any[]) {
-  const db = await getDb();
-  if (!db) return;
-
-  for (const item of items) {
-    await db.insert(intelItems).values(item).onDuplicateKeyUpdate({
-      set: {
-        content: item.content,
-        confidence: item.confidence,
-        fetchedAt: new Date()
-      }
-    });
-  }
-}
-
-export async function getConnectors() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(connectors);
-}
-
-export async function createConnector(input: any) {
-  const db = await getDb();
-  if (!db) return;
-  return await db.insert(connectors).values(input);
-}
-
-export async function recordConnectorSync(log: any) {
-  const db = await getDb();
-  if (!db) return;
-
-  await db.insert(connectorSyncLogs).values(log);
-  await db.update(connectors)
-    .set({ lastSyncAt: new Date() })
-    .where(eq(connectors.id, log.connectorId));
-}
-
-export async function getSyncLogs(connectorId?: number) {
-  const db = await getDb();
-  if (!db) return [];
-
-  let query = db.select().from(connectorSyncLogs);
-  if (connectorId) {
-    query = query.where(eq(connectorSyncLogs.connectorId, connectorId)) as any;
-  }
-
-  return await query.orderBy(desc(connectorSyncLogs.createdAt)).limit(50);
-}
 
 export async function getAllBookings() {
   const db = await getDb();
@@ -2146,708 +1941,80 @@ export async function getUserCollectibles(profileId: number) {
     .orderBy(desc(userCollectibles.acquiredAt));
 }
 
-export async function addUserCollectible(collectible: InsertUserCollectible) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(userCollectibles).values(collectible);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(userCollectibles).where(eq(userCollectibles.id, insertedId)).limit(1);
-  return created[0];
-}
 
 // Achievements
-export async function createAchievement(achievement: InsertAchievement) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(achievements).values({
-    ...achievement,
-    criteria: typeof achievement.criteria === "string" ? achievement.criteria : JSON.stringify(achievement.criteria || {}),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(achievements).where(eq(achievements.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listAchievements(activeOnly: boolean = true) {
-  const db = await getDb();
-  if (!db) return [];
-  if (activeOnly) {
-    return await db.select().from(achievements).where(eq(achievements.isActive, true)).orderBy(desc(achievements.createdAt));
-  }
-  return await db.select().from(achievements).orderBy(desc(achievements.createdAt));
-}
 
-export async function getUserAchievements(profileId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select({
-      id: userAchievements.id,
-      profileId: userAchievements.profileId,
-      achievementId: userAchievements.achievementId,
-      unlockedAt: userAchievements.unlockedAt,
-      name: achievements.name,
-      description: achievements.description,
-      iconUrl: achievements.iconUrl,
-    })
-    .from(userAchievements)
-    .innerJoin(achievements, eq(userAchievements.achievementId, achievements.id))
-    .where(eq(userAchievements.profileId, profileId))
-    .orderBy(desc(userAchievements.unlockedAt));
-}
 
-export async function unlockAchievement(achievement: InsertUserAchievement) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // Check if already unlocked
-  const existing = await db
-    .select()
-    .from(userAchievements)
-    .where(and(eq(userAchievements.profileId, achievement.profileId), eq(userAchievements.achievementId, achievement.achievementId)))
-    .limit(1);
-
-  if (existing[0]) return existing[0];
-
-  const result = await db.insert(userAchievements).values(achievement);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(userAchievements).where(eq(userAchievements.id, insertedId)).limit(1);
-  return created[0];
-}
 
 // AI Danny Chats
-export async function createAIDannyChat(chat: InsertAIDannyChat) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(aiDannyChats).values({
-    ...chat,
-    context: typeof chat.context === "string" ? chat.context : JSON.stringify(chat.context || {}),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(aiDannyChats).where(eq(aiDannyChats.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getAIDannyChatHistory(sessionId: string, limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(aiDannyChats)
-    .where(eq(aiDannyChats.sessionId, sessionId))
-    .orderBy(desc(aiDannyChats.createdAt))
-    .limit(limit);
-}
 
 // World Avatars
-export async function createOrUpdateWorldAvatar(avatar: InsertWorldAvatar) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const existing = await db
-    .select()
-    .from(worldAvatars)
-    .where(eq(worldAvatars.profileId, avatar.profileId))
-    .limit(1);
-
-  if (existing[0]) {
-    await db
-      .update(worldAvatars)
-      .set({
-        ...avatar,
-        avatarData: typeof avatar.avatarData === "string" ? avatar.avatarData : JSON.stringify(avatar.avatarData || {}),
-        updatedAt: new Date(),
-        lastSeen: new Date(),
-      })
-      .where(eq(worldAvatars.id, existing[0].id));
-    const updated = await db.select().from(worldAvatars).where(eq(worldAvatars.id, existing[0].id)).limit(1);
-    return updated[0];
-  }
-
-  const result = await db.insert(worldAvatars).values({
-    ...avatar,
-    avatarData: typeof avatar.avatarData === "string" ? avatar.avatarData : JSON.stringify(avatar.avatarData || {}),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(worldAvatars).where(eq(worldAvatars.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function listOnlineWorldAvatars() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(worldAvatars).where(eq(worldAvatars.isOnline, true)).orderBy(desc(worldAvatars.lastSeen));
-}
 
 // ============================================
 // PHASE 7: GLOBAL CULT MODE
 // ============================================
 
 // Bookings Phase 7
-export async function createBookingPhase7(booking: InsertBookingPhase7) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(bookingsPhase7).values(booking);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(bookingsPhase7).where(eq(bookingsPhase7.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listBookingsPhase7(filters?: { status?: string; type?: string }) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(bookingsPhase7);
-  if (filters?.status) {
-    query = query.where(eq(bookingsPhase7.status, filters.status as any)) as any;
-  }
-  if (filters?.type) {
-    query = query.where(eq(bookingsPhase7.type, filters.type as any)) as any;
-  }
-  return await query.orderBy(desc(bookingsPhase7.createdAt));
-}
 
-export async function getBookingPhase7(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(bookingsPhase7).where(eq(bookingsPhase7.id, id)).limit(1);
-  return result[0];
-}
 
-export async function updateBookingPhase7(id: number, updates: Partial<InsertBookingPhase7>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(bookingsPhase7).set({ ...updates, updatedAt: new Date() }).where(eq(bookingsPhase7.id, id));
-  const updated = await db.select().from(bookingsPhase7).where(eq(bookingsPhase7.id, id)).limit(1);
-  return updated[0];
-}
 
 // Events Phase 7
-export async function createEventPhase7(event: InsertEventPhase7) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(eventsPhase7).values(event);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(eventsPhase7).where(eq(eventsPhase7.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listEventsPhase7(upcomingOnly: boolean = false) {
-  const db = await getDb();
-  if (!db) return [];
-  if (upcomingOnly) {
-    const now = new Date();
-    return await db
-      .select()
-      .from(eventsPhase7)
-      .where(and(eq(eventsPhase7.status, "upcoming"), gt(eventsPhase7.dateTimeStart, now)))
-      .orderBy(asc(eventsPhase7.dateTimeStart));
-  }
-  return await db.select().from(eventsPhase7).orderBy(desc(eventsPhase7.dateTimeStart));
-}
 
-export async function getEventPhase7(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(eventsPhase7).where(eq(eventsPhase7.id, id)).limit(1);
-  return result[0];
-}
 
-export async function updateEventPhase7(id: number, updates: Partial<InsertEventPhase7>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(eventsPhase7).set({ ...updates, updatedAt: new Date() }).where(eq(eventsPhase7.id, id));
-  const updated = await db.select().from(eventsPhase7).where(eq(eventsPhase7.id, id)).limit(1);
-  return updated[0];
-}
 
 // Partner Requests
-export async function createPartnerRequest(request: InsertPartnerRequest) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(partnerRequests).values({
-    ...request,
-    links: typeof request.links === "string" ? request.links : JSON.stringify(request.links || {}),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(partnerRequests).where(eq(partnerRequests.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listPartnerRequests(filters?: { status?: string }) {
-  const db = await getDb();
-  if (!db) return [];
-  if (filters?.status) {
-    return await db
-      .select()
-      .from(partnerRequests)
-      .where(eq(partnerRequests.status, filters.status as any))
-      .orderBy(desc(partnerRequests.createdAt));
-  }
-  return await db.select().from(partnerRequests).orderBy(desc(partnerRequests.createdAt));
-}
 
-export async function updatePartnerRequest(id: number, updates: Partial<InsertPartnerRequest>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const updateData: any = { ...updates };
-  if (updates.links) {
-    updateData.links = typeof updates.links === "string" ? updates.links : JSON.stringify(updates.links);
-  }
-  await db.update(partnerRequests).set({ ...updateData, updatedAt: new Date() }).where(eq(partnerRequests.id, id));
-  const updated = await db.select().from(partnerRequests).where(eq(partnerRequests.id, id)).limit(1);
-  return updated[0];
-}
 
 // Partners
-export async function createPartner(partner: InsertPartner) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(partners).values({
-    ...partner,
-    links: typeof partner.links === "string" ? partner.links : JSON.stringify(partner.links || {}),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(partners).where(eq(partners.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listPartners(activeOnly: boolean = true) {
-  const db = await getDb();
-  if (!db) return [];
-  if (activeOnly) {
-    return await db.select().from(partners).where(eq(partners.isActive, true)).orderBy(desc(partners.createdAt));
-  }
-  return await db.select().from(partners).orderBy(desc(partners.createdAt));
-}
 
 // Social Profiles
-export async function createSocialProfile(profile: InsertSocialProfile) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(socialProfiles).values(profile);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(socialProfiles).where(eq(socialProfiles.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listSocialProfiles(brandId?: number, activeOnly: boolean = true) {
-  const db = await getDb();
-  if (!db) return [];
-  if (brandId) {
-    if (activeOnly) {
-      return await db
-        .select()
-        .from(socialProfiles)
-        .where(and(eq(socialProfiles.brandId, brandId), eq(socialProfiles.isActive, true)))
-        .orderBy(asc(socialProfiles.platform));
-    }
-    return await db
-      .select()
-      .from(socialProfiles)
-      .where(eq(socialProfiles.brandId, brandId))
-      .orderBy(asc(socialProfiles.platform));
-  }
-  if (activeOnly) {
-    return await db.select().from(socialProfiles).where(eq(socialProfiles.isActive, true)).orderBy(asc(socialProfiles.platform));
-  }
-  return await db.select().from(socialProfiles).orderBy(asc(socialProfiles.platform));
-}
 
-export async function updateSocialProfile(id: number, updates: Partial<InsertSocialProfile>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(socialProfiles).set({ ...updates, updatedAt: new Date() }).where(eq(socialProfiles.id, id));
-  const updated = await db.select().from(socialProfiles).where(eq(socialProfiles.id, id)).limit(1);
-  return updated[0];
-}
 
 // Post Templates
-export async function createPostTemplate(template: InsertPostTemplate) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(postTemplates).values(template);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(postTemplates).where(eq(postTemplates.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listPostTemplates(platform?: string, templateType?: string) {
-  const db = await getDb();
-  if (!db) return [];
-  const conditions: SQL[] = [eq(postTemplates.isActive, true)];
-  if (platform) {
-    conditions.push(eq(postTemplates.platform, platform as any));
-  }
-  if (templateType) {
-    conditions.push(eq(postTemplates.templateType, templateType as any));
-  }
-  return await db.select().from(postTemplates).where(and(...conditions)).orderBy(asc(postTemplates.name));
-}
 
-export function renderPostTemplate(templateText: string, data: Record<string, string>): string {
-  let rendered = templateText;
-  for (const [key, value] of Object.entries(data)) {
-    rendered = rendered.replace(new RegExp(`\\{${key}\\}`, "g"), value);
-  }
-  return rendered;
-}
 
 // Promotions
-export async function createPromotion(promotion: InsertPromotion) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(promotions).values({
-    ...promotion,
-    platforms: typeof promotion.platforms === "string" ? promotion.platforms : JSON.stringify(promotion.platforms || []),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(promotions).where(eq(promotions.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listPromotions(filters?: { status?: string }) {
-  const db = await getDb();
-  if (!db) return [];
-  if (filters?.status) {
-    return await db
-      .select()
-      .from(promotions)
-      .where(eq(promotions.status, filters.status as any))
-      .orderBy(desc(promotions.createdAt));
-  }
-  return await db.select().from(promotions).orderBy(desc(promotions.createdAt));
-}
 
-export async function updatePromotion(id: number, updates: Partial<InsertPromotion>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const updateData: any = { ...updates };
-  if (updates.platforms) {
-    updateData.platforms = typeof updates.platforms === "string" ? updates.platforms : JSON.stringify(updates.platforms);
-  }
-  await db.update(promotions).set({ ...updateData, updatedAt: new Date() }).where(eq(promotions.id, id));
-  const updated = await db.select().from(promotions).where(eq(promotions.id, id)).limit(1);
-  return updated[0];
-}
 
 // Traffic Events
-export async function createTrafficEvent(event: InsertTrafficEvent) {
-  const db = await getDb();
-  if (!db) {
-    // Don't throw - traffic events are optional
-    return;
-  }
-  try {
-    await db.insert(trafficEvents).values(event);
-  } catch (error) {
-    console.error("[Traffic] Failed to log event:", error);
-  }
-}
 
-export async function getTrafficStats(days: number = 7) {
-  const db = await getDb();
-  if (!db) return { bySource: {}, byMedium: {}, byRoute: {}, hourlyActivity: {} };
-
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-
-  const events = await db
-    .select()
-    .from(trafficEvents)
-    .where(gt(trafficEvents.timestamp, cutoff));
-
-  const bySource: Record<string, number> = {};
-  const byMedium: Record<string, number> = {};
-  const byRoute: Record<string, number> = {};
-  const hourlyActivity: Record<number, number> = {};
-
-  events.forEach((event) => {
-    if (event.utmSource) {
-      bySource[event.utmSource] = (bySource[event.utmSource] || 0) + 1;
-    }
-    if (event.utmMedium) {
-      byMedium[event.utmMedium] = (byMedium[event.utmMedium] || 0) + 1;
-    }
-    if (event.route) {
-      byRoute[event.route] = (byRoute[event.route] || 0) + 1;
-    }
-    if (event.timestamp) {
-      const hour = new Date(event.timestamp).getHours();
-      hourlyActivity[hour] = (hourlyActivity[hour] || 0) + 1;
-    }
-  });
-
-  return { bySource, byMedium, byRoute, hourlyActivity };
-}
 
 // Inner Circle
-export async function createOrUpdateInnerCircle(innerCircleData: InsertInnerCircle) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const existing = await db
-    .select()
-    .from(innerCircle)
-    .where(eq(innerCircle.profileId, innerCircleData.profileId))
-    .limit(1);
 
-  if (existing[0]) {
-    await db
-      .update(innerCircle)
-      .set({
-        ...innerCircleData,
-        updatedAt: new Date(),
-        unlockedAt: innerCircleData.isEligible && !existing[0].isEligible ? new Date() : existing[0].unlockedAt,
-      })
-      .where(eq(innerCircle.id, existing[0].id));
-    const updated = await db.select().from(innerCircle).where(eq(innerCircle.id, existing[0].id)).limit(1);
-    return updated[0];
-  }
-
-  const result = await db.insert(innerCircle).values({
-    ...innerCircleData,
-    unlockedAt: innerCircleData.isEligible ? new Date() : undefined,
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(innerCircle).where(eq(innerCircle.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function getInnerCircleStatus(profileId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(innerCircle).where(eq(innerCircle.profileId, profileId)).limit(1);
-  return result[0];
-}
-
-export async function listInnerCircleMembers() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(innerCircle)
-    .where(eq(innerCircle.isEligible, true))
-    .orderBy(desc(innerCircle.unlockedAt));
-}
 
 // ============================================
 // PHASE 8: HECTIC AI STUDIO
 // ============================================
 
 // AI Script Jobs
-export async function createAIScriptJob(job: InsertAIScriptJob) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(aiScriptJobs).values({
-    ...job,
-    inputContext: typeof job.inputContext === "string" ? job.inputContext : JSON.stringify(job.inputContext || {}),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(aiScriptJobs).where(eq(aiScriptJobs.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getAIScriptJob(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(aiScriptJobs).where(eq(aiScriptJobs.id, id)).limit(1);
-  return result[0];
-}
 
-export async function listAIScriptJobs(filters?: { status?: string; type?: string; userId?: number }, limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(aiScriptJobs);
-  const conditions = [];
-  if (filters?.status) {
-    conditions.push(eq(aiScriptJobs.status, filters.status as any));
-  }
-  if (filters?.type) {
-    conditions.push(eq(aiScriptJobs.type, filters.type as any));
-  }
-  if (filters?.userId) {
-    conditions.push(eq(aiScriptJobs.requestedByUserId, filters.userId));
-  }
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  return await query.orderBy(desc(aiScriptJobs.createdAt)).limit(limit);
-}
 
-export async function updateAIScriptJob(id: number, updates: Partial<InsertAIScriptJob>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const updateData: any = { ...updates };
-  if (updates.inputContext) {
-    updateData.inputContext = typeof updates.inputContext === "string" ? updates.inputContext : JSON.stringify(updates.inputContext);
-  }
-  await db.update(aiScriptJobs).set({ ...updateData, updatedAt: new Date() }).where(eq(aiScriptJobs.id, id));
-  const updated = await db.select().from(aiScriptJobs).where(eq(aiScriptJobs.id, id)).limit(1);
-  return updated[0];
-}
 
 // AI Voice Jobs
-export async function createAIVoiceJob(job: InsertAIVoiceJob) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(aiVoiceJobs).values(job);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(aiVoiceJobs).where(eq(aiVoiceJobs.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getAIVoiceJob(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(aiVoiceJobs).where(eq(aiVoiceJobs.id, id)).limit(1);
-  return result[0];
-}
 
-export async function listAIVoiceJobs(filters?: { status?: string; userId?: number }, limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(aiVoiceJobs);
-  const conditions = [];
-  if (filters?.status) {
-    conditions.push(eq(aiVoiceJobs.status, filters.status as any));
-  }
-  if (filters?.userId) {
-    conditions.push(eq(aiVoiceJobs.requestedByUserId, filters.userId));
-  }
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  return await query.orderBy(desc(aiVoiceJobs.createdAt)).limit(limit);
-}
 
-export async function updateAIVoiceJob(id: number, updates: Partial<InsertAIVoiceJob>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(aiVoiceJobs).set({ ...updates, updatedAt: new Date() }).where(eq(aiVoiceJobs.id, id));
-  const updated = await db.select().from(aiVoiceJobs).where(eq(aiVoiceJobs.id, id)).limit(1);
-  return updated[0];
-}
 
 // AI Video Jobs
-export async function createAIVideoJob(job: InsertAIVideoJob) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(aiVideoJobs).values(job);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(aiVideoJobs).where(eq(aiVideoJobs.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getAIVideoJob(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(aiVideoJobs).where(eq(aiVideoJobs.id, id)).limit(1);
-  return result[0];
-}
 
-export async function listAIVideoJobs(filters?: { status?: string; userId?: number }, limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(aiVideoJobs);
-  const conditions = [];
-  if (filters?.status) {
-    conditions.push(eq(aiVideoJobs.status, filters.status as any));
-  }
-  if (filters?.userId) {
-    conditions.push(eq(aiVideoJobs.requestedByUserId, filters.userId));
-  }
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  return await query.orderBy(desc(aiVideoJobs.createdAt)).limit(limit);
-}
 
-export async function updateAIVideoJob(id: number, updates: Partial<InsertAIVideoJob>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(aiVideoJobs).set({ ...updates, updatedAt: new Date() }).where(eq(aiVideoJobs.id, id));
-  const updated = await db.select().from(aiVideoJobs).where(eq(aiVideoJobs.id, id)).limit(1);
-  return updated[0];
-}
 
 // User Consents
-export async function createOrUpdateUserConsent(consent: InsertUserConsent) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  let existing;
-  if (consent.profileId) {
-    const byProfile = await db
-      .select()
-      .from(userConsents)
-      .where(eq(userConsents.profileId, consent.profileId))
-      .limit(1);
-    existing = byProfile[0];
-  } else if (consent.userId) {
-    const byUser = await db
-      .select()
-      .from(userConsents)
-      .where(eq(userConsents.userId, consent.userId))
-      .limit(1);
-    existing = byUser[0];
-  } else if (consent.email) {
-    const byEmail = await db
-      .select()
-      .from(userConsents)
-      .where(eq(userConsents.email, consent.email))
-      .limit(1);
-    existing = byEmail[0];
-  }
 
-  if (existing) {
-    await db
-      .update(userConsents)
-      .set({
-        ...consent,
-        lastUpdatedAt: new Date(),
-      })
-      .where(eq(userConsents.id, existing.id));
-    const updated = await db.select().from(userConsents).where(eq(userConsents.id, existing.id)).limit(1);
-    return updated[0];
-  }
-
-  const result = await db.insert(userConsents).values(consent);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(userConsents).where(eq(userConsents.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function getUserConsent(profileId?: number, userId?: number, email?: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-
-  if (profileId) {
-    const result = await db.select().from(userConsents).where(eq(userConsents.profileId, profileId)).limit(1);
-    if (result[0]) return result[0];
-  }
-  if (userId) {
-    const result = await db.select().from(userConsents).where(eq(userConsents.userId, userId)).limit(1);
-    if (result[0]) return result[0];
-  }
-  if (email) {
-    const result = await db.select().from(userConsents).where(eq(userConsents.email, email)).limit(1);
-    if (result[0]) return result[0];
-  }
-  return undefined;
-}
-
-export async function getConsentStats() {
-  const db = await getDb();
-  if (!db) return { total: 0, aiContent: 0, marketing: 0, dataShare: 0 };
-
-  const all = await db.select().from(userConsents);
-  return {
-    total: all.length,
-    aiContent: all.filter((c) => c.aiContentConsent).length,
-    marketing: all.filter((c) => c.marketingConsent).length,
-    dataShare: all.filter((c) => c.dataShareConsent).length,
-  };
-}
 
 // ============================================
 // PHASE 9: HECTIC ECONOMY + THE HECTIC SHOW
@@ -2858,808 +2025,97 @@ export async function getConsentStats() {
 // ============================================
 
 // Wallets
-export async function getOrCreateWallet(userId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const existing = await db.select().from(wallets).where(eq(wallets.userId, userId)).limit(1);
-  if (existing[0]) return existing[0];
 
-  const result = await db.insert(wallets).values({ userId, balanceCoins: 0 });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(wallets).where(eq(wallets.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getWalletByUserId(userId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(wallets).where(eq(wallets.userId, userId)).limit(1);
-  return result[0];
-}
 
-export async function listWallets(limit: number = 1000) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(wallets).orderBy(desc(wallets.balanceCoins)).limit(limit);
-}
-
-export async function adjustCoins(options: {
-  userId: number;
-  amount: number;
-  source: InsertCoinTransaction["source"];
-  type: InsertCoinTransaction["type"];
-  referenceId?: number;
-  description?: string;
-}) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const wallet = await getOrCreateWallet(options.userId);
-
-  // Check balance for spending
-  if (options.type === "spend" && wallet.balanceCoins + options.amount < 0) {
-    throw new Error("Insufficient coins");
-  }
-
-  const newBalance = wallet.balanceCoins + options.amount;
-  const newLifetimeEarned = options.type === "earn" ? wallet.lifetimeCoinsEarned + Math.abs(options.amount) : wallet.lifetimeCoinsEarned;
-  const newLifetimeSpent = options.type === "spend" ? wallet.lifetimeCoinsSpent + Math.abs(options.amount) : wallet.lifetimeCoinsSpent;
-
-  await db.update(wallets).set({
-    balanceCoins: newBalance,
-    lifetimeCoinsEarned: newLifetimeEarned,
-    lifetimeCoinsSpent: newLifetimeSpent,
-    lastUpdatedAt: new Date(),
-  }).where(eq(wallets.id, wallet.id));
-
-  const transaction = await db.insert(coinTransactions).values({
-    userId: options.userId,
-    walletId: wallet.id,
-    amount: options.amount,
-    type: options.type,
-    source: options.source,
-    referenceId: options.referenceId,
-    description: options.description,
-  });
-
-  const updated = await db.select().from(wallets).where(eq(wallets.id, wallet.id)).limit(1);
-  return updated[0];
-}
-
-export async function getCoinTransactions(userId: number, limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(coinTransactions)
-    .where(eq(coinTransactions.userId, userId))
-    .orderBy(desc(coinTransactions.createdAt))
-    .limit(limit);
-}
 
 // ============================================
 // SOCIAL MEDIA FEED INTEGRATION
 // ============================================
 
-export async function createSocialMediaFeedPost(post: InsertSocialMediaFeedPost) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(socialMediaFeedPosts).values(post);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(socialMediaFeedPosts).where(eq(socialMediaFeedPosts.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getSocialMediaFeedPosts(filters?: { platform?: string; isActive?: boolean; limit?: number }) {
-  const db = await getDb();
-  if (!db) return [];
-  let query: any = db.select().from(socialMediaFeedPosts);
-  const conditions = [];
-  if (filters?.platform) {
-    conditions.push(eq(socialMediaFeedPosts.platform, filters.platform as any));
-  }
-  if (filters?.isActive !== undefined) {
-    conditions.push(eq(socialMediaFeedPosts.isActive, filters.isActive));
-  }
-  if (conditions.length > 0) {
-    // @ts-ignore
-    query = query.where(and(...conditions));
-  }
-  query = query.orderBy(desc(socialMediaFeedPosts.postedAt));
-  if (filters?.limit) {
-    query = query.limit(filters.limit) as any;
-  }
-  // @ts-ignore
-  return await query;
-}
 
-export async function updateSocialMediaFeedPost(id: number, updates: Partial<InsertSocialMediaFeedPost>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(socialMediaFeedPosts).set({ ...updates, updatedAt: new Date() }).where(eq(socialMediaFeedPosts.id, id));
-  const updated = await db.select().from(socialMediaFeedPosts).where(eq(socialMediaFeedPosts.id, id)).limit(1);
-  return updated[0];
-}
 
 // ============================================
 // MUSIC DISCOVERY / RECOMMENDATIONS
 // ============================================
 
-export async function createMusicRecommendation(recommendation: InsertMusicRecommendation) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(musicRecommendations).values(recommendation);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(musicRecommendations).where(eq(musicRecommendations.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getMusicRecommendations(userId: number, limit: number = 10) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(musicRecommendations)
-    .where(eq(musicRecommendations.userId, userId))
-    .orderBy(desc(musicRecommendations.score))
-    .limit(limit);
-}
 
-export async function getRecommendationsForEntity(entityType: "mix" | "track" | "event" | "podcast", entityId: number, limit: number = 5) {
-  const db = await getDb();
-  if (!db) return [];
-  // Get users who favorited this entity, then recommend what else they favorited
-  const favoriters = await db
-    .select({ userId: userFavorites.userId })
-    .from(userFavorites)
-    .where(and(eq(userFavorites.entityType, entityType), eq(userFavorites.entityId, entityId)))
-    .limit(100);
-
-  if (favoriters.length === 0) return [];
-
-  const userIds = favoriters.map(f => f.userId).filter(Boolean);
-  if (userIds.length === 0) return [];
-
-  // Get other entities favorited by these users
-  const recommendations = await db
-    .select({
-      entityType: userFavorites.entityType,
-      entityId: userFavorites.entityId,
-      count: sql<number>`COUNT(*)`.as('count'),
-    })
-    .from(userFavorites)
-    .where(
-      and(
-        sql`${userFavorites.userId} IN (${userIds.join(',')})`,
-        sql`NOT (${userFavorites.entityType} = ${entityType} AND ${userFavorites.entityId} = ${entityId})`
-      )
-    )
-    .groupBy(userFavorites.entityType, userFavorites.entityId)
-    .orderBy(desc(sql`COUNT(*)`))
-    .limit(limit);
-
-  return recommendations;
-}
 
 // Rewards
-export async function createReward(reward: InsertReward) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(rewards).values(reward);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(rewards).where(eq(rewards.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listRewards(activeOnly: boolean = false) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(rewards);
-  if (activeOnly) {
-    query = query.where(eq(rewards.isActive, true)) as any;
-  }
-  return await query.orderBy(desc(rewards.createdAt));
-}
 
-export async function getReward(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(rewards).where(eq(rewards.id, id)).limit(1);
-  return result[0];
-}
 
-export async function updateReward(id: number, updates: Partial<InsertReward>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(rewards).set({ ...updates, updatedAt: new Date() }).where(eq(rewards.id, id));
-  const updated = await db.select().from(rewards).where(eq(rewards.id, id)).limit(1);
-  return updated[0];
-}
 
 // Redemptions
-export async function createRedemption(userId: number, rewardId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const reward = await getReward(rewardId);
-  if (!reward || !reward.isActive) throw new Error("Reward not found or inactive");
 
-  const wallet = await getOrCreateWallet(userId);
-  if (wallet.balanceCoins < reward.costCoins) throw new Error("Insufficient coins");
-
-  // Deduct coins
-  await adjustCoins({
-    userId,
-    amount: -reward.costCoins,
-    type: "spend",
-    source: "rewardRedeem",
-    referenceId: rewardId,
-    description: `Redeemed: ${reward.name}`,
-  });
-
-  // Create redemption
-  const result = await db.insert(redemptions).values({
-    userId,
-    rewardId,
-    coinsSpent: reward.costCoins,
-    status: reward.fulfillmentType === "autoLink" || reward.fulfillmentType === "autoEmail" ? "fulfilled" : "pending",
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(redemptions).where(eq(redemptions.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function listRedemptions(filters?: { userId?: number; status?: string }, limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(redemptions);
-  const conditions = [];
-  if (filters?.userId) {
-    conditions.push(eq(redemptions.userId, filters.userId));
-  }
-  if (filters?.status) {
-    conditions.push(eq(redemptions.status, filters.status as any));
-  }
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  return await query.orderBy(desc(redemptions.createdAt)).limit(limit);
-}
-
-export async function updateRedemptionStatus(id: number, status: InsertRedemption["status"], notesAdmin?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(redemptions).set({ status, notesAdmin, updatedAt: new Date() }).where(eq(redemptions.id, id));
-  const updated = await db.select().from(redemptions).where(eq(redemptions.id, id)).limit(1);
-  return updated[0];
-}
 
 // Referrals
-export async function createReferralCode(ownerUserId: number, code: string, maxUses?: number, expiresAt?: Date) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(referralCodes).values({
-    ownerUserId,
-    code,
-    maxUses,
-    expiresAt,
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(referralCodes).where(eq(referralCodes.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getReferralCode(code: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(referralCodes).where(eq(referralCodes.code, code)).limit(1);
-  return result[0];
-}
 
-export async function applyReferralCode(code: string, newUserId: number, rewardCoins: number = 100) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const referralCode = await getReferralCode(code);
-  if (!referralCode) throw new Error("Invalid referral code");
 
-  // Check expiry
-  if (referralCode.expiresAt && new Date(referralCode.expiresAt) < new Date()) {
-    throw new Error("Referral code expired");
-  }
-
-  // Check max uses
-  if (referralCode.maxUses) {
-    const uses = await db.select().from(referralUses).where(eq(referralUses.codeId, referralCode.id));
-    if (uses.length >= referralCode.maxUses) {
-      throw new Error("Referral code max uses reached");
-    }
-  }
-
-  // Check if already used by this user
-  const existingUse = await db
-    .select()
-    .from(referralUses)
-    .where(and(eq(referralUses.codeId, referralCode.id), eq(referralUses.referredUserId, newUserId)))
-    .limit(1);
-  if (existingUse[0]) throw new Error("Referral code already used by this user");
-
-  // Record use
-  await db.insert(referralUses).values({
-    codeId: referralCode.id,
-    referredUserId: newUserId,
-    rewardCoins,
-  });
-
-  // Award coins to both users
-  await adjustCoins({
-    userId: newUserId,
-    amount: rewardCoins,
-    type: "earn",
-    source: "referral",
-    referenceId: referralCode.id,
-    description: `Referral bonus`,
-  });
-
-  await adjustCoins({
-    userId: referralCode.ownerUserId,
-    amount: rewardCoins,
-    type: "earn",
-    source: "referral",
-    referenceId: referralCode.id,
-    description: `Referral reward for ${code}`,
-  });
-
-  return { success: true };
-}
-
-export async function listReferralCodes(ownerUserId?: number) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(referralCodes);
-  if (ownerUserId) {
-    query = query.where(eq(referralCodes.ownerUserId, ownerUserId)) as any;
-  }
-  return await query.orderBy(desc(referralCodes.createdAt));
-}
-
-export async function getReferralStats(ownerUserId: number) {
-  const db = await getDb();
-  if (!db) return { totalUses: 0, totalCoinsAwarded: 0, codes: [] };
-
-  const codes = await listReferralCodes(ownerUserId);
-  const uses = await db
-    .select()
-    .from(referralUses)
-    .where(eq(referralUses.codeId, codes.map((c) => c.id)[0] || 0));
-
-  return {
-    totalUses: uses.length,
-    totalCoinsAwarded: uses.reduce((sum, u) => sum + u.rewardCoins, 0),
-    codes: codes.map((c) => ({ ...c, uses: uses.filter((u) => u.codeId === c.id).length })),
-  };
-}
 
 // ============================================
 // PHASE 9B: THE HECTIC SHOW
 // ============================================
 
 // Shows
-export async function createShowPhase9(show: InsertShowPhase9) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(showsPhase9).values(show);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(showsPhase9).where(eq(showsPhase9.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listShowsPhase9(activeOnly: boolean = false) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(showsPhase9);
-  if (activeOnly) {
-    query = query.where(eq(showsPhase9.isActive, true)) as any;
-  }
-  return await query.orderBy(desc(showsPhase9.createdAt));
-}
 
-export async function getShowPhase9(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(showsPhase9).where(eq(showsPhase9.id, id)).limit(1);
-  return result[0];
-}
 
-export async function getShowPhase9BySlug(slug: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(showsPhase9).where(eq(showsPhase9.slug, slug)).limit(1);
-  return result[0];
-}
 
-export async function updateShowPhase9(id: number, updates: Partial<InsertShowPhase9>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(showsPhase9).set({ ...updates, updatedAt: new Date() }).where(eq(showsPhase9.id, id));
-  const updated = await db.select().from(showsPhase9).where(eq(showsPhase9.id, id)).limit(1);
-  return updated[0];
-}
 
 // ============================================
 // SOCIAL PROOF NOTIFICATIONS
 // ============================================
-export async function getActiveSocialProofNotifications(limit: number = 10) {
-  const db = await getDb();
-  if (!db) return [];
-  const now = new Date();
-  return await db
-    .select()
-    .from(socialProofNotifications)
-    .where(
-      and(
-        eq(socialProofNotifications.isActive, true),
-        or(
-          isNull(socialProofNotifications.expiresAt),
-          gt(socialProofNotifications.expiresAt, now)
-        )
-      )
-    )
-    .orderBy(desc(socialProofNotifications.createdAt))
-    .limit(limit);
-}
 
-export async function createSocialProofNotification(notification: InsertSocialProofNotification) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(socialProofNotifications).values(notification);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(socialProofNotifications).where(eq(socialProofNotifications.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function expireSocialProofNotification(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(socialProofNotifications).set({ isActive: false }).where(eq(socialProofNotifications.id, id));
-}
 
-export async function setPrimaryShowPhase9(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  // Unset all others
-  await db.update(showsPhase9).set({ isPrimaryShow: false }).where(eq(showsPhase9.isPrimaryShow, true));
-  // Set this one
-  await db.update(showsPhase9).set({ isPrimaryShow: true, updatedAt: new Date() }).where(eq(showsPhase9.id, id));
-  const updated = await db.select().from(showsPhase9).where(eq(showsPhase9.id, id)).limit(1);
-  return updated[0];
-}
 
 // Episodes
-export async function createShowEpisode(episode: InsertShowEpisode) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(showEpisodes).values(episode);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(showEpisodes).where(eq(showEpisodes.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listShowEpisodes(showId?: number, publishedOnly: boolean = false, limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(showEpisodes);
-  const conditions = [];
-  if (showId) {
-    conditions.push(eq(showEpisodes.showId, showId));
-  }
-  if (publishedOnly) {
-    conditions.push(eq(showEpisodes.status, "published"));
-  }
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  return await query.orderBy(desc(showEpisodes.publishedAt || showEpisodes.createdAt)).limit(limit);
-}
 
-export async function getShowEpisode(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(showEpisodes).where(eq(showEpisodes.id, id)).limit(1);
-  return result[0];
-}
 
-export async function getShowEpisodeBySlug(slug: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(showEpisodes).where(eq(showEpisodes.slug, slug)).limit(1);
-  return result[0];
-}
 
-export async function updateShowEpisode(id: number, updates: Partial<InsertShowEpisode>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(showEpisodes).set({ ...updates, updatedAt: new Date() }).where(eq(showEpisodes.id, id));
-  const updated = await db.select().from(showEpisodes).where(eq(showEpisodes.id, id)).limit(1);
-  return updated[0];
-}
 
 // Segments
-export async function createShowSegment(segment: InsertShowSegment) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(showSegments).values(segment);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(showSegments).where(eq(showSegments.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listShowSegments(episodeId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(showSegments)
-    .where(eq(showSegments.episodeId, episodeId))
-    .orderBy(asc(showSegments.orderIndex));
-}
 
-export async function updateShowSegment(id: number, updates: Partial<InsertShowSegment>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(showSegments).set({ ...updates, updatedAt: new Date() }).where(eq(showSegments.id, id));
-  const updated = await db.select().from(showSegments).where(eq(showSegments.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function reorderShowSegments(episodeId: number, segmentIds: number[]) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  for (let i = 0; i < segmentIds.length; i++) {
-    await db.update(showSegments).set({ orderIndex: i, updatedAt: new Date() }).where(eq(showSegments.id, segmentIds[i]));
-  }
-  return { success: true };
-}
 
 // Live Sessions
-export async function scheduleLiveSession(session: InsertShowLiveSession) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(showLiveSessions).values({ ...session, status: "upcoming" });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(showLiveSessions).where(eq(showLiveSessions.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function startLiveSession(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(showLiveSessions).set({ status: "live", startedAt: new Date(), updatedAt: new Date() }).where(eq(showLiveSessions.id, id));
-  const updated = await db.select().from(showLiveSessions).where(eq(showLiveSessions.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function endLiveSession(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(showLiveSessions).set({ status: "ended", endedAt: new Date(), updatedAt: new Date() }).where(eq(showLiveSessions.id, id));
-  const updated = await db.select().from(showLiveSessions).where(eq(showLiveSessions.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function listLiveSessions(showId?: number, limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(showLiveSessions);
-  if (showId) {
-    query = query.where(eq(showLiveSessions.showId, showId)) as any;
-  }
-  return await query.orderBy(desc(showLiveSessions.startedAt)).limit(limit);
-}
 
-export async function getActiveSessionForShow(showId: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db
-    .select()
-    .from(showLiveSessions)
-    .where(and(eq(showLiveSessions.showId, showId), eq(showLiveSessions.status, "live")))
-    .limit(1);
-  return result[0];
-}
 
-export async function getCurrentLiveSession() {
-  const db = await getDb();
-  if (!db) return undefined;
-  // Get primary show
-  const primaryShow = await db.select().from(showsPhase9).where(eq(showsPhase9.isPrimaryShow, true)).limit(1);
-  if (!primaryShow[0]) return undefined;
-  return await getActiveSessionForShow(primaryShow[0].id);
-}
 
 // Cues
-export async function createCue(cue: InsertShowCue) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(showCues).values(cue);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(showCues).where(eq(showCues.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function listCuesForSession(liveSessionId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(showCues)
-    .where(eq(showCues.liveSessionId, liveSessionId))
-    .orderBy(asc(showCues.orderIndex));
-}
 
-export async function updateCueStatus(id: number, status: InsertShowCue["status"]) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(showCues).set({ status, updatedAt: new Date() }).where(eq(showCues.id, id));
-  const updated = await db.select().from(showCues).where(eq(showCues.id, id)).limit(1);
-  return updated[0];
-}
 
 // ============================================
 // PHASE 10: HECTICOPS CONTROL TOWER - INTEGRATIONS
 // ============================================
 
 // Social Integrations
-export async function listSocialIntegrations(activeOnly: boolean = false) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(socialIntegrations);
-  if (activeOnly) {
-    query = query.where(eq(socialIntegrations.isActive, true)) as any;
-  }
-  return await query.orderBy(desc(socialIntegrations.createdAt));
-}
 
-export async function createSocialIntegration(integration: InsertSocialIntegration) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(socialIntegrations).values(integration);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(socialIntegrations).where(eq(socialIntegrations.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function updateSocialIntegration(id: number, updates: Partial<InsertSocialIntegration>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(socialIntegrations).set({ ...updates, updatedAt: new Date() }).where(eq(socialIntegrations.id, id));
-  const updated = await db.select().from(socialIntegrations).where(eq(socialIntegrations.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function setPrimarySocial(platform: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  // Unset all others for this platform
-  await db.update(socialIntegrations).set({ isPrimary: false }).where(eq(socialIntegrations.platform, platform as any));
-  // Set this one
-  const result = await db.select().from(socialIntegrations).where(eq(socialIntegrations.platform, platform as any)).limit(1);
-  if (result[0]) {
-    await db.update(socialIntegrations).set({ isPrimary: true, updatedAt: new Date() }).where(eq(socialIntegrations.id, result[0].id));
-    return result[0];
-  }
-  return undefined;
-}
 
-// Content Queue
-export async function createContentItem(item: InsertContentQueueItem) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(contentQueue).values(item);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(contentQueue).where(eq(contentQueue.id, insertedId)).limit(1);
-  return created[0];
-}
+// REMOVED: createContentItem - uses non-existent contentQueue table
 
-export async function updateContentItemStatus(id: number, status: InsertContentQueueItem["status"], externalUrl?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const updates: any = { status, updatedAt: new Date() };
-  if (status === "posted" && externalUrl) {
-    updates.externalUrl = externalUrl;
-    updates.postedAt = new Date();
-  }
-  await db.update(contentQueue).set(updates).where(eq(contentQueue.id, id));
-  const updated = await db.select().from(contentQueue).where(eq(contentQueue.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function listContentQueue(filters?: { status?: string; platform?: string; source?: string }, limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(contentQueue);
-  const conditions = [];
-  if (filters?.status) {
-    conditions.push(eq(contentQueue.status, filters.status as any));
-  }
-  if (filters?.platform) {
-    conditions.push(eq(contentQueue.targetPlatform, filters.platform as any));
-  }
-  if (filters?.source) {
-    conditions.push(eq(contentQueue.source, filters.source as any));
-  }
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-  return await query.orderBy(desc(contentQueue.createdAt)).limit(limit);
-}
 
-export async function listContentForPlatform(platform: string, limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(contentQueue)
-    .where(eq(contentQueue.targetPlatform, platform as any))
-    .orderBy(desc(contentQueue.createdAt))
-    .limit(limit);
-}
 
 // Webhooks
-export async function listWebhooks(activeOnly: boolean = false) {
-  const db = await getDb();
-  if (!db) return [];
-  let query = db.select().from(webhooks);
-  if (activeOnly) {
-    query = query.where(eq(webhooks.isActive, true)) as any;
-  }
-  return await query.orderBy(desc(webhooks.createdAt));
-}
 
-export async function createWebhook(webhook: InsertWebhook) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(webhooks).values(webhook);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(webhooks).where(eq(webhooks.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function updateWebhook(id: number, updates: Partial<InsertWebhook>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(webhooks).set({ ...updates, updatedAt: new Date() }).where(eq(webhooks.id, id));
-  const updated = await db.select().from(webhooks).where(eq(webhooks.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function dispatchWebhooks(eventType: InsertWebhook["eventType"], payload: any) {
-  const db = await getDb();
-  if (!db) return { dispatched: 0, errors: [] };
-
-  const activeWebhooks = await db
-    .select()
-    .from(webhooks)
-    .where(and(eq(webhooks.isActive, true), eq(webhooks.eventType, eventType)));
-
-  const errors: string[] = [];
-  let dispatched = 0;
-
-  for (const webhook of activeWebhooks) {
-    try {
-      // In a real implementation, this would make HTTP POST requests
-      // For now, we just log it
-      console.log(`[Webhook] Dispatching to ${webhook.url} for event ${eventType}`, payload);
-      dispatched++;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error";
-      errors.push(`${webhook.name}: ${errorMsg}`);
-    }
-  }
-
-  return { dispatched, errors };
-}
 
 export async function getActiveIncidentBanners() {
   const db = await getDb();
@@ -4095,112 +2551,16 @@ export async function searchAll(query: string, limit: number = 20) {
 // MISSING FUNCTIONS (Added for Fix)
 // ============================================
 
-export async function deleteEvent(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(events).where(eq(events.id, id));
-}
 
-export async function getAllMarketingLeads(filters?: {
-  status?: string;
-  type?: string;
-  location?: string;
-  assignedTo?: number
-}) {
-  const db = await getDb();
-  if (!db) return [];
-
-  let query = db.select().from(marketingLeads);
-  const conditions = [];
-
-  if (filters?.status) {
-    conditions.push(eq(marketingLeads.status, filters.status as any));
-  }
-  if (filters?.type) {
-    conditions.push(eq(marketingLeads.type, filters.type as any));
-  }
-  if (filters?.location) {
-    conditions.push(like(marketingLeads.location, `%${filters.location}%`));
-  }
-  if (filters?.assignedTo) {
-    conditions.push(eq(marketingLeads.assignedTo, filters.assignedTo));
-  }
-
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-
-  return await query.orderBy(desc(marketingLeads.createdAt));
-}
 
 // ============================================
 // MORE MISSING FUNCTIONS (Added for Fix)
 // ============================================
 
-export async function createEvent(event: InsertEvent) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(events).values(event);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(events).where(eq(events.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function updateEvent(id: number, updates: Partial<InsertEvent>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(events).set({ ...updates, updatedAt: new Date() }).where(eq(events.id, id));
-  const updated = await db.select().from(events).where(eq(events.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function getMarketingLeadById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(marketingLeads).where(eq(marketingLeads.id, id)).limit(1);
-  return result[0];
-}
 
-export async function createVenueScraperResult(result: InsertVenueScraperResult) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const insertResult = await db.insert(venueScraperResults).values(result);
-  const insertedId = insertResult[0].insertId;
-  const created = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function convertScraperResultToLead(id: number, extraData?: any) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // Get the result
-  const scraperResult = await db.select().from(venueScraperResults).where(eq(venueScraperResults.id, id)).limit(1);
-  if (!scraperResult[0]) throw new Error("Scraper result not found");
-
-  const venue = scraperResult[0];
-  const rawData = typeof venue.rawData === 'string' ? JSON.parse(venue.rawData) : venue.rawData;
-
-  // Create lead
-  const leadData: InsertMarketingLead = {
-    name: venue.name,
-    type: "bar", // Default fallback
-    location: venue.location,
-    source: venue.source,
-    website: venue.sourceUrl || undefined,
-    socialMedia: rawData.socialMedia ? JSON.stringify(rawData.socialMedia) : undefined,
-    ...extraData
-  };
-
-  const leadResult = await db.insert(marketingLeads).values(leadData);
-  const leadId = leadResult[0].insertId;
-
-  // Update result as converted
-  await db.update(venueScraperResults).set({ convertedToLead: true }).where(eq(venueScraperResults.id, id));
-
-  const created = await db.select().from(marketingLeads).where(eq(marketingLeads.id, leadId)).limit(1);
-  return created[0];
-}
 /**
  * ============================================
  * PHASE 7: ADMIN FEATURE EXPANSION (VIDEOS, BLOG, MEDIA)
@@ -4237,81 +2597,16 @@ export async function createVideo(video: InsertVideo) {
   }
 }
 
-export async function deleteVideo(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(videos).where(eq(videos.id, id));
-}
 
 // Articles (Blog)
-export async function getAllArticles(publishedOnly = true) {
-  const db = await getDb();
-  if (!db) return [];
 
-  let query = db.select().from(articles).orderBy(desc(articles.publishedAt));
 
-  if (publishedOnly) {
-    // @ts-ignore
-    query = query.where(eq(articles.isPublished, true));
-  }
 
-  return await query;
-}
 
-export async function getArticleBySlug(slug: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
-  return result[0];
-}
-
-export async function createArticle(article: InsertArticle) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const result = await db.insert(articles).values(article);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(articles).where(eq(articles.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function updateArticle(id: number, updates: Partial<InsertArticle>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  await db.update(articles).set({ ...updates, updatedAt: new Date() }).where(eq(articles.id, id));
-  const updated = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
-  return updated[0];
-}
-
-export async function deleteArticle(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(articles).where(eq(articles.id, id));
-}
 
 // Media Library
-export async function getMediaLibrary() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(mediaLibrary).orderBy(desc(mediaLibrary.createdAt));
-}
 
-export async function createMediaItem(item: InsertMediaItem) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(mediaLibrary).values(item);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(mediaLibrary).where(eq(mediaLibrary.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function deleteMediaItem(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(mediaLibrary).where(eq(mediaLibrary.id, id));
-}
 
 // ============================================
 // MISSING MARKETING & SOCIAL FUNCTIONS (Appended for Build Fix)
@@ -4320,430 +2615,75 @@ export async function deleteMediaItem(id: number) {
 
 
 // Marketing Campaigns
-export async function getAllMarketingCampaigns(filters?: { status?: string; type?: string }) {
-  const db = await getDb();
-  if (!db) return [];
 
-  let query = db.select().from(marketingCampaigns);
-  const conditions = [];
 
-  if (filters?.status) {
-    conditions.push(eq(marketingCampaigns.status, filters.status as any));
-  }
-  if (filters?.type) {
-    conditions.push(eq(marketingCampaigns.type, filters.type as any));
-  }
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
 
-  return await query.orderBy(desc(marketingCampaigns.createdAt));
-}
-
-export async function getMarketingCampaignById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
-  return result[0];
-}
-
-export async function createMarketingCampaign(campaign: InsertMarketingCampaign) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(marketingCampaigns).values(campaign);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function updateMarketingCampaign(id: number, updates: Partial<InsertMarketingCampaign>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(marketingCampaigns).set({ ...updates, updatedAt: new Date() }).where(eq(marketingCampaigns.id, id));
-  const updated = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id)).limit(1);
-  return updated[0];
-}
-
-export async function deleteMarketingCampaign(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(marketingCampaigns).where(eq(marketingCampaigns.id, id));
-}
 
 // Outreach Activities
-export async function getOutreachActivitiesByLeadId(leadId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(outreachActivities).where(eq(outreachActivities.leadId, leadId)).orderBy(desc(outreachActivities.createdAt));
-}
 
-export async function createOutreachActivity(activity: InsertOutreachActivity) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(outreachActivities).values(activity);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(outreachActivities).where(eq(outreachActivities.id, insertedId)).limit(1);
-  return created[0];
-}
 
 // Social Media Posts
-export async function getAllSocialMediaPosts(filters?: { platform?: string; status?: string; createdBy?: number }) {
-  const db = await getDb();
-  if (!db) return [];
 
-  let query = db.select().from(socialMediaPosts);
-  const conditions = [];
 
-  if (filters?.platform) {
-    conditions.push(eq(socialMediaPosts.platform, filters.platform as any));
-  }
-  if (filters?.status) {
-    conditions.push(eq(socialMediaPosts.status, filters.status as any));
-  }
-  if (filters?.createdBy) {
-    conditions.push(eq(socialMediaPosts.createdBy, filters.createdBy));
-  }
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
 
-  return await query.orderBy(desc(socialMediaPosts.createdAt));
-}
-
-export async function getSocialMediaPostById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, id)).limit(1);
-  return result[0];
-}
-
-export async function createSocialMediaPost(post: InsertSocialMediaPost) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(socialMediaPosts).values(post);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function updateSocialMediaPost(id: number, updates: Partial<InsertSocialMediaPost>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(socialMediaPosts).set({ ...updates, updatedAt: new Date() }).where(eq(socialMediaPosts.id, id));
-  const updated = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, id)).limit(1);
-  return updated[0];
-}
-
-export async function deleteSocialMediaPost(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(socialMediaPosts).where(eq(socialMediaPosts.id, id));
-}
 
 // Scraper Results
-export async function getAllVenueScraperResults(filters?: { processed?: boolean; convertedToLead?: boolean }) {
-  const db = await getDb();
-  if (!db) return [];
-
-  let query = db.select().from(venueScraperResults);
-  const conditions = [];
-
-  if (filters?.processed !== undefined) {
-    conditions.push(eq(venueScraperResults.processed, filters.processed));
-  }
-  if (filters?.convertedToLead !== undefined) {
-    conditions.push(eq(venueScraperResults.convertedToLead, filters.convertedToLead));
-  }
-
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
-
-  return await query.orderBy(desc(venueScraperResults.createdAt));
-}
 
 
 
 // ============================================
 // Marketing & Leads
 // ============================================
-export async function createMarketingLead(lead: InsertMarketingLead) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(marketingLeads).values(lead);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(marketingLeads).where(eq(marketingLeads.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function updateMarketingLead(id: number, updates: Partial<InsertMarketingLead>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(marketingLeads).set({ ...updates, updatedAt: new Date() }).where(eq(marketingLeads.id, id));
-  const updated = await db.select().from(marketingLeads).where(eq(marketingLeads.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function deleteMarketingLead(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(marketingLeads).where(eq(marketingLeads.id, id));
-}
 
 // ============================================
 // User Favorites
 // ============================================
-export async function addToFavorites(favorite: InsertUserFavorite) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  // Check if exists
-  const existing = await db
-    .select()
-    .from(userFavorites)
-    .where(
-      and(
-        eq(userFavorites.userId, favorite.userId),
-        eq(userFavorites.entityType, favorite.entityType),
-        eq(userFavorites.entityId, favorite.entityId)
-      )
-    )
-    .limit(1);
 
-  if (existing.length > 0) return existing[0];
 
-  const result = await db.insert(userFavorites).values(favorite);
-  return { ...favorite, id: result[0].insertId };
-}
 
-export async function removeFromFavorites(userId: number, entityType: string, entityId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db
-    .delete(userFavorites)
-    .where(
-      and(
-        eq(userFavorites.userId, userId),
-        eq(userFavorites.entityType, entityType as any),
-        eq(userFavorites.entityId, entityId)
-      )
-    );
-}
-
-export async function getUserFavorites(userId: number, type?: string) {
-  const db = await getDb();
-  if (!db) return [];
-  const conditions: SQL[] = [eq(userFavorites.userId, userId)];
-  if (type) {
-    conditions.push(eq(userFavorites.entityType, type as any));
-  }
-  return await db.select().from(userFavorites).where(and(...conditions)).orderBy(desc(userFavorites.createdAt));
-}
-
-export async function isFavorited(userId: number, entityType: string, entityId: number) {
-  const db = await getDb();
-  if (!db) return false;
-  const result = await db
-    .select()
-    .from(userFavorites)
-    .where(
-      and(
-        eq(userFavorites.userId, userId),
-        eq(userFavorites.entityType, entityType as any),
-        eq(userFavorites.entityId, entityId)
-      )
-    )
-    .limit(1);
-  return result.length > 0;
-}
 
 // ============================================
 // Playlists
 // ============================================
-export async function createPlaylist(playlist: InsertUserPlaylist) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(userPlaylists).values(playlist);
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(userPlaylists).where(eq(userPlaylists.id, insertedId)).limit(1);
-  return created[0];
-}
 
-export async function getUserPlaylists(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(userPlaylists).where(eq(userPlaylists.userId, userId)).orderBy(desc(userPlaylists.createdAt));
-}
 
-export async function getPlaylistById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(userPlaylists).where(eq(userPlaylists.id, id)).limit(1);
-  return result[0];
-}
 
-export async function updatePlaylist(id: number, updates: Partial<InsertUserPlaylist>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(userPlaylists).set({ ...updates, updatedAt: new Date() }).where(eq(userPlaylists.id, id));
-  const updated = await db.select().from(userPlaylists).where(eq(userPlaylists.id, id)).limit(1);
-  return updated[0];
-}
 
-export async function deletePlaylist(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(userPlaylists).where(eq(userPlaylists.id, id));
-  await db.delete(userPlaylistItems).where(eq(userPlaylistItems.playlistId, id));
-}
 
-export async function addToPlaylist(item: InsertUserPlaylistItem) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(userPlaylistItems).values(item);
-  return { ...item, id: result[0].insertId };
-}
 
-export async function removeFromPlaylist(playlistId: number, itemId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(userPlaylistItems).where(and(eq(userPlaylistItems.playlistId, playlistId), eq(userPlaylistItems.id, itemId)));
-}
 
-export async function getPlaylistItems(playlistId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(userPlaylistItems).where(eq(userPlaylistItems.playlistId, playlistId)).orderBy(asc(userPlaylistItems.orderIndex));
-}
 
 // ============================================
 // Track ID Requests
 // ============================================
 
 
-export async function createTrackIdRequest(request: InsertTrackIdRequest) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(trackIdRequests).values(request as any);
-  return { ...request, id: result[0].insertId };
-}
 
-export async function getTrackIdRequests(filters?: { status?: string, userId?: number }) {
-  const db = await getDb();
-  if (!db) return [];
 
-  let query: any = db.select().from(trackIdRequests);
-  const conditions: SQL[] = [];
 
-  if (filters?.status) conditions.push(eq(trackIdRequests.status, filters.status as any));
-  if (filters?.userId) conditions.push(eq(trackIdRequests.userId, filters.userId));
 
-  if (conditions.length > 0) {
-    // @ts-ignore - Drizzle recursive type workaround
-    query = query.where(and(...conditions));
-  }
-  return await query.orderBy(desc(trackIdRequests.createdAt));
-}
-
-export async function getTrackIdRequestById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  return await db.select().from(trackIdRequests).where(eq(trackIdRequests.id, id)).limit(1).then(r => r[0]);
-}
-
-export async function updateTrackIdRequest(id: number, updates: Partial<InsertTrackIdRequest>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(trackIdRequests).set({ ...updates, updatedAt: new Date() }).where(eq(trackIdRequests.id, id));
-  return await getTrackIdRequestById(id);
-}
-
-export async function getShareStats(entityType: string, entityId: number) {
-  const db = await getDb();
-  if (!db) return { total: 0, byPlatform: {} };
-  const shares = await db.select().from(socialShares).where(and(eq(socialShares.entityType, entityType as any), eq(socialShares.entityId, entityId)));
-  const stats: Record<string, number> = {};
-  shares.forEach(s => {
-    if (s.platform) stats[s.platform] = (stats[s.platform] || 0) + 1;
-  });
-  return { total: shares.length, byPlatform: stats };
-}
 
 
 // ============================================
 // Social Shares
 // ============================================
-export async function recordSocialShare(share: InsertSocialShare) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(socialShares).values(share);
-  return { ...share, id: result[0].insertId };
-}
 
-export async function getSocialShares(limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(socialShares).orderBy(desc(socialShares.createdAt)).limit(limit);
-}
 
 // ============================================
 // Video Testimonials
 // ============================================
-export async function createVideoTestimonial(testimonial: InsertVideoTestimonial) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(videoTestimonials).values(testimonial);
-  const insertedId = result[0].insertId;
-  return await db.select().from(videoTestimonials).where(eq(videoTestimonials.id, insertedId)).limit(1).then(r => r[0]);
-}
 
-export async function getVideoTestimonials(filters?: { isApproved?: boolean, isFeatured?: boolean, limit?: number }) {
-  const db = await getDb();
-  if (!db) return [];
 
-  let query = db.select().from(videoTestimonials);
-  const conditions = [];
 
-  if (filters?.isApproved !== undefined) conditions.push(eq(videoTestimonials.isApproved, filters.isApproved));
-  if (filters?.isFeatured !== undefined) conditions.push(eq(videoTestimonials.isFeatured, filters.isFeatured));
 
-  let finalQuery: any = query;
-  if (conditions.length > 0) {
-    finalQuery = query.where(and(...conditions));
-  }
-
-  return await finalQuery.orderBy(desc(videoTestimonials.createdAt)).limit(filters?.limit || 50);
-}
-
-export async function getVideoTestimonialById(id: number) {
-  const db = await getDb();
-  if (!db) return undefined;
-  return await db.select().from(videoTestimonials).where(eq(videoTestimonials.id, id)).limit(1).then(r => r[0]);
-}
-
-export async function updateVideoTestimonial(id: number, updates: Partial<InsertVideoTestimonial>) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(videoTestimonials).set({ ...updates, updatedAt: new Date() }).where(eq(videoTestimonials.id, id));
-  return await db.select().from(videoTestimonials).where(eq(videoTestimonials.id, id)).limit(1).then(r => r[0]);
-}
-
-export async function deleteVideoTestimonial(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(videoTestimonials).where(eq(videoTestimonials.id, id));
-}
 
 // ============================================
 // Music Recommendations
 // ============================================
-export async function createRecommendation(rec: InsertMusicRecommendation) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(musicRecommendations).values(rec);
-  return { ...rec, id: result[0].insertId };
-}
 
 
 // ============================================
@@ -4835,27 +2775,8 @@ export async function createOutboundLead(lead: InsertOutboundLead) {
   return result[0].insertId;
 }
 
-export async function listOutboundLeads(status?: "new" | "qualified" | "contacted" | "converted") {
-  const db = await getDb();
-  if (!db) return [];
-  if (status) {
-    return await db.select().from(outboundLeads).where(eq(outboundLeads.status, status)).orderBy(desc(outboundLeads.leadScore));
-  }
-  return await db.select().from(outboundLeads).orderBy(desc(outboundLeads.createdAt));
-}
 
-export async function updateLeadScore(leadId: number, score: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(outboundLeads).set({ leadScore: score }).where(eq(outboundLeads.id, leadId));
-}
 
-export async function createOutboundInteraction(interaction: InsertOutboundInteraction) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(outboundInteractions).values(interaction);
-  return result[0].insertId;
-}
 
 export async function getLeadWithInteractions(leadId: number) {
   const db = await getDb();
@@ -4865,117 +2786,22 @@ export async function getLeadWithInteractions(leadId: number) {
   return { ...lead[0], interactions };
 }
 
-export async function expirePendingDeposits() {
-  const db = await getDb();
-  if (!db) return 0;
-
-  const now = new Date();
-
-  // Find all pending bookings where depositExpiresAt < now
-  const result = await db.update(eventBookings)
-    .set({ status: "cancelled", extraNotes: sql`CONCAT(COALESCE(${eventBookings.extraNotes}, ''), '\n[Governance] System Auto-Expired: Deposit TTL reached.')` })
-    .where(and(
-      eq(eventBookings.status, "pending"),
-      eq(eventBookings.depositPaid, false),
-      lt(eventBookings.depositExpiresAt, now)
-    ));
-
-  return result[0].affectedRows;
-}
 
 // ============================================
 // Revenue Governance & Fail-Safe
 // ============================================
 
-export async function createRevenueIncident(incident: InsertRevenueIncident) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(revenueIncidents).values(incident);
-  return result[0].insertId;
-}
 
-export async function listActiveRevenueIncidents() {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(revenueIncidents).where(eq(revenueIncidents.status, "active"));
-}
 
-export async function resolveRevenueIncident(id: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(revenueIncidents)
-    .set({ status: "resolved", resolvedAt: new Date() })
-    .where(eq(revenueIncidents.id, id));
-}
 
-export async function createGovernanceLog(log: InsertGovernanceLog) {
-  const db = await getDb();
-  if (!db) return;
-  await db.insert(governanceLogs).values(log);
-}
 
-export async function listGovernanceLogs(limit: number = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(governanceLogs).orderBy(desc(governanceLogs.createdAt)).limit(limit);
-}
 
 // --- Governance & Feature Flags ---
 
-export async function checkFeatureFlag(key: string): Promise<boolean> {
-  const db = await getDb();
-  if (!db) return false;
-  const [flag] = await db.select().from(featureFlags).where(eq(featureFlags.key, key));
-  return flag ? flag.isEnabled : true;
-}
 
 // --- Rollup Helpers ---
 
-export async function incrementLaneRollup(laneId: string, day: Date, metrics: Partial<{ views: number, saves: number, signups: number, redemptions: number }>) {
-  const db = await getDb();
-  if (!db) return;
 
-  const dateOnly = new Date(day.toISOString().split('T')[0]);
-
-  await db.insert(laneDailyRollups).values({
-    laneId,
-    day: dateOnly,
-    views: metrics.views || 0,
-    saves: metrics.saves || 0,
-    signups: metrics.signups || 0,
-    inviteRedemptions: metrics.redemptions || 0
-  }).onDuplicateKeyUpdate({
-    set: {
-      views: sql`${laneDailyRollups.views} + ${metrics.views || 0}`,
-      saves: sql`${laneDailyRollups.saves} + ${metrics.saves || 0}`,
-      signups: sql`${laneDailyRollups.signups} + ${metrics.signups || 0}`,
-      inviteRedemptions: sql`${laneDailyRollups.inviteRedemptions} + ${metrics.redemptions || 0}`
-    }
-  });
-}
-
-export async function incrementSourceRollup(sourceType: string, day: Date, metrics: { ingested?: number, served?: number, saved?: number, failed?: boolean }) {
-  const db = await getDb();
-  if (!db) return;
-
-  const dateOnly = new Date(day.toISOString().split('T')[0]);
-
-  await db.insert(sourceDailyRollups).values({
-    sourceType,
-    day: dateOnly,
-    ingested: metrics.ingested || 0,
-    served: metrics.served || 0,
-    saved: metrics.saved || 0,
-    failCount: metrics.failed ? 1 : 0
-  }).onDuplicateKeyUpdate({
-    set: {
-      ingested: sql`${sourceDailyRollups.ingested} + ${metrics.ingested || 0}`,
-      served: sql`${sourceDailyRollups.served} + ${metrics.served || 0}`,
-      saved: sql`${sourceDailyRollups.saved} + ${metrics.saved || 0}`,
-      failCount: sql`${sourceDailyRollups.failCount} + ${metrics.failed ? 1 : 0}`
-    }
-  });
-}
 
 // --- Supporter Management ---
 

@@ -22,7 +22,7 @@
 
 import { chatCompletion, ChatCompletionRequest } from "./aiProviders";
 import * as db from "../db";
-import { InsertAIScriptJob } from "../../drizzle/schema";
+// Removed: InsertAIScriptJob (type doesn't exist in schema)
 
 export type ScriptType = "intro" | "outro" | "mixStory" | "tiktokClip" | "promo" | "fanShout" | "generic";
 

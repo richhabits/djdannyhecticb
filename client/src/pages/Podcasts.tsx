@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Music, Play, Headphones, Music as SpotifyIcon, X } from "lucide-react";
 import { Link } from "wouter";
 import { formatDate } from "date-fns";
+import { useState } from "react";
 import AudioPlayer from "@/components/AudioPlayer";
 
 export default function Podcasts() {

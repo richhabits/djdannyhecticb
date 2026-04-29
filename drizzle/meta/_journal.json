@@ -1,75 +1,19 @@
 {
   "version": "7",
-  "dialect": "mysql",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1762473481638,
-      "tag": "0000_sweet_fantastic_four",
+      "version": "7",
+      "when": 1777501598678,
+      "tag": "0000_graceful_spacker_dave",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "5",
-      "when": 1762473527757,
-      "tag": "0001_cynical_rictor",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1766876766459,
-      "tag": "0002_odd_gamma_corps",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1767393082450,
-      "tag": "0003_wakeful_human_fly",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1767396439727,
-      "tag": "0004_grey_psynapse",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1767657266250,
-      "tag": "0005_old_risque",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1767660768433,
-      "tag": "0006_clammy_namor",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "5",
-      "when": 1769477193719,
-      "tag": "0007_hard_charles_xavier",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "5",
-      "when": 1769483359320,
-      "tag": "0008_typical_mystique",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "5",
-      "when": 1770650457861,
-      "tag": "0009_icy_risque",
+      "version": "7",
+      "when": 1777501707004,
+      "tag": "0001_elite_magneto",
       "breakpoints": true
     }
   ]

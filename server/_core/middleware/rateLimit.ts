@@ -35,3 +35,12 @@ export const aiRateLimit = rateLimit({
     legacyHeaders: false,
     message: { error: "AI capacity reached, please try again later." },
 });
+
+// Analytics tracking rate limit (500 requests per minute per IP)
+export const trackLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 500,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    message: { error: "Too many tracking requests, please try again later." },
+});

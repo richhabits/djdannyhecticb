@@ -103,8 +103,8 @@ async function startServer() {
 
 
   // Global Rate Limiting (DDoS Protection)
-  const { strictLimiter } = await import("./rateLimit");
-  app.use(strictLimiter);
+  const { publicRateLimit } = await import("./middleware/rateLimit");
+  app.use(publicRateLimit);
 
   // Security headers (consolidated)
   const isProduction = process.env.NODE_ENV === "production";
@@ -132,9 +132,6 @@ async function startServer() {
     next();
   });
 
-  // Authentication routes with specific rate limits
-  const { authLimiter, bookingLimiter, aiLimiter } = await import("./rateLimit");
-
   // OAuth callback under /api/oauth/callback (only if configured)
   try {
     registerOAuthRoutes(app);
@@ -146,7 +143,6 @@ async function startServer() {
   }
 
   // Admin authentication routes
-  app.use("/api/admin/auth", authLimiter);
   registerAdminAuthRoutes(app);
 
   // Health Checks (Self-Healing Sentinel)
@@ -174,15 +170,7 @@ async function startServer() {
   const { registerAnalyticsRoutes } = await import("./analytics");
   registerAnalyticsRoutes(app);
 
-  // Procedure-specific rate limiting for tRPC
-  app.use("/api/trpc/danny.chat", aiLimiter);
-  app.use("/api/trpc/ai.listenerAssistant", aiLimiter);
-  app.use("/api/trpc/bookings.create", bookingLimiter);
-  app.use("/api/trpc/auth.register", authLimiter);
-
-  // Intel endpoints - D1 Hardening tier (60 req/min)
-  const { intelLimiter } = await import("./rateLimit");
-  app.use("/api/trpc/raveIntel", intelLimiter);
+  // Rate limiting is handled globally by express-rate-limit middleware
 
   // tRPC API
   const { logger } = await import("./logger");

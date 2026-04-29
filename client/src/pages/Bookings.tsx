@@ -22,36 +22,38 @@ export default function Bookings() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
-    eventName: "",
+    name: "",
     eventDate: "",
-    eventLocation: "",
-    eventType: "wedding",
-    guestCount: "",
+    location: "",
+    eventType: "club",
     budget: "",
-    description: "",
-    contactEmail: user?.email || "",
-    contactPhone: "",
+    extraNotes: "",
+    email: user?.email || "",
+    phone: "",
+    organisation: "",
+    eventTime: "",
   });
 
-  const { data: bookings, isLoading, refetch } = trpc.bookings.list.useQuery(
+  const { data: bookings, isLoading, refetch } = trpc.eventBookings.list.useQuery(
     undefined,
     { enabled: isAuthenticated }
   );
 
-  const createBookingMutation = trpc.bookings.create.useMutation({
+  const createBookingMutation = trpc.eventBookings.create.useMutation({
     onSuccess: () => {
       toast.success("🎉 Booking request created! DJ Danny will get back to you soon!");
       setShowForm(false);
       setFormData({
-        eventName: "",
+        name: "",
         eventDate: "",
-        eventLocation: "",
-        eventType: "wedding",
-        guestCount: "",
+        location: "",
+        eventType: "club",
         budget: "",
-        description: "",
-        contactEmail: user?.email || "",
-        contactPhone: "",
+        extraNotes: "",
+        email: user?.email || "",
+        phone: "",
+        organisation: "",
+        eventTime: "",
       });
       refetch();
     },
@@ -67,15 +69,19 @@ export default function Bookings() {
       return;
     }
     createBookingMutation.mutate({
-      eventName: formData.eventName,
-      eventDate: new Date(formData.eventDate),
-      eventLocation: formData.eventLocation,
-      eventType: formData.eventType,
-      guestCount: formData.guestCount ? parseInt(formData.guestCount) : undefined,
-      budget: formData.budget,
-      description: formData.description + "\nGenres: " + selectedGenres.join(", "),
-      contactEmail: formData.contactEmail,
-      contactPhone: formData.contactPhone,
+      name: formData.name,
+      eventDate: formData.eventDate,
+      eventTime: formData.eventTime,
+      location: formData.location,
+      eventType: formData.eventType as "club" | "radio" | "private" | "brand" | "other",
+      budgetRange: formData.budget,
+      extraNotes: formData.extraNotes + "\nGenres: " + selectedGenres.join(", "),
+      email: formData.email,
+      phone: formData.phone,
+      organisation: formData.organisation,
+      marketingConsent: false,
+      dataConsent: true,
+      streamingRequired: false,
     });
   };
 
@@ -133,9 +139,9 @@ export default function Bookings() {
                   {bookings.map((booking) => (
                     <div key={booking.id} className="flyer-card p-6 flex justify-between items-center">
                       <div className="space-y-1">
-                        <h3 className="font-black italic text-xl uppercase">{booking.eventName}</h3>
+                        <h3 className="font-black italic text-xl uppercase">{booking.name}</h3>
                         <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">
-                          {formatDate(new Date(booking.eventDate), 'MMM d, yyyy')} | {booking.eventLocation}
+                          {formatDate(new Date(booking.eventDate), 'MMM d, yyyy')} | {booking.location}
                         </p>
                       </div>
                       <div className={`tape-strip text-[10px] ${booking.status === 'confirmed' ? 'bg-green-500' : 'bg-white text-black'}`}>
@@ -183,10 +189,10 @@ export default function Bookings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <input
                     required
-                    value={formData.eventName}
-                    onChange={(e) => setFormData({ ...formData, eventName: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
-                    placeholder="EVENT_NAME"
+                    placeholder="YOUR_NAME"
                   />
                   <select
                     required
@@ -194,42 +200,33 @@ export default function Bookings() {
                     onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
                     className="w-full bg-white border-4 border-black p-4 font-black uppercase outline-none focus:bg-accent focus:text-white"
                   >
-                    <option value="wedding">Wedding</option>
-                    <option value="corporate">Corporate</option>
-                    <option value="club">Club/Bar Slot</option>
-                    <option value="private">Private Party</option>
-                    <option value="festival">Festival</option>
+                    <option value="club">Club</option>
+                    <option value="radio">Radio/Broadcast</option>
+                    <option value="private">Private Event</option>
+                    <option value="brand">Brand/Corporate</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <input
                     required
-                    value={formData.eventLocation}
-                    onChange={(e) => setFormData({ ...formData, eventLocation: e.target.value })}
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
                     placeholder="LOCATION_CITY_VENUE"
                   />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="number"
-                      value={formData.guestCount}
-                      onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
-                      className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
-                      placeholder="GUESTS"
-                    />
-                    <input
-                      value={formData.budget}
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
-                      placeholder="BUDGET"
-                    />
-                  </div>
+                  <input
+                    value={formData.budget}
+                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
+                    placeholder="BUDGET_RANGE"
+                  />
                 </div>
 
                 <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  value={formData.extraNotes}
+                  onChange={(e) => setFormData({ ...formData, extraNotes: e.target.value })}
                   className="w-full bg-white border-4 border-black p-4 h-40 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
                   placeholder="SPECIFIC_REQUIREMENTS / VIBE_CHECK"
                 />
@@ -238,15 +235,15 @@ export default function Bookings() {
                   <input
                     type="email"
                     required
-                    value={formData.contactEmail}
-                    onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
                     placeholder="EMAIL_IDENTITY"
                   />
                   <input
                     type="tel"
-                    value={formData.contactPhone}
-                    onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full bg-white border-4 border-black p-4 font-black uppercase placeholder:text-black/30 outline-none focus:bg-accent focus:text-white"
                     placeholder="PHONE_SIGNAL"
                   />

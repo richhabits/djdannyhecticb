@@ -5,9 +5,8 @@
 
 import { observability } from "./observability";
 import * as db from "../db";
-import * as schema from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
-import { execSync } from "child_process";
+import { exec } from "child_process";
+import { promisify } from "util";
 
 export type SystemState = 'GREEN' | 'AMBER' | 'RED';
 
@@ -88,9 +87,11 @@ class AutonomousEngine {
         if (!dbConn) return;
 
         console.warn(`🛑 [SENTRY] ACTIVATING KILL-SWITCH: ${reason}`);
-        await dbConn.update(schema.featureFlags)
-            .set({ isEnabled: false })
-            .where(eq(schema.featureFlags.key, "alerts_enabled"));
+        // TODO: featureFlags table not yet implemented in schema
+        // Stub: Feature flag update would be applied here when schema is ready
+        // await dbConn.update(schema.featureFlags)
+        //     .set({ isEnabled: false })
+        //     .where(eq(schema.featureFlags.key, "alerts_enabled"));
 
         await db.createGovernanceLog({
             actorType: "system",
@@ -101,12 +102,15 @@ class AutonomousEngine {
     }
 
     private async performHygiene() {
-        // Log rotation / Cleanup
+        // Log rotation / Cleanup (non-blocking async version)
         try {
-            // Prune any dangling docker images or temp files if on server
-            // For now, just a placeholder for the logic
+            // Prune temp files in background without blocking event loop
             if (process.env.NODE_ENV === 'production') {
-                execSync("find /tmp -mtime +1 -type f -delete");
+                const execAsync = promisify(exec);
+                // Don't await - let it run asynchronously in background
+                execAsync("find /tmp -mtime +1 -type f -delete").catch((e) => {
+                    console.warn("⚠️ [SENTRY] Temp file cleanup failed:", e);
+                });
             }
         } catch (e) {
             console.warn("⚠️ [SENTRY] Hygiene task failed:", e);

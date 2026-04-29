@@ -478,7 +478,7 @@ function SubmitEventModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                                 <select
                                     required
                                     value={formData.category}
-                                    onChange={(e) => setFormData(f => ({ ...f, category: e.target.value as any }))}
+                                    onChange={(e) => setFormData(f => ({ ...f, category: e.target.value as 'music' | 'festival' | 'boxing' | 'sports' | 'comedy' | 'theatre' | 'clubbing' | 'other' }))}
                                     className="w-full bg-black border-2 border-white/30 p-3 focus:border-accent outline-none font-bold uppercase"
                                 >
                                     <option value="music">Music</option>

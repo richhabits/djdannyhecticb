@@ -26,8 +26,13 @@
 
 import { Express, Request, Response } from "express";
 import { getDb } from "../db";
-import { mixes, events, podcasts, shows, showEpisodes } from "../../drizzle/schema";
+import { mixes, events, podcasts, shows } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
+
+/**
+ * NOTE: showEpisodes table has been removed from schema.
+ * Episode sitemap generation has been stubbed out.
+ */
 
 const BASE_URL = process.env.BASE_URL || "https://djdannyhecticb.co.uk";
 
@@ -85,15 +90,8 @@ async function generateSitemap(): Promise<string> {
       }
 
       // Show Episodes
-      const allEpisodes = await db.select().from(showEpisodes).orderBy(desc(showEpisodes.createdAt));
-      for (const episode of allEpisodes) {
-        urls.push({
-          loc: `${BASE_URL}/show/episode/${episode.slug}`,
-          lastmod: episode.updatedAt.toISOString(),
-          changefreq: "weekly",
-          priority: 0.8,
-        });
-      }
+      // STUB: showEpisodes table has been removed from schema
+      // Episode sitemap generation disabled
     } catch (error) {
       if (process.env.NODE_ENV === "development") {
         console.warn("[SEO] Error generating sitemap:", error);

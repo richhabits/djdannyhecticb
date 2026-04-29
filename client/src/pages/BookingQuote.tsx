@@ -16,6 +16,7 @@ import { format, parseISO } from "date-fns";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
@@ -35,7 +36,7 @@ export default function BookingQuote() {
 
                 {/* Invoice Main Body */}
                 <div className="lg:col-span-2 space-y-8">
-                    <motion_div
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white text-black rounded-[40px] overflow-hidden shadow-2xl relative"
@@ -110,7 +111,7 @@ export default function BookingQuote() {
                                 </div>
                             </div>
                         </div>
-                    </motion_div>
+                    </motion.div>
                 </div>
 
                 {/* Action Sidebar */}
@@ -181,11 +182,11 @@ export default function BookingQuote() {
 
 function DepositPaymentWrapper({ bookingId }: { bookingId: number }) {
     const [showPayment, setShowPayment] = useState(false);
-    const depositIntent = trpc.bookings.createDepositIntent.useMutation();
+    const { mutateAsync } = trpc.bookings.createDepositIntent.useMutation();
 
     const handleStartPayment = async () => {
         try {
-            await depositIntent.mutateAsync({ bookingId });
+            await mutateAsync({ bookingId });
             setShowPayment(true);
         } catch (err: any) {
             toast.error(err.message);
@@ -196,17 +197,16 @@ function DepositPaymentWrapper({ bookingId }: { bookingId: number }) {
         return (
             <Button
                 onClick={handleStartPayment}
-                disabled={depositIntent.isPending}
                 className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest italic rounded-2xl shadow-lg shadow-orange-900/30"
             >
-                {depositIntent.isPending ? "Generating Secure Link..." : "Lock My Date Now"}
+                Lock My Date Now
             </Button>
         );
     }
 
     return (
         <div className="space-y-6 pt-4">
-            <Elements stripe={stripePromise} options={{ clientSecret: depositIntent.data?.clientSecret }}>
+            <Elements stripe={stripePromise}>
                 <DepositPaymentForm bookingId={bookingId} />
             </Elements>
         </div>
@@ -252,5 +252,3 @@ function DepositPaymentForm({ bookingId }: { bookingId: number }) {
     );
 }
 
-// Helper to keep motion clean since I can't use framer-motion directly in this turn if not imported
-import { motion as motion_div } from "framer-motion";

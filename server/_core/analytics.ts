@@ -13,6 +13,7 @@ import crypto from "crypto";
 import { Request, Response, Express } from "express";
 import { getDb } from "../db";
 import { analyticsEvents } from "../../drizzle/schema";
+import { trackLimiter } from "./middleware/rateLimit";
 
 // Validation schema for tracking events
 const trackEventSchema = z.object({
@@ -20,7 +21,7 @@ const trackEventSchema = z.object({
         .min(1, "Event name is required")
         .max(80, "Event name must be <= 80 characters")
         .regex(/^[a-z][a-z0-9_]*$/, "Event name must be snake_case"),
-    props: z.record(z.unknown())
+    props: z.record(z.string(), z.unknown())
         .optional()
         .refine(
             (props) => {
@@ -97,7 +98,7 @@ async function handleTrackEvent(req: Request, res: Response): Promise<void> {
         // Validate request body
         const result = trackEventSchema.safeParse(req.body);
         if (!result.success) {
-            res.status(400).json({ ok: false, error: result.error.errors[0].message });
+            res.status(400).json({ ok: false, error: result.error.issues[0].message });
             return;
         }
 
@@ -125,9 +126,6 @@ async function handleTrackEvent(req: Request, res: Response): Promise<void> {
  * Register analytics routes
  */
 export function registerAnalyticsRoutes(app: Express): void {
-    // Apply lightweight rate limiting via the existing trackLimiter
-    const { trackLimiter } = require("./rateLimit");
-
     app.post("/api/track", trackLimiter, handleTrackEvent);
 
     console.log("[Analytics] Routes registered: POST /api/track");

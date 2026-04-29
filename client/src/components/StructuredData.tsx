@@ -14,7 +14,7 @@ interface StructuredDataProps {
 export function StructuredData({ data, type }: StructuredDataProps) {
   useEffect(() => {
     // Add @type if not present
-    const structuredData = {
+    const structuredData: Record<string, any> = {
       "@context": "https://schema.org",
       ...data,
     };
