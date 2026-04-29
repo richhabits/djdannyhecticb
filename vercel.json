@@ -62,10 +62,6 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/hourly",
-      "schedule": "0 * * * *"
-    },
-    {
       "path": "/api/cron/jarvis-insights",
       "schedule": "0 7 * * *"
     },
