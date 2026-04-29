@@ -2851,6 +2851,286 @@ export const appRouter = router({
   // PHASE 7: ADMIN FEATURE EXPANSION
   // ============================================
 
+  // ============================================
+  // HECTIC AI - Public booking chatbot
+  // ============================================
+  hectic: router({
+    chat: publicProcedure
+      .input(z.object({
+        message: z.string().min(1).max(1000),
+        sessionId: z.string().min(1).max(64),
+        userId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { extractBookingData } = await import("./_core/hecticExtractor");
+        const { buildHecticContext, shouldPromptSignup, HECTIC_SYSTEM_PROMPT } = await import("./_core/hecticPersona");
+        const { aiProvider } = await import("./_core/aiProvider");
+
+        // Load conversation
+        let conversation = await db.query.hecticConversations.findFirst({
+          where: (t) => t.sessionId.eq(input.sessionId),
+        });
+
+        if (!conversation) {
+          // Create new conversation
+          const [newConv] = await db.insert(db.schema.hecticConversations).values({
+            sessionId: input.sessionId,
+            userId: input.userId,
+            channel: "web",
+            status: "active",
+            extractedData: null,
+          }).returning();
+          conversation = newConv;
+        }
+
+        // Load last 10 messages (cost control - context window)
+        const previousMessages = await db.query.hecticMessages.findMany({
+          where: (t) => t.conversationId.eq(conversation.id),
+          orderBy: (t) => t.createdAt,
+          limit: 10,
+        });
+
+        // Extract booking data
+        const extracted = await extractBookingData(input.message, conversation.extractedData as any);
+
+        // Build context
+        const context = buildHecticContext(extracted, previousMessages.length + 1);
+
+        // Build messages for AI
+        const systemPrompt = HECTIC_SYSTEM_PROMPT + context;
+        const messages = [
+          { role: "system", content: systemPrompt },
+          ...previousMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          { role: "user", content: input.message },
+        ];
+
+        // Call AI with auto-provider selection (Gemini Flash by default, free tier)
+        const response = await aiProvider.chat(input.message, "auto");
+        if (!response.success) {
+          throw new Error(`AI error: ${response.error}`);
+        }
+
+        // Persist messages
+        await db.insert(db.schema.hecticMessages).values([
+          {
+            conversationId: conversation.id,
+            role: "user",
+            content: input.message,
+            metadata: { extracted },
+          },
+          {
+            conversationId: conversation.id,
+            role: "assistant",
+            content: response.text!,
+            metadata: { provider: response.provider, model: response.model },
+          },
+        ]);
+
+        // Update conversation extracted data + status
+        let leadCaptured = conversation.leadCaptured || false;
+        if (extracted.email && !conversation.leadCaptured) {
+          leadCaptured = true;
+          // Create lead record
+          await db.insert(db.schema.hecticLeads).values({
+            conversationId: conversation.id,
+            name: extracted.name,
+            email: extracted.email,
+            phone: extracted.phone,
+            organisation: extracted.organisation,
+            intent: extracted.intent,
+            eventType: extracted.eventType,
+            eventDate: extracted.eventDate,
+            location: extracted.location,
+            budget: extracted.budget,
+            status: "new",
+          });
+        }
+
+        await db.update(db.schema.hecticConversations)
+          .set({
+            extractedData: extracted,
+            leadCaptured,
+            updatedAt: new Date(),
+          })
+          .where((t) => t.id.eq(conversation.id));
+
+        const signupPromptCount = conversation.signupPromptCount || 0;
+        const showSignupPrompt =
+          shouldPromptSignup(previousMessages.length + 1, !!extracted.email, extracted.intent) &&
+          signupPromptCount === 0;
+
+        if (showSignupPrompt) {
+          await db.update(db.schema.hecticConversations)
+            .set({ signupPromptCount: signupPromptCount + 1 })
+            .where((t) => t.id.eq(conversation.id));
+        }
+
+        return {
+          response: response.text!,
+          extractedData: extracted,
+          shouldPromptSignup: showSignupPrompt,
+          sessionId: input.sessionId,
+          provider: response.provider,
+        };
+      }),
+
+    history: publicProcedure
+      .input(z.object({ sessionId: z.string() }))
+      .query(async ({ input }) => {
+        const conversation = await db.query.hecticConversations.findFirst({
+          where: (t) => t.sessionId.eq(input.sessionId),
+        });
+
+        if (!conversation) return [];
+
+        return db.query.hecticMessages.findMany({
+          where: (t) => t.conversationId.eq(conversation.id),
+          orderBy: (t) => t.createdAt,
+          limit: 30,
+        });
+      }),
+
+    lead: protectedProcedure
+      .input(z.object({ sessionId: z.string() }))
+      .query(async ({ input }) => {
+        const conversation = await db.query.hecticConversations.findFirst({
+          where: (t) => t.sessionId.eq(input.sessionId),
+        });
+
+        if (!conversation) return null;
+
+        return db.query.hecticLeads.findFirst({
+          where: (t) => t.conversationId.eq(conversation.id),
+        });
+      }),
+  }),
+
+  // ============================================
+  // JARVIS - Admin AI assistant
+  // ============================================
+  jarvis: router({
+    chat: adminProcedure
+      .input(z.object({
+        message: z.string().min(1).max(2000),
+        sessionId: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        // Load recent bookings for context
+        const recentBookings = await db.query.eventBookings.findMany({
+          limit: 10,
+          orderBy: (t) => t.createdAt,
+        });
+
+        const newLeads = await db.query.hecticLeads.findMany({
+          where: (t) => t.status.eq("new"),
+          limit: 10,
+        });
+
+        // Build business context
+        const context = `
+DANNY'S BUSINESS CONTEXT:
+Recent bookings: ${recentBookings.length}
+New leads: ${newLeads.length}
+Top cities: ${newLeads.map((l) => l.location).filter(Boolean).join(", ") || "N/A"}
+
+Recent leads:
+${newLeads.map((l) => `- ${l.name} (${l.location}) - ${l.eventType} - Budget: ${l.budget}`).join("\n")}
+`;
+
+        const jarvisPrompt = `
+You are JARVIS — DJ Danny Hectic B's private admin intelligence system.
+You have full access to Danny's business data: bookings, leads, fan activity, revenue, events.
+
+YOUR CAPABILITIES:
+1. Booking Analysis: Surface patterns, identify high-value opportunities
+2. Venue Intelligence: Suggest specific clubs, bars, promoters in UK cities to approach
+3. Social Media: Write Instagram captions, TikTok hooks, X posts in Danny's voice
+4. Lead Follow-up: Draft personalised emails to booking leads
+5. Marketing Copy: Promo text for specific events, mix releases, shout-outs
+
+${context}
+
+RESPONSE FORMAT:
+- Be direct and actionable. Give names, suggest specific venues where you can.
+- When suggesting outreach: provide the actual DM/email text to copy.
+- UK music industry knowledge: Fabric, XOYO, EGG, Ministry of Sound,
+  Manchester: Warehouse Project, Sankeys,
+  Leeds: Wire, Mint Club,
+  Glasgow: SWG3, Sub Club,
+  Birmingham: Mama Roux's, Electric Ballroom
+`;
+
+        // Call Jarvis (use Groq if available for cost savings, fallback to Gemini Flash)
+        const response = await aiProvider.chat(
+          `${jarvisPrompt}\n\nAdmin ask: ${input.message}`,
+          process.env.GROQ_API_KEY ? "groq" : "gemini"
+        );
+
+        if (!response.success) {
+          throw new Error(`Jarvis error: ${response.error}`);
+        }
+
+        return {
+          response: response.text!,
+          provider: response.provider,
+          model: response.model,
+        };
+      }),
+
+    insights: adminProcedure.query(async () => {
+      return db.query.jarvisInsights.findMany({
+        where: (t) => t.status.eq("active"),
+        limit: 20,
+        orderBy: (t) => t.priority,
+      });
+    }),
+
+    leadsQueue: adminProcedure.query(async () => {
+      return db.query.hecticLeads.findMany({
+        where: (t) =>
+          t.status.in(["new", "contacted"]),
+        limit: 50,
+        orderBy: (t) => t.createdAt,
+      });
+    }),
+
+    generateSuggestions: adminProcedure.mutation(async () => {
+      const leads = await db.query.hecticLeads.findMany({
+        where: (t) =>
+          t.status.eq("new"),
+      });
+
+      if (leads.length === 0) return { suggestions: 0 };
+
+      // Group by location and event type
+      const byCity = new Map<string, number>();
+      const byType = new Map<string, number>();
+
+      leads.forEach((lead) => {
+        if (lead.location) byCity.set(lead.location, (byCity.get(lead.location) || 0) + 1);
+        if (lead.eventType) byType.set(lead.eventType, (byType.get(lead.eventType) || 0) + 1);
+      });
+
+      // Create suggestions (simplified - in production would call venue API)
+      const suggestions = Array.from(byCity.entries()).map(([city, count]) => ({
+        type: "venue_suggestion",
+        title: `${city} Opportunities`,
+        content: `${count} new booking inquiries from ${city}. Consider outreach to clubs in this area.`,
+        metadata: { city, inquiries: count, source: "hectic_leads" },
+        status: "active",
+        priority: count * 2,
+      }));
+
+      // Insert into jarvisInsights
+      await db.insert(db.schema.jarvisInsights).values(suggestions as any);
+
+      return { suggestions: suggestions.length };
+    }),
+  }),
+
 });
 
 export type AppRouter = typeof appRouter;

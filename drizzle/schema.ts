@@ -1193,3 +1193,113 @@ export const aiDannyChats = pgTable("ai_danny_chats", {
 
 export type AIDannyChat = typeof aiDannyChats.$inferSelect;
 export type InsertAIDannyChat = typeof aiDannyChats.$inferInsert;
+
+/**
+ * ============================================
+ * HECTIC AI SYSTEM
+ * ============================================
+ */
+
+// Enums for Hectic AI
+export const hecticChannelEnum = pgEnum("hectic_channel", ["web", "sms", "call", "whatsapp"]);
+export const hecticStatusEnum = pgEnum("hectic_status", ["active", "booking_captured", "signed_up", "closed"]);
+export const hecticLeadIntentEnum = pgEnum("hectic_lead_intent", ["booking", "inquiry", "fan", "media"]);
+export const hecticLeadStatusEnum = pgEnum("hectic_lead_status", ["new", "contacted", "converted", "lost"]);
+export const jarvisInsightTypeEnum = pgEnum("jarvis_insight_type", ["venue_suggestion", "marketing_copy", "follow_up", "trend"]);
+export const commsProviderEnum = pgEnum("comms_provider", ["telnyx", "vapi", "whatsapp"]);
+export const commsDirectionEnum = pgEnum("comms_direction", ["inbound", "outbound"]);
+
+/**
+ * Hectic Conversations - Session management for AI chats
+ */
+export const hecticConversations = pgTable("hectic_conversations", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 64 }).notNull().unique(),
+  userId: integer("user_id").references(() => users.id),
+  channel: hecticChannelEnum("channel").default("web").notNull(),
+  status: hecticStatusEnum("status").default("active").notNull(),
+  extractedData: json("extracted_data"),
+  leadCaptured: boolean("lead_captured").default(false).notNull(),
+  signupPromptCount: integer("signup_prompt_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type HecticConversation = typeof hecticConversations.$inferSelect;
+export type InsertHecticConversation = typeof hecticConversations.$inferInsert;
+
+/**
+ * Hectic Messages - Individual messages in conversations
+ */
+export const hecticMessages = pgTable("hectic_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => hecticConversations.id).notNull(),
+  role: varchar("role", { length: 16 }).notNull(),
+  content: text("content").notNull(),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type HecticMessage = typeof hecticMessages.$inferSelect;
+export type InsertHecticMessage = typeof hecticMessages.$inferInsert;
+
+/**
+ * Hectic Leads - Captured booking leads from conversations
+ */
+export const hecticLeads = pgTable("hectic_leads", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => hecticConversations.id),
+  name: varchar("name", { length: 255 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 50 }),
+  organisation: varchar("organisation", { length: 255 }),
+  intent: hecticLeadIntentEnum("intent"),
+  eventType: eventTypeEnum("event_type"),
+  eventDate: varchar("event_date", { length: 100 }),
+  location: varchar("location", { length: 255 }),
+  budget: varchar("budget", { length: 100 }),
+  status: hecticLeadStatusEnum("status").default("new").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  followedUpAt: timestamp("followed_up_at"),
+});
+
+export type HecticLead = typeof hecticLeads.$inferSelect;
+export type InsertHecticLead = typeof hecticLeads.$inferInsert;
+
+/**
+ * Jarvis Insights - Admin AI suggestions and intelligence
+ */
+export const jarvisInsights = pgTable("jarvis_insights", {
+  id: serial("id").primaryKey(),
+  type: jarvisInsightTypeEnum("type").notNull(),
+  title: varchar("title", { length: 255 }),
+  content: text("content").notNull(),
+  metadata: json("metadata"),
+  status: varchar("status", { length: 32 }).default("active").notNull(),
+  priority: integer("priority").default(5).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export type JarvisInsight = typeof jarvisInsights.$inferSelect;
+export type InsertJarvisInsight = typeof jarvisInsights.$inferInsert;
+
+/**
+ * Communications Log - Telnyx/Vapi message tracking
+ */
+export const commsLog = pgTable("comms_log", {
+  id: serial("id").primaryKey(),
+  provider: commsProviderEnum("provider"),
+  direction: commsDirectionEnum("direction"),
+  from: varchar("from_number", { length: 50 }),
+  to: varchar("to_number", { length: 50 }),
+  body: text("body"),
+  status: varchar("status", { length: 32 }),
+  externalId: varchar("external_id", { length: 255 }),
+  conversationId: integer("conversation_id").references(() => hecticConversations.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type CommsLogEntry = typeof commsLog.$inferSelect;
+export type InsertCommsLogEntry = typeof commsLog.$inferInsert;
