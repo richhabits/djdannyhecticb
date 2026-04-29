@@ -1,0 +1,12 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "env": {
+    "NODE_ENV": "production",
+    "DATABASE_URL": "@database_url",
+    "JWT_SECRET": "@jwt_secret",
+    "OAUTH_SERVER_URL": "@oauth_server_url",
+    "VITE_OAUTH_PORTAL_URL": "@vite_oauth_portal_url",
+    "VITE_APP_ID": "@vite_app_id"
+  }
+}
