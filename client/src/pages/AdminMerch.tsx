@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, RefreshCw, Link as LinkIcon, Unlink, ShoppingBox } from "lucide-react";
+import { Loader2, RefreshCw, Link as LinkIcon, Unlink, Package } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -65,7 +65,7 @@ export default function AdminMerch() {
         <Card className="bg-black/80 border-white mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ShoppingBox className="w-5 h-5" />
+              <Package className="w-5 h-5" />
               Printfull Catalog Sync
             </CardTitle>
             <CardDescription>Synchronize available merchandise from Printfull</CardDescription>
