@@ -183,6 +183,64 @@ export type Podcast = typeof podcasts.$inferSelect;
 export type InsertPodcast = typeof podcasts.$inferInsert;
 
 /**
+ * UK Events table for Ticketmaster and other event sources
+ */
+export const ukEvents = pgTable("uk_events", {
+  id: serial("id").primaryKey(),
+  externalId: varchar("external_id", { length: 255 }).notNull().unique(),
+  source: varchar("source", { length: 50 }).notNull(), // ticketmaster, skiddle, ra, etc
+  title: varchar("title", { length: 512 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }),
+  subcategory: varchar("subcategory", { length: 100 }),
+  eventDate: timestamp("event_date").notNull(),
+  doorsTime: timestamp("doors_time"),
+  venue: varchar("venue", { length: 255 }).notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  latitude: numeric("latitude", { precision: 10, scale: 8 }),
+  longitude: numeric("longitude", { precision: 11, scale: 8 }),
+  imageUrl: varchar("image_url", { length: 512 }),
+  ticketUrl: varchar("ticket_url", { length: 512 }),
+  ticketStatus: varchar("ticket_status", { length: 50 }), // AVAILABLE, LIMITED, SOLD_OUT, ON_SALE, POSTPONED, CANCELLED
+  priceMin: numeric("price_min", { precision: 10, scale: 2 }),
+  priceMax: numeric("price_max", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("GBP"),
+  artists: text("artists"), // JSON array of artist names
+  ageRestriction: varchar("age_restriction", { length: 50 }),
+  isFeatured: boolean("is_featured").default(false),
+  isSynced: boolean("is_synced").default(true),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type UKEvent = typeof ukEvents.$inferSelect;
+export type InsertUKEvent = typeof ukEvents.$inferInsert;
+
+/**
+ * Event Sync Status table for tracking ingestion health
+ */
+export const eventSyncStatus = pgTable("event_sync_status", {
+  id: serial("id").primaryKey(),
+  connector: varchar("connector", { length: 50 }).notNull().unique(), // ticketmaster, skiddle, ra
+  lastSyncedAt: timestamp("last_synced_at"),
+  lastSuccessfulSyncAt: timestamp("last_successful_sync_at"),
+  syncStatus: varchar("sync_status", { length: 50 }).default("idle"), // idle, syncing, success, error
+  errorMessage: text("error_message"),
+  eventsProcessed: integer("events_processed").default(0),
+  eventsCreated: integer("events_created").default(0),
+  eventsUpdated: integer("events_updated").default(0),
+  eventsSkipped: integer("events_skipped").default(0),
+  nextSyncScheduledAt: timestamp("next_sync_scheduled_at"),
+  syncDurationMs: integer("sync_duration_ms"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type EventSyncStatus = typeof eventSyncStatus.$inferSelect;
+export type InsertEventSyncStatus = typeof eventSyncStatus.$inferInsert;
+
+/**
  * Streaming Links table for music platforms
  */
 export const streamingLinks = pgTable("streamingLinks", {
