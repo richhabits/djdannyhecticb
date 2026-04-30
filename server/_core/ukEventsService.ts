@@ -377,6 +377,122 @@ export async function syncTicketmasterEvents(): Promise<{
     }
 }
 
+// Sample events for demonstration when database is unavailable
+const SAMPLE_EVENTS: UKEvent[] = [
+    {
+        id: 1,
+        externalId: 'tm-sample-1',
+        source: 'ticketmaster',
+        title: 'Danny Live @ Ministry of Sound',
+        description: 'High-energy UK Garage and House set. Danny delivers an electrifying night of classic UK underground sounds.',
+        category: 'music',
+        subcategory: 'UK Garage',
+        venue: 'Ministry of Sound',
+        city: 'London',
+        latitude: '51.5017',
+        longitude: '-0.1194',
+        eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        doorsTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 22 * 60 * 60 * 1000),
+        imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&h=600&fit=crop',
+        ticketUrl: 'https://www.ministryofsound.com',
+        priceMin: '£25',
+        priceMax: '£35',
+        currency: 'GBP',
+        ticketStatus: 'available',
+        artists: JSON.stringify(['Danny Hectic B']),
+        ageRestriction: '18+',
+        isFeatured: true,
+        isSynced: true,
+        lastSyncedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    } as UKEvent,
+    {
+        id: 2,
+        externalId: 'tm-sample-2',
+        source: 'ticketmaster',
+        title: 'Electric Ballroom - Jungle Night',
+        description: 'Danny joins top UK DJs for an all-night jungle extravaganza. Fast breaks, high energy, unforgettable vibes.',
+        category: 'music',
+        subcategory: 'Drum & Bass',
+        venue: 'Electric Ballroom',
+        city: 'London',
+        latitude: '51.5401',
+        longitude: '-0.1307',
+        eventDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        doorsTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000),
+        imageUrl: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1200&h=600&fit=crop',
+        ticketUrl: 'https://www.electricballroom.co.uk',
+        priceMin: '£20',
+        priceMax: '£30',
+        currency: 'GBP',
+        ticketStatus: 'available',
+        artists: JSON.stringify(['Danny Hectic B', 'Jungle Collective']),
+        ageRestriction: '18+',
+        isFeatured: true,
+        isSynced: true,
+        lastSyncedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    } as UKEvent,
+    {
+        id: 3,
+        externalId: 'tm-sample-3',
+        source: 'ticketmaster',
+        title: 'XOYO - Private Event',
+        description: 'Exclusive booking. Corporate team-building with Danny on the decks. Custom setlist, full technical equipment.',
+        category: 'music',
+        subcategory: 'House',
+        venue: 'XOYO',
+        city: 'London',
+        latitude: '51.5189',
+        longitude: '-0.0903',
+        eventDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+        doorsTime: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000 + 19 * 60 * 60 * 1000),
+        imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=600&fit=crop',
+        ticketUrl: 'https://www.xoyo.co.uk',
+        priceMin: '£2000',
+        priceMax: '£3000',
+        currency: 'GBP',
+        ticketStatus: 'available',
+        artists: JSON.stringify(['Danny Hectic B']),
+        ageRestriction: null,
+        isFeatured: true,
+        isSynced: true,
+        lastSyncedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    } as UKEvent,
+    {
+        id: 4,
+        externalId: 'tm-sample-4',
+        source: 'ticketmaster',
+        title: 'SWG3 Glasgow - Warehouse Vibe',
+        description: 'Danny takes over the decks at Glasgow\'s premier warehouse venue. 4-hour set of everything from Grime to House.',
+        category: 'music',
+        subcategory: 'Grime',
+        venue: 'SWG3',
+        city: 'Glasgow',
+        latitude: '55.8642',
+        longitude: '-4.2945',
+        eventDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
+        doorsTime: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000 + 22 * 60 * 60 * 1000),
+        imageUrl: 'https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=1200&h=600&fit=crop',
+        ticketUrl: 'https://www.swg3.com',
+        priceMin: '£30',
+        priceMax: '£45',
+        currency: 'GBP',
+        ticketStatus: 'available',
+        artists: JSON.stringify(['Danny Hectic B', 'Glasgow Crew']),
+        ageRestriction: '18+',
+        isFeatured: false,
+        isSynced: true,
+        lastSyncedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    } as UKEvent,
+];
+
 /**
  * Get upcoming UK events with filters
  */
@@ -388,7 +504,28 @@ export async function getUKEvents(options: {
     featured?: boolean;
 }): Promise<UKEvent[]> {
     const db = await getDb();
-    if (!db) return [];
+    if (!db) {
+        // Return sample events when database is unavailable
+        console.warn('[UKEvents] Database unavailable, returning sample events for demo');
+        let results = [...SAMPLE_EVENTS];
+
+        if (options.category) {
+            results = results.filter(e => e.category === options.category);
+        }
+        if (options.city) {
+            results = results.filter(e => e.city?.toLowerCase().includes(options.city?.toLowerCase() || ''));
+        }
+        if (options.featured) {
+            results = results.filter(e => e.isFeatured);
+        }
+
+        results = results.slice(options.offset || 0);
+        if (options.limit) {
+            results = results.slice(0, options.limit);
+        }
+
+        return results;
+    }
 
     try {
         const conditions = [gt(ukEvents.eventDate, new Date())];
@@ -421,7 +558,8 @@ export async function getUKEvents(options: {
         return await query;
     } catch (error) {
         console.error('[UKEvents] Failed to fetch events:', error);
-        return [];
+        // Fallback to sample events on error
+        return SAMPLE_EVENTS.slice(0, options.limit || 10);
     }
 }
 
@@ -450,7 +588,11 @@ export async function getUKEventById(id: number): Promise<UKEvent | null> {
  */
 export async function getFeaturedUKEvents(limit: number = 6): Promise<UKEvent[]> {
     const db = await getDb();
-    if (!db) return [];
+    if (!db) {
+        // Return sample featured events when database is unavailable
+        console.warn('[UKEvents] Database unavailable, returning sample featured events for demo');
+        return SAMPLE_EVENTS.filter(e => e.isFeatured).slice(0, limit);
+    }
 
     try {
         return await db.select()
@@ -463,7 +605,8 @@ export async function getFeaturedUKEvents(limit: number = 6): Promise<UKEvent[]>
             .limit(limit);
     } catch (error) {
         console.error('[UKEvents] Failed to fetch featured events:', error);
-        return [];
+        // Fallback to sample featured events on error
+        return SAMPLE_EVENTS.filter(e => e.isFeatured).slice(0, limit);
     }
 }
 
