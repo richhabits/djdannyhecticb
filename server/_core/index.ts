@@ -19,6 +19,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerAdminAuthRoutes } from "./adminAuthRoutes";
 import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
+import { registerRateCardRoutes } from "../routes/ratecard";
 import { registerUploadRoutes } from "../routes/upload";
 import { registerWebhookRoutes } from "../routes/webhooks";
 import { registerCronRoutes } from "../routes/cron";
@@ -164,6 +165,9 @@ async function startServer() {
 
   // Payment webhooks (Stripe, PayPal)
   registerPaymentRoutes(app);
+
+  // Rate Card
+  registerRateCardRoutes(app);
 
   // File Uploads
   registerUploadRoutes(app);

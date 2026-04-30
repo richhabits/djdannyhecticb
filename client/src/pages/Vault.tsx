@@ -3,12 +3,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Trophy, Sparkles, Star } from "lucide-react";
 import { useState } from "react";
 
-const currentProfileId = 1; // TODO: Get from auth
-
 export default function Vault() {
+  const { user } = useAuth();
+  const currentProfileId = user?.id ?? null;
+
   const { data: collectibles } = trpc.genz.collectibles.getUserCollectibles.useQuery(
     { profileId: currentProfileId },
     { enabled: !!currentProfileId }

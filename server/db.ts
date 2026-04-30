@@ -16,7 +16,7 @@
 
 import { asc, desc, eq, gt, lt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo } from "../drizzle/schema";
+import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo, blogPosts, InsertBlogPost, faqs, InsertFAQ, contactMessages, InsertContactMessage, printfullProducts, InsertPrintfullProduct, merchOrders, InsertMerchOrder, products, refundRequests, InsertRefundRequest } from "../drizzle/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ENV } from './_core/env';
@@ -146,7 +146,7 @@ export async function getAllBookings() {
   return await db.select().from(bookings).orderBy(desc(bookings.createdAt));
 }
 
-export async function createBooking(booking: any) {
+export async function createBooking(booking: InsertBooking) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.insert(bookings).values(booking);
@@ -1126,7 +1126,7 @@ export async function createSupportEvent(event: InsertSupportEvent) {
   if (!db) throw new Error("Database not available");
 
   // Only include fields that are explicitly provided (omit undefined to let defaults work)
-  const values: any = {
+  const values: Record<string, unknown> = {
     fanName: event.fanName,
     amount: event.amount,
     currency: event.currency || "GBP",
@@ -1214,6 +1214,23 @@ export async function deleteProduct(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(products).where(eq(products.id, id));
+}
+
+export async function searchProducts(q: string, type?: string, limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  const searchTerm = `%${q}%`;
+  const conditions = [
+    or(
+      like(products.name, searchTerm),
+      like(products.description, searchTerm)
+    ),
+    eq(products.isActive, true)
+  ];
+  if (type) {
+    conditions.push(eq(products.type, type));
+  }
+  return await db.select().from(products).where(and(...conditions)).limit(limit);
 }
 
 export async function createPurchase(purchase: InsertPurchase) {
@@ -2836,4 +2853,475 @@ export async function recordSupporterScore(userId: number, weekStart: Date, scor
     score,
     breakdown: JSON.stringify(breakdown)
   });
+}
+
+/**
+ * BLOG POST FUNCTIONS
+ */
+export async function createBlogPost(data: InsertBlogPost) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(blogPosts).values({
+    ...data,
+    tags: data.tags ? JSON.stringify(data.tags) : null,
+  });
+
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(blogPosts).where(eq(blogPosts.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateBlogPost(id: number, data: Partial<InsertBlogPost>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(blogPosts).set({
+    ...data,
+    tags: data.tags ? JSON.stringify(data.tags) : undefined,
+    updatedAt: new Date(),
+  }).where(eq(blogPosts.id, id));
+
+  const updated = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteBlogPost(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(blogPosts).where(eq(blogPosts.id, id));
+}
+
+export async function listBlogPosts(limit: number = 10, offset: number = 0, published?: boolean) {
+  const db = await getDb();
+  if (!db) return { posts: [], total: 0 };
+
+  const conditions = [];
+  if (published !== undefined) {
+    conditions.push(eq(blogPosts.published, published));
+  }
+
+  let query = db.select().from(blogPosts);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  const posts = await query
+    .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  const countResult = await db.select({ count: sql`COUNT(*)` }).from(blogPosts);
+  const total = Number(countResult[0]?.count || 0);
+
+  return { posts, total };
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const posts = await db.select().from(blogPosts).where(eq(blogPosts.slug, slug)).limit(1);
+  return posts[0] || null;
+}
+
+export async function searchBlogPosts(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(blogPosts)
+    .where(
+      and(
+        eq(blogPosts.published, true),
+        or(
+          like(blogPosts.title, `%${query}%`),
+          like(blogPosts.content, `%${query}%`),
+          like(blogPosts.excerpt, `%${query}%`)
+        )
+      )
+    )
+    .orderBy(desc(blogPosts.publishedAt))
+    .limit(20);
+}
+
+export async function getBlogPostsByTag(tag: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(blogPosts)
+    .where(eq(blogPosts.published, true))
+    .orderBy(desc(blogPosts.publishedAt));
+  // Note: Tags filtering would require JSON query support or denormalization
+  // For now, filtering can be done in application code
+}
+
+/**
+ * FAQ FUNCTIONS
+ */
+export async function createFAQ(data: InsertFAQ) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(faqs).values(data);
+  const insertedId = result[0].insertId;
+  const created = await db.select().from(faqs).where(eq(faqs.id, insertedId)).limit(1);
+  return created[0];
+}
+
+export async function updateFAQ(id: number, data: Partial<InsertFAQ>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(faqs).set({
+    ...data,
+    updatedAt: new Date(),
+  }).where(eq(faqs.id, id));
+
+  const updated = await db.select().from(faqs).where(eq(faqs.id, id)).limit(1);
+  return updated[0];
+}
+
+export async function deleteFAQ(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(faqs).where(eq(faqs.id, id));
+}
+
+export async function listFAQs(category?: string, active?: boolean) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  if (category) {
+    conditions.push(eq(faqs.category, category as any));
+  }
+  if (active !== undefined) {
+    conditions.push(eq(faqs.active, active));
+  }
+
+  let query = db.select().from(faqs);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  return await query.orderBy(asc(faqs.displayOrder), desc(faqs.createdAt));
+}
+
+export async function reorderFAQs(faqIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  for (let i = 0; i < faqIds.length; i++) {
+    await db.update(faqs).set({ displayOrder: i }).where(eq(faqs.id, faqIds[i]));
+  }
+}
+
+export async function searchFAQs(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(faqs)
+    .where(
+      and(
+        eq(faqs.active, true),
+        or(
+          like(faqs.question, `%${query}%`),
+          like(faqs.answer, `%${query}%`)
+        )
+      )
+    )
+    .orderBy(asc(faqs.displayOrder));
+}
+
+// Contact Messages
+
+export async function createContactMessage(data: InsertContactMessage) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error(getDatabaseErrorMessage("contact form"));
+  }
+
+  const result = await db
+    .insert(contactMessages)
+    .values(data)
+    .returning({ id: contactMessages.id });
+
+  return result[0]?.id || null;
+}
+
+export async function getContactMessages(filters?: { status?: string; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(contactMessages);
+
+  if (filters?.status) {
+    query = query.where(eq(contactMessages.status, filters.status)) as any;
+  }
+
+  const limit = filters?.limit || 50;
+  const offset = filters?.offset || 0;
+
+  return await query
+    .orderBy(desc(contactMessages.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function markContactMessageResolved(id: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .update(contactMessages)
+    .set({
+      status: "responded",
+      respondedAt: new Date(),
+    })
+    .where(eq(contactMessages.id, id));
+
+  return true;
+}
+
+// Printfull Merch
+
+export async function createOrUpdatePrintfullProduct(data: InsertPrintfullProduct) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const existing = await db
+    .select()
+    .from(printfullProducts)
+    .where(eq(printfullProducts.productId, data.productId || 0));
+
+  if (existing.length > 0) {
+    // Update existing
+    await db
+      .update(printfullProducts)
+      .set(data)
+      .where(eq(printfullProducts.productId, data.productId || 0));
+    return existing[0].id;
+  } else {
+    // Create new
+    const result = await db
+      .insert(printfullProducts)
+      .values(data)
+      .returning({ id: printfullProducts.id });
+    return result[0]?.id || null;
+  }
+}
+
+export async function getPrintfullProducts(filters?: { category?: string; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(printfullProducts);
+
+  if (filters?.category) {
+    query = query.where(eq(printfullProducts.category, filters.category)) as any;
+  }
+
+  const limit = filters?.limit || 50;
+  const offset = filters?.offset || 0;
+
+  return await query
+    .orderBy(desc(printfullProducts.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function updateProductMerchLink(data: {
+  productId: number;
+  printfullProductId: number | null;
+  merchCategory?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db
+    .update(products)
+    .set({
+      printfullProductId: data.printfullProductId?.toString() || null,
+      merchCategory: data.merchCategory || null,
+    })
+    .where(eq(products.id, data.productId));
+
+  return result.rowCount > 0;
+}
+
+export async function createMerchOrder(data: InsertMerchOrder) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .insert(merchOrders)
+    .values(data)
+    .returning({ id: merchOrders.id });
+
+  return result[0]?.id || null;
+}
+
+export async function getMerchOrder(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(merchOrders)
+    .where(eq(merchOrders.id, id));
+
+  return result[0] || null;
+}
+
+export async function updateMerchOrderStatus(
+  id: number,
+  status: string,
+  trackingNumber?: string,
+  trackingUrl?: string
+) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .update(merchOrders)
+    .set({
+      status,
+      trackingNumber: trackingNumber || undefined,
+      trackingUrl: trackingUrl || undefined,
+      updatedAt: new Date(),
+    })
+    .where(eq(merchOrders.id, id));
+
+  return true;
+}
+
+export async function listMerchOrders(filters?: { status?: string; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(merchOrders);
+
+  if (filters?.status) {
+    query = query.where(eq(merchOrders.status, filters.status)) as any;
+  }
+
+  const limit = filters?.limit || 50;
+  const offset = filters?.offset || 0;
+
+  return await query
+    .orderBy(desc(merchOrders.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+// Refund Requests
+
+export async function createRefundRequest(data: InsertRefundRequest) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error(getDatabaseErrorMessage("refund requests"));
+  }
+
+  const result = await db
+    .insert(refundRequests)
+    .values(data)
+    .returning({ id: refundRequests.id });
+
+  return result[0] || null;
+}
+
+export async function getRefundRequest(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(refundRequests).where(eq(refundRequests.id, id));
+  return result[0] || null;
+}
+
+export async function listRefundRequests(filters?: { status?: string; limit?: number; offset?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  let query = db.select().from(refundRequests);
+
+  if (filters?.status) {
+    query = query.where(eq(refundRequests.status, filters.status as any)) as any;
+  }
+
+  const limit = filters?.limit || 20;
+  const offset = filters?.offset || 0;
+
+  return await query
+    .orderBy(desc(refundRequests.requestedAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function listRefundRequestsByPurchase(purchaseId: number, limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(refundRequests)
+    .where(eq(refundRequests.purchaseId, purchaseId))
+    .orderBy(desc(refundRequests.requestedAt))
+    .limit(limit);
+}
+
+export async function approveRefund(id: number, adminId: number, notes?: string) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .update(refundRequests)
+    .set({
+      status: "approved",
+      adminId,
+      responseNotes: notes || null,
+      respondedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(refundRequests.id, id));
+
+  return true;
+}
+
+export async function denyRefund(id: number, adminId: number, notes?: string) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .update(refundRequests)
+    .set({
+      status: "denied",
+      adminId,
+      responseNotes: notes || null,
+      respondedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(refundRequests.id, id));
+
+  return true;
+}
+
+export async function markRefundAsRefunded(id: number) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .update(refundRequests)
+    .set({
+      status: "refunded",
+      updatedAt: new Date(),
+    })
+    .where(eq(refundRequests.id, id));
+
+  return true;
 }

@@ -39,6 +39,7 @@ export const supportEventStatusEnum = pgEnum("support_event_status", ["pending",
 export const productTypeEnum = pgEnum("product_type", ["drop", "soundpack", "preset", "course", "bundle", "vinyl", "merch", "other"]);
 export const purchaseStatusEnum = pgEnum("purchase_status", ["pending", "completed", "refunded", "failed", "cancelled"]);
 export const paymentProviderEnum = pgEnum("payment_provider", ["stripe", "paypal", "manual"]);
+export const shippingMethodEnum = pgEnum("shipping_method", ["standard", "express", "international"]);
 export const subscriptionTierEnum = pgEnum("subscription_tier", ["hectic_regular", "hectic_royalty", "inner_circle"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "cancelled", "expired"]);
 export const brandTypeEnum = pgEnum("brand_type", ["personality", "station", "clothing", "pets", "other"]);
@@ -56,6 +57,8 @@ export const userPostTypeEnum = pgEnum("user_post_type", ["text", "image", "vide
 export const collectibleTypeEnum = pgEnum("collectible_type", ["badge", "nft", "trophy", "item", "skin"]);
 export const collectibleRarityEnum = pgEnum("collectible_rarity", ["common", "rare", "epic", "legendary"]);
 export const achievementRarityEnum = pgEnum("achievement_rarity", ["common", "rare", "epic", "legendary"]);
+export const refundRequestStatusEnum = pgEnum("refund_request_status", ["pending", "approved", "denied", "refunded"]);
+export const refundRequestReasonEnum = pgEnum("refund_request_reason", ["damaged", "wrong_item", "not_as_described", "changed_mind", "other"]);
 
 /**
  * Core user table backing auth flow.
@@ -755,6 +758,9 @@ export const products = pgTable("products", {
   beatportUrl: varchar("beatportUrl", { length: 512 }),
   soundcloudUrl: varchar("soundcloudUrl", { length: 512 }),
   spotifyUrl: varchar("spotifyUrl", { length: 512 }),
+  // Merch integration
+  printfullProductId: varchar("printfullProductId", { length: 255 }),
+  merchCategory: varchar("merchCategory", { length: 100 }),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -780,12 +786,39 @@ export const purchases = pgTable("purchases", {
   paypalOrderId: varchar("paypalOrderId", { length: 255 }),
   transactionId: varchar("transactionId", { length: 255 }),
   metadata: text("metadata"),
+  // Shipping information
+  shippingAddress: text("shippingAddress"),
+  shippingCity: varchar("shippingCity", { length: 255 }),
+  shippingPostalCode: varchar("shippingPostalCode", { length: 20 }),
+  shippingCountry: varchar("shippingCountry", { length: 100 }),
+  shippingCost: numeric("shippingCost", { precision: 10, scale: 2 }),
+  shippingMethod: shippingMethodEnum("shippingMethod"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Purchase = typeof purchases.$inferSelect;
 export type InsertPurchase = typeof purchases.$inferInsert;
+
+/**
+ * Refund requests for purchases
+ */
+export const refundRequests = pgTable("refund_requests", {
+  id: serial("id").primaryKey(),
+  purchaseId: integer("purchaseId").notNull(),
+  reason: refundRequestReasonEnum("reason").notNull(),
+  details: text("details"),
+  status: refundRequestStatusEnum("status").default("pending").notNull(),
+  adminId: integer("adminId"),
+  responseNotes: text("responseNotes"),
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  respondedAt: timestamp("respondedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type RefundRequest = typeof refundRequests.$inferSelect;
+export type InsertRefundRequest = typeof refundRequests.$inferInsert;
 
 /**
  * Subscriptions (VIP tiers)
@@ -1272,6 +1305,7 @@ export const hecticLeadStatusEnum = pgEnum("hectic_lead_status", ["new", "contac
 export const jarvisInsightTypeEnum = pgEnum("jarvis_insight_type", ["venue_suggestion", "marketing_copy", "follow_up", "trend"]);
 export const commsProviderEnum = pgEnum("comms_provider", ["telnyx", "vapi", "whatsapp"]);
 export const commsDirectionEnum = pgEnum("comms_direction", ["inbound", "outbound"]);
+export const faqCategoryEnum = pgEnum("faq_category", ["booking", "merch", "technical", "shipping", "general"]);
 
 /**
  * Hectic Conversations - Session management for AI chats
@@ -1367,3 +1401,96 @@ export const commsLog = pgTable("comms_log", {
 
 export type CommsLogEntry = typeof commsLog.$inferSelect;
 export type InsertCommsLogEntry = typeof commsLog.$inferInsert;
+
+/**
+ * Contact Form Messages
+ */
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  message: text("message").notNull(),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  status: varchar("status", { length: 50 }).default("new").notNull(), // new, responded, archived
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  respondedAt: timestamp("respondedAt"),
+});
+
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type InsertContactMessage = typeof contactMessages.$inferInsert;
+
+/**
+ * Printfull Products Catalog - Synced from Printfull
+ */
+export const printfullProducts = pgTable("printfull_products", {
+  id: serial("id").primaryKey(),
+  productId: integer("productId").notNull().unique(), // Printfull product ID
+  name: varchar("name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  variants: json("variants"), // JSON array of variant objects
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type PrintfullProduct = typeof printfullProducts.$inferSelect;
+export type InsertPrintfullProduct = typeof printfullProducts.$inferInsert;
+
+/**
+ * Merch Orders - Orders placed on Printfull for physical merchandise
+ */
+export const merchOrders = pgTable("merch_orders", {
+  id: serial("id").primaryKey(),
+  purchaseId: integer("purchaseId").notNull(), // Reference to purchases table
+  printfullOrderId: integer("printfullOrderId"), // Printfull order ID
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, submitted, printed, shipped, delivered, failed
+  trackingNumber: varchar("trackingNumber", { length: 255 }),
+  trackingUrl: varchar("trackingUrl", { length: 512 }),
+  shippingAddress: text("shippingAddress"), // JSON address
+  items: json("items"), // JSON array of order items
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type MerchOrder = typeof merchOrders.$inferSelect;
+export type InsertMerchOrder = typeof merchOrders.$inferInsert;
+
+/**
+ * Blog Posts table
+ */
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: varchar("excerpt", { length: 512 }),
+  author: varchar("author", { length: 255 }),
+  featuredImageUrl: varchar("featuredImageUrl", { length: 512 }),
+  tags: text("tags"), // JSON array stored as text
+  published: boolean("published").default(false).notNull(),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+/**
+ * FAQs table
+ */
+export const faqs = pgTable("faqs", {
+  id: serial("id").primaryKey(),
+  question: varchar("question", { length: 512 }).notNull(),
+  answer: text("answer").notNull(),
+  category: faqCategoryEnum("category").notNull(),
+  displayOrder: integer("displayOrder").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type FAQ = typeof faqs.$inferSelect;
+export type InsertFAQ = typeof faqs.$inferInsert;

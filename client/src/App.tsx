@@ -18,7 +18,6 @@ import Testimonials from "./pages/Testimonials";
 import Shop from "./pages/Shop";
 import Checkout from "./pages/Checkout";
 import Pricing from "./pages/Pricing";
-import FAQ from "./pages/FAQ";
 import VideoGallery from "./pages/VideoGallery";
 import Equipment from "./pages/Equipment";
 import Discography from "./pages/Discography";
@@ -28,7 +27,11 @@ import Portfolio from "./pages/Portfolio";
 import TrackID from "./pages/TrackID";
 // DELETED: import SocialFeed from "./pages/SocialFeed"; // Deleted router: socialFeed
 import Gallery from "./pages/Gallery";
-import Blog from "./pages/Blog";
+import { Blog } from "./pages/Blog";
+import { BlogPost } from "./pages/BlogPost";
+import { FAQ } from "./pages/FAQ";
+import { AdminBlog } from "./pages/AdminBlog";
+import { AdminFAQ } from "./pages/AdminFAQ";
 import Contact from "./pages/Contact";
 import Tutorials from "./pages/Tutorials";
 import Affiliate from "./pages/Affiliate";
@@ -83,6 +86,8 @@ import AdminJarvis from "./pages/AdminJarvis";
 import AdminMarketing from "./pages/AdminMarketing";
 import AdminHub from "./pages/AdminHub";
 import AdminShop from "./pages/AdminShop";
+import AdminMerch from "./pages/AdminMerch";
+import AdminMusicCatalog from "./pages/AdminMusicCatalog";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -90,8 +95,18 @@ import { HecticOnboarding } from "./components/HecticOnboarding";
 import { GlobalSearch } from "./components/GlobalSearch";
 // DELETED: import { SocialProofNotifications } from "./components/SocialProofNotifications"; // Deleted router: socialProof
 import { GlobalNav } from "./components/GlobalNav";
+import { Footer } from "./components/Footer";
 import Bio from "./pages/Bio";
 import Support from "./pages/Support";
+import Cart from "./pages/Cart";
+import ProductDetail from "./pages/ProductDetail";
+import RateCard from "./pages/RateCard";
+import RefundRequest from "./pages/RefundRequest";
+import AdminRefunds from "./pages/AdminRefunds";
+import VIP from "./pages/VIP";
+import BookingQuote from "./pages/BookingQuote";
+import ComponentShowcase from "./pages/ComponentShowcase";
+import { CartProvider } from "./contexts/CartContext";
 
 function Router() {
   return (
@@ -102,9 +117,12 @@ function Router() {
       <Route path={"/history"} component={History} />
       <Route path={"/testimonials"} component={Testimonials} />
       <Route path={"/shop"} component={Shop} />
+      <Route path={"/cart"} component={Cart} />
+      <Route path={"/products/:id"} component={ProductDetail} />
       <Route path={"/checkout"} component={Checkout} />
       <Route path={"/checkout/success"} component={CheckoutSuccess} />
       <Route path={"/pricing"} component={Pricing} />
+      <Route path={"/rate-card"} component={RateCard} />
       <Route path={"/faq"} component={FAQ} />
       <Route path={"/videos"} component={VideoGallery} />
       <Route path={"/equipment"} component={Equipment} />
@@ -117,6 +135,7 @@ function Router() {
       {/* <Route path={"/social-feed"} component={SocialFeed} /> */}
       <Route path={"/gallery"} component={Gallery} />
       <Route path={"/blog"} component={Blog} />
+      <Route path={"/blog/:slug"} component={BlogPost} />
       <Route path={"/contact"} component={Contact} />
       <Route path={"/tutorials"} component={Tutorials} />
       <Route path={"/affiliate"} component={Affiliate} />
@@ -154,6 +173,8 @@ function Router() {
       <Route path={"/admin/streaming-links"} component={AdminStreamingLinks} />
       <Route path={"/admin/empire"} component={AdminEmpire} />
       <Route path={"/support"} component={Support} />
+      <Route path={"/refund-request"} component={RefundRequest} />
+      <Route path={"/admin/refunds"} component={AdminRefunds} />
       <Route path={"/ai-danny"} component={AIDanny} />
       <Route path={"/profile/:username"} component={Profile} />
       <Route path={"/world"} component={World} />
@@ -177,6 +198,13 @@ function Router() {
       <Route path={"/admin/jarvis"} component={AdminJarvis} />
       <Route path={"/admin/marketing"} component={AdminMarketing} />
       <Route path={"/admin/shop"} component={AdminShop} />
+      <Route path={"/admin/merch"} component={AdminMerch} />
+      <Route path={"/admin/music-catalog"} component={AdminMusicCatalog} />
+      <Route path={"/admin/blog"} component={AdminBlog} />
+      <Route path={"/admin/faq"} component={AdminFAQ} />
+      <Route path={"/vip"} component={VIP} />
+      <Route path={"/booking-quote/:id"} component={BookingQuote} />
+      <Route path={"/admin/showcase"} component={ComponentShowcase} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -200,25 +228,30 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="dark"
-      // switchable
-      >
-        <TooltipProvider>
-          <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
-          <div className="min-h-screen bg-black pirate-scanlines">
-            <Toaster />
-            <GlobalBanner />
-            <GlobalNav />
-            <Router />
-            <LiveAudioPlayer />
-            <AIDannyFloating />
-            <HecticOnboarding />
-            {/* DELETED COMPONENT: SocialProofNotifications - deleted router: socialProof */}
-            {/* <SocialProofNotifications /> */}
-          </div>
-        </TooltipProvider>
-      </ThemeProvider>
+      <CartProvider>
+        <ThemeProvider
+          defaultTheme="dark"
+        // switchable
+        >
+          <TooltipProvider>
+            <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
+            <div className="min-h-screen bg-black pirate-scanlines flex flex-col">
+              <Toaster />
+              <GlobalBanner />
+              <GlobalNav />
+              <div className="flex-1">
+                <Router />
+              </div>
+              <Footer />
+              <LiveAudioPlayer />
+              <AIDannyFloating />
+              <HecticOnboarding />
+              {/* DELETED COMPONENT: SocialProofNotifications - deleted router: socialProof */}
+              {/* <SocialProofNotifications /> */}
+            </div>
+          </TooltipProvider>
+        </ThemeProvider>
+      </CartProvider>
     </ErrorBoundary>
   );
 }

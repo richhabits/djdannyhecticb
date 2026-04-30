@@ -8,6 +8,13 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { ukEventsRouter } from "./ukEventsRouter";
+import * as ukEventsService from "./_core/ukEventsService";
+import { soundcloudRouter } from "./routers/soundcloudRouter";
+import { spotifyRouter } from "./routers/spotifyRouter";
+import { blogRouter } from "./routers/blogRouter";
+import { faqRouter } from "./routers/faqRouter";
+import { contactRouter } from "./routers/contactRouter";
+import { merchRouter } from "./routers/merchRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -19,6 +26,12 @@ import { HECTIC_SYSTEM_PROMPT, buildHecticContext } from "./_core/hecticPersona"
 export const appRouter = router({
   system: systemRouter,
   ukEvents: ukEventsRouter,
+  soundcloud: soundcloudRouter,
+  spotify: spotifyRouter,
+  blog: blogRouter,
+  faq: faqRouter,
+  contact: contactRouter,
+  merch: merchRouter,
 
   // Alias for frontend compatibility
   events: router({
@@ -1019,6 +1032,13 @@ export const appRouter = router({
           afterSnapshot: JSON.stringify({ deleted: true }),
         });
       }),
+    search: publicProcedure
+      .input(z.object({
+        q: z.string().min(1).max(100),
+        type: z.string().optional(),
+        limit: z.number().default(20),
+      }))
+      .query(({ input }) => db.searchProducts(input.q, input.type, input.limit)),
   }),
 
   purchases: router({
@@ -1345,54 +1365,6 @@ export const appRouter = router({
           return updated;
         }),
     }),
-  }),
-
-  // ============================================
-  // PHASE 5: EMPIRE MODE - BACKUP & RECOVERY
-  // ============================================
-  backups: router({
-    create: adminProcedure
-      .input(z.object({
-        label: z.string().min(1).max(255),
-        description: z.string().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // TODO: Serialize actual data from database
-        const dataBlob = JSON.stringify({ timestamp: new Date().toISOString(), label: input.label });
-        const crypto = await import("crypto");
-        const checksum = crypto.createHash("sha256").update(dataBlob).digest("hex");
-        const backup = await db.createBackup({
-          ...input,
-          dataBlob,
-          checksum,
-          sizeBytes: dataBlob.length,
-          createdBy: ctx.user?.id,
-        });
-        await db.createAuditLog({
-          action: "create_backup",
-          entityType: "backup",
-          entityId: backup.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
-        });
-        return backup;
-      }),
-    list: adminProcedure.query(() => db.listBackups()),
-    get: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .query(({ input }) => db.getBackup(input.id)),
-    delete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
-        await db.deleteBackup(input.id);
-        await db.createAuditLog({
-          action: "delete_backup",
-          entityType: "backup",
-          entityId: input.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
-        });
-      }),
   }),
 
   // ============================================
@@ -2886,8 +2858,16 @@ export const appRouter = router({
         // Extract booking data
         const extracted = await extractBookingData(input.message, conversation.extractedData as any);
 
+        // Fetch latest shop items (top 5 for token efficiency)
+        const shopProducts = await db.listProducts(true);
+        const shopItems = shopProducts.slice(0, 5).map((p) => ({
+          name: p.name,
+          type: p.type,
+          price: p.price,
+        }));
+
         // Build context
-        const context = buildHecticContext(extracted, previousMessages.length + 1);
+        const context = buildHecticContext(extracted, previousMessages.length + 1, shopItems);
 
         // Build messages for AI
         const systemPrompt = HECTIC_SYSTEM_PROMPT + context;

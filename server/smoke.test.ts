@@ -15,7 +15,7 @@ describe("API Smoke Tests", () => {
         try {
             const res = await axios.get(`${API_URL}/api/ready`);
             expect([200, 503]).toContain(res.status);
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (error.response) {
                 expect(error.response.status).toBe(503);
             } else {
@@ -31,7 +31,7 @@ describe("API Smoke Tests", () => {
             });
             // In some configurations, simple GETs might not be blocked by helmet/cors middleware 
             // unless specifically configured to reject them, but let's check headers.
-        } catch (error: any) {
+        } catch (error: unknown) {
             // If CORS middleware is strict, it might reject.
         }
     });

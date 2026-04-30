@@ -1,265 +1,218 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Music, Calendar, User, ArrowRight, Search } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "../lib/trpc";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import { Link } from "wouter";
-import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { Search } from "lucide-react";
 
-export default function Blog() {
-  const [searchTerm, setSearchTerm] = useState("");
+const POSTS_PER_PAGE = 6;
 
-  const blogPosts = [
-    {
-      id: 1,
-      title: "The Evolution of UK Garage: From Pirate Radio to Mainstream",
-      excerpt: "Explore how UK garage music evolved from underground pirate radio stations to becoming a global phenomenon.",
-      category: "Music History",
-      date: "Nov 15, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "8 min read",
-      image: "📻",
-      content: "UK garage has come a long way since its humble beginnings on pirate radio stations...",
-    },
-    {
-      id: 2,
-      title: "5 Essential DJ Mixing Techniques for House Music",
-      excerpt: "Master the fundamental mixing techniques that will elevate your house music sets to the next level.",
-      category: "DJ Tips",
-      date: "Nov 12, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "6 min read",
-      image: "🎧",
-      content: "Whether you're a beginner or experienced DJ, these mixing techniques will improve your sets...",
-    },
-    {
-      id: 3,
-      title: "How to Build Your DJ Brand in 2024",
-      excerpt: "Strategies for building a strong personal brand as a DJ in today's competitive music industry.",
-      category: "Business",
-      date: "Nov 10, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "10 min read",
-      image: "🎯",
-      content: "Building a successful DJ brand requires more than just technical skills...",
-    },
-    {
-      id: 4,
-      title: "Soulful House: The Art of Emotional Connection Through Music",
-      excerpt: "Discover how soulful house music creates deep emotional connections with audiences.",
-      category: "Music Production",
-      date: "Nov 8, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "7 min read",
-      image: "💫",
-      content: "Soulful house is more than just a genre; it's a feeling, an emotion...",
-    },
-    {
-      id: 5,
-      title: "Event Recap: Twice as Nice Festival 2024",
-      excerpt: "Highlights from the legendary Twice as Nice Festival featuring performances from top UK garage DJs.",
-      category: "Event Recap",
-      date: "Nov 5, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "5 min read",
-      image: "🎪",
-      content: "The 2024 Twice as Nice Festival was absolutely incredible...",
-    },
-    {
-      id: 6,
-      title: "Equipment Guide: Essential Gear for Professional DJs",
-      excerpt: "A comprehensive guide to the equipment you need to start your DJ journey professionally.",
-      category: "Equipment",
-      date: "Nov 1, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "12 min read",
-      image: "🎛️",
-      content: "Starting your DJ career requires the right equipment. Here's what you need...",
-    },
-    {
-      id: 7,
-      title: "Amapiano: The South African Sound Taking Over the World",
-      excerpt: "Explore the rise of Amapiano and how this South African genre is influencing global music.",
-      category: "Music Trends",
-      date: "Oct 28, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "9 min read",
-      image: "🌍",
-      content: "Amapiano has taken the world by storm, and for good reason...",
-    },
-    {
-      id: 8,
-      title: "The Art of Reading Your Crowd: A DJ's Guide",
-      excerpt: "Learn how to read your audience and adapt your music selection in real-time.",
-      category: "DJ Tips",
-      date: "Oct 25, 2024",
-      author: "DJ Danny Hectic B",
-      readTime: "6 min read",
-      image: "👥",
-      content: "One of the most important skills a DJ can develop is the ability to read the crowd...",
-    },
-  ];
+export function Blog() {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const categories = ['All', 'DJ Tips', 'Music History', 'Music Production', 'Business', 'Event Recap', 'Equipment', 'Music Trends'];
-  const [activeCategory, setActiveCategory] = useState('All');
-
-  const filteredPosts = blogPosts.filter(post => {
-    const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    queryKey: ["blog:list", currentPage],
+    queryFn: () =>
+      trpc.blog.list.query({
+        limit: POSTS_PER_PAGE,
+        offset: currentPage * POSTS_PER_PAGE,
+      }),
   });
 
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            <Music className="w-6 h-6" />
-            <span className="font-bold">DJ Danny Hectic B</span>
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/mixes" className="text-sm hover:text-accent">Mixes</Link>
-            <Link href="/bookings" className="text-sm hover:text-accent">Bookings</Link>
-            <Link href="/blog" className="text-sm hover:text-accent font-semibold text-accent">Blog</Link>
-          </nav>
-        </div>
-      </header>
+  const { data: searchResults, isLoading: searchLoading } = useQuery({
+    queryKey: ["blog:search", searchQuery],
+    queryFn: () => trpc.blog.search.query({ query: searchQuery }),
+    enabled: searchQuery.length > 0,
+  });
 
-      {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
-        <div className="container">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">DJ Blog & Insights</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl">
-            Music tips, industry insights, and behind-the-scenes stories from DJ Danny Hectic B.
+  const posts = searchQuery ? searchResults || [] : postsData?.posts || [];
+  const total = postsData?.total || 0;
+  const totalPages = Math.ceil(total / POSTS_PER_PAGE);
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    postsData?.posts.forEach(post => {
+      post.tags?.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  }, [postsData?.posts]);
+
+  const filteredPosts = selectedTag
+    ? posts.filter(post => post.tags?.includes(selectedTag))
+    : posts;
+
+  const isLoading = postsLoading || searchLoading;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12">
+      <div className="max-w-6xl mx-auto px-4 space-y-12">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white">Blog</h1>
+          <p className="text-lg text-slate-300">
+            Latest insights, stories, and updates from DJ Danny Hectic B
           </p>
         </div>
-      </section>
 
-      {/* Search and Filter */}
-      <section className="py-8 border-b border-border">
-        <div className="container space-y-6">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-3 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search articles..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
-                  activeCategory === category
-                    ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white'
-                    : 'bg-card border border-border hover:border-accent'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Search blog posts..."
+            value={searchQuery}
+            onChange={e => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(0);
+            }}
+            className="pl-10 py-2 w-full bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+          />
         </div>
-      </section>
 
-      {/* Blog Posts Grid */}
-      <section className="py-16 md:py-24">
-        <div className="container">
-          {filteredPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="overflow-hidden hover:border-accent transition border-border/50 flex flex-col cursor-pointer group"
+        {allTags.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-200">Filter by tag:</h3>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedTag === null ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedTag(null)}
+                className={selectedTag === null ? "bg-purple-600 hover:bg-purple-700" : ""}
+              >
+                All Tags
+              </Button>
+              {allTags.map(tag => (
+                <Button
+                  key={tag}
+                  variant={selectedTag === tag ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedTag(tag)}
+                  className={selectedTag === tag ? "bg-purple-600 hover:bg-purple-700" : ""}
                 >
-                  {/* Image */}
-                  <div className="bg-gradient-to-br from-orange-900/20 to-amber-900/20 p-8 text-6xl flex items-center justify-center h-40 group-hover:scale-105 transition-transform">
-                    {post.image}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6 flex flex-col flex-1">
-                    <p className="text-xs text-orange-400 font-bold mb-2">{post.category}</p>
-                    <h3 className="text-lg font-bold mb-3 group-hover:text-accent transition">
-                      {post.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4 flex-1">
-                      {post.excerpt}
-                    </p>
-
-                    {/* Meta */}
-                    <div className="space-y-3 pt-4 border-t border-border/50">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3" />
-                          {post.date}
-                        </div>
-                        <span>{post.readTime}</span>
-                      </div>
-                      <Button className="w-full bg-gradient-to-r from-orange-600 to-amber-600 group-hover:from-orange-700 group-hover:to-amber-700">
-                        Read More
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
+                  {tag}
+                </Button>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">No articles found matching your search.</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Newsletter CTA */}
-      <section className="py-16 md:py-24 border-t border-border bg-gradient-to-r from-orange-900/20 to-amber-900/20">
-        <div className="container max-w-2xl text-center space-y-6">
-          <h2 className="text-4xl font-bold">Get DJ Tips in Your Inbox</h2>
-          <p className="text-lg text-muted-foreground">
-            Subscribe to get the latest blog posts, DJ tips, and exclusive insights delivered weekly.
-          </p>
-          <div className="flex gap-3">
-            <input
-              type="email"
-              placeholder="Enter your email..."
-              className="flex-1 px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
-              Subscribe
-            </Button>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Related Resources */}
-      <section className="py-16 md:py-24 border-t border-border">
-        <div className="container">
-          <h2 className="text-4xl font-bold mb-12">More Resources</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: "Free DJ Guides", description: "Download comprehensive guides on mixing, production, and more.", icon: "📚" },
-              { title: "Video Tutorials", description: "Watch step-by-step tutorials on DJ techniques and equipment.", icon: "🎬" },
-              { title: "Community Forum", description: "Connect with other DJs and share your experiences.", icon: "💬" },
-            ].map((resource, idx) => (
-              <Card key={idx} className="p-8 text-center hover:border-accent transition">
-                <div className="text-5xl mb-4">{resource.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{resource.title}</h3>
-                <p className="text-muted-foreground mb-4">{resource.description}</p>
-                <Button variant="outline">Explore</Button>
-              </Card>
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-slate-700 rounded-lg h-64 animate-pulse" />
             ))}
           </div>
-        </div>
-      </section>
+        )}
+
+        {!isLoading && filteredPosts.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPosts.map(post => (
+              <Link key={post.id} href={`/blog/${post.slug}`}>
+                <a className="group">
+                  <Card className="h-full bg-slate-700 border-slate-600 hover:border-purple-500 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-purple-500/20">
+                    {post.featuredImageUrl && (
+                      <div className="relative h-40 bg-slate-600 overflow-hidden rounded-t-lg">
+                        <img
+                          src={post.featuredImageUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <CardHeader>
+                      <CardTitle className="text-white line-clamp-2 group-hover:text-purple-400 transition-colors">
+                        {post.title}
+                      </CardTitle>
+                      {post.author && (
+                        <CardDescription className="text-slate-300">
+                          by {post.author}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {post.excerpt && (
+                        <p className="text-slate-300 text-sm line-clamp-2">
+                          {post.excerpt}
+                        </p>
+                      )}
+
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {post.tags.slice(0, 2).map(tag => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs border-purple-500 text-purple-300"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                          {post.tags.length > 2 && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs border-slate-500 text-slate-300"
+                            >
+                              +{post.tags.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {post.publishedAt && (
+                        <p className="text-xs text-slate-400">
+                          {formatDistanceToNow(new Date(post.publishedAt), {
+                            addSuffix: true,
+                          })}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </a>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && filteredPosts.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-slate-300 text-lg">
+              {searchQuery
+                ? "No posts found matching your search"
+                : selectedTag
+                  ? `No posts found with tag "${selectedTag}"`
+                  : "No blog posts available yet"}
+            </p>
+          </div>
+        )}
+
+        {!searchQuery && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+              className="border-slate-600 text-white hover:bg-slate-700"
+            >
+              Previous
+            </Button>
+            <div className="text-slate-300">
+              Page {currentPage + 1} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+              disabled={currentPage === totalPages - 1}
+              className="border-slate-600 text-white hover:bg-slate-700"
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

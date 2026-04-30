@@ -62,7 +62,7 @@ export class IngestionEngine {
                     durationMs: duration
                 });
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(`❌ [INGESTION] Connector ${connector.name} failed:`, error);
                 await db.recordConnectorSync({
                     connectorId: connector.id,

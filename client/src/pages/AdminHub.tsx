@@ -175,6 +175,22 @@ export default function AdminHub() {
       category: "business",
       color: "text-cyan-400",
     },
+    {
+      name: "Merch",
+      description: "Printfull integration & orders",
+      icon: ShoppingCart,
+      href: "/admin/merch",
+      category: "business",
+      color: "text-yellow-400",
+    },
+    {
+      name: "Music Catalog",
+      description: "SoundCloud, Spotify & Beatport sync",
+      icon: Music,
+      href: "/admin/music-catalog",
+      category: "integrations",
+      color: "text-purple-400",
+    },
   ];
 
   const categories = [

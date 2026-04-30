@@ -28,6 +28,20 @@ function validateEnv() {
   if (jwtSecret && jwtSecret.length < 32) {
     console.warn("[ENV] WARNING: JWT_SECRET should be at least 32 characters for security");
   }
+
+  // Warn about missing optional services
+  if (!process.env.PRINTFULL_API_KEY) {
+    console.warn("[ENV] WARNING: PRINTFULL_API_KEY not set - merchandise/print features disabled");
+  }
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    console.warn("[ENV] WARNING: PayPal credentials missing - PayPal payment option disabled");
+  }
+  if (!process.env.EMAIL_API_KEY) {
+    console.warn("[ENV] WARNING: EMAIL_API_KEY not set - email notifications disabled");
+  }
+  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
+    console.warn("[ENV] WARNING: Spotify credentials missing - Spotify integration disabled");
+  }
 }
 
 validateEnv();
@@ -49,5 +63,22 @@ export const ENV = {
   paypalClientId: process.env.PAYPAL_CLIENT_ID ?? "",
   paypalClientSecret: process.env.PAYPAL_CLIENT_SECRET ?? "",
   paypalMode: process.env.PAYPAL_MODE ?? "sandbox", // sandbox or live
+  soundcloudClientId: process.env.SOUNDCLOUD_CLIENT_ID ?? "",
+  soundcloudUserId: process.env.SOUNDCLOUD_USER_ID ?? "",
+  spotifyClientId: process.env.SPOTIFY_CLIENT_ID ?? "",
+  spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET ?? "",
+  spotifyArtistId: process.env.SPOTIFY_ARTIST_ID ?? "",
+  beatportProfileUrl: process.env.BEATPORT_PROFILE_URL ?? "",
   corsOrigins: process.env.CORS_ORIGINS?.split(",") ?? ["http://localhost:3000"],
+  // Email configuration
+  emailServiceProvider: process.env.EMAIL_SERVICE_PROVIDER ?? "sendgrid", // resend or sendgrid
+  emailApiKey: process.env.EMAIL_API_KEY ?? "",
+  emailFromAddress: process.env.EMAIL_FROM_ADDRESS ?? "noreply@djdannyhectic.com",
+  emailFromDomain: process.env.EMAIL_FROM_DOMAIN ?? "djdannyhectic.com",
+  notificationsEmail: process.env.NOTIFICATIONS_EMAIL ?? "",
+  // Contact info
+  phoneNumber: process.env.PHONE_NUMBER ?? "07957 432842",
+  instagramHandle: process.env.INSTAGRAM_HANDLE ?? "djdannyhecticb",
+  // Printfull integration
+  printfullApiKey: process.env.PRINTFULL_API_KEY ?? "",
 };

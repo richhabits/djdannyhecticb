@@ -6,7 +6,7 @@ A modern web application for DJ Danny Hectic B featuring mixes, events, live stu
 
 - **Node.js** (v18 or higher)
 - **pnpm** (v10 or higher) - [Install pnpm](https://pnpm.io/installation)
-- **MySQL** (or compatible database) - for production
+- **PostgreSQL** (or compatible database) - for production
 - **macOS** (for this guide, but works on Linux/Windows too)
 
 ## Quick Start (From Zero to Running)
@@ -51,7 +51,7 @@ VITE_APP_ID=your-app-id-here
 JWT_SECRET=your-random-secret-key-here
 
 # Database (optional for basic dev, required for full features)
-DATABASE_URL=mysql://user:password@localhost:3306/dbname
+DATABASE_URL=postgresql://user:password@localhost:5432/djdannyhecticb
 
 # Frontend OAuth Portal URL
 VITE_OAUTH_PORTAL_URL=http://localhost:3000
@@ -76,7 +76,7 @@ VITE_APP_LOGO=/logo-icon.png
 pnpm db:push
 ```
 
-**Note:** If you don't have a database set up yet, you can still run the app, but the shoutbox feature won't work. For full functionality, set up MySQL and configure `DATABASE_URL` in your `.env`.
+**Note:** If you don't have a database set up yet, you can still run the app, but the shoutbox feature won't work. For full functionality, set up PostgreSQL and configure `DATABASE_URL` in your `.env`.
 
 ### 4. Start the Development Server
 

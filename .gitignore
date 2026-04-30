@@ -104,3 +104,14 @@ shared/node_modules/
 .DS_Store
 .vercel
 .env*.local
+
+# Planning / tooling artifacts
+graphify-out/
+STREAM_A_*.md
+STREAM_A_*.txt
+STREAM_B_*.md
+QUICKSTART_*.md
+WORK_MAP.md
+SEO_DEPLOYMENT_SUMMARY.md
+VERCEL_DEPLOYMENT.md
+todo.md

@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Music, Download } from "lucide-react";
+import { Music, Mail, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 
 export default function EPK() {
@@ -22,10 +21,20 @@ export default function EPK() {
           <p className="text-xl text-muted-foreground mb-8">
             Professional media assets and information for promoters and media.
           </p>
-          <Button size="lg" className="gradient-bg">
-            <Download className="w-5 h-5 mr-2" />
-            Download EPK
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/contact">
+              <Button size="lg" className="gradient-bg">
+                <Mail className="w-5 h-5 mr-2" />
+                Request EPK via Email
+              </Button>
+            </Link>
+            <Link href="/press">
+              <Button size="lg" variant="outline">
+                <BookOpen className="w-5 h-5 mr-2" />
+                View Press Kit Online
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>

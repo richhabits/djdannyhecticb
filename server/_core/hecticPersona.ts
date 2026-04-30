@@ -37,6 +37,9 @@ KNOWLEDGE BASE:
   🎤 Radio/Festival: Negotiate per opportunity (exposure + possible back-end)
 - Content: All mixes at /mixes, Live studio /live-studio, Radio broadcasts weekly
 - Booking system: Full form at /bookings (but capture essentials HERE)
+- SHOP: Danny sells digital drops, sound packs, vinyl, and merch at /shop
+  → If someone asks about buying music, beats, or merchandise, mention the shop
+  → New releases available: check /shop for latest drops
 
 BOOKING DATA EXTRACTION:
 Always extract:
@@ -89,33 +92,46 @@ export interface ExtractedBookingData {
   budget?: string;
 }
 
+export interface ShopItem {
+  name: string;
+  type: string;
+  price: string;
+}
+
 export function buildHecticContext(
   extractedData: ExtractedBookingData | null,
-  messageCount: number
+  messageCount: number,
+  shopItems?: ShopItem[]
 ): string {
-  if (!extractedData) return "";
-
   const parts: string[] = [];
 
-  if (extractedData.name) parts.push(`✓ Name: ${extractedData.name}`);
-  if (extractedData.email) parts.push(`✓ Email: ${extractedData.email}`);
-  if (extractedData.phone) parts.push(`✓ Phone: ${extractedData.phone}`);
-  if (extractedData.intent) parts.push(`→ Intent: ${extractedData.intent}`);
-  if (extractedData.eventType) parts.push(`→ Event type: ${extractedData.eventType}`);
-  if (extractedData.location) parts.push(`→ Location: ${extractedData.location}`);
-  if (extractedData.eventDate) parts.push(`→ Date: ${extractedData.eventDate}`);
-  if (extractedData.budget) parts.push(`→ Budget: ${extractedData.budget}`);
+  if (extractedData) {
+    if (extractedData.name) parts.push(`✓ Name: ${extractedData.name}`);
+    if (extractedData.email) parts.push(`✓ Email: ${extractedData.email}`);
+    if (extractedData.phone) parts.push(`✓ Phone: ${extractedData.phone}`);
+    if (extractedData.intent) parts.push(`→ Intent: ${extractedData.intent}`);
+    if (extractedData.eventType) parts.push(`→ Event type: ${extractedData.eventType}`);
+    if (extractedData.location) parts.push(`→ Location: ${extractedData.location}`);
+    if (extractedData.eventDate) parts.push(`→ Date: ${extractedData.eventDate}`);
+    if (extractedData.budget) parts.push(`→ Budget: ${extractedData.budget}`);
 
-  // Priority signals
-  if (messageCount > 6 && !extractedData.email) {
-    parts.push("⚠️ PRIORITY: Get email to lock in this booking");
+    // Priority signals
+    if (messageCount > 6 && !extractedData.email) {
+      parts.push("⚠️ PRIORITY: Get email to lock in this booking");
+    }
+    if (messageCount > 10 && !extractedData.intent) {
+      parts.push("⚠️ Still unclear on what they want — clarify intent");
+    }
   }
-  if (messageCount > 10 && !extractedData.intent) {
-    parts.push("⚠️ Still unclear on what they want — clarify intent");
+
+  // Add shop items if available
+  if (shopItems && shopItems.length > 0) {
+    const itemNames = shopItems.map((item) => item.name).join(", ");
+    parts.push(`\nLatest Shop Drops: ${itemNames}`);
   }
 
   return parts.length
-    ? `Current extracted data:\n${parts.join("\n")}\n`
+    ? `Current context:\n${parts.join("\n")}\n`
     : "";
 }
 

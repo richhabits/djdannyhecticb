@@ -3,12 +3,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Lock, Sparkles, Calendar, Trophy, Music } from "lucide-react";
 import { Link } from "wouter";
 
-const currentProfileId = 1; // TODO: Get from auth
-
 export default function Backstage() {
+  const { user } = useAuth();
+  const currentProfileId = user?.id ?? null;
+
   const { data: innerCircleStatus } = trpc.innerCircle.getStatus.useQuery(
     { profileId: currentProfileId },
     { enabled: !!currentProfileId }

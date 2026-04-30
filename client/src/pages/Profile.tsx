@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { trpc } from "@/lib/trpc";
 import { MetaTagsComponent } from "@/components/MetaTags";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { UserPlus, UserMinus, MessageSquare, Heart, Share2, Trophy, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +13,8 @@ import { toast } from "sonner";
 export default function Profile() {
   const [, params] = useRoute<{ username: string }>("/profile/:username");
   const username = params?.username || "";
+  const { user } = useAuth();
+  const currentProfileId = user?.id ?? null;
 
   const { data: profile, refetch } = trpc.genz.profiles.getByUsername.useQuery(
     { username },
@@ -34,7 +37,6 @@ export default function Profile() {
   );
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const currentProfileId = 1; // TODO: Get from auth
 
   const followMutation = trpc.genz.follows.follow.useMutation({
     onSuccess: () => {

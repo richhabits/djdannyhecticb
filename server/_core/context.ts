@@ -23,6 +23,7 @@ export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
+  ipAddress?: string;
 };
 
 export async function createContext(
@@ -45,9 +46,17 @@ export async function createContext(
     }
   }
 
+  // Get IP address from request
+  const ipAddress =
+    (opts.req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
+    (opts.req.headers["x-real-ip"] as string) ||
+    opts.req.socket?.remoteAddress ||
+    "unknown";
+
   return {
     req: opts.req,
     res: opts.res,
     user,
+    ipAddress,
   };
 }

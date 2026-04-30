@@ -1,169 +1,167 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { MetaTagsComponent } from "@/components/MetaTags";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "../lib/trpc";
+import { Input } from "../components/ui/input";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Search } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
-const faqs = [
-  {
-    category: "Booking & Events",
-    questions: [
-      {
-        q: "How far in advance should I book?",
-        a: "We recommend booking at least 2-4 weeks in advance to secure your preferred date. However, we can accommodate last-minute bookings (within 48 hours) subject to availability and a rush fee.",
-      },
-      {
-        q: "What's included in the booking price?",
-        a: "All packages include professional DJ equipment, sound system, basic lighting, setup and breakdown, and travel within the standard distance. Extended hours, additional travel, and special requests may incur extra charges.",
-      },
-      {
-        q: "Do you provide your own equipment?",
-        a: "Yes, we bring professional-grade DJ equipment, sound systems, and lighting. If the venue has existing equipment, we can discuss using it, but we recommend our professional setup for the best experience.",
-      },
-      {
-        q: "What happens if I need to cancel?",
-        a: "Cancellations made more than 14 days before the event receive a full refund. Cancellations 7-14 days before receive a 50% refund. Cancellations within 7 days are non-refundable.",
-      },
-    ],
-  },
-  {
-    category: "Music & Playlists",
-    questions: [
-      {
-        q: "Can I request specific songs?",
-        a: "Absolutely! We encourage you to share your favorite tracks, must-play songs, and any do-not-play lists. We'll incorporate your requests while maintaining the flow and energy of the event.",
-      },
-      {
-        q: "What genres do you play?",
-        a: "We specialize in a wide range of electronic music including house, techno, drum & bass, garage, and more. We adapt to your event's vibe and audience preferences.",
-      },
-      {
-        q: "Do you take song requests during the event?",
-        a: "Yes! We welcome requests from guests during the event. We'll do our best to accommodate requests that fit the current vibe and energy.",
-      },
-    ],
-  },
-  {
-    category: "Technical",
-    questions: [
-      {
-        q: "What equipment do you use?",
-        a: "We use professional DJ equipment including Pioneer CDJs, professional mixers, high-quality sound systems, and lighting equipment. All equipment is regularly maintained and tested.",
-      },
-      {
-        q: "Do you need specific power requirements?",
-        a: "We typically need standard power outlets (220V/240V). For larger events, we may require dedicated circuits. We'll discuss power requirements during the booking consultation.",
-      },
-      {
-        q: "How long does setup take?",
-        a: "Setup typically takes 1-2 hours depending on the package and venue. We arrive early to ensure everything is ready before your event starts.",
-      },
-    ],
-  },
-  {
-    category: "Payment & Pricing",
-    questions: [
-      {
-        q: "What payment methods do you accept?",
-        a: "We accept bank transfers, credit/debit cards via Stripe, and PayPal. A deposit is required to secure your booking, with the balance due before or on the event date.",
-      },
-      {
-        q: "Are there any hidden fees?",
-        a: "No hidden fees! All pricing is transparent. Additional charges only apply for extended hours, extra travel distance, or special custom requests, which are discussed upfront.",
-      },
-      {
-        q: "Do you offer discounts for multiple events?",
-        a: "Yes! We offer package deals for multiple bookings. Contact us to discuss bulk booking discounts.",
-      },
-    ],
-  },
-  {
-    category: "General",
-    questions: [
-      {
-        q: "Do you have public liability insurance?",
-        a: "Yes, we carry full public liability insurance. Certificates can be provided upon request.",
-      },
-      {
-        q: "Can you provide references or testimonials?",
-        a: "Absolutely! Check out our testimonials page or contact us for references from previous clients.",
-      },
-      {
-        q: "Do you play at weddings?",
-        a: "Yes! We provide DJ services for weddings, private parties, corporate events, clubs, festivals, and more. Contact us to discuss your specific event.",
-      },
-    ],
-  },
-];
+export function FAQ() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-export default function FAQ() {
+  const { data: faqs, isLoading } = useQuery({
+    queryKey: ["faq:list"],
+    queryFn: () => trpc.faq.list.query(),
+  });
+
+  const { data: searchResults } = useQuery({
+    queryKey: ["faq:search", searchQuery],
+    queryFn: () => trpc.faq.search.query({ query: searchQuery }),
+    enabled: searchQuery.length > 0,
+  });
+
+  const displayFaqs = searchQuery ? searchResults : faqs;
+  const categories = displayFaqs
+    ? Object.keys(displayFaqs).filter(cat => Array.isArray(displayFaqs[cat]))
+    : [];
+
   return (
-    <>
-      <MetaTagsComponent
-        title="FAQ | DJ Danny Hectic B"
-        description="Frequently asked questions about DJ services, bookings, pricing, and more."
-        url="/faq"
-      />
-      <div className="min-h-screen bg-background text-foreground pt-14">
-        {/* Hero Section */}
-        <section className="border-b border-foreground px-4 py-12 md:py-20">
-          <div className="container max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-black uppercase mb-6 tracking-tighter">
-              Frequently Asked Questions
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to know about booking DJ Danny Hectic B for your event.
-            </p>
-          </div>
-        </section>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-12">
+      <div className="max-w-4xl mx-auto px-4 space-y-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white">Frequently Asked Questions</h1>
+          <p className="text-lg text-slate-300">
+            Find answers to common questions about bookings, merchandise, technical support, and more
+          </p>
+        </div>
 
-        {/* FAQ Content */}
-        <section className="py-12 md:py-20 px-4">
-          <div className="container max-w-4xl mx-auto">
-            {faqs.map((category) => (
-              <div key={category.category} className="mb-12">
-                <h2 className="text-3xl font-black uppercase mb-6 border-b border-foreground pb-4">
-                  {category.category}
-                </h2>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Search FAQs..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-10 py-2 w-full bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+          />
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-slate-700 rounded animate-pulse" />
+            ))}
+          </div>
+        ) : searchQuery ? (
+          <Card className="bg-slate-700 border-slate-600">
+            <CardHeader>
+              <CardTitle className="text-white">Search Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {searchResults && searchResults.length > 0 ? (
                 <Accordion type="single" collapsible className="w-full">
-                  {category.questions.map((faq, idx) => (
-                    <AccordionItem key={idx} value={`${category.category}-${idx}`}>
-                      <AccordionTrigger className="text-left font-bold">
-                        {faq.q}
+                  {searchResults.map(faq => (
+                    <AccordionItem key={faq.id} value={`faq-${faq.id}`} className="border-slate-600">
+                      <AccordionTrigger className="hover:text-purple-400 text-white">
+                        {faq.question}
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        {faq.a}
+                      <AccordionContent className="text-slate-200">
+                        <div className="prose prose-invert max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              p: ({ children }) => <p className="mb-2">{children}</p>,
+                              ul: ({ children }) => (
+                                <ul className="list-disc list-inside space-y-1 mb-2">
+                                  {children}
+                                </ul>
+                              ),
+                              li: ({ children }) => <li className="ml-2">{children}</li>,
+                              a: ({ children, href }) => (
+                                <a href={href} className="text-purple-400 hover:text-purple-300">
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
+                            {faq.answer}
+                          </ReactMarkdown>
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>
-              </div>
-            ))}
-          </div>
-        </section>
+              ) : (
+                <p className="text-slate-300">No FAQs found matching your search</p>
+              )}
+            </CardContent>
+          </Card>
+        ) : categories.length > 0 ? (
+          <Tabs defaultValue={categories[0]} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-slate-700 border-slate-600">
+              {categories.map(cat => (
+                <TabsTrigger
+                  key={cat}
+                  value={cat}
+                  className="capitalize text-slate-300 data-[state=active]:text-purple-400 data-[state=active]:bg-slate-600"
+                >
+                  {cat}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-        {/* Still Have Questions */}
-        <section className="py-12 md:py-20 px-4 border-t border-foreground bg-muted/10">
-          <div className="container max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-black uppercase mb-6">
-              Still Have Questions?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Can't find what you're looking for? Get in touch and we'll be happy to help.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/contact" className="inline-block">
-                <button className="px-6 py-3 bg-foreground text-background hover:bg-accent hover:text-foreground uppercase font-bold transition-colors">
-                  Contact Us
-                </button>
-              </a>
-              <a href="/book-danny" className="inline-block">
-                <button className="px-6 py-3 border border-foreground hover:bg-foreground hover:text-background uppercase font-bold transition-colors">
-                  Book Now
-                </button>
-              </a>
-            </div>
+            {categories.map(category => (
+              <TabsContent key={category} value={category} className="mt-6">
+                <Card className="bg-slate-700 border-slate-600">
+                  <CardHeader>
+                    <CardTitle className="text-white capitalize">{category}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                      {displayFaqs[category]?.map(faq => (
+                        <AccordionItem key={faq.id} value={`faq-${faq.id}`} className="border-slate-600">
+                          <AccordionTrigger className="hover:text-purple-400 text-white">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-slate-200">
+                            <div className="prose prose-invert max-w-none">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({ children }) => <p className="mb-2">{children}</p>,
+                                  ul: ({ children }) => (
+                                    <ul className="list-disc list-inside space-y-1 mb-2">
+                                      {children}
+                                    </ul>
+                                  ),
+                                  li: ({ children }) => <li className="ml-2">{children}</li>,
+                                  a: ({ children, href }) => (
+                                    <a href={href} className="text-purple-400 hover:text-purple-300">
+                                      {children}
+                                    </a>
+                                  ),
+                                }}
+                              >
+                                {faq.answer}
+                              </ReactMarkdown>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            ))}
+          </Tabs>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-slate-300 text-lg">No FAQs available yet</p>
           </div>
-        </section>
+        )}
       </div>
-    </>
+    </div>
   );
 }
-

@@ -1,31 +1,64 @@
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Check, ArrowRight, Loader2, Search } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { trpc } from "@/lib/trpc";
+import { useCart } from "@/contexts/CartContext";
 
 export default function Shop() {
   const [newsletter, setNewsletter] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [, navigate] = useLocation();
+  const { addItem } = useCart();
 
   const { data: products = [], isLoading } = trpc.products.list.useQuery({ activeOnly: true });
+  const { data: searchResults = [] } = trpc.products.search.useQuery(
+    { q: debouncedQuery },
+    { enabled: debouncedQuery.length > 0 }
+  );
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Map product types to categories for filtering
   const getCategory = (type: string) => {
     if (type === "drop" || type === "soundpack" || type === "preset" || type === "course") return "Digital";
+    if (type === "vinyl") return "Vinyl";
+    if (type === "merch") return "Merch";
     return "Other";
   };
 
-  const filteredProducts = activeCategory === "All"
+  // Use search results if searching, otherwise filter by category
+  const displayProducts = debouncedQuery.length > 0
+    ? searchResults
+    : activeCategory === "All"
     ? products
     : products.filter(p => getCategory(p.type) === activeCategory);
 
   const handleBuyNow = (productId: number) => {
     navigate(`/checkout?productId=${productId}`);
+  };
+
+  const handleAddToCart = (product: typeof products[0]) => {
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      currency: product.currency,
+      thumbnailUrl: product.thumbnailUrl,
+      type: product.type,
+    });
+    toast.success(`${product.name} added to cart!`);
   };
 
   return (
@@ -37,15 +70,33 @@ export default function Shop() {
       />
       <div className="min-h-screen bg-background text-foreground font-mono pt-14">
         {/* Brutalist Header */}
-        <section className="border-b border-foreground px-4 py-8 md:px-6 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div>
-            <h1 className="text-6xl md:text-9xl font-black uppercase leading-[0.8] tracking-tighter">
-              Empire<br />Supply
-            </h1>
+        <section className="border-b border-foreground px-4 py-8 md:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8">
+            <div>
+              <h1 className="text-6xl md:text-9xl font-black uppercase leading-[0.8] tracking-tighter">
+                Empire<br />Supply
+              </h1>
+            </div>
+            <div className="md:text-right">
+              <p className="text-sm font-bold uppercase tracking-widest mb-2 text-muted-foreground">Status</p>
+              <p className="text-xl font-bold uppercase">Online Store v2.0</p>
+            </div>
           </div>
-          <div className="md:text-right">
-            <p className="text-sm font-bold uppercase tracking-widest mb-2 text-muted-foreground">Status</p>
-            <p className="text-xl font-bold uppercase">Online Store v2.0</p>
+
+          {/* Search Bar */}
+          <div className="max-w-md">
+            <div className="flex border border-foreground">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="SEARCH PRODUCTS"
+                className="bg-transparent border-none focus:ring-0 w-full px-4 py-3 font-mono uppercase placeholder:text-muted-foreground text-sm"
+              />
+              <button className="bg-foreground text-background px-4 py-3 font-bold hover:bg-accent transition-colors">
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -67,17 +118,21 @@ export default function Shop() {
 
         {/* Product Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:gap-[1px] bg-foreground border-b border-foreground">
-          {isLoading ? (
+          {isLoading && debouncedQuery.length > 0 ? (
             <div className="col-span-full flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : displayProducts.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">No products available</p>
+              <p className="text-muted-foreground">{debouncedQuery.length > 0 ? "No results found" : "No products available"}</p>
             </div>
           ) : (
-            filteredProducts.map((p) => (
-              <div key={p.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-150">
+            displayProducts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => navigate(`/products/${p.id}`)}
+                className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-150 text-left"
+              >
                 <div className="aspect-square relative overflow-hidden border-b border-foreground">
                   <img
                     src={p.thumbnailUrl || "https://images.unsplash.com/photo-1603048588665-791ca8aea616?q=80&w=2670&auto=format&fit=crop"}
@@ -87,6 +142,11 @@ export default function Shop() {
                   {!p.isActive && (
                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
                       <span className="text-3xl font-black uppercase border border-foreground px-4 py-2 bg-background">Unavailable</span>
+                    </div>
+                  )}
+                  {p.stock === 0 && p.isActive && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                      <span className="text-3xl font-black uppercase border border-foreground px-4 py-2 bg-background">Sold Out</span>
                     </div>
                   )}
                 </div>
@@ -101,15 +161,24 @@ export default function Shop() {
                     )}
                   </div>
 
-                  <Button
-                    onClick={() => handleBuyNow(p.id)}
-                    disabled={!p.isActive}
-                    className="w-full rounded-none border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background uppercase font-bold text-lg h-12"
-                  >
-                    {p.isActive ? "Buy Now" : "Unavailable"}
-                  </Button>
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      onClick={() => handleAddToCart(p)}
+                      disabled={!p.isActive || p.stock === 0}
+                      className="flex-1 rounded-none border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background uppercase font-bold text-sm h-10"
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button
+                      onClick={() => handleBuyNow(p.id)}
+                      disabled={!p.isActive || p.stock === 0}
+                      className="flex-1 rounded-none border border-foreground bg-foreground text-background hover:bg-transparent hover:text-foreground uppercase font-bold text-sm h-10"
+                    >
+                      {p.isActive && p.stock !== 0 ? "Buy Now" : "Unavailable"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </section>

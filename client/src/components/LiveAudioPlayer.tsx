@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, VolumeX, AlertCircle } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, AlertCircle, RotateCcw, Repeat } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
@@ -11,7 +11,16 @@ export function LiveAudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [isLooping, setIsLooping] = useState(false);
+  const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(() => {
+    try {
+      return localStorage.getItem("hectic-autoplay") === "true";
+    } catch {
+      return false;
+    }
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoPlayInitialized = useRef(false);
 
   const { data: activeStream } = trpc.streams.active.useQuery(undefined, {
     retry: false,
@@ -65,7 +74,14 @@ export function LiveAudioPlayer() {
   const setupAudioListeners = (audio: HTMLAudioElement) => {
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
-    const handleEnded = () => setIsPlaying(false);
+    const handleEnded = () => {
+      if (isLooping) {
+        audio.currentTime = 0;
+        audio.play().catch(console.error);
+      } else {
+        setIsPlaying(false);
+      }
+    };
     const handleError = (e: Event) => {
       console.error("[AudioPlayer] Error:", e);
       setIsPlaying(false);
@@ -89,6 +105,18 @@ export function LiveAudioPlayer() {
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  // Auto-play on mount if enabled
+  useEffect(() => {
+    if (!autoPlayInitialized.current && isAutoPlayEnabled && streamUrl && audioRef.current && !isPlaying) {
+      autoPlayInitialized.current = true;
+      setTimeout(() => {
+        audioRef.current?.play().catch(() => {
+          console.log("[AudioPlayer] Auto-play prevented by browser");
+        });
+      }, 500);
+    }
+  }, [isAutoPlayEnabled, streamUrl, isPlaying]);
 
   const togglePlay = () => {
     if (!streamUrl) {
@@ -117,6 +145,26 @@ export function LiveAudioPlayer() {
     setIsMuted(!isMuted);
   };
 
+  const toggleLoop = () => {
+    setIsLooping(!isLooping);
+  };
+
+  const rewindStream = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+    }
+  };
+
+  const toggleAutoPlay = () => {
+    const newState = !isAutoPlayEnabled;
+    setIsAutoPlayEnabled(newState);
+    try {
+      localStorage.setItem("hectic-autoplay", newState ? "true" : "false");
+    } catch {
+      console.warn("[AudioPlayer] Could not save auto-play preference");
+    }
+  };
+
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
     setVolume(newVolume);
@@ -134,19 +182,53 @@ export function LiveAudioPlayer() {
       )}
     >
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {/* Play/Pause Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={togglePlay}
             className="shrink-0"
+            title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
               <Pause className="w-5 h-5" />
             ) : (
               <Play className="w-5 h-5" />
             )}
+          </Button>
+
+          {/* Rewind Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={rewindStream}
+            className="shrink-0"
+            title="Rewind 10s"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+
+          {/* Loop Button */}
+          <Button
+            variant={isLooping ? "default" : "ghost"}
+            size="icon"
+            onClick={toggleLoop}
+            className="shrink-0"
+            title={isLooping ? "Loop: ON" : "Loop: OFF"}
+          >
+            <Repeat className="w-4 h-4" />
+          </Button>
+
+          {/* Auto-Play Toggle */}
+          <Button
+            variant={isAutoPlayEnabled ? "default" : "ghost"}
+            size="sm"
+            onClick={toggleAutoPlay}
+            className="shrink-0 text-xs"
+            title={isAutoPlayEnabled ? "Auto-play: ON" : "Auto-play: OFF"}
+          >
+            {isAutoPlayEnabled ? "🔊 AUTO" : "AUTO"}
           </Button>
 
           {/* Live Label */}

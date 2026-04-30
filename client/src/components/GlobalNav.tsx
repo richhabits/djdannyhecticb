@@ -3,10 +3,12 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { GlobalSearch } from "./GlobalSearch";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X, Zap, ShoppingCart, Phone, Instagram } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 export function GlobalNav() {
   const { isAuthenticated } = useAuth();
+  const { count } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
 
@@ -50,7 +52,21 @@ export function GlobalNav() {
           <MenuItem href="/contact" label="CONTACT" />
 
           <div className="ml-4 flex items-center gap-2">
+            <a href="tel:+447957432842" className="tape-strip bg-black text-white border-white p-2 hover:bg-accent transition-all duration-150 flex items-center gap-1" title="Call DJ Danny Hectic B">
+              <Phone className="w-4 h-4" />
+            </a>
+            <a href="https://instagram.com/djdannyhecticb" target="_blank" rel="noopener noreferrer" className="tape-strip bg-black text-white border-white p-2 hover:bg-accent transition-all duration-150 flex items-center gap-1" title="Follow on Instagram">
+              <Instagram className="w-4 h-4" />
+            </a>
             <GlobalSearch />
+            <Link href="/cart" className="relative tape-strip bg-black text-white border-white p-2 hover:bg-accent transition-all duration-150">
+              <ShoppingCart className="w-5 h-5" />
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 bg-accent text-black text-xs font-black w-5 h-5 flex items-center justify-center rounded-full">
+                  {count}
+                </span>
+              )}
+            </Link>
             {isAuthenticated ? (
               <Link href="/dashboard" className="tape-strip bg-white text-black border-black text-xs">DASHBOARD</Link>
             ) : (
@@ -78,6 +94,19 @@ export function GlobalNav() {
             <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="hover:text-accent">Events</Link>
             <Link href="/bookings" onClick={() => setMobileMenuOpen(false)} className="hover:text-accent">Bookings</Link>
             <Link href="/press" onClick={() => setMobileMenuOpen(false)} className="hover:text-accent">Press Kit</Link>
+            <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="hover:text-accent">Contact</Link>
+            <Link href="/shop" onClick={() => setMobileMenuOpen(false)} className="hover:text-accent">Shop</Link>
+            <Link href="/cart" onClick={() => setMobileMenuOpen(false)} className="hover:text-accent flex items-center gap-2">
+              Cart {count > 0 && <span className="text-sm bg-accent text-black px-2 py-1 rounded">({count})</span>}
+            </Link>
+            <div className="flex gap-4 mt-4">
+              <a href="tel:+447957432842" className="text-accent text-2xl hover:text-white flex items-center gap-2">
+                <Phone className="w-6 h-6" /> Call
+              </a>
+              <a href="https://instagram.com/djdannyhecticb" target="_blank" rel="noopener noreferrer" className="text-accent text-2xl hover:text-white flex items-center gap-2">
+                <Instagram className="w-6 h-6" /> Follow
+              </a>
+            </div>
             {!isAuthenticated && <a href={getLoginUrl()} className="text-accent underline">Login</a>}
           </div>
         </div>
