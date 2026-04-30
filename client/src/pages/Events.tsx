@@ -1,156 +1,133 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Music, Calendar, MapPin, Ticket } from "lucide-react";
+import { Calendar, MapPin, Ticket } from "lucide-react";
 import { Link } from "wouter";
 import { formatDate } from "date-fns";
+import { BackButton } from "@/components/BackButton";
 
 export default function Events() {
   const { data: events, isLoading } = trpc.events.upcoming.useQuery();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            <Music className="w-6 h-6" />
-            <span className="font-bold">DJ Danny Hectic B</span>
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/mixes" className="text-sm hover:text-accent">Mixes</Link>
-            <Link href="/events" className="text-sm font-medium text-accent">Events</Link>
-            <Link href="/live-studio" className="text-sm hover:text-accent">Live</Link>
-            <Link href="/podcasts" className="text-sm hover:text-accent">Podcast</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-black text-white selection:bg-accent pt-32 pb-20 px-6">
+      <div className="max-w-6xl mx-auto flex flex-col gap-16">
 
-      {/* Hero */}
-      <section className="py-12 md:py-20 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
-        <div className="container">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Upcoming Events</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Check out where DJ Danny Hectic B will be performing next. Book tickets and don't miss the beat!
-          </p>
-        </div>
-      </section>
+        {/* Back Button */}
+        <BackButton />
 
-      {/* Events List */}
-      <section className="py-16 md:py-24">
-        <div className="container">
+        {/* Header */}
+        <section className="relative border-b-4 border-white pb-8">
+          <div className="tape-strip bg-accent text-white border-white mb-6 inline-block">LIVE_CALENDAR</div>
+          <h1 className="text-8xl md:text-[12rem] font-black uppercase tracking-tighter leading-[0.75] italic">
+            EVENTS<br />SCHEDULE
+          </h1>
+        </section>
+
+        {/* Events List */}
+        <section>
           {isLoading ? (
             <div className="space-y-6">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="p-6 animate-pulse">
-                  <div className="flex gap-6">
-                    <div className="w-48 h-48 bg-muted rounded-lg" />
-                    <div className="flex-1 space-y-4">
-                      <div className="h-6 bg-muted rounded w-1/2" />
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-4 bg-muted rounded w-1/2" />
-                    </div>
-                  </div>
-                </Card>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flyer-card p-6 animate-pulse">
+                  <div className="h-6 bg-white/20 w-1/3 mb-4" />
+                  <div className="h-4 bg-white/20 w-full mb-2" />
+                  <div className="h-4 bg-white/20 w-2/3" />
+                </div>
               ))}
             </div>
           ) : events && events.length > 0 ? (
             <div className="space-y-6">
               {events.map((event) => (
-                <Card key={event.id} className="overflow-hidden hover:border-accent transition">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+                <div key={event.id} className="flyer-card p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Event Image */}
-                    <div className="md:col-span-1">
-                      {event.imageUrl ? (
+                    {(event.imageUrl) && (
+                      <div className="md:col-span-1">
                         <img
                           src={event.imageUrl}
                           alt={event.title}
-                          className="w-full h-48 object-cover rounded-lg"
+                          className="w-full aspect-square object-cover grayscale hover:grayscale-0 transition-all duration-150"
                         />
-                      ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
-                          <Calendar className="w-12 h-12 text-white/50" />
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Event Details */}
-                    <div className="md:col-span-3 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-2xl font-bold mb-4">{event.title}</h3>
+                    <div className={`md:col-span-${event.imageUrl ? 2 : 3} flex flex-col justify-between`}>
+                      <div className="space-y-4">
+                        <h3 className="text-4xl font-black uppercase italic leading-tight">{event.title}</h3>
                         {event.description && (
-                          <p className="text-muted-foreground mb-6 line-clamp-2">{event.description}</p>
+                          <p className="text-white/70 text-lg">{event.description}</p>
                         )}
 
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-center gap-3 text-sm">
-                            <Calendar className="w-5 h-5 text-orange-400" />
-                            <span>{formatDate(new Date(event.eventDate), 'EEEE, MMMM d, yyyy')}</span>
+                        <div className="space-y-2 text-sm font-mono">
+                          <div className="flex items-center gap-3">
+                            <Calendar className="w-5 h-5 text-accent" />
+                            <span className="font-black uppercase">
+                              {formatDate(new Date(event.eventDate), 'EEEE, MMMM d, yyyy')}
+                            </span>
                           </div>
-                          <div className="flex items-center gap-3 text-sm">
-                            <MapPin className="w-5 h-5 text-amber-400" />
-                            <span>{event.location}</span>
+                          <div className="flex items-center gap-3">
+                            <MapPin className="w-5 h-5 text-accent" />
+                            <span className="font-black uppercase">{event.location}</span>
                           </div>
                           {event.price && (
-                            <div className="flex items-center gap-3 text-sm">
-                              <Ticket className="w-5 h-5 text-orange-400" />
-                              <span>{event.price}</span>
+                            <div className="flex items-center gap-3">
+                              <Ticket className="w-5 h-5 text-accent" />
+                              <span className="font-black uppercase">{event.price}</span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
+                      <div className="flex gap-3 mt-6">
                         {event.ticketUrl ? (
-                          <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer">
-                            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
-                              <Ticket className="w-4 h-4 mr-2" />
-                              Get Tickets
-                            </Button>
+                          <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
+                            <button className="tape-strip bg-white text-black border-black w-full py-3 text-lg hover:bg-accent hover:text-white transition-all duration-150">
+                              GET_TICKETS
+                            </button>
                           </a>
                         ) : (
-                          <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
-                            <Ticket className="w-4 h-4 mr-2" />
-                            Coming Soon
-                          </Button>
+                          <button className="tape-strip bg-white text-black border-black flex-1 py-3 text-lg opacity-50 cursor-not-allowed">
+                            COMING_SOON
+                          </button>
                         )}
-                        <Button variant="outline">
-                          Add to Calendar
-                        </Button>
                       </div>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground text-lg">No upcoming events. Check back soon!</p>
+            <div className="flyer-card p-12 text-center space-y-6">
+              <Calendar className="w-16 h-16 text-accent mx-auto" />
+              <div>
+                <p className="text-3xl font-black uppercase mb-2">NO EVENTS SCHEDULED</p>
+                <p className="text-white/60 font-mono uppercase">Check back soon for upcoming gigs and appearances</p>
+              </div>
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      {/* Newsletter */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-orange-900/30 to-amber-900/30 border-t border-border">
-        <div className="container max-w-2xl text-center space-y-6">
-          <h2 className="text-3xl font-bold">Stay Updated</h2>
-          <p className="text-lg text-muted-foreground">
-            Subscribe to get notified about upcoming events and special performances.
-          </p>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">
-              Subscribe
-            </Button>
+        {/* Newsletter CTA */}
+        <section className="border-t-4 border-white pt-16 text-center">
+          <div className="space-y-8">
+            <div>
+              <p className="tape-strip bg-accent text-white border-white mb-6 inline-block">STAY_LOCKED_IN</p>
+              <h2 className="text-4xl font-black uppercase mb-4">Never Miss A Transmission</h2>
+              <p className="text-white/60 font-mono uppercase mb-8">Get event notifications sent straight to your inbox</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="your@email.com"
+                className="flex-1 px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent"
+              />
+              <button className="tape-strip bg-white text-black border-black px-8 py-3 hover:bg-accent hover:text-white transition-all duration-150">
+                NOTIFY_ME
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

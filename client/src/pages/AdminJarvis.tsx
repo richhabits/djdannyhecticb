@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
@@ -80,6 +81,7 @@ export default function AdminJarvis() {
       />
       <div className="min-h-screen bg-background text-foreground">
         <div className="container mx-auto p-6 max-w-7xl">
+          <BackButton to="/admin/control-tower" label="Back to Admin" />
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">

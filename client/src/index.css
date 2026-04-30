@@ -82,7 +82,7 @@
   }
 
   .flyer-card {
-    @apply border-2 border-white bg-black hover:bg-accent hover:text-white transition-all duration-0;
+    @apply border-2 border-white bg-black hover:bg-accent hover:text-white transition-all duration-150;
     box-shadow: 8px 8px 0px rgba(255, 255, 255, 0.1);
   }
 

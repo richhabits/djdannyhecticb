@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { BackButton } from "@/components/BackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,7 @@ export default function AdminIntegrations() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <BackButton to="/admin/control-tower" label="Back to Admin" />
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Integrations</h1>
         <Badge variant="outline">Admin Only</Badge>

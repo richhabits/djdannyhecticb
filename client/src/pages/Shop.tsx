@@ -56,7 +56,7 @@ export default function Shop() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "px-6 py-4 uppercase font-bold text-sm tracking-wider hover:bg-foreground hover:text-background transition-colors duration-0",
+                "px-6 py-4 uppercase font-bold text-sm tracking-wider hover:bg-foreground hover:text-background transition-colors duration-150",
                 activeCategory === cat ? "bg-foreground text-background" : ""
               )}
             >
@@ -77,12 +77,12 @@ export default function Shop() {
             </div>
           ) : (
             filteredProducts.map((p) => (
-              <div key={p.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-0">
+              <div key={p.id} className="bg-background group relative flex flex-col h-full md:border-r border-b border-foreground last:border-0 hover:bg-muted/20 transition-colors duration-150">
                 <div className="aspect-square relative overflow-hidden border-b border-foreground">
                   <img
                     src={p.thumbnailUrl || "https://images.unsplash.com/photo-1603048588665-791ca8aea616?q=80&w=2670&auto=format&fit=crop"}
                     alt={p.name}
-                    className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-0 group-hover:grayscale-0"
+                    className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-150 group-hover:grayscale-0"
                   />
                   {!p.isActive && (
                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center">

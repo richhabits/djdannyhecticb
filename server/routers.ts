@@ -20,6 +20,56 @@ export const appRouter = router({
   system: systemRouter,
   ukEvents: ukEventsRouter,
 
+  // Alias for frontend compatibility
+  events: router({
+    upcoming: publicProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(100).default(10),
+        offset: z.number().min(0).default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        return await ukEventsService.getUKEvents({
+          limit: input?.limit || 10,
+          offset: input?.offset || 0,
+        });
+      }),
+
+    all: publicProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        return await ukEventsService.getUKEvents({
+          limit: input?.limit || 50,
+          offset: input?.offset || 0,
+        });
+      }),
+
+    featured: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(12).default(6) }).optional())
+      .query(async ({ input }) => {
+        return await ukEventsService.getFeaturedUKEvents(input?.limit || 6);
+      }),
+
+    byId: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await ukEventsService.getUKEventById(input.id);
+      }),
+
+    search: publicProcedure
+      .input(z.object({
+        query: z.string().min(1).max(100),
+        limit: z.number().min(1).max(50).default(20),
+      }))
+      .query(async ({ input }) => {
+        return await ukEventsService.searchUKEvents(input.query, {
+          limit: input.limit,
+        });
+      }),
+  }),
+
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -186,73 +236,6 @@ export const appRouter = router({
           action: "delete_booking",
           entityType: "booking",
           entityId: input.id,
-        });
-        return { success: true };
-      }),
-  }),
-
-  events: router({
-    upcoming: publicProcedure.query(() => db.getUpcomingEvents()),
-    featured: publicProcedure.query(() => db.getFeaturedEvents()),
-    all: publicProcedure.query(() => db.getAllEvents()),
-    // Admin routes for managing events
-    adminList: adminProcedure.query(() => db.getAllEvents()),
-    adminCreate: adminProcedure
-      .input(z.object({
-        title: z.string().min(1).max(255),
-        description: z.string().optional(),
-        eventDate: z.date(),
-        location: z.string().min(1).max(255),
-        imageUrl: z.string().url().optional(),
-        ticketUrl: z.string().url().optional(),
-        price: z.string().optional(),
-        isFeatured: z.boolean().default(false),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const event = await db.createEvent(input);
-        await db.createAuditLog({
-          action: "create_event",
-          entityType: "event",
-          entityId: event.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
-        });
-        return event;
-      }),
-    adminUpdate: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        title: z.string().min(1).max(255).optional(),
-        description: z.string().optional(),
-        eventDate: z.date().optional(),
-        location: z.string().min(1).max(255).optional(),
-        imageUrl: z.string().url().optional(),
-        ticketUrl: z.string().url().optional(),
-        price: z.string().optional(),
-        isFeatured: z.boolean().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { id, ...updates } = input;
-        const event = await db.updateEvent(id, updates);
-        await db.createAuditLog({
-          action: "update_event",
-          entityType: "event",
-          entityId: id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
-        });
-        return event;
-      }),
-    adminDelete: adminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
-        await db.deleteEvent(input.id);
-        await db.createAuditLog({
-          action: "delete_event",
-          entityType: "event",
-          entityId: input.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
         });
         return { success: true };
       }),

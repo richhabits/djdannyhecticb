@@ -5,8 +5,8 @@
  */
 
 import { getDb } from '../db';
-// Removed: ukEvents, eventSyncStatus, InsertUKEvent, InsertEventSyncStatus (types don't exist in schema)
-import { eq, and, gt, desc, sql } from 'drizzle-orm';
+import { ukEvents, eventSyncStatus, InsertUKEvent, UKEvent, EventSyncStatus } from '../../drizzle/schema';
+import { eq, and, gt, desc, sql, like, ilike } from 'drizzle-orm';
 
 // Ticketmaster API Configuration
 const TICKETMASTER_API_KEY = process.env.TICKETMASTER_API_KEY || '';
@@ -93,9 +93,8 @@ interface TicketmasterResponse {
 
 /**
  * Map Ticketmaster event to our schema
- * NOTE: Disabled - InsertUKEvent type doesn't exist in schema
  */
-function mapTicketmasterEvent(event: TicketmasterEvent): any | null {
+function mapTicketmasterEvent(event: TicketmasterEvent): InsertUKEvent | null {
     try {
         const venue = event._embedded?.venues?.[0];
         const classification = event.classifications?.[0];
@@ -109,7 +108,7 @@ function mapTicketmasterEvent(event: TicketmasterEvent): any | null {
             || images[0];
 
         // Determine category
-        let category: 'music' | 'festival' | 'boxing' | 'sports' | 'comedy' | 'theatre' | 'clubbing' | 'other' = 'other';
+        let category: string = 'other';
         const segmentName = classification?.segment?.name || '';
 
         if (CATEGORY_MAP[segmentName]) {
@@ -128,10 +127,10 @@ function mapTicketmasterEvent(event: TicketmasterEvent): any | null {
         }
 
         // Determine genre for music events
-        let genre = classification?.genre?.name || '';
+        let subcategory = classification?.subGenre?.name || null;
         for (const [keyword, mappedGenre] of Object.entries(GENRE_KEYWORDS)) {
-            if (eventNameLower.includes(keyword) || genre.toLowerCase().includes(keyword)) {
-                genre = mappedGenre;
+            if (eventNameLower.includes(keyword) || classification?.genre?.name?.toLowerCase().includes(keyword)) {
+                subcategory = mappedGenre;
                 break;
             }
         }
@@ -143,8 +142,17 @@ function mapTicketmasterEvent(event: TicketmasterEvent): any | null {
         const eventDate = new Date(startDate);
         if (isNaN(eventDate.getTime())) return null;
 
+        // Parse doors time
+        let doorsTime: Date | null = null;
+        if (event.dates?.start?.localTime) {
+            const [hours, minutes] = event.dates.start.localTime.split(':');
+            doorsTime = new Date(eventDate);
+            doorsTime.setHours(parseInt(hours, 10));
+            doorsTime.setMinutes(parseInt(minutes, 10));
+        }
+
         // Determine ticket status
-        let ticketStatus: 'available' | 'limited' | 'sold_out' | 'cancelled' | 'postponed' = 'available';
+        let ticketStatus = 'available';
         const statusCode = event.dates?.status?.code?.toLowerCase();
         if (statusCode === 'cancelled') ticketStatus = 'cancelled';
         else if (statusCode === 'postponed') ticketStatus = 'postponed';
@@ -154,31 +162,26 @@ function mapTicketmasterEvent(event: TicketmasterEvent): any | null {
             externalId: event.id,
             source: 'ticketmaster',
             title: event.name,
-            description: event.info || event.pleaseNote || null,
+            description: event.info || event.pleaseNote || undefined,
             category,
-            subcategory: classification?.subGenre?.name || null,
-            genre: genre || null,
-            venueName: venue?.name || null,
-            venueAddress: venue?.address?.line1 || null,
+            subcategory,
+            venue: venue?.name || 'TBA',
             city: venue?.city?.name || 'London',
-            postcode: venue?.postalCode || null,
-            latitude: venue?.location?.latitude || null,
-            longitude: venue?.location?.longitude || null,
+            latitude: venue?.location?.latitude ? venue.location.latitude : undefined,
+            longitude: venue?.location?.longitude ? venue.location.longitude : undefined,
             eventDate,
-            eventEndDate: event.dates?.end?.dateTime ? new Date(event.dates.end.dateTime) : null,
-            doorsTime: event.dates?.start?.localTime || null,
-            imageUrl: bestImage?.url || null,
-            thumbnailUrl: images.find(img => img.width < 300)?.url || bestImage?.url || null,
-            ticketUrl: event.url || null,
-            priceMin: priceRange?.min?.toString() || null,
-            priceMax: priceRange?.max?.toString() || null,
+            doorsTime: doorsTime || undefined,
+            imageUrl: bestImage?.url || undefined,
+            ticketUrl: event.url || undefined,
+            priceMin: priceRange?.min ? priceRange.min.toString() : undefined,
+            priceMax: priceRange?.max ? priceRange.max.toString() : undefined,
             currency: priceRange?.currency || 'GBP',
             ticketStatus,
-            artists: artists.length > 0 ? artists : null,
-            ageRestriction: event.ageRestrictions?.legalAgeEnforced ? '18+' : null,
+            artists: artists.length > 0 ? JSON.stringify(artists) : undefined,
+            ageRestriction: event.ageRestrictions?.legalAgeEnforced ? '18+' : undefined,
             isFeatured: false,
-            isVerified: true,
-            viewCount: 0,
+            isSynced: true,
+            lastSyncedAt: new Date(),
         };
     } catch (error) {
         console.error('[UKEvents] Failed to map event:', error);
@@ -256,7 +259,6 @@ async function fetchTicketmasterEvents(options: {
 
 /**
  * Sync UK events from Ticketmaster
- * NOTE: Disabled - ukEvents and eventSyncStatus tables don't exist in schema
  */
 export async function syncTicketmasterEvents(): Promise<{
     success: boolean;
@@ -265,16 +267,6 @@ export async function syncTicketmasterEvents(): Promise<{
     eventsUpdated: number;
     error?: string;
 }> {
-    // Disabled: Tables ukEvents and eventSyncStatus don't exist in schema
-    return {
-        success: false,
-        eventsFound: 0,
-        eventsAdded: 0,
-        eventsUpdated: 0,
-        error: 'ukEvents and eventSyncStatus tables not found in schema'
-    };
-
-    /* Original implementation (disabled due to missing schema tables):
     const db = await getDb();
     if (!db) {
         return { success: false, eventsFound: 0, eventsAdded: 0, eventsUpdated: 0, error: 'Database not available' };
@@ -334,7 +326,7 @@ export async function syncTicketmasterEvents(): Promise<{
                     eventsUpdated++;
                 } else {
                     // Insert new event
-                    await db.insert(ukEvents).values(mappedEvent);
+                    await db.insert(ukEvents).values(mappedEvent as InsertUKEvent);
                     eventsAdded++;
                 }
             }
@@ -344,101 +336,229 @@ export async function syncTicketmasterEvents(): Promise<{
         }
 
         // Log sync status
-        const syncLog: InsertEventSyncStatus = {
-            source: 'ticketmaster',
-            lastSyncedAt: new Date(),
-            eventsFound,
-            eventsAdded,
-            eventsUpdated,
-            status: 'success',
-        };
+        const syncDurationMs = Date.now() - startTime;
+        await db.update(eventSyncStatus)
+            .set({
+                lastSyncedAt: new Date(),
+                lastSuccessfulSyncAt: new Date(),
+                syncStatus: 'success',
+                eventsProcessed: eventsFound,
+                eventsCreated: eventsAdded,
+                eventsUpdated: eventsUpdated,
+                errorMessage: null,
+                syncDurationMs,
+                updatedAt: new Date(),
+            })
+            .where(eq(eventSyncStatus.connector, 'ticketmaster'));
 
-        await db.insert(eventSyncStatus).values(syncLog);
-
-        console.log(`[UKEvents] Ticketmaster sync complete: ${eventsFound} found, ${eventsAdded} added, ${eventsUpdated} updated`);
+        console.log(`[UKEvents] Ticketmaster sync complete: ${eventsFound} found, ${eventsAdded} added, ${eventsUpdated} updated in ${syncDurationMs}ms`);
 
         return { success: true, eventsFound, eventsAdded, eventsUpdated };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error('[UKEvents] Sync failed:', error);
 
+        const syncDurationMs = Date.now() - startTime;
         // Log failed sync
-        await db.insert(eventSyncStatus).values({
-            source: 'ticketmaster',
-            lastSyncedAt: new Date(),
-            eventsFound,
-            eventsAdded,
-            eventsUpdated,
-            status: 'failed',
-            errorMessage,
-        });
+        await db.update(eventSyncStatus)
+            .set({
+                lastSyncedAt: new Date(),
+                syncStatus: 'error',
+                errorMessage,
+                eventsProcessed: eventsFound,
+                eventsCreated: eventsAdded,
+                eventsUpdated: eventsUpdated,
+                syncDurationMs,
+                updatedAt: new Date(),
+            })
+            .where(eq(eventSyncStatus.connector, 'ticketmaster'));
 
         return { success: false, eventsFound, eventsAdded, eventsUpdated, error: errorMessage };
     }
-    */
 }
 
 /**
  * Get upcoming UK events with filters
- * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getUKEvents(options: {
     category?: string;
     city?: string;
-    genre?: string;
     limit?: number;
     offset?: number;
     featured?: boolean;
-}): Promise<any[]> {
-    console.warn('[UKEvents] getUKEvents disabled - table not found in schema');
-    return [];
+}): Promise<UKEvent[]> {
+    const db = await getDb();
+    if (!db) return [];
+
+    try {
+        const conditions = [gt(ukEvents.eventDate, new Date())];
+
+        if (options.category) {
+            conditions.push(eq(ukEvents.category, options.category));
+        }
+
+        if (options.city) {
+            conditions.push(ilike(ukEvents.city, `%${options.city}%`));
+        }
+
+        if (options.featured) {
+            conditions.push(eq(ukEvents.isFeatured, true));
+        }
+
+        const query = db.select()
+            .from(ukEvents)
+            .where(and(...conditions))
+            .orderBy(desc(ukEvents.eventDate));
+
+        if (options.limit) {
+            query.limit(options.limit);
+        }
+
+        if (options.offset) {
+            query.offset(options.offset);
+        }
+
+        return await query;
+    } catch (error) {
+        console.error('[UKEvents] Failed to fetch events:', error);
+        return [];
+    }
 }
 
 /**
  * Get event by ID
- * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
-export async function getUKEventById(id: number): Promise<any | null> {
-    console.warn('[UKEvents] getUKEventById disabled - table not found in schema');
-    return null;
+export async function getUKEventById(id: number): Promise<UKEvent | null> {
+    const db = await getDb();
+    if (!db) return null;
+
+    try {
+        const results = await db.select()
+            .from(ukEvents)
+            .where(eq(ukEvents.id, id))
+            .limit(1);
+
+        return results[0] || null;
+    } catch (error) {
+        console.error('[UKEvents] Failed to fetch event by ID:', error);
+        return null;
+    }
 }
 
 /**
  * Get featured events
- * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
-export async function getFeaturedUKEvents(limit: number = 6): Promise<any[]> {
-    console.warn('[UKEvents] getFeaturedUKEvents disabled - table not found in schema');
-    return [];
+export async function getFeaturedUKEvents(limit: number = 6): Promise<UKEvent[]> {
+    const db = await getDb();
+    if (!db) return [];
+
+    try {
+        return await db.select()
+            .from(ukEvents)
+            .where(and(
+                eq(ukEvents.isFeatured, true),
+                gt(ukEvents.eventDate, new Date())
+            ))
+            .orderBy(desc(ukEvents.eventDate))
+            .limit(limit);
+    } catch (error) {
+        console.error('[UKEvents] Failed to fetch featured events:', error);
+        return [];
+    }
 }
 
 /**
  * Search UK events
- * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function searchUKEvents(query: string, options: {
     category?: string;
     city?: string;
     limit?: number;
-}): Promise<any[]> {
-    console.warn('[UKEvents] searchUKEvents disabled - table not found in schema');
-    return [];
+}): Promise<UKEvent[]> {
+    const db = await getDb();
+    if (!db) return [];
+
+    try {
+        const conditions = [
+            gt(ukEvents.eventDate, new Date()),
+        ];
+
+        // Search in title, description, venue, and artists
+        if (query) {
+            conditions.push(
+                sql`(
+                    ${ilike(ukEvents.title, `%${query}%`)} OR
+                    ${ilike(ukEvents.description, `%${query}%`)} OR
+                    ${ilike(ukEvents.venue, `%${query}%`)} OR
+                    ${ilike(ukEvents.artists, `%${query}%`)}
+                )`
+            );
+        }
+
+        if (options.category) {
+            conditions.push(eq(ukEvents.category, options.category));
+        }
+
+        if (options.city) {
+            conditions.push(ilike(ukEvents.city, `%${options.city}%`));
+        }
+
+        const queryBuilder = db.select()
+            .from(ukEvents)
+            .where(and(...conditions))
+            .orderBy(desc(ukEvents.eventDate));
+
+        if (options.limit) {
+            queryBuilder.limit(options.limit);
+        }
+
+        return await queryBuilder;
+    } catch (error) {
+        console.error('[UKEvents] Search failed:', error);
+        return [];
+    }
 }
 
 /**
  * Get unique cities with events
- * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getEventCities(): Promise<string[]> {
-    console.warn('[UKEvents] getEventCities disabled - table not found in schema');
-    return [];
+    const db = await getDb();
+    if (!db) return [];
+
+    try {
+        const results = await db.selectDistinct({ city: ukEvents.city })
+            .from(ukEvents)
+            .where(gt(ukEvents.eventDate, new Date()))
+            .orderBy(ukEvents.city);
+
+        return results.map(r => r.city).filter(Boolean) as string[];
+    } catch (error) {
+        console.error('[UKEvents] Failed to fetch cities:', error);
+        return [];
+    }
 }
 
 /**
  * Get event categories with counts
- * NOTE: Disabled - ukEvents table doesn't exist in schema
  */
 export async function getEventCategories(): Promise<Array<{ category: string; count: number }>> {
-    console.warn('[UKEvents] getEventCategories disabled - table not found in schema');
-    return [];
+    const db = await getDb();
+    if (!db) return [];
+
+    try {
+        const results = await db.select({
+            category: ukEvents.category,
+            count: sql<number>`count(*)`.mapWith(Number),
+        })
+            .from(ukEvents)
+            .where(gt(ukEvents.eventDate, new Date()))
+            .groupBy(ukEvents.category)
+            .orderBy(desc(sql<number>`count(*)`));
+
+        return results.filter(r => r.category) as Array<{ category: string; count: number }>;
+    } catch (error) {
+        console.error('[UKEvents] Failed to fetch categories:', error);
+        return [];
+    }
 }

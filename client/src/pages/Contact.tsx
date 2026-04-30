@@ -1,9 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Music, Mail, Phone, MapPin, Send, MessageSquare, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BackButton } from "@/components/BackButton";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -18,291 +17,201 @@ export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
     setTimeout(() => {
-      toast.success("Message sent! We'll get back to you soon. 🎉");
+      toast.success("TRANSMISSION RECEIVED. DANNY WILL RESPOND WITHIN 24 HOURS. 📡");
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       setIsSubmitting(false);
     }, 1500);
   };
 
-  const contactMethods = [
-    {
-      icon: Mail,
-      title: "Email",
-      description: "Send us an email and we'll respond within 24 hours",
-      contact: "contact@djdannyhectic.com",
-      link: "mailto:contact@djdannyhectic.com",
-    },
-    {
-      icon: Phone,
-      title: "Phone",
-      description: "Call us for urgent inquiries or bookings",
-      contact: "+1 (555) 123-4567",
-      link: "tel:+15551234567",
-    },
-    {
-      icon: MessageSquare,
-      title: "Live Chat",
-      description: "Chat with us on our website or social media",
-      contact: "Available 9 AM - 9 PM",
-      link: "#",
-    },
-    {
-      icon: MapPin,
-      title: "Location",
-      description: "Visit us or send mail to our studio",
-      contact: "London, UK",
-      link: "#",
-    },
-  ];
-
-  const faqItems = [
-    {
-      q: "What's the fastest way to reach you?",
-      a: "Live chat on our website is the fastest way to reach us. We typically respond within minutes during business hours.",
-    },
-    {
-      q: "How long does it take to get a response?",
-      a: "Email inquiries are usually answered within 24 hours. Urgent matters can be addressed via phone.",
-    },
-    {
-      q: "Can I book you for an event?",
-      a: "Absolutely! Visit our Bookings page to submit a booking request or contact us directly.",
-    },
-    {
-      q: "Do you offer DJ lessons?",
-      a: "Yes! We offer private DJ lessons and group workshops. Contact us for pricing and availability.",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80">
-            <Music className="w-6 h-6" />
-            <span className="font-bold">DJ Danny Hectic B</span>
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/about" className="text-sm hover:text-accent">About</Link>
-            <Link href="/bookings" className="text-sm hover:text-accent">Bookings</Link>
-            <Link href="/contact" className="text-sm hover:text-accent font-semibold text-accent">Contact</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-black text-white selection:bg-accent pt-32 pb-20 px-6">
+      <div className="max-w-4xl mx-auto flex flex-col gap-16">
 
-      {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-orange-900/20 to-background border-b border-border">
-        <div className="container">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">Get in Touch</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl">
-            Have questions? Want to book DJ Danny? Or just want to say hello? We'd love to hear from you!
-          </p>
-        </div>
-      </section>
+        {/* Back Button */}
+        <BackButton />
 
-      {/* Contact Methods */}
-      <section className="py-16 md:py-24">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {contactMethods.map((method, idx) => {
-              const Icon = method.icon;
-              return (
-                <a
-                  key={idx}
-                  href={method.link}
-                  className="group"
-                >
-                  <Card className="p-6 h-full hover:border-accent transition cursor-pointer">
-                    <Icon className="w-8 h-8 text-orange-400 mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-lg font-bold mb-2">{method.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{method.description}</p>
-                    <p className="font-semibold text-accent">{method.contact}</p>
-                  </Card>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+        {/* Header */}
+        <section className="relative border-b-4 border-white pb-8">
+          <div className="tape-strip bg-accent text-white border-white mb-6 inline-block">DISPATCH_CONTACT_FORM</div>
+          <h1 className="text-7xl md:text-8xl font-black uppercase tracking-tighter leading-[0.75] italic">
+            REACH_OUT
+          </h1>
+        </section>
 
-      {/* Contact Form & Info */}
-      <section className="py-16 md:py-24 border-t border-border">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <div>
-              <h2 className="text-3xl font-bold mb-8">Send us a Message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Email *</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Subject *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      placeholder="How can we help?"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Message *</label>
-                  <textarea
-                    required
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg bg-card border border-border focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    placeholder="Tell us more..."
-                    rows={6}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 py-6 text-lg"
-                >
-                  {isSubmitting ? "Sending..." : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Send Message
-                    </>
-                  )}
-                </Button>
-              </form>
-            </div>
-
-            {/* Info & Hours */}
-            <div className="space-y-8">
+        {/* Contact Form */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div>
+            <div className="tape-strip bg-white text-black border-black mb-6 text-xs inline-block">DIRECT_MESSAGE</div>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <h2 className="text-3xl font-bold mb-6">Contact Information</h2>
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <Mail className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
-                    <div>
-                      <p className="font-semibold">Email</p>
-                      <p className="text-muted-foreground">contact@djdannyhectic.com</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <Phone className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
-                    <div>
-                      <p className="font-semibold">Phone</p>
-                      <p className="text-muted-foreground">+1 (555) 123-4567</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <MapPin className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
-                    <div>
-                      <p className="font-semibold">Location</p>
-                      <p className="text-muted-foreground">London, United Kingdom</p>
-                    </div>
-                  </div>
-                </div>
+                <label className="block text-xs uppercase font-black mb-2 tracking-widest">Your Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent"
+                  placeholder="Enter your name"
+                />
               </div>
 
-              {/* Business Hours */}
-              <Card className="p-6 border-orange-500/30">
-                <div className="flex items-center gap-3 mb-4">
-                  <Clock className="w-6 h-6 text-orange-400" />
-                  <h3 className="text-xl font-bold">Business Hours</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Monday - Friday</span>
-                    <span className="text-muted-foreground">9:00 AM - 9:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Saturday</span>
-                    <span className="text-muted-foreground">10:00 AM - 11:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sunday</span>
-                    <span className="text-muted-foreground">12:00 PM - 8:00 PM</span>
-                  </div>
-                </div>
-              </Card>
+              <div>
+                <label className="block text-xs uppercase font-black mb-2 tracking-widest">Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent"
+                  placeholder="your@email.com"
+                />
+              </div>
 
-              {/* Social Links */}
-              <Card className="p-6 border-amber-500/30">
-                <h3 className="text-xl font-bold mb-4">Follow Us</h3>
-                <div className="flex gap-3">
-                  {['Instagram', 'Facebook', 'TikTok', 'Spotify'].map((social) => (
-                    <a
-                      key={social}
-                      href="#"
-                      className="px-4 py-2 rounded-lg bg-card border border-border hover:border-accent transition text-sm font-semibold"
-                    >
-                      {social}
-                    </a>
-                  ))}
+              <div>
+                <label className="block text-xs uppercase font-black mb-2 tracking-widest">Phone (Optional)</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent"
+                  placeholder="+44 (0) 000 000 0000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-black mb-2 tracking-widest">Subject *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent"
+                  placeholder="Booking / Question / Other"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-black mb-2 tracking-widest">Message *</label>
+                <textarea
+                  required
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-accent resize-none"
+                  placeholder="Enter your message..."
+                  rows={5}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="tape-strip bg-white text-black border-black w-full py-4 text-lg hover:bg-accent hover:text-white transition-all duration-150 disabled:opacity-50"
+              >
+                {isSubmitting ? "TRANSMITTING..." : (
+                  <>
+                    <Send className="w-4 h-4 inline mr-2" />
+                    SEND_TRANSMISSION
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Contact Info */}
+          <div className="space-y-6">
+            <div>
+              <div className="tape-strip bg-accent text-white border-white mb-6 text-xs inline-block">CONTACT_CHANNELS</div>
+
+              <div className="space-y-6">
+                <div className="border-l-4 border-accent pl-4">
+                  <p className="text-xs uppercase font-black tracking-widest text-accent mb-1">EMAIL</p>
+                  <p className="font-mono">contact@djdannyhectic.com</p>
                 </div>
-              </Card>
+
+                <div className="border-l-4 border-white pl-4">
+                  <p className="text-xs uppercase font-black tracking-widest mb-1">PHONE</p>
+                  <p className="font-mono">+44 (0) 000 000 0000</p>
+                </div>
+
+                <div className="border-l-4 border-accent pl-4">
+                  <p className="text-xs uppercase font-black tracking-widest text-accent mb-1">LOCATION</p>
+                  <p className="font-mono">London, United Kingdom</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Hours */}
+            <div className="border-2 border-white p-6 bg-black">
+              <p className="tape-strip bg-accent text-white border-white mb-4 text-xs inline-block">RESPONSE_TIMES</p>
+              <div className="space-y-2 text-sm font-mono">
+                <div className="flex justify-between">
+                  <span>MON - FRI:</span>
+                  <span className="text-accent">9 AM - 9 PM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>SATURDAY:</span>
+                  <span className="text-accent">10 AM - 11 PM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>SUNDAY:</span>
+                  <span className="text-accent">12 PM - 8 PM</span>
+                </div>
+              </div>
+              <p className="text-xs text-white/60 mt-4 font-mono">Typically respond within 24 hours. Urgent matters prioritized.</p>
+            </div>
+
+            {/* Social */}
+            <div className="border-2 border-white p-6 bg-black">
+              <p className="tape-strip bg-white text-black border-black mb-4 text-xs inline-block">FOLLOW_ON_SOCIALS</p>
+              <div className="flex gap-2 flex-wrap">
+                {['Instagram', 'TikTok', 'X', 'Spotify'].map((social) => (
+                  <a
+                    key={social}
+                    href="#"
+                    className="tape-strip bg-black text-white border-white text-xs hover:bg-accent transition-all duration-150"
+                  >
+                    {social.toUpperCase()}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FAQ */}
-      <section className="py-16 md:py-24 border-t border-border bg-card/50">
-        <div className="container max-w-3xl">
-          <h2 className="text-4xl font-bold mb-12 text-center">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {faqItems.map((item, idx) => (
-              <details key={idx} className="group border border-border rounded-lg">
-                <summary className="flex cursor-pointer items-center justify-between p-6 font-semibold hover:bg-background/50">
-                  {item.q}
-                  <span className="transition group-open:rotate-180">▼</span>
+        {/* FAQ */}
+        <section className="border-t-4 border-white pt-16">
+          <h2 className="text-4xl font-black uppercase tracking-tighter mb-8">COMMON_QUESTIONS</h2>
+          <div className="space-y-3">
+            {[
+              { q: "How long before you respond?", a: "Usually within 24 hours. Urgent inquiries flagged and prioritized." },
+              { q: "Can I book directly through this form?", a: "Yes. Include event details (date, venue, type, budget) and we'll confirm availability." },
+              { q: "What's the fastest way to reach you?", a: "Email for written inquiries, phone for urgent matters. Both checked regularly." },
+              { q: "Do you offer DJ lessons?", a: "Yes. Contact us with your skill level and goals — we can discuss packages." },
+            ].map((item, idx) => (
+              <details key={idx} className="group border-2 border-white">
+                <summary className="flex cursor-pointer items-center justify-between p-4 font-bold uppercase text-sm hover:bg-accent hover:text-black transition-all duration-150">
+                  <span>{item.q}</span>
+                  <span className="transition group-open:rotate-180 text-accent group-open:text-black">▼</span>
                 </summary>
-                <div className="px-6 pb-6 text-muted-foreground border-t border-border">
+                <div className="px-4 pb-4 text-white/80 border-t-2 border-white font-mono text-sm">
                   {item.a}
                 </div>
               </details>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* CTA */}
+        <section className="border-t-4 border-white pt-16 text-center">
+          <p className="text-white/60 uppercase font-black tracking-widest mb-6">OR VISIT:</p>
+          <Link href="/bookings">
+            <button className="tape-strip bg-white text-black border-black px-12 py-4 text-2xl hover:bg-accent hover:text-white transition-all duration-150">
+              BOOKINGS_PAGE
+            </button>
+          </Link>
+        </section>
+      </div>
     </div>
   );
 }

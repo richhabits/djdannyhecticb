@@ -13,7 +13,7 @@ export function GlobalNav() {
   const MenuItem = ({ href, label }: { href: string; label: string }) => (
     <Link
       href={href}
-      className={`tape-strip px-6 py-1 mx-1 transition-all duration-0 ${location === href
+      className={`tape-strip px-6 py-1 mx-1 transition-all duration-150 ${location === href
         ? "bg-accent text-white border-white"
         : "bg-black text-white border-white hover:bg-white hover:text-black"
         }`}

@@ -76,7 +76,7 @@ export default function Home() {
           </div>
 
           <div className="relative z-10 p-4 md:p-6 pb-12 md:pb-20">
-            <h1 className="text-[15vw] leading-[0.8] font-black uppercase tracking-tighter text-white mix-blend-difference mb-4">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl leading-[0.8] font-black uppercase tracking-tighter text-white mix-blend-difference mb-4">
               HECTIC<br />EMPIRE
             </h1>
             <div className="mt-6 max-w-2xl">
@@ -106,8 +106,8 @@ export default function Home() {
           {/* Item 1: Latest Drop */}
           <div className="bg-background aspect-square relative group cursor-pointer border-r border-foreground md:border-none">
             <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=2670&auto=format&fit=crop"
-              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-0" />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 transition-opacity duration-0">
+              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 transition-opacity duration-150">
               <Play className="w-20 h-20 text-white fill-white" />
             </div>
             <div className="absolute top-0 left-0 bg-foreground text-background px-2 py-1 text-xs font-bold uppercase">
@@ -119,11 +119,11 @@ export default function Home() {
           </div>
 
           {/* Item 2: Shop Promo */}
-          <div className="bg-background aspect-square flex flex-col justify-between p-6 hover:bg-accent hover:text-white transition-colors duration-0 cursor-pointer group">
+          <div className="bg-background aspect-square flex flex-col justify-between p-6 hover:bg-accent hover:text-white transition-colors duration-150 cursor-pointer group">
             <Link href="/shop" className="h-full flex flex-col justify-between">
               <div className="flex justify-between items-start">
                 <h3 className="text-4xl font-black uppercase leading-none">Empire<br />Supply</h3>
-                <ArrowRight className="w-8 h-8 -rotate-45 group-hover:rotate-0 transition-transform duration-0" />
+                <ArrowRight className="w-8 h-8 -rotate-45 group-hover:rotate-0 transition-transform duration-150" />
               </div>
               <div>
                 <p className="text-sm font-bold uppercase border-t border-current pt-2 mt-4">New Merch Available</p>
@@ -300,9 +300,9 @@ export default function Home() {
             <div>
               <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Connect</h4>
               <div className="flex flex-col gap-2 items-start">
-                <a href="#" className="text-4xl md:text-6xl font-black uppercase hover:text-accent transition-colors duration-0">Instagram</a>
-                <a href="#" className="text-4xl md:text-6xl font-black uppercase hover:text-accent transition-colors duration-0">TikTok</a>
-                <a href="#" className="text-4xl md:text-6xl font-black uppercase hover:text-accent transition-colors duration-0">YouTube</a>
+                <a href="#" className="text-4xl md:text-6xl font-black uppercase hover:text-accent transition-colors duration-150">Instagram</a>
+                <a href="#" className="text-4xl md:text-6xl font-black uppercase hover:text-accent transition-colors duration-150">TikTok</a>
+                <a href="#" className="text-4xl md:text-6xl font-black uppercase hover:text-accent transition-colors duration-150">YouTube</a>
               </div>
             </div>
             <div className="flex flex-col justify-end items-start md:items-end">
