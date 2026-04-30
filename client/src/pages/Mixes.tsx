@@ -21,6 +21,16 @@ export default function Mixes() {
 
   const sampleTracks = [
     {
+      id: "amapiano-soulful",
+      title: "Soulful Amapiano Mix",
+      artist: "DJ Danny Hectic B",
+      genre: "Amapiano",
+      coverArt: "/logo-danny-hectic-b.png",
+      energy: "SMOOTH",
+      audioUrl: "/mixes/amapiano-soulful.mp3",
+      url: "/mixes/amapiano-soulful.mp3"
+    },
+    {
       id: "1",
       title: "UK Garage Classics Mix",
       artist: "DJ Danny Hectic B",

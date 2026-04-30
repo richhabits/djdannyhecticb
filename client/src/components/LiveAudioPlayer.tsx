@@ -5,7 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 
-const FALLBACK_STREAM_URL = import.meta.env.VITE_HECTIC_RADIO_STREAM_URL || "";
+const FALLBACK_STREAM_URL = import.meta.env.VITE_HECTIC_RADIO_STREAM_URL || "/mixes/amapiano-soulful.mp3";
 
 export function LiveAudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
