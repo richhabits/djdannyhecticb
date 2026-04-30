@@ -36,7 +36,7 @@ export const promoSourceTypeEnum = pgEnum("promo_source_type", ["mix", "show", "
 export const promoStatusEnum = pgEnum("promo_status", ["pending", "generated", "published"]);
 export const superfanTierEnum = pgEnum("superfan_tier", ["bronze", "silver", "gold", "platinum"]);
 export const supportEventStatusEnum = pgEnum("support_event_status", ["pending", "completed", "failed"]);
-export const productTypeEnum = pgEnum("product_type", ["drop", "soundpack", "preset", "course", "bundle", "other"]);
+export const productTypeEnum = pgEnum("product_type", ["drop", "soundpack", "preset", "course", "bundle", "vinyl", "merch", "other"]);
 export const purchaseStatusEnum = pgEnum("purchase_status", ["pending", "completed", "refunded", "failed", "cancelled"]);
 export const paymentProviderEnum = pgEnum("payment_provider", ["stripe", "paypal", "manual"]);
 export const subscriptionTierEnum = pgEnum("subscription_tier", ["hectic_regular", "hectic_royalty", "inner_circle"]);
@@ -749,6 +749,12 @@ export const products = pgTable("products", {
   currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
   downloadUrl: varchar("downloadUrl", { length: 512 }),
   thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  stock: integer("stock"),
+  shippingRequired: boolean("shippingRequired").default(false).notNull(),
+  downloadToken: varchar("downloadToken", { length: 128 }),
+  beatportUrl: varchar("beatportUrl", { length: 512 }),
+  soundcloudUrl: varchar("soundcloudUrl", { length: 512 }),
+  spotifyUrl: varchar("spotifyUrl", { length: 512 }),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),

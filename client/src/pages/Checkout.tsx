@@ -26,26 +26,31 @@ function CheckoutForm({ productId, productName, amount, currency }: { productId:
   const [email, setEmail] = useState(user?.email || "");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
+  const [intentCreating, setIntentCreating] = useState(false);
+  const [intentCreated, setIntentCreated] = useState(false);
 
   const createPaymentIntent = trpc.purchases.createPaymentIntent.useMutation({
     onSuccess: (data) => {
       setClientSecret(data.clientSecret);
+      setIntentCreating(false);
+      setIntentCreated(true);
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create payment");
+      setIntentCreating(false);
     },
   });
 
-  useEffect(() => {
-    if (fanName && email) {
-      createPaymentIntent.mutate({
-        productId,
-        fanName,
-        email,
-        fanId: user?.id,
-      });
-    }
-  }, [productId, fanName, email, user?.id]);
+  const handleCreateIntent = () => {
+    if (intentCreating || intentCreated || !fanName || !email) return;
+    setIntentCreating(true);
+    createPaymentIntent.mutate({
+      productId,
+      fanName,
+      email,
+      fanId: user?.id,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,14 +81,6 @@ function CheckoutForm({ productId, productName, amount, currency }: { productId:
     }
   };
 
-  if (!clientSecret) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -94,7 +91,7 @@ function CheckoutForm({ productId, productName, amount, currency }: { productId:
             value={fanName}
             onChange={(e) => setFanName(e.target.value)}
             required
-            disabled={isProcessing}
+            disabled={isProcessing || intentCreated}
           />
         </div>
         <div>
@@ -105,39 +102,62 @@ function CheckoutForm({ productId, productName, amount, currency }: { productId:
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            disabled={isProcessing}
+            disabled={isProcessing || intentCreated}
           />
         </div>
       </div>
 
-      <Separator />
+      {!clientSecret ? (
+        <>
+          <Separator />
+          <Button
+            type="button"
+            onClick={handleCreateIntent}
+            disabled={!fanName || !email || intentCreating}
+            className="w-full"
+            size="lg"
+          >
+            {intentCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Continue to Payment"
+            )}
+          </Button>
+        </>
+      ) : (
+        <>
+          <Separator />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Lock className="w-4 h-4" />
+              <span>Secure payment powered by Stripe</span>
+            </div>
+            <PaymentElement />
+          </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Lock className="w-4 h-4" />
-          <span>Secure payment powered by Stripe</span>
-        </div>
-        <PaymentElement />
-      </div>
-
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full"
-        size="lg"
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            <CreditCard className="w-4 h-4 mr-2" />
-            Pay {amount}
-          </>
-        )}
-      </Button>
+          <Button
+            type="submit"
+            disabled={!stripe || isProcessing}
+            className="w-full"
+            size="lg"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Pay {amount}
+              </>
+            )}
+          </Button>
+        </>
+      )}
     </form>
   );
 }

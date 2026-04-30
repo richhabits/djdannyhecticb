@@ -979,22 +979,30 @@ export const appRouter = router({
     update: adminProcedure
       .input(z.object({
         id: z.number(),
-        updates: z.object({
-          name: z.string().max(255).optional(),
-          description: z.string().optional(),
-          price: z.string().optional(),
-          isActive: z.boolean().optional(),
-        }).partial(),
+        name: z.string().max(255).optional(),
+        description: z.string().optional(),
+        price: z.string().optional(),
+        currency: z.string().optional(),
+        type: z.enum(["drop", "soundpack", "preset", "course", "bundle", "vinyl", "merch", "other"]).optional(),
+        downloadUrl: z.string().optional(),
+        thumbnailUrl: z.string().optional(),
+        stock: z.number().optional(),
+        shippingRequired: z.boolean().optional(),
+        beatportUrl: z.string().optional(),
+        soundcloudUrl: z.string().optional(),
+        spotifyUrl: z.string().optional(),
+        isActive: z.boolean().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const updated = await db.updateProduct(input.id, input.updates);
+        const { id, ...updates } = input;
+        const updated = await db.updateProduct(id, updates);
         await db.createAuditLog({
           action: "update_product",
           entityType: "product",
-          entityId: input.id,
+          entityId: id,
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
-          afterSnapshot: JSON.stringify(input.updates),
+          afterSnapshot: JSON.stringify(updates),
         });
         return updated;
       }),
