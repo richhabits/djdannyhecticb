@@ -82,6 +82,7 @@ import AdminIntegrations from "./pages/AdminIntegrations";
 import AdminJarvis from "./pages/AdminJarvis";
 import AdminMarketing from "./pages/AdminMarketing";
 import AdminHub from "./pages/AdminHub";
+import AdminShop from "./pages/AdminShop";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -175,6 +176,7 @@ function Router() {
       <Route path={"/admin/integrations"} component={AdminIntegrations} />
       <Route path={"/admin/jarvis"} component={AdminJarvis} />
       <Route path={"/admin/marketing"} component={AdminMarketing} />
+      <Route path={"/admin/shop"} component={AdminShop} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

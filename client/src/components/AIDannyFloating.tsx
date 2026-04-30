@@ -151,7 +151,7 @@ export function AIDannyFloating() {
                   </div>
                 </div>
               ))}
-              {assistant.isPending && (
+              {hectic.isPending && (
                 <div className="flex justify-start">
                   <div className="bg-muted rounded-lg px-3 py-2 flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -167,17 +167,17 @@ export function AIDannyFloating() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask Danny anything..."
-                disabled={assistant.isPending}
+                disabled={hectic.isPending}
                 maxLength={500}
                 className="flex-1"
               />
               <Button
                 type="submit"
                 size="icon"
-                disabled={!input.trim() || assistant.isPending}
+                disabled={!input.trim() || hectic.isPending}
                 className="shrink-0"
               >
-                {assistant.isPending ? (
+                {hectic.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4" />

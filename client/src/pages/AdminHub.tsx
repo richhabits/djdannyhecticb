@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import {
   Settings, Zap, Radio, Music, ShoppingCart, Brain, BarChart3, Megaphone,
   Users, Cpu, Code, Video, Volume2, Bookmark, Share2, TrendingUp,
-  Lock, AlertCircle, Lightbulb, Monitor, Shield
+  Lock, AlertCircle, Lightbulb, Monitor, Shield, Package
 } from "lucide-react";
 
 export default function AdminHub() {
@@ -166,6 +166,14 @@ export default function AdminHub() {
       href: "/admin/integrations",
       category: "system",
       color: "text-slate-400",
+    },
+    {
+      name: "Shop",
+      description: "Products & merchandise management",
+      icon: Package,
+      href: "/admin/shop",
+      category: "business",
+      color: "text-cyan-400",
     },
   ];
 
