@@ -21,6 +21,7 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FileText, Play, RefreshCw } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -74,6 +75,7 @@ export default function AdminAIScripts() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <BackButton to="/admin/control-tower" label="Back to Admin" />
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">AI Script Factory</h1>
         <Badge variant="outline">Admin Only</Badge>

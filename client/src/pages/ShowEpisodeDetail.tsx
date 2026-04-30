@@ -5,6 +5,7 @@ import { useRoute } from "wouter";
 import { Calendar, Play } from "lucide-react";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { format } from "date-fns";
+import { BackButton } from "@/components/BackButton";
 
 export default function ShowEpisodeDetail() {
   const [, params] = useRoute("/show/episode/:slug");
@@ -35,6 +36,7 @@ export default function ShowEpisodeDetail() {
         url={`/show/episode/${episode.slug}`}
       />
       <div className="container mx-auto p-6 max-w-4xl">
+        <BackButton to="/shows" label="Back to Shows" className="mb-6" />
         <div className="mb-6">
           <Badge variant="outline" className="mb-2">{episode.status}</Badge>
           <h1 className="text-4xl font-bold mb-4">{episode.title}</h1>

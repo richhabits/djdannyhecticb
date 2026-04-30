@@ -86,7 +86,7 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/bio">
-                  <Button className="px-5 py-3 border border-white/20 hover:border-white/50 bg-transparent text-white uppercase font-bold tracking-wider rounded-none text-sm">
+                  <Button className="px-5 py-3 border-2 border-white bg-transparent text-white uppercase font-bold tracking-wider rounded-none text-sm hover:bg-white hover:text-black transition-colors">
                     READ THE BIO
                   </Button>
                 </Link>
