@@ -81,6 +81,7 @@ import AdminControlTower from "./pages/AdminControlTower";
 import AdminIntegrations from "./pages/AdminIntegrations";
 import AdminJarvis from "./pages/AdminJarvis";
 import AdminMarketing from "./pages/AdminMarketing";
+import AdminHub from "./pages/AdminHub";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -140,6 +141,7 @@ function Router() {
       <Route path={"/live"} component={Live} />
       <Route path={"/listeners"} component={ListenerLeaderboard} />
       <Route path={"/book-danny"} component={BookDanny} />
+      <Route path={"/admin"} component={AdminHub} />
       <Route path={"/admin/shouts"} component={AdminShouts} />
       <Route path={"/admin/streams"} component={AdminStreams} />
       <Route path={"/admin/now-playing"} component={AdminNowPlaying} />
