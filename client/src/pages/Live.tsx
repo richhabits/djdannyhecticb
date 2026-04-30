@@ -8,6 +8,7 @@ import { SocialShareBar } from "@/components/SocialShareBar";
 import { SocialLinks } from "@/components/SocialLinks";
 import { MetaTagsComponent } from "@/components/MetaTags";
 import { LiveChatDanny } from "@/components/LiveChatDanny";
+import { MultiPlatformPlayer } from "@/components/MultiPlatformPlayer";
 import { trpc } from "@/lib/trpc";
 import { Music, Radio } from "lucide-react";
 
@@ -51,6 +52,11 @@ export default function Live() {
           </div>
         </div>
       </section>
+
+      {/* Multi-Platform Video Player */}
+      <div className="container py-8 px-4">
+        <MultiPlatformPlayer />
+      </div>
 
       {/* Main Content */}
       <div className="container py-8 px-4">

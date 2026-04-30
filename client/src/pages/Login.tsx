@@ -43,89 +43,28 @@ export default function Login() {
     }
   };
 
-  const handleOAuthLogin = (provider: string) => {
-    toast.info(`Redirecting to ${provider}...`);
-    // In production, this would redirect to OAuth provider
-    setTimeout(() => {
-      toast.success(`Connected with ${provider}!`);
-      window.location.href = "/dashboard";
-    }, 2000);
+  const handleGoogleLogin = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      toast.error("Google OAuth is not configured");
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}/api/auth/google/callback`;
+    const scope = "openid email profile";
+    const responseType = "code";
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: responseType,
+      scope: scope,
+      prompt: "consent",
+    });
+
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
 
-  const oauthProviders = [
-    {
-      name: "Google",
-      icon: "🔍",
-      color: "from-orange-500 to-orange-600",
-      hoverColor: "hover:from-orange-600 hover:to-orange-700"
-    },
-    {
-      name: "Facebook",
-      icon: "📘",
-      color: "from-orange-600 to-orange-700",
-      hoverColor: "hover:from-orange-700 hover:to-orange-800"
-    },
-    {
-      name: "Apple",
-      icon: "🍎",
-      color: "from-gray-800 to-black",
-      hoverColor: "hover:from-gray-900 hover:to-black"
-    },
-    {
-      name: "TikTok",
-      icon: "🎬",
-      color: "from-black to-gray-900",
-      hoverColor: "hover:from-gray-900 hover:to-black"
-    },
-    {
-      name: "Snapchat",
-      icon: "👻",
-      color: "from-yellow-400 to-yellow-500",
-      hoverColor: "hover:from-yellow-500 hover:to-yellow-600"
-    },
-    {
-      name: "Spotify",
-      icon: "🎵",
-      color: "from-green-500 to-green-600",
-      hoverColor: "hover:from-green-600 hover:to-green-700"
-    },
-    {
-      name: "Instagram",
-      icon: "📸",
-      color: "from-amber-500 to-orange-600",
-      hoverColor: "hover:from-amber-600 hover:to-orange-700"
-    },
-    {
-      name: "Twitter/X",
-      icon: "🐦",
-      color: "from-orange-400 to-orange-500",
-      hoverColor: "hover:from-orange-500 hover:to-orange-600"
-    },
-    {
-      name: "Discord",
-      icon: "💬",
-      color: "from-orange-500 to-orange-600",
-      hoverColor: "hover:from-orange-600 hover:to-orange-700"
-    },
-    {
-      name: "Twitch",
-      icon: "🎮",
-      color: "from-orange-500 to-orange-600",
-      hoverColor: "hover:from-orange-600 hover:to-orange-700"
-    },
-    {
-      name: "LinkedIn",
-      icon: "💼",
-      color: "from-orange-700 to-orange-800",
-      hoverColor: "hover:from-orange-800 hover:to-orange-900"
-    },
-    {
-      name: "GitHub",
-      icon: "⚡",
-      color: "from-gray-700 to-gray-800",
-      hoverColor: "hover:from-gray-800 hover:to-gray-900"
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
@@ -166,97 +105,24 @@ export default function Login() {
           <Card className="p-8 glass hover-lift">
             <h2 className="text-2xl font-bold mb-6">Sign In</h2>
 
-            {/* OAuth Providers */}
-            <div className="space-y-3 mb-6">
-              <p className="text-sm text-muted-foreground mb-4">Continue with:</p>
-              <div className="grid grid-cols-2 gap-3">
-                {oauthProviders.map((provider) => (
-                  <button
-                    key={provider.name}
-                    onClick={() => handleOAuthLogin(provider.name)}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r ${provider.color} ${provider.hoverColor} text-white font-semibold smooth-transition hover-lift`}
-                  >
-                    <span className="text-xl">{provider.icon}</span>
-                    <span className="text-sm">{provider.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-card text-muted-foreground">Or continue with email</span>
-              </div>
-            </div>
-
-            {/* Email/Password Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent smooth-transition"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-12 py-3 rounded-lg bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent smooth-transition"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground smooth-transition"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-border" />
-                  <span className="text-sm text-muted-foreground">Remember me</span>
-                </label>
-                <Link href="/forgot-password" className="text-sm text-accent hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full gradient-bg py-6 text-lg font-semibold hover-lift"
+            {/* Google OAuth Button */}
+            <div className="mb-6">
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-black font-semibold transition-colors"
               >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Sign in with Google
+              </button>
+            </div>
 
-            {/* Sign Up Link */}
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-accent font-semibold hover:underline">
-                Sign up for free
-              </Link>
+            <p className="text-center text-sm text-muted-foreground">
+              Use your Google account to sign in securely
             </p>
 
             {/* Privacy Notice */}

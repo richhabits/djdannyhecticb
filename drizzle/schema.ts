@@ -59,6 +59,11 @@ export const collectibleRarityEnum = pgEnum("collectible_rarity", ["common", "ra
 export const achievementRarityEnum = pgEnum("achievement_rarity", ["common", "rare", "epic", "legendary"]);
 export const refundRequestStatusEnum = pgEnum("refund_request_status", ["pending", "approved", "denied", "refunded"]);
 export const refundRequestReasonEnum = pgEnum("refund_request_reason", ["damaged", "wrong_item", "not_as_described", "changed_mind", "other"]);
+export const platformTypeEnum = pgEnum("platform_type", ["youtube", "twitch", "tiktok", "instagram", "own_stream"]);
+export const liveSessionStatusEnum = pgEnum("live_session_status", ["upcoming", "live", "completed", "cancelled"]);
+export const cueTypeEnum = pgEnum("cue_type", ["playTrack", "readShout", "playConfession", "askQuestion", "adBreak", "topicIntro", "callToAction", "custom"]);
+export const cueStatusEnum = pgEnum("cue_status", ["pending", "done", "skipped"]);
+export const showPhase9StatusEnum = pgEnum("show_phase9_status", ["draft", "published", "archived"]);
 
 /**
  * Core user table backing auth flow.
@@ -305,6 +310,9 @@ export const streams = pgTable("streams", {
   adminApiUrl: varchar("adminApiUrl", { length: 512 }),
   adminUser: varchar("adminUser", { length: 255 }),
   adminPassword: varchar("adminPassword", { length: 255 }),
+  showName: varchar("showName", { length: 255 }),
+  hostName: varchar("hostName", { length: 255 }),
+  category: varchar("category", { length: 100 }),
   isActive: boolean("isActive").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -1494,3 +1502,100 @@ export const faqs = pgTable("faqs", {
 
 export type FAQ = typeof faqs.$inferSelect;
 export type InsertFAQ = typeof faqs.$inferInsert;
+
+/**
+ * Shows (Phase 9) table for managing show metadata
+ */
+export const showsPhase9 = pgTable("shows_phase9", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  hostName: varchar("hostName", { length: 255 }),
+  coverImageUrl: varchar("coverImageUrl", { length: 512 }),
+  isPrimaryShow: boolean("isPrimaryShow").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type ShowPhase9 = typeof showsPhase9.$inferSelect;
+export type InsertShowPhase9 = typeof showsPhase9.$inferInsert;
+
+/**
+ * Show Episodes table for managing episode metadata
+ */
+export const showEpisodes = pgTable("show_episodes", {
+  id: serial("id").primaryKey(),
+  showId: integer("showId").notNull(),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  recordingUrl: varchar("recordingUrl", { length: 512 }),
+  coverImageUrl: varchar("coverImageUrl", { length: 512 }),
+  status: varchar("status", { length: 50 }).default("planned").notNull(),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type ShowEpisode = typeof showEpisodes.$inferSelect;
+export type InsertShowEpisode = typeof showEpisodes.$inferInsert;
+
+/**
+ * Live Sessions table for managing live broadcast sessions
+ */
+export const liveSessions = pgTable("live_sessions", {
+  id: serial("id").primaryKey(),
+  showId: integer("showId").notNull(),
+  episodeId: integer("episodeId"),
+  status: liveSessionStatusEnum("status").default("upcoming").notNull(),
+  livePlatform: platformTypeEnum("livePlatform").default("own_stream").notNull(),
+  liveUrl: varchar("liveUrl", { length: 512 }),
+  streamId: integer("streamId"),
+  startedAt: timestamp("startedAt"),
+  endedAt: timestamp("endedAt"),
+  scheduledAt: timestamp("scheduledAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type LiveSession = typeof liveSessions.$inferSelect;
+export type InsertLiveSession = typeof liveSessions.$inferInsert;
+
+/**
+ * Cues table for managing live session cues (DJ control)
+ */
+export const cues = pgTable("cues", {
+  id: serial("id").primaryKey(),
+  liveSessionId: integer("liveSessionId").notNull(),
+  type: cueTypeEnum("type").notNull(),
+  payload: text("payload"),
+  orderIndex: integer("orderIndex").default(0).notNull(),
+  status: cueStatusEnum("status").default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type Cue = typeof cues.$inferSelect;
+export type InsertCue = typeof cues.$inferInsert;
+
+/**
+ * Platform Live Status table for tracking live status across platforms
+ */
+export const platformLiveStatus = pgTable("platform_live_status", {
+  id: serial("id").primaryKey(),
+  platform: platformTypeEnum("platform").notNull().unique(),
+  channelId: varchar("channelId", { length: 255 }),
+  isLive: boolean("isLive").default(false).notNull(),
+  streamTitle: varchar("streamTitle", { length: 512 }),
+  streamUrl: varchar("streamUrl", { length: 512 }),
+  embedUrl: varchar("embedUrl", { length: 512 }),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 512 }),
+  viewerCount: integer("viewerCount"),
+  manualOverride: boolean("manualOverride").default(false).notNull(),
+  lastCheckedAt: timestamp("lastCheckedAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type PlatformLiveStatus = typeof platformLiveStatus.$inferSelect;
+export type InsertPlatformLiveStatus = typeof platformLiveStatus.$inferInsert;

@@ -16,6 +16,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import helmet from "helmet";
 import cors from "cors";
 import { registerOAuthRoutes } from "./oauth";
+import { registerGoogleAuthRoutes } from "./googleAuth";
 import { registerAdminAuthRoutes } from "./adminAuthRoutes";
 import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
@@ -70,7 +71,7 @@ async function startServer() {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
         "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com", "https://*.stripe.com"],
         "connect-src": ["'self'", "https:", "https://*.stripe.com"],
-        "frame-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com"],
+        "frame-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com", "https://www.youtube.com", "https://player.twitch.tv", "https://www.tiktok.com", "https://www.instagram.com"],
         "img-src": ["'self'", "data:", "https:"],
         "media-src": ["'self'", "https:", "http:", "blob:"],
       },
@@ -144,6 +145,9 @@ async function startServer() {
       console.warn("[OAuth] Routes not registered:", error);
     }
   }
+
+  // Google OAuth routes
+  registerGoogleAuthRoutes(app);
 
   // Admin authentication routes
   registerAdminAuthRoutes(app);

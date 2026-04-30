@@ -3107,6 +3107,148 @@ export const appRouter = router({
     }),
   }),
 
+  platformStream: router({
+    getLiveStatuses: publicProcedure.query(async () => {
+      return await db.getAllPlatformLiveStatuses();
+    }),
+
+    getSinglePlatform: publicProcedure
+      .input(z.object({
+        platform: z.enum(["youtube", "twitch", "tiktok", "instagram", "own_stream"]),
+      }))
+      .query(async ({ input }) => {
+        return await db.getPlatformLiveStatus(input.platform);
+      }),
+
+    setManualLive: adminProcedure
+      .input(z.object({
+        platform: z.enum(["tiktok", "instagram"]),
+        isLive: z.boolean(),
+        streamUrl: z.string().optional(),
+        streamTitle: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.setPlatformLiveStatus({
+          platform: input.platform as any,
+          isLive: input.isLive,
+          streamUrl: input.streamUrl,
+          streamTitle: input.streamTitle,
+          manualOverride: true,
+        });
+      }),
+
+    updateChannelConfig: adminProcedure
+      .input(z.object({
+        platform: z.enum(["youtube", "twitch"]),
+        channelId: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.updatePlatformChannelId(input.platform, input.channelId);
+      }),
+
+    getOBSConfig: adminProcedure
+      .input(z.object({
+        platform: z.enum(["youtube", "twitch"]),
+      }))
+      .query(async ({ input }) => {
+        const config = {
+          youtube: {
+            rtmpUrl: "rtmps://a.rtmp.youtube.com/live2",
+            streamKeyEnvVar: "YOUTUBE_RTMP_KEY",
+          },
+          twitch: {
+            rtmpUrl: "rtmps://live-prg.twitch.tv/app",
+            streamKeyEnvVar: "TWITCH_STREAM_KEY",
+          },
+        };
+        return config[input.platform] || null;
+      }),
+
+    refreshStatus: adminProcedure
+      .input(z.object({
+        platform: z.enum(["youtube", "twitch"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { checkYouTubeLive, checkTwitchLive, checkSinglePlatform } = await import("./_core/platformLiveChecker");
+
+        if (input?.platform) {
+          return await checkSinglePlatform(input.platform as any);
+        } else {
+          // Check all platforms
+          const { checkAllPlatforms } = await import("./_core/platformLiveChecker");
+          await checkAllPlatforms();
+          return { message: "All platforms checked" };
+        }
+      }),
+
+    initializePlatforms: adminProcedure.mutation(async () => {
+      await db.initDefaultPlatformStatuses();
+      return { message: "Platform statuses initialized" };
+    }),
+
+    listLiveSessions: adminProcedure
+      .input(z.object({
+        showId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.listLiveSessions(input?.showId);
+      }),
+
+    getCurrentLiveSession: publicProcedure.query(async () => {
+      return await db.getCurrentLiveSession();
+    }),
+
+    startSession: adminProcedure
+      .input(z.object({
+        sessionId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.startLiveSession(input.sessionId);
+      }),
+
+    endSession: adminProcedure
+      .input(z.object({
+        sessionId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.endLiveSession(input.sessionId);
+      }),
+
+    createCue: adminProcedure
+      .input(z.object({
+        liveSessionId: z.number(),
+        type: z.enum(["playTrack", "readShout", "playConfession", "askQuestion", "adBreak", "topicIntro", "callToAction", "custom"]),
+        payload: z.string().optional(),
+        orderIndex: z.number().default(0),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.createCue({
+          liveSessionId: input.liveSessionId,
+          type: input.type as any,
+          payload: input.payload,
+          orderIndex: input.orderIndex,
+          status: "pending",
+        });
+      }),
+
+    listCues: publicProcedure
+      .input(z.object({
+        sessionId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await db.listCuesForSession(input.sessionId);
+      }),
+
+    updateCueStatus: adminProcedure
+      .input(z.object({
+        cueId: z.number(),
+        status: z.enum(["pending", "done", "skipped"]),
+      }))
+      .mutation(async ({ input }) => {
+        return await db.updateCueStatus(input.cueId, input.status);
+      }),
+  }),
+
 });
 
 export type AppRouter = typeof appRouter;

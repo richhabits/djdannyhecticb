@@ -16,7 +16,7 @@
 
 import { asc, desc, eq, gt, lt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo, blogPosts, InsertBlogPost, faqs, InsertFAQ, contactMessages, InsertContactMessage, printfullProducts, InsertPrintfullProduct, merchOrders, InsertMerchOrder, products, refundRequests, InsertRefundRequest } from "../drizzle/schema";
+import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo, blogPosts, InsertBlogPost, faqs, InsertFAQ, contactMessages, InsertContactMessage, printfullProducts, InsertPrintfullProduct, merchOrders, InsertMerchOrder, products, refundRequests, InsertRefundRequest, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, liveSessions, InsertLiveSession, cues, InsertCue, platformLiveStatus, InsertPlatformLiveStatus } from "../drizzle/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ENV } from './_core/env';
@@ -2426,17 +2426,14 @@ export async function goLive(
     // 1. Deactivate all other streams
     await database.update(streams).set({ isActive: false });
 
-    // 2. Activate the selected stream
+    // 2. Activate the selected stream with proper columns
     await database
       .update(streams)
       .set({
         isActive: true,
-        // We'll overload the 'mount' and 'sourceHost' fields to store transient show data
-        // since we can't easily change the schema right now.
-        // mount -> showName
-        // sourceHost -> hostName
-        mount: showName,
-        sourceHost: hostName
+        showName: showName,
+        hostName: hostName,
+        category: category
       })
       .where(eq(streams.id, streamId));
 
@@ -2466,6 +2463,360 @@ export async function goLive(
       showName,
       hostName,
     };
+  }
+}
+
+// ============================================
+// LIVE STREAMING: Shows & Episodes
+// ============================================
+
+export async function createShowPhase9(show: InsertShowPhase9) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(showsPhase9).values(show).returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in createShowPhase9:", error);
+    throw error;
+  }
+}
+
+export async function listShowsPhase9() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const results = await db
+      .select()
+      .from(showsPhase9)
+      .where(eq(showsPhase9.isActive, true))
+      .orderBy(desc(showsPhase9.createdAt));
+    return results;
+  } catch (error) {
+    console.error("[db] Error in listShowsPhase9:", error);
+    return [];
+  }
+}
+
+export async function getShowPhase9BySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .select()
+      .from(showsPhase9)
+      .where(eq(showsPhase9.slug, slug))
+      .limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[db] Error in getShowPhase9BySlug:", error);
+    return null;
+  }
+}
+
+export async function updateShowPhase9(id: number, updates: Partial<InsertShowPhase9>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .update(showsPhase9)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(showsPhase9.id, id))
+      .returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in updateShowPhase9:", error);
+    throw error;
+  }
+}
+
+export async function createShowEpisode(episode: InsertShowEpisode) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(showEpisodes).values(episode).returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in createShowEpisode:", error);
+    throw error;
+  }
+}
+
+export async function listShowEpisodes(showId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const results = await db
+      .select()
+      .from(showEpisodes)
+      .where(eq(showEpisodes.showId, showId))
+      .orderBy(desc(showEpisodes.createdAt));
+    return results;
+  } catch (error) {
+    console.error("[db] Error in listShowEpisodes:", error);
+    return [];
+  }
+}
+
+// ============================================
+// LIVE STREAMING: Sessions & Cues
+// ============================================
+
+export async function scheduleLiveSession(session: InsertLiveSession) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(liveSessions).values(session).returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in scheduleLiveSession:", error);
+    throw error;
+  }
+}
+
+export async function startLiveSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .update(liveSessions)
+      .set({
+        status: "live",
+        startedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(liveSessions.id, sessionId))
+      .returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in startLiveSession:", error);
+    throw error;
+  }
+}
+
+export async function endLiveSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .update(liveSessions)
+      .set({
+        status: "completed",
+        endedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(liveSessions.id, sessionId))
+      .returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in endLiveSession:", error);
+    throw error;
+  }
+}
+
+export async function listLiveSessions(showId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    let query = db.select().from(liveSessions);
+    if (showId) {
+      query = query.where(eq(liveSessions.showId, showId));
+    }
+    const results = await query.orderBy(desc(liveSessions.createdAt));
+    return results;
+  } catch (error) {
+    console.error("[db] Error in listLiveSessions:", error);
+    return [];
+  }
+}
+
+export async function getCurrentLiveSession() {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .select()
+      .from(liveSessions)
+      .where(eq(liveSessions.status, "live"))
+      .limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[db] Error in getCurrentLiveSession:", error);
+    return null;
+  }
+}
+
+export async function createCue(cue: InsertCue) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db.insert(cues).values(cue).returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in createCue:", error);
+    throw error;
+  }
+}
+
+export async function listCuesForSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const results = await db
+      .select()
+      .from(cues)
+      .where(eq(cues.liveSessionId, sessionId))
+      .orderBy(asc(cues.orderIndex));
+    return results;
+  } catch (error) {
+    console.error("[db] Error in listCuesForSession:", error);
+    return [];
+  }
+}
+
+export async function updateCueStatus(cueId: number, status: "pending" | "done" | "skipped") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .update(cues)
+      .set({
+        status: status,
+        updatedAt: new Date()
+      })
+      .where(eq(cues.id, cueId))
+      .returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in updateCueStatus:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// LIVE STREAMING: Platform Status
+// ============================================
+
+export async function getAllPlatformLiveStatuses() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const results = await db.select().from(platformLiveStatus);
+    return results;
+  } catch (error) {
+    console.error("[db] Error in getAllPlatformLiveStatuses:", error);
+    return [];
+  }
+}
+
+export async function getPlatformLiveStatus(platform: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const result = await db
+      .select()
+      .from(platformLiveStatus)
+      .where(eq(platformLiveStatus.platform, platform as any))
+      .limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[db] Error in getPlatformLiveStatus:", error);
+    return null;
+  }
+}
+
+export async function setPlatformLiveStatus(data: InsertPlatformLiveStatus) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    // Try to update first
+    const existing = await getPlatformLiveStatus(data.platform as string);
+
+    if (existing) {
+      const result = await db
+        .update(platformLiveStatus)
+        .set({
+          ...data,
+          lastCheckedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(platformLiveStatus.platform, data.platform as any))
+        .returning();
+      return result[0];
+    } else {
+      // Insert new if doesn't exist
+      const result = await db.insert(platformLiveStatus).values({
+        ...data,
+        lastCheckedAt: new Date()
+      }).returning();
+      return result[0];
+    }
+  } catch (error) {
+    console.error("[db] Error in setPlatformLiveStatus:", error);
+    throw error;
+  }
+}
+
+export async function updatePlatformChannelId(platform: string, channelId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const result = await db
+      .update(platformLiveStatus)
+      .set({
+        channelId: channelId,
+        updatedAt: new Date()
+      })
+      .where(eq(platformLiveStatus.platform, platform as any))
+      .returning();
+    return result[0];
+  } catch (error) {
+    console.error("[db] Error in updatePlatformChannelId:", error);
+    throw error;
+  }
+}
+
+export async function initDefaultPlatformStatuses() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  try {
+    const platforms = ["youtube", "twitch", "tiktok", "instagram", "own_stream"];
+
+    for (const platform of platforms) {
+      const existing = await getPlatformLiveStatus(platform);
+      if (!existing) {
+        await db.insert(platformLiveStatus).values({
+          platform: platform as any,
+          isLive: false,
+          manualOverride: false
+        });
+      }
+    }
+  } catch (error) {
+    console.error("[db] Error in initDefaultPlatformStatuses:", error);
+    throw error;
   }
 }
 

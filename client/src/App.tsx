@@ -51,6 +51,7 @@ import LiveStudio from "./pages/LiveStudio";
 import Dashboard from "./pages/Dashboard";
 import AdminShouts from "./pages/AdminShouts";
 import AdminStreams from "./pages/AdminStreams";
+import AdminPlatformStreams from "./pages/AdminPlatformStreams";
 import AdminNowPlaying from "./pages/AdminNowPlaying";
 import AdminShows from "./pages/AdminShows";
 import AdminEmpire from "./pages/AdminEmpire";
@@ -164,6 +165,7 @@ function Router() {
       <Route path={"/admin"} component={AdminHub} />
       <Route path={"/admin/shouts"} component={AdminShouts} />
       <Route path={"/admin/streams"} component={AdminStreams} />
+      <Route path={"/admin/platform-streams"} component={AdminPlatformStreams} />
       <Route path={"/admin/now-playing"} component={AdminNowPlaying} />
       <Route path={"/admin/shows"} component={AdminShows} />
       <Route path={"/admin/mixes"} component={AdminMixes} />

@@ -261,21 +261,31 @@ function AdminMissionControl() {
 }
 
 function ViewerMode() {
-  const [viewers, setViewers] = useState(342);
   const [currentTrack, setCurrentTrack] = useState("Hectic Beats Mix Vol. 5");
-  const [activeStream, setActiveStream] = useState<'youtube' | 'youtube-live' | 'twitch' | 'instagram' | 'tiktok'>('youtube');
+  const [activeStream, setActiveStream] = useState<'youtube' | 'youtube-live' | 'twitch' | 'instagram' | 'tiktok'>('youtube-live');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubeLiveUrl, setYoutubeLiveUrl] = useState('');
   const [twitchUrl, setTwitchUrl] = useState('');
   const [instagramUrl, setInstagramUrl] = useState('');
   const [tiktokUrl, setTiktokUrl] = useState('');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setViewers(prev => prev + Math.floor(Math.random() * 10) - 3);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  // Fetch live platform statuses
+  const { data: platformStatuses = [] } = trpc.platformStream.getLiveStatuses.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
+
+  // Get current live status based on active stream
+  const currentLiveStatus = platformStatuses.find(s => {
+    if (activeStream === 'youtube-live') return s.platform === 'youtube';
+    if (activeStream === 'twitch') return s.platform === 'twitch';
+    if (activeStream === 'instagram') return s.platform === 'instagram';
+    if (activeStream === 'tiktok') return s.platform === 'tiktok';
+    return false;
+  });
+
+  const viewers = currentLiveStatus?.viewerCount || 0;
+  const streamTitle = currentLiveStatus?.streamTitle || currentTrack;
 
   const getEmbedUrl = (url: string, platform: string) => {
     if (!url) return '';
