@@ -12,15 +12,15 @@
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/robots.txt",
-      "destination": "/"
+      "destination": "/api/robots"
     },
     {
       "source": "/feed.xml",
-      "destination": "/"
+      "destination": "/api/feed"
     },
     {
       "source": "/:path*",
