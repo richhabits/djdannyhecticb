@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>DJ Danny Hectic B - Updates</title>
+    <link>https://djdannyhecticb.com</link>
+    <description>30+ years of UK Garage, House, Jungle, Grime. Mixes, events, bookings, and live radio.</description>
+    <language>en-gb</language>
+    <copyright>Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio. All rights reserved.</copyright>
+    <image>
+      <url>https://djdannyhecticb.com/og-image.png</url>
+      <title>DJ Danny Hectic B</title>
+      <link>https://djdannyhecticb.com</link>
+    </image>
+    <item>
+      <title>Welcome to DJ Danny Hectic B</title>
+      <description>30+ years in UK Garage, House, Jungle, Grime. Available for club gigs, private events, corporate bookings, radio shows, and more.</description>
+      <link>https://djdannyhecticb.com</link>
+      <guid>https://djdannyhecticb.com</guid>
+      <category>Updates</category>
+    </item>
+    <item>
+      <title>Browse Mixes</title>
+      <description>Check out curated mixes and productions from DJ Danny Hectic B</description>
+      <link>https://djdannyhecticb.com/mixes</link>
+      <guid>https://djdannyhecticb.com/mixes</guid>
+      <category>Mixes</category>
+    </item>
+    <item>
+      <title>Upcoming Events</title>
+      <description>Find upcoming events and bookings featuring DJ Danny Hectic B</description>
+      <link>https://djdannyhecticb.com/events</link>
+      <guid>https://djdannyhecticb.com/events</guid>
+      <category>Events</category>
+    </item>
+    <item>
+      <title>Book a Gig</title>
+      <description>Get in touch to book DJ Danny Hectic B for your event</description>
+      <link>https://djdannyhecticb.com/bookings</link>
+      <guid>https://djdannyhecticb.com/bookings</guid>
+      <category>Bookings</category>
+    </item>
+  </channel>
+</rss>
