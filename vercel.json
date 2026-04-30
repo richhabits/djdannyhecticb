@@ -11,6 +11,18 @@
       "destination": "/"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "/"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/"
+    },
+    {
+      "source": "/feed.xml",
+      "destination": "/"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }
