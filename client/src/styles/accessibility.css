@@ -1,0 +1,300 @@
+/* ============================================================================
+   WCAG 2.1 AA ACCESSIBILITY STYLES
+   Ensures visible focus management, keyboard navigation, and screen reader support
+   ============================================================================ */
+
+/* Focus Visible States - All Interactive Elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus-visible {
+  outline: 3px solid var(--accent, #F97316);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Enhanced focus-visible for better visibility */
+:focus-visible {
+  outline: 3px solid var(--accent, #F97316);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip Link - Visible on focus */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background-color: var(--accent, #F97316);
+  color: var(--background, #000000);
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  z-index: 1000;
+  border-radius: 0px;
+  font-weight: 900;
+  font-size: 0.875rem;
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  border: 2px solid #fff;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  top: 0;
+  outline: none;
+}
+
+/* Reduced Motion Preference - Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable glitch animations */
+  .glitch-text:hover {
+    animation: none !important;
+  }
+
+  /* Disable marquee animations */
+  .marquee-content {
+    animation: none !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: more) {
+  body {
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #e0e0e0;
+    --color-border-primary: #ffffff;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-width: 4px;
+  }
+}
+
+/* Dark Color Scheme (already default but ensuring consistency) */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
+/* Ensure sufficient color contrast */
+a:not(.skip-link) {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Visually Hidden Text for Screen Readers (.sr-only) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus Management - Focus trap for modals */
+.focus-trap-container {
+  position: relative;
+}
+
+/* Live Region Announcements */
+[role="status"],
+[role="alert"],
+[aria-live] {
+  position: relative;
+}
+
+/* Form Field Accessibility */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown) {
+  border-color: #ff4444;
+}
+
+/* Ensure form labels are properly styled */
+label {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+/* Error message styling */
+[role="alert"] {
+  color: #ff4444;
+  font-size: 0.875rem;
+}
+
+/* Checkbox and Radio Accessibility */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.5rem;
+}
+
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 3px solid var(--accent, #F97316);
+  outline-offset: 2px;
+}
+
+/* Button Accessibility */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button[aria-busy="true"] {
+  opacity: 0.7;
+}
+
+/* Links should have visible keyboard focus */
+a:focus-visible {
+  outline: 3px solid var(--accent, #F97316);
+  outline-offset: 2px;
+  text-decoration: underline;
+}
+
+/* Image alt text accessibility - ensure images have semantic alt attributes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive text sizing for readability */
+body {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  margin-bottom: 0.875rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  margin-bottom: 0.625rem;
+}
+
+h5 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+h6 {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+/* Table accessibility */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 2px solid #ffffff;
+  padding: 0.75rem;
+}
+
+td {
+  border-bottom: 1px solid #333333;
+  padding: 0.75rem;
+}
+
+/* List accessibility */
+ul,
+ol {
+  margin-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure sufficient color contrast for status indicators */
+.status-healthy {
+  color: #22c55e;
+}
+
+.status-warning {
+  color: #eab308;
+}
+
+.status-error {
+  color: #ff4444;
+}
+
+/* Video and Media Accessibility */
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure proper spacing for touch targets (minimum 44x44px) */
+button,
+a[href],
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure sufficient spacing between interactive elements */
+button + button,
+a + a {
+  margin-left: 0.5rem;
+}

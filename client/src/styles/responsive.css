@@ -1,0 +1,538 @@
+/**
+ * Responsive Design System - Mobile-First Breakpoints
+ *
+ * Breakpoints:
+ * - Mobile: 375px (base - no prefix)
+ * - Tablet: 768px (tablet: or md:)
+ * - Desktop: 1024px (desktop: or lg:)
+ * - Wide: 1440px (wide:)
+ *
+ * Usage: Apply base styles for mobile, then use prefixes for larger screens
+ * Example: className="text-xs tablet:text-sm desktop:text-base wide:text-lg"
+ */
+
+/* ==================== MOBILE-FIRST BASE STYLES ==================== */
+
+:root {
+  /* Responsive spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* Mobile text sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* Responsive tap targets */
+  --tap-target-min: 44px;
+  --tap-target-safe: 8px;
+}
+
+body {
+  @supports (padding: max(0px)) {
+    padding-left: max(var(--space-md), env(safe-area-inset-left));
+    padding-right: max(var(--space-md), env(safe-area-inset-right));
+    padding-top: max(var(--space-md), env(safe-area-inset-top));
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
+  }
+}
+
+/* Ensure minimum tap target sizes on mobile */
+button,
+[role="button"],
+a:where([class*="btn"]),
+input[type="button"],
+input[type="submit"] {
+  min-height: var(--tap-target-min);
+  min-width: var(--tap-target-min);
+  padding: var(--tap-target-safe);
+}
+
+/* ==================== MOBILE TEXT SCALING (375px) ==================== */
+
+@media (max-width: 767px) {
+  :root {
+    --text-xs: 0.7rem;
+    --text-sm: 0.813rem;
+    --text-base: 0.938rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.25rem;
+  }
+
+  /* Body text readable on small screens */
+  body {
+    font-size: var(--text-base);
+    line-height: 1.5;
+  }
+
+  /* Reduce padding on mobile */
+  .p-3 { @apply p-2; }
+  .p-4 { @apply p-3; }
+  .gap-3 { @apply gap-2; }
+  .gap-4 { @apply gap-3; }
+
+  /* Hide verbose UI on mobile */
+  .hidden-mobile { display: none; }
+
+  /* Stack layout on mobile */
+  .flex-row { @apply flex-col; }
+}
+
+/* ==================== TABLET STYLES (768px) ==================== */
+
+@media (min-width: 768px) {
+  :root {
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+  }
+
+  /* Tablet-specific grid adjustments */
+  .tablet\:grid-cols-2 { @apply grid grid-cols-2; }
+  .tablet\:grid-cols-3 { @apply grid grid-cols-3; }
+
+  /* Show tablet UI elements */
+  .visible-tablet { display: block; }
+  .hidden-tablet { display: none; }
+
+  /* Sidebar becomes visible on tablet */
+  .tablet\:block { @apply block; }
+  .tablet\:hidden { display: none; }
+}
+
+/* ==================== DESKTOP STYLES (1024px) ==================== */
+
+@media (min-width: 1024px) {
+  :root {
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+  }
+
+  /* Desktop grid layouts */
+  .desktop\:grid-cols-2 { @apply grid grid-cols-2; }
+  .desktop\:grid-cols-3 { @apply grid grid-cols-3; }
+  .desktop\:grid-cols-4 { @apply grid grid-cols-4; }
+
+  /* Full desktop UI visible */
+  .hidden-desktop { display: none; }
+  .visible-desktop { display: block; }
+
+  /* Side-by-side layouts */
+  .desktop\:flex-row { @apply flex-row; }
+}
+
+/* ==================== WIDE SCREENS (1440px+) ==================== */
+
+@media (min-width: 1440px) {
+  :root {
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+  }
+
+  /* Max-width container for wide screens */
+  .wide\:max-w-7xl {
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* 3-column grids on wide */
+  .wide\:grid-cols-3 { @apply grid grid-cols-3; }
+}
+
+/* ==================== RESPONSIVE GRID UTILITIES ==================== */
+
+/* Multi-column grids that respond to viewport */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ==================== RESPONSIVE LAYOUT: STREAMER LIVE ==================== */
+
+.streamer-layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .streamer-layout-container {
+    flex-direction: row;
+  }
+}
+
+/* Video section - full width on mobile, 60% on tablet, 70% on desktop */
+.video-section {
+  width: 100%;
+  flex: 1;
+}
+
+@media (min-width: 768px) {
+  .video-section {
+    width: 60%;
+    flex: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .video-section {
+    width: 70%;
+    flex: none;
+  }
+}
+
+/* Sidebar - hidden on mobile, 40% on tablet, 30% on desktop */
+.sidebar-section {
+  display: none;
+  width: 100%;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .sidebar-section {
+    display: flex;
+    width: 40%;
+    flex: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar-section {
+    width: 30%;
+    flex: none;
+  }
+}
+
+/* Mobile navigation drawer */
+.mobile-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1f1f1f;
+  border-top: 1px solid #333333;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+
+@media (min-width: 768px) {
+  .mobile-drawer {
+    display: none;
+  }
+}
+
+/* ==================== RESPONSIVE CARDS ==================== */
+
+/* Event cards - responsive sizing */
+.event-card {
+  width: 100%;
+  overflow: hidden;
+}
+
+.event-card-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .event-card-image {
+    height: 150px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .event-card-image {
+    height: 180px;
+  }
+}
+
+/* Product card responsive */
+.product-card {
+  padding: var(--space-md);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 767px) {
+  .product-card-description {
+    display: none;
+  }
+}
+
+/* ==================== RESPONSIVE ALERT POSITIONING ==================== */
+
+/* Alert stack - unified positioning */
+.alert-stack {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 100%;
+}
+
+/* Mobile: Top-center full width with safe area */
+@media (max-width: 767px) {
+  .alert-stack {
+    top: max(1rem, env(safe-area-inset-top));
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    align-items: center;
+  }
+
+  .alert-stack > * {
+    width: calc(100% - 1rem);
+    max-width: 100%;
+  }
+}
+
+/* Tablet: Top-right */
+@media (min-width: 768px) {
+  .alert-stack {
+    top: 1rem;
+    right: 1rem;
+    left: auto;
+    width: auto;
+    max-width: 400px;
+    align-items: flex-end;
+  }
+}
+
+/* Desktop: Top-right, slightly wider */
+@media (min-width: 1024px) {
+  .alert-stack {
+    max-width: 500px;
+  }
+}
+
+/* ==================== RESPONSIVE STREAM EVENT LOG ==================== */
+
+.stream-event-log {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+  .stream-event-log {
+    max-height: 200px;
+    font-size: var(--text-xs);
+  }
+
+  /* Hide verbose info on mobile */
+  .event-venue { display: none; }
+  .event-location { display: none; }
+}
+
+@media (min-width: 768px) {
+  .stream-event-log {
+    max-height: 400px;
+  }
+}
+
+/* ==================== RESPONSIVE PRODUCT CAROUSEL ==================== */
+
+.product-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+@media (min-width: 768px) {
+  .product-carousel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-carousel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .product-carousel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.product-carousel-item {
+  flex: 0 0 auto;
+  width: 280px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+@media (min-width: 768px) {
+  .product-carousel-item {
+    width: auto;
+    flex: 1;
+  }
+}
+
+/* ==================== RESPONSIVE TEXT SIZES ==================== */
+
+/* Scale text responsively */
+h1 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  line-height: 1.4;
+}
+
+h4, .text-lg {
+  font-size: clamp(0.938rem, 2.5vw, 1.125rem);
+}
+
+body, .text-base {
+  font-size: clamp(0.938rem, 2vw, 1rem);
+  line-height: 1.5;
+}
+
+.text-sm {
+  font-size: clamp(0.813rem, 1.8vw, 0.875rem);
+  line-height: 1.5;
+}
+
+.text-xs {
+  font-size: clamp(0.7rem, 1.5vw, 0.75rem);
+  line-height: 1.4;
+}
+
+/* ==================== SAFE AREA ADJUSTMENTS ==================== */
+
+/* Notch support for iPhone X+ */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .safe-area-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* ==================== RESPONSIVE FLEX UTILITIES ==================== */
+
+.flex-col-mobile {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .flex-col-mobile {
+    flex-direction: row;
+  }
+}
+
+.flex-center-mobile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ==================== RESPONSIVE SPACING ==================== */
+
+/* Dynamic padding that scales with viewport */
+.px-responsive {
+  padding-left: clamp(0.5rem, 2vw, 2rem);
+  padding-right: clamp(0.5rem, 2vw, 2rem);
+}
+
+.py-responsive {
+  padding-top: clamp(0.5rem, 2vw, 2rem);
+  padding-bottom: clamp(0.5rem, 2vw, 2rem);
+}
+
+/* ==================== ORIENTATION-SPECIFIC STYLES ==================== */
+
+@media (orientation: landscape) and (max-height: 600px) {
+  /* Reduce height on landscape mobile */
+  .sidebar-section {
+    max-height: 100vh;
+  }
+
+  .stream-event-log {
+    max-height: 150px;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  .no-print { display: none; }
+
+  body {
+    padding: 0;
+    margin: 0;
+  }
+}

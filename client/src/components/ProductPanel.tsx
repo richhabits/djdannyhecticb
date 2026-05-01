@@ -1,4 +1,4 @@
-import { Music, ShoppingCart } from "lucide-react";
+import { Music, ShoppingCart, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Product {
@@ -16,6 +16,18 @@ interface ProductPanelProps {
   products?: Product[];
   onProductClick?: (product: Product) => void;
 }
+
+const typeEmojis = {
+  track: "🎵",
+  merchandise: "👕",
+  link: "🔗",
+};
+
+const typeLabels = {
+  track: "Tracks",
+  merchandise: "Merchandise",
+  link: "Links",
+};
 
 export function ProductPanel({
   title = "NOW PLAYING",
@@ -45,49 +57,73 @@ export function ProductPanel({
   ],
   onProductClick,
 }: ProductPanelProps) {
-  return (
-    <div className="bg-[#0A0A0A] rounded-lg border border-[#333333] p-3 space-y-3">
-      <h4 className="text-xs font-bold text-white">{title}</h4>
+  // Group products by type
+  const groupedProducts = products.reduce(
+    (acc, product) => {
+      if (!acc[product.type]) acc[product.type] = [];
+      acc[product.type].push(product);
+      return acc;
+    },
+    {} as Record<string, Product[]>
+  );
 
-      <div className="space-y-2">
-        {products.map((product) => (
-          <button
-            key={product.id}
-            onClick={() => onProductClick?.(product)}
-            className="w-full text-left px-3 py-2 rounded-lg bg-[#2F2F2F] hover:bg-[#3F3F3F] transition border border-[#333333] hover:border-[#FF4444] group"
-          >
-            <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded bg-[#FF4444] flex items-center justify-center flex-shrink-0 text-xs">
-                {product.type === "track" && <Music className="w-3 h-3 text-white" />}
-                {product.type === "merchandise" && (
-                  <ShoppingCart className="w-3 h-3 text-white" />
-                )}
-                {product.type === "link" && <span className="text-white font-bold">🔗</span>}
+  const typeOrder: (keyof typeof typeLabels)[] = ["track", "merchandise", "link"];
+
+  return (
+    <div className="bg-dark-surface rounded-lg border border-border-primary p-2 md:p-md lg:p-lg space-y-2 md:space-y-md lg:space-y-lg">
+      <h4 className="text-xs md:text-body lg:text-lg font-bold text-white">{title}</h4>
+
+      <div className="space-y-2 md:space-y-lg lg:space-y-lg">
+        {typeOrder.map((type) => {
+          if (!groupedProducts[type]) return null;
+
+          return (
+            <div key={type}>
+              <h5 className="text-xs md:text-caption lg:text-sm font-bold text-text-secondary mb-1 md:mb-sm lg:mb-sm">
+                {typeEmojis[type]} {typeLabels[type]}
+              </h5>
+
+              {/* Responsive grid: 1 col mobile, 2 col tablet, 3 col wide */}
+              <div className="grid grid-cols-1 tablet:grid-cols-2 wide:grid-cols-3 gap-1.5 md:gap-md lg:gap-lg">
+                {groupedProducts[type].map((product) => (
+                  <a
+                    key={product.id}
+                    href={product.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onProductClick?.(product);
+                    }}
+                    className="group bg-dark-surface rounded-lg p-2 md:p-md lg:p-lg border border-border-primary hover:border-accent-red hover:shadow-lg transition-all duration-base cursor-pointer min-h-[44px] flex flex-col justify-center"
+                  >
+                    <span className="text-xl md:text-2xl lg:text-3xl mb-1 md:mb-sm lg:mb-sm block group-hover:scale-110 transition-transform duration-base">
+                      {typeEmojis[type]}
+                    </span>
+                    <p className="text-xs md:text-caption lg:text-sm font-semibold group-hover:text-accent-red transition-colors duration-base line-clamp-2">
+                      {product.name}
+                    </p>
+                    {product.description && (
+                      <p className="text-xs md:text-micro lg:text-xs text-text-tertiary mt-0.5 md:mt-xs lg:mt-xs line-clamp-1 hidden md:block">
+                        {product.description}
+                      </p>
+                    )}
+                    {product.price && (
+                      <p className="text-xs md:text-caption lg:text-sm font-bold text-accent-red mt-1 md:mt-md lg:mt-md">
+                        ${product.price.toFixed(2)}
+                      </p>
+                    )}
+                  </a>
+                ))}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white group-hover:text-[#FF4444] transition truncate">
-                  {product.name}
-                </p>
-                {product.description && (
-                  <p className="text-xs text-[#999999] mt-0.5 truncate">
-                    {product.description}
-                  </p>
-                )}
-              </div>
-              {product.price && (
-                <div className="flex-shrink-0 text-xs font-bold text-[#FF4444]">
-                  ${product.price.toFixed(2)}
-                </div>
-              )}
             </div>
-          </button>
-        ))}
+          );
+        })}
       </div>
 
       <Button
-        variant="outline"
         size="sm"
-        className="w-full h-8 text-xs bg-[#FF4444] text-white hover:bg-[#FF5555] border-0"
+        className="w-full h-9 md:h-10 lg:h-11 text-xs md:text-body lg:text-base font-semibold bg-accent-red text-white hover:bg-red-600 border-0 transition-all duration-base hover:shadow-lg"
       >
         View All Products
       </Button>

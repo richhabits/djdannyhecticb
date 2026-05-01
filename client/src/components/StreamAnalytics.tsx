@@ -1,4 +1,5 @@
-import { TrendingUp, Eye, Clock } from "lucide-react";
+import { useState } from "react";
+import { Eye, Clock, Globe } from "lucide-react";
 
 interface StreamAnalyticsProps {
   peakViewers?: number;
@@ -6,6 +7,8 @@ interface StreamAnalyticsProps {
   streamDuration?: string;
   topCountries?: { code: string; viewers: number }[];
 }
+
+type FilterTab = "metrics" | "regions";
 
 export function StreamAnalytics({
   peakViewers = 5200,
@@ -18,50 +21,122 @@ export function StreamAnalytics({
     { code: "AU", viewers: 457 },
   ],
 }: StreamAnalyticsProps) {
+  const [activeTab, setActiveTab] = useState<FilterTab>("metrics");
+  const totalViewers = topCountries.reduce((sum, c) => sum + c.viewers, 0);
+
   return (
-    <div className="bg-[#0A0A0A] rounded-lg border border-[#333333] p-3 space-y-3">
-      <h4 className="text-xs font-bold text-white">STREAM ANALYTICS</h4>
+    <div className="bg-dark-surface rounded-lg border border-border-primary p-md space-y-md">
+      <div className="flex items-center justify-between">
+        <h4 className="text-caption font-bold text-white uppercase tracking-wider">Stream Analytics</h4>
 
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-[#2F2F2F] rounded p-2">
-          <p className="text-xs text-[#999999] mb-1">Peak</p>
-          <p className="text-sm font-bold text-[#FF4444]">
-            {peakViewers.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-[#2F2F2F] rounded p-2">
-          <p className="text-xs text-[#999999] mb-1">Average</p>
-          <p className="text-sm font-bold text-white">
-            {avgViewers.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-[#2F2F2F] rounded p-2">
-          <p className="text-xs text-[#999999] mb-1">Duration</p>
-          <p className="text-sm font-bold text-white">{streamDuration}</p>
+        {/* Toggle buttons */}
+        <div className="flex items-center gap-xs bg-dark-bg rounded-lg p-xs">
+          <button
+            onClick={() => setActiveTab("metrics")}
+            className={`text-micro font-semibold px-sm py-xs rounded transition-all duration-base ${
+              activeTab === "metrics"
+                ? "bg-accent-primary text-white shadow-sm"
+                : "text-text-secondary hover:text-white"
+            }`}
+          >
+            Metrics
+          </button>
+          <button
+            onClick={() => setActiveTab("regions")}
+            className={`text-micro font-semibold px-sm py-xs rounded transition-all duration-base ${
+              activeTab === "regions"
+                ? "bg-accent-primary text-white shadow-sm"
+                : "text-text-secondary hover:text-white"
+            }`}
+          >
+            Regions
+          </button>
         </div>
       </div>
 
-      <div>
-        <p className="text-xs font-bold text-white mb-2">Top Regions</p>
-        <div className="space-y-1">
-          {topCountries.map((country) => (
-            <div key={country.code} className="flex items-center justify-between text-xs">
-              <span className="text-[#999999]">{country.code}</span>
-              <div className="flex-1 mx-2 h-1.5 bg-[#2F2F2F] rounded overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#FF4444] to-[#FF6666]"
-                  style={{
-                    width: `${(country.viewers / topCountries[0].viewers) * 100}%`,
-                  }}
-                />
-              </div>
-              <span className="text-white font-bold">
-                {country.viewers.toLocaleString()}
-              </span>
-            </div>
-          ))}
+      {/* Metrics view */}
+      {activeTab === "metrics" && (
+        <div className="grid grid-cols-2 gap-md tablet:grid-cols-2 desktop:grid-cols-2 wide:grid-cols-4 animate-in fade-in slide-in-from-left-4 duration-200">
+          {/* Peak Viewers */}
+          <div className="bg-dark-bg rounded-lg p-md border border-border-primary/50 hover:border-accent-red/50 transition-all duration-base group cursor-pointer">
+            <p className="text-caption text-text-secondary font-semibold mb-xs flex items-center gap-xs">
+              <Eye className="w-4 h-4 text-accent-red group-hover:scale-110 transition-transform duration-base" />
+              Peak Viewers
+            </p>
+            <p className="text-h2 font-extrabold text-accent-red">
+              {peakViewers.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Average Viewers */}
+          <div className="bg-dark-bg rounded-lg p-md border border-border-primary/50 hover:border-accent-primary/50 transition-all duration-base group cursor-pointer">
+            <p className="text-caption text-text-secondary font-semibold mb-xs flex items-center gap-xs">
+              <Eye className="w-4 h-4 text-accent-primary group-hover:scale-110 transition-transform duration-base" />
+              Average Viewers
+            </p>
+            <p className="text-h2 font-extrabold text-white">
+              {avgViewers.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Stream Duration */}
+          <div className="bg-dark-bg rounded-lg p-md border border-border-primary/50 hover:border-accent-primary/50 transition-all duration-base group cursor-pointer">
+            <p className="text-caption text-text-secondary font-semibold mb-xs flex items-center gap-xs">
+              <Clock className="w-4 h-4 text-accent-primary group-hover:scale-110 transition-transform duration-base" />
+              Duration
+            </p>
+            <p className="text-h2 font-extrabold text-white">{streamDuration}</p>
+          </div>
+
+          {/* Average % */}
+          <div className="bg-dark-bg rounded-lg p-md border border-border-primary/50 hover:border-accent-primary/50 transition-all duration-base group cursor-pointer">
+            <p className="text-caption text-text-secondary font-semibold mb-xs">Avg Retention</p>
+            <p className="text-h2 font-extrabold text-white">
+              {Math.round((avgViewers / peakViewers) * 100)}%
+            </p>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Regions view */}
+      {activeTab === "regions" && (
+        <div className="space-y-md animate-in fade-in slide-in-from-right-4 duration-200">
+          <div className="space-y-sm">
+            {topCountries.map((country, idx) => {
+              const percentage = Math.round((country.viewers / totalViewers) * 100);
+              const barWidth = (country.viewers / topCountries[0].viewers) * 100;
+
+              return (
+                <div key={country.code} className="group">
+                  {/* Country header */}
+                  <div className="flex items-center justify-between mb-xs">
+                    <span className="text-caption font-semibold text-text-secondary">
+                      {country.code}
+                    </span>
+                    <span className="text-caption font-bold text-white">
+                      {country.viewers.toLocaleString()} ({percentage}%)
+                    </span>
+                  </div>
+
+                  {/* Bar */}
+                  <div className="h-2 bg-dark-bg rounded-full overflow-hidden border border-border-primary/30 group-hover:border-accent-primary/50 transition-all duration-base">
+                    <div
+                      className="h-full bg-gradient-to-r from-accent-primary to-accent-red transition-all duration-base group-hover:shadow-lg"
+                      style={{ width: `${barWidth}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Summary */}
+          <div className="bg-dark-bg rounded-lg p-md border border-border-primary/50">
+            <p className="text-micro text-text-secondary mb-xs">Total Viewers from Top Regions</p>
+            <p className="text-h3 font-extrabold text-white">{totalViewers.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -236,21 +236,28 @@ function App() {
         // switchable
         >
           <TooltipProvider>
-            <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
-            <div className="min-h-screen bg-black pirate-scanlines flex flex-col">
-              <Toaster />
-              <GlobalBanner />
-              <GlobalNav />
-              <div className="flex-1">
-                <Router />
+            <>
+              {/* Skip Link - Accessibility: Jump to main content */}
+              <a href="#main-content" className="skip-link">
+                Skip to main content
+              </a>
+
+              <div className="fixed inset-0 pointer-events-none z-[60] vignette-orange" />
+              <div className="min-h-screen bg-black pirate-scanlines flex flex-col">
+                <Toaster />
+                <GlobalBanner />
+                <GlobalNav />
+                <main id="main-content" role="main" className="flex-1">
+                  <Router />
+                </main>
+                <Footer />
+                <LiveAudioPlayer />
+                <AIDannyFloating />
+                <HecticOnboarding />
+                {/* DELETED COMPONENT: SocialProofNotifications - deleted router: socialProof */}
+                {/* <SocialProofNotifications /> */}
               </div>
-              <Footer />
-              <LiveAudioPlayer />
-              <AIDannyFloating />
-              <HecticOnboarding />
-              {/* DELETED COMPONENT: SocialProofNotifications - deleted router: socialProof */}
-              {/* <SocialProofNotifications /> */}
-            </div>
+            </>
           </TooltipProvider>
         </ThemeProvider>
       </CartProvider>
