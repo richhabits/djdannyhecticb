@@ -1,0 +1,517 @@
+/**
+ * Live Streaming Components - CSS Animations & Styles
+ * Professional DJ streaming animations and transitions
+ *
+ * Include this file in your main.tsx or App.tsx:
+ * import "@/components/live-streaming.css"
+ */
+
+/* ==================== DONATION ALERT ANIMATIONS ==================== */
+
+@keyframes donationEnter {
+  from {
+    opacity: 0;
+    transform: translateX(400px) scale(0.95) rotate(5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes donationExit {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(400px) scale(0.95) rotate(-5deg);
+  }
+}
+
+@keyframes donationPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+  }
+}
+
+.donation-alert-enter {
+  animation: donationEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.donation-alert-exit {
+  animation: donationExit 0.3s ease-out forwards;
+}
+
+.donation-alert-pulse {
+  animation: donationPulse 2s infinite;
+}
+
+/* ==================== VIEWER COUNT ANIMATIONS ==================== */
+
+@keyframes countUpdate {
+  0% {
+    transform: scale(1.2);
+    color: #FF4444;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    color: #FFFFFF;
+  }
+}
+
+.viewer-count-update {
+  animation: countUpdate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ==================== CHAT MESSAGE ANIMATIONS ==================== */
+
+@keyframes messageCascade {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-message-enter {
+  animation: messageCascade 0.3s ease-out forwards;
+}
+
+@keyframes typingIndicator {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-6px);
+  }
+}
+
+.typing-dot {
+  animation: typingIndicator 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ==================== BUTTON & INTERACTION ANIMATIONS ==================== */
+
+@keyframes buttonLift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn-hover-lift:hover {
+  animation: buttonLift 0.2s ease-out forwards;
+}
+
+.btn-active:active {
+  animation: buttonPress 0.15s ease-out forwards;
+}
+
+/* ==================== REACTION ANIMATIONS ==================== */
+
+@keyframes reactionPop {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes reactionFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.reaction-enter {
+  animation: reactionPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.reaction-float {
+  animation: reactionFloat 1s ease-out forwards;
+}
+
+/* ==================== POLL ANIMATIONS ==================== */
+
+@keyframes pollBarFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--poll-percentage, 0%);
+  }
+}
+
+.poll-bar-fill {
+  animation: pollBarFill 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes pollPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.poll-active {
+  animation: pollPulse 2s ease-in-out infinite;
+}
+
+/* ==================== LIVE INDICATOR ANIMATIONS ==================== */
+
+@keyframes livePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes liveBlink {
+  0%, 49% {
+    background-color: #FF4444;
+  }
+  50%, 100% {
+    background-color: #CC3333;
+  }
+}
+
+.live-indicator {
+  animation: liveBlink 1s ease-in-out infinite;
+}
+
+.live-text {
+  animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ==================== TRANSITION CLASSES ==================== */
+
+.transition-fast {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-standard {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-slow {
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== MOBILE-SPECIFIC ANIMATIONS ==================== */
+
+@media (max-width: 1023px) {
+  @keyframes slideInFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideOutToBottom {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+  }
+
+  .mobile-slide-in {
+    animation: slideInFromBottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .mobile-slide-out {
+    animation: slideOutToBottom 0.3s ease-out forwards;
+  }
+}
+
+/* ==================== FOCUS & ACCESSIBILITY ==================== */
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #FF4444;
+  outline-offset: 2px;
+}
+
+/* Remove default focus ring and add custom one */
+button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.3);
+}
+
+/* ==================== REDUCED MOTION ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==================== DARK MODE SUPPORT ==================== */
+
+@media (prefers-color-scheme: dark) {
+  /* Ensure dark colors are used */
+  :root {
+    --background: #0a0a0a;
+    --panel-bg: #1f1f1f;
+    --border-color: #333333;
+  }
+}
+
+/* ==================== SCROLLBAR STYLING ==================== */
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF4444;
+}
+
+/* Firefox */
+* {
+  scrollbar-color: #333333 #0a0a0a;
+  scrollbar-width: thin;
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+/* Gradient backgrounds */
+.gradient-bg-primary {
+  background: linear-gradient(135deg, #FF4444 0%, #FF5555 100%);
+}
+
+.gradient-bg-dark {
+  background: linear-gradient(135deg, #1f1f1f 0%, #0a0a0a 100%);
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.5),
+              0 0 40px rgba(255, 68, 68, 0.2);
+}
+
+.glow-primary-sm {
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(31, 31, 31, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Badges */
+.badge-live {
+  background: #FF4444;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: liveBlink 1s ease-in-out infinite;
+}
+
+.badge-live::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  animation: livePulse 2s infinite;
+}
+
+/* Hover state utilities */
+.hover-lift {
+  transition: all 200ms ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 68, 68, 0.2);
+}
+
+.hover-lift:active {
+  transform: translateY(0);
+}
+
+/* Text truncate variations */
+.truncate-1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ==================== LOADING & SKELETON ==================== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #2f2f2f 0%, #3f3f3f 50%, #2f2f2f 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ==================== STATE-BASED ANIMATIONS ==================== */
+
+/* Active/selected state */
+.is-active {
+  color: #FF4444;
+  border-color: #FF4444;
+}
+
+.is-selected {
+  background-color: #FF4444;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.3);
+}
+
+/* Disabled state */
+.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state */
+.is-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.is-loading::after {
+  content: '';
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
+@media (max-width: 640px) {
+  /* Increase touch target sizes */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Reduce animation complexity on mobile */
+  .donation-alert-enter {
+    animation-duration: 0.3s;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  /* Hide interactive elements when printing */
+  button,
+  [role="button"],
+  .interactive {
+    display: none;
+  }
+
+  /* Disable animations when printing */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
