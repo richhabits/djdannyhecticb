@@ -4,6 +4,14 @@ import { ViewerStats } from "./ViewerStats";
 import { InteractionPanel } from "./InteractionPanel";
 import { DonationAlert } from "./DonationAlert";
 import { MobileBottomSheet } from "./MobileBottomSheet";
+import { StreamHealthIndicator } from "./StreamHealthIndicator";
+import { RaidAlert } from "./RaidAlert";
+import { SubscriberAlert } from "./SubscriberAlert";
+import { StreamEventLog } from "./StreamEventLog";
+import { ProductPanel } from "./ProductPanel";
+import { QualitySelector } from "./QualitySelector";
+import { StreamAnalytics } from "./StreamAnalytics";
+import { useStreamEvents } from "@/_core/hooks/useStreamEvents";
 import { Card } from "@/components/ui/card";
 import { Music, Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +21,29 @@ interface Donation {
   donor: string;
   amount: number;
   message?: string;
+  timestamp: Date;
+}
+
+interface Raid {
+  id: string;
+  raiderName: string;
+  raidCount: number;
+  timestamp: Date;
+}
+
+interface Subscriber {
+  id: string;
+  subscriberName: string;
+  tier: "bronze" | "silver" | "gold" | "platinum";
+  months: number;
+  message?: string;
+  timestamp: Date;
+}
+
+interface StreamEvent {
+  id: string;
+  type: "follow" | "subscribe" | "donation" | "raid";
+  username: string;
   timestamp: Date;
 }
 
@@ -47,9 +78,14 @@ export function StreamerLiveLayout({
   const [viewerCount, setViewerCount] = useState(2847);
   const [isLiked, setIsLiked] = useState(false);
   const [donations, setDonations] = useState<Donation[]>([]);
+  const [raids, setRaids] = useState<Raid[]>([]);
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [streamDuration, setStreamDuration] = useState(1800); // 30 minutes in seconds
   const [isMobile, setIsMobile] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [currentQuality, setCurrentQuality] = useState("auto");
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [streamEvents, setStreamEvents] = useState<StreamEvent[]>([]);
 
   // Simulate viewer count changes
   useEffect(() => {
@@ -103,10 +139,96 @@ export function StreamerLiveLayout({
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Connect to real-time stream events
+  useStreamEvents({
+    onDonation: (donor, amount, message) => {
+      const donation: Donation = {
+        id: Date.now().toString(),
+        donor,
+        amount,
+        message,
+        timestamp: new Date(),
+      };
+      setDonations((prev) => [...prev, donation]);
+      setStreamEvents((prev) => [
+        { id: donation.id, type: "donation", username: donor, timestamp: new Date() },
+        ...prev.slice(0, 49),
+      ]);
+      setTimeout(() => setDonations((prev) => prev.filter((d) => d.id !== donation.id)), 5000);
+    },
+    onRaid: (raiderName, raidCount) => {
+      const raid: Raid = {
+        id: Date.now().toString(),
+        raiderName,
+        raidCount,
+        timestamp: new Date(),
+      };
+      setRaids((prev) => [...prev, raid]);
+      setStreamEvents((prev) => [
+        { id: raid.id, type: "raid", username: raiderName, timestamp: new Date() },
+        ...prev.slice(0, 49),
+      ]);
+      setTimeout(() => setRaids((prev) => prev.filter((r) => r.id !== raid.id)), 8000);
+    },
+    onSubscribe: (username, tier, months, message) => {
+      const subscriber: Subscriber = {
+        id: Date.now().toString(),
+        subscriberName: username,
+        tier: tier as "bronze" | "silver" | "gold" | "platinum",
+        months,
+        message,
+        timestamp: new Date(),
+      };
+      setSubscribers((prev) => [...prev, subscriber]);
+      setStreamEvents((prev) => [
+        { id: subscriber.id, type: "subscribe", username, timestamp: new Date() },
+        ...prev.slice(0, 49),
+      ]);
+      setTimeout(
+        () => setSubscribers((prev) => prev.filter((s) => s.id !== subscriber.id)),
+        7000
+      );
+    },
+    onFollow: (username) => {
+      setStreamEvents((prev) => [
+        {
+          id: Date.now().toString(),
+          type: "follow",
+          username,
+          timestamp: new Date(),
+        },
+        ...prev.slice(0, 49),
+      ]);
+    },
+  });
+
   return (
     <div className="w-full bg-background text-foreground">
+      {/* Raid Alerts */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none space-y-3">
+        {raids.map((raid) => (
+          <RaidAlert
+            key={raid.id}
+            raiderName={raid.raiderName}
+            raidCount={raid.raidCount}
+          />
+        ))}
+      </div>
+
+      {/* Subscriber Alerts */}
+      <div className="fixed top-32 left-1/2 -translate-x-1/2 z-50 pointer-events-none space-y-3">
+        {subscribers.map((subscriber) => (
+          <SubscriberAlert
+            key={subscriber.id}
+            subscriberName={subscriber.subscriberName}
+            tier={subscriber.tier}
+            months={subscriber.months}
+          />
+        ))}
+      </div>
+
       {/* Donation Alerts */}
-      <div className="fixed top-4 right-4 z-50 pointer-events-none space-y-3 max-w-sm px-4">
+      <div className="fixed bottom-4 right-4 z-50 pointer-events-none space-y-3 max-w-sm px-4">
         {donations.map((donation) => (
           <DonationAlert key={donation.id} donation={donation} />
         ))}
@@ -117,19 +239,42 @@ export function StreamerLiveLayout({
         <div className="flex h-screen overflow-hidden gap-1 p-1 bg-background">
           {/* Left: Video Player (70%) */}
           <div className="flex-1 min-w-0 flex flex-col">
+            {/* Stream Health & Quality Controls */}
+            <div className="bg-[#1F1F1F] border-b border-[#333333] px-4 py-2 flex items-center justify-between gap-3">
+              <StreamHealthIndicator bitrate={5000} fps={60} resolution="1080p" />
+              <QualitySelector
+                currentQuality={currentQuality}
+                onQualityChange={setCurrentQuality}
+              />
+            </div>
+
             <VideoPlayerSection
               streamerName={streamerName}
               streamTitle={streamTitle}
               category={category}
             />
 
-            {/* Bottom Stats Bar */}
+            {/* Bottom Stats Bar with Event Log */}
             <div className="bg-[#1F1F1F] border-t border-[#333333] px-4 py-3">
-              <ViewerStats
-                viewerCount={viewerCount}
-                streamDuration={formatDuration(streamDuration)}
-                donationsRaised={donations.reduce((sum, d) => sum + d.amount, 0)}
-              />
+              <div className="flex items-center justify-between mb-3">
+                <ViewerStats
+                  viewerCount={viewerCount}
+                  streamDuration={formatDuration(streamDuration)}
+                  donationsRaised={donations.reduce((sum, d) => sum + d.amount, 0)}
+                />
+                <button
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  className="text-xs px-3 py-1 rounded bg-[#2F2F2F] hover:bg-[#3F3F3F] text-white transition"
+                >
+                  {showAnalytics ? "Hide Stats" : "Show Stats"}
+                </button>
+              </div>
+
+              {showAnalytics && (
+                <div className="mt-3 pt-3 border-t border-[#333333]">
+                  <StreamAnalytics />
+                </div>
+              )}
             </div>
           </div>
 
@@ -184,8 +329,23 @@ export function StreamerLiveLayout({
               </div>
             </div>
 
+            {/* Event Log / Product Tabs */}
+            <div className="border-b border-[#333333] flex">
+              <button className="flex-1 text-xs font-bold text-white bg-[#FF4444] p-3">
+                Products
+              </button>
+              <button className="flex-1 text-xs font-bold text-[#999999] p-3 hover:text-white transition">
+                Activity
+              </button>
+            </div>
+
+            {/* Product Panel */}
+            <div className="p-3 border-b border-[#333333] flex-shrink-0">
+              <ProductPanel />
+            </div>
+
             {/* Interaction Panel */}
-            <div className="p-4 border-b border-[#333333] flex-shrink-0">
+            <div className="p-3 border-b border-[#333333] flex-shrink-0">
               <InteractionPanel
                 onReaction={(type) => console.log("Reaction:", type)}
                 onPollVote={(option) => console.log("Poll vote:", option)}
@@ -242,7 +402,10 @@ export function StreamerLiveLayout({
                 </div>
               </div>
 
-              {/* Donation Button */}
+              {/* Event Log Tab Content */}
+            {/* (Hidden by default, shown via tab click) */}
+
+            {/* Donation Button */}
               <div className="p-3 border-t border-[#333333] flex-shrink-0">
                 <Button
                   onClick={onDonateClick}

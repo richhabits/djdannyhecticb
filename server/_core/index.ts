@@ -24,6 +24,7 @@ import { registerRateCardRoutes } from "../routes/ratecard";
 import { registerUploadRoutes } from "../routes/upload";
 import { registerWebhookRoutes } from "../routes/webhooks";
 import { registerCronRoutes } from "../routes/cron";
+import streamEventsRouter, { setupStreamWebSocket } from "../routers/streamEventsRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { ENV } from "./env";
@@ -59,6 +60,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Setup WebSocket for stream events
+  setupStreamWebSocket(server);
 
   // Request ID and Logging (First)
   app.use(requestIdMiddleware);
@@ -182,6 +186,9 @@ async function startServer() {
 
   // Webhook Routes (Telnyx, Vapi)
   registerWebhookRoutes(app);
+
+  // Stream Events (WebSocket + API)
+  app.use("/api/stream", streamEventsRouter);
 
   // Cron Job Routes
   registerCronRoutes(app);
