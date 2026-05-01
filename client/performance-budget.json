@@ -1,0 +1,74 @@
+{
+  "bundles": [
+    {
+      "name": "main",
+      "maxSize": "250kb"
+    },
+    {
+      "name": "vendor",
+      "maxSize": "200kb"
+    },
+    {
+      "name": "styles",
+      "maxSize": "50kb"
+    }
+  ],
+  "metrics": {
+    "LCP": {
+      "target": 2500,
+      "type": "milliseconds",
+      "description": "Largest Contentful Paint - when the main content loads"
+    },
+    "FID": {
+      "target": 100,
+      "type": "milliseconds",
+      "description": "First Input Delay - responsiveness to user input"
+    },
+    "CLS": {
+      "target": 0.1,
+      "type": "unitless",
+      "description": "Cumulative Layout Shift - visual stability"
+    },
+    "INP": {
+      "target": 200,
+      "type": "milliseconds",
+      "description": "Interaction to Next Paint - interaction latency"
+    },
+    "TTFB": {
+      "target": 600,
+      "type": "milliseconds",
+      "description": "Time to First Byte - server response time"
+    }
+  },
+  "compression": {
+    "gzip": {
+      "enabled": true,
+      "minSize": 1024
+    },
+    "brotli": {
+      "enabled": true,
+      "minSize": 2048
+    }
+  },
+  "imageOptimization": {
+    "formats": ["webp", "avif"],
+    "quality": {
+      "thumbnail": 60,
+      "preview": 70,
+      "standard": 80,
+      "high": 85,
+      "maximum": 95
+    },
+    "maxWidth": 2560,
+    "enableLazyLoading": true
+  },
+  "caching": {
+    "browser": {
+      "maxAge": 31536000,
+      "publicAssets": true
+    },
+    "cdn": {
+      "maxAge": 86400
+    }
+  }
+}

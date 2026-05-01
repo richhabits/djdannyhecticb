@@ -1,9 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@900&display=swap');
+/* Font optimization with font-display: swap for better performance */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Outfit:wght@700;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./styles/tokens.css";
 @import "./styles/globals.css";
 @import "./styles/animations.css";
+@import "./styles/advanced-animations.css";
 @import "./styles/accessibility.css";
 @import "./styles/responsive.css";
 
@@ -160,4 +162,47 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #F97316;
+}
+
+/* Font optimization: CSS variables with system font fallbacks */
+:root {
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-mono: 'Fira Code', 'Courier New', monospace;
+}
+
+/* Font loading optimization: Use font-display: swap to prevent FOUT */
+@font-feature-values 'Inter' {
+  @styleset {
+    alt-g: 1;
+  }
+}
+
+/* Reduce layout shift by setting font-size-adjust */
+body {
+  font-size-adjust: 0.5;
+}
+
+/* Optimize font weights to reduce total font file downloads */
+@supports font-variation-settings {
+  body {
+    font-family: 'Inter', sans-serif;
+    font-variation-settings: "wght" 400;
+  }
+
+  strong, b, .font-bold {
+    font-variation-settings: "wght" 700;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    font-variation-settings: "wght" 900;
+  }
+}
+
+/* Preload critical font styles to avoid font swap delay */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }

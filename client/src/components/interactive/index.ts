@@ -59,3 +59,27 @@ export {
   StatCounter,
   easingFunctions,
 } from './CounterAnimation';
+
+// Advanced Gesture & Animation Components
+export {
+  PageTransition,
+  FadeInUp,
+  FadeOutDown,
+  StaggeredTransition,
+} from './PageTransition';
+
+export {
+  SwipeableCard,
+  SwipeableDismissCard,
+} from './SwipeableCard';
+
+export {
+  MorphShape,
+  MorphShapeGroup,
+  FloatingShapeBackground,
+  PulsingMorphShape,
+} from './MorphShape';
+
+export {
+  InteractionDemo,
+} from './InteractionDemo';
