@@ -11,6 +11,7 @@ import { StreamEventLog } from "./StreamEventLog";
 import { ProductPanel } from "./ProductPanel";
 import { QualitySelector } from "./QualitySelector";
 import { StreamAnalytics } from "./StreamAnalytics";
+import { UpcomingEvents } from "./UpcomingEvents";
 import { useStreamEvents } from "@/_core/hooks/useStreamEvents";
 import { Card } from "@/components/ui/card";
 import { Music, Heart, Share2 } from "lucide-react";
@@ -342,6 +343,11 @@ export function StreamerLiveLayout({
             {/* Product Panel */}
             <div className="p-3 border-b border-[#333333] flex-shrink-0">
               <ProductPanel />
+            </div>
+
+            {/* Upcoming Events */}
+            <div className="p-3 border-b border-[#333333] flex-shrink-0 max-h-64 overflow-y-auto">
+              <UpcomingEvents maxEvents={3} compact={true} />
             </div>
 
             {/* Interaction Panel */}

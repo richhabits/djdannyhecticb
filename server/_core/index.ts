@@ -25,6 +25,9 @@ import { registerUploadRoutes } from "../routes/upload";
 import { registerWebhookRoutes } from "../routes/webhooks";
 import { registerCronRoutes } from "../routes/cron";
 import streamEventsRouter, { setupStreamWebSocket } from "../routers/streamEventsRouter";
+import stripeEventsRouter from "../routers/stripeEventsRouter";
+import youtubeEventsRouter from "../routers/youtubeEventsRouter";
+import ticketmasterRouter from "../routers/ticketmasterRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { ENV } from "./env";
@@ -189,6 +192,15 @@ async function startServer() {
 
   // Stream Events (WebSocket + API)
   app.use("/api/stream", streamEventsRouter);
+
+  // Stripe Events (Real donations)
+  app.use("/api/stripe", stripeEventsRouter);
+
+  // YouTube Events (Real follows)
+  app.use("/api/youtube", youtubeEventsRouter);
+
+  // Ticketmaster Events (Concerts and shows)
+  app.use("/api/ticketmaster", ticketmasterRouter);
 
   // Cron Job Routes
   registerCronRoutes(app);
