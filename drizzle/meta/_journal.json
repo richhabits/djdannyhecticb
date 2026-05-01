@@ -29,6 +29,13 @@
       "when": 1777510685045,
       "tag": "0003_add_uk_events_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777662146691,
+      "tag": "0004_redundant_korg",
+      "breakpoints": true
     }
   ]
 }

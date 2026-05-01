@@ -7,10 +7,12 @@
  * Handles real-time chat, reactions, and notifications
  */
 
-import WebSocket from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import { getDb } from "../db";
 import { chatMessages, notifications } from "../../drizzle/engagement-schema";
 import { eq, and } from "drizzle-orm";
+import { handleChatMessage, isUserRateLimited as isChatRateLimited, initializeChatLimiter } from "../features/liveChat";
+import { handleReaction, isUserReactionLimited as isReactionRateLimited, initializeReactionLimiter } from "../features/reactions";
 
 interface LiveSession {
   liveSessionId: number;
@@ -32,6 +34,10 @@ interface Message {
 
 // Track active WebSocket connections
 const sessions = new Map<string, { ws: WebSocket; session: LiveSession }>();
+
+// Initialize limiters on module load
+initializeChatLimiter();
+initializeReactionLimiter();
 
 /**
  * Initialize WebSocket handler
@@ -58,6 +64,16 @@ export function initializeLiveWebSocket(wss: WebSocket.Server) {
 
     console.log(`[WebSocket] User ${userId} connected to session ${sessionId}`);
 
+    // Announce user join to session
+    broadcastToSession(session.liveSessionId, {
+      type: "user_joined",
+      data: {
+        userId: session.userId,
+        username: session.username,
+        activeUsers: getSessionConnectionCount(session.liveSessionId),
+      },
+    });
+
     // Handle incoming messages
     ws.on("message", (data) => {
       handleMessage(data.toString(), session);
@@ -69,6 +85,15 @@ export function initializeLiveWebSocket(wss: WebSocket.Server) {
       console.log(
         `[WebSocket] User ${userId} disconnected from session ${sessionId}`
       );
+
+      // Announce user left to session
+      broadcastToSession(session.liveSessionId, {
+        type: "user_left",
+        data: {
+          userId: session.userId,
+          activeUsers: getSessionConnectionCount(session.liveSessionId),
+        },
+      });
     });
 
     // Handle errors
@@ -81,6 +106,9 @@ export function initializeLiveWebSocket(wss: WebSocket.Server) {
       JSON.stringify({
         type: "connected",
         message: "Connected to live session",
+        sessionId: session.liveSessionId,
+        userId: session.userId,
+        activeUsers: getSessionConnectionCount(session.liveSessionId),
       })
     );
   });
@@ -95,15 +123,19 @@ async function handleMessage(rawData: string, session: LiveSession) {
 
     switch (message.type) {
       case "chat":
-        await handleChatMessage(message.data, session);
+        await handleChatMessageEvent(message.data, session);
         break;
 
       case "reaction":
-        await handleReaction(message.data, session);
+        await handleReactionEvent(message.data, session);
         break;
 
       case "ping":
-        // Keep-alive ping
+        // Keep-alive ping - respond with pong
+        broadcastToSession(session.liveSessionId, {
+          type: "pong",
+          data: { timestamp: Date.now() },
+        });
         break;
 
       default:
@@ -115,66 +147,125 @@ async function handleMessage(rawData: string, session: LiveSession) {
 }
 
 /**
- * Handle chat message
+ * Handle chat message event with proper error response
  */
-async function handleChatMessage(
+async function handleChatMessageEvent(
   data: { message: string; color?: string },
   session: LiveSession
 ) {
-  const db = await getDb();
-  if (!db) return;
+  const result = await handleChatMessage(data, session.userId, session.liveSessionId);
 
-  try {
-    // Save message to database
-    const msg = await db
-      .insert(chatMessages)
-      .values({
-        liveSessionId: session.liveSessionId,
-        userId: session.userId,
-        message: data.message,
-        usernameColor: data.color || "#ffffff",
-      })
-      .returning();
-
-    // Broadcast to all connected clients in this session
-    broadcastToSession(session.liveSessionId, {
-      type: "chat_message",
-      data: msg[0],
-    });
-  } catch (error) {
-    console.error("Chat message error:", error);
+  if (!result.success) {
+    // Send error to sender only
+    const connectionId = `${session.liveSessionId}:${session.userId}`;
+    const senderWs = sessions.get(connectionId)?.ws;
+    if (senderWs && senderWs.readyState === WebSocket.OPEN) {
+      senderWs.send(
+        JSON.stringify({
+          type: "chat_error",
+          data: { error: result.error },
+        })
+      );
+    }
+    return;
   }
+
+  // Broadcast successful message to all in session
+  broadcastToSession(session.liveSessionId, {
+    type: "chat_message",
+    data: result.message,
+  });
 }
 
 /**
- * Handle reaction
+ * Handle reaction event with combo feedback
  */
-async function handleReaction(
-  data: { type: string },
+async function handleReactionEvent(
+  data: { reactionType: string },
   session: LiveSession
 ) {
-  // Broadcast reaction to all connected clients
+  const result = await handleReaction(
+    { reactionType: data.reactionType as any },
+    session.userId,
+    session.liveSessionId
+  );
+
+  if (!result.success) {
+    // Send error to sender only
+    const connectionId = `${session.liveSessionId}:${session.userId}`;
+    const senderWs = sessions.get(connectionId)?.ws;
+    if (senderWs && senderWs.readyState === WebSocket.OPEN) {
+      senderWs.send(
+        JSON.stringify({
+          type: "reaction_error",
+          data: { error: result.error },
+        })
+      );
+    }
+    return;
+  }
+
+  // Broadcast reaction to all in session
   broadcastToSession(session.liveSessionId, {
     type: "reaction",
     data: {
       userId: session.userId,
-      reactionType: data.type,
+      reactionType: data.reactionType,
       timestamp: new Date(),
+      combo: result.combo,
+      reaction: result.reaction,
     },
   });
 }
+
 
 /**
  * Broadcast to all clients in a session
  */
 function broadcastToSession(liveSessionId: number, message: Message) {
   const payload = JSON.stringify(message);
+  let broadcastCount = 0;
 
   sessions.forEach(({ ws, session }) => {
     if (session.liveSessionId === liveSessionId && ws.readyState === WebSocket.OPEN) {
-      ws.send(payload);
+      try {
+        ws.send(payload);
+        broadcastCount++;
+      } catch (error) {
+        console.error(`[WebSocket] Failed to send message to user ${session.userId}:`, error);
+      }
     }
   });
+
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      `[WebSocket] Broadcast to ${broadcastCount} users in session ${liveSessionId}`
+    );
+  }
+}
+
+/**
+ * Broadcast to specific user(s)
+ */
+function broadcastToUser(
+  userId: number,
+  liveSessionId: number,
+  message: Message
+) {
+  const payload = JSON.stringify(message);
+  const connectionId = `${liveSessionId}:${userId}`;
+  const connection = sessions.get(connectionId);
+
+  if (connection && connection.ws.readyState === WebSocket.OPEN) {
+    try {
+      connection.ws.send(payload);
+    } catch (error) {
+      console.error(
+        `[WebSocket] Failed to send message to user ${userId}:`,
+        error
+      );
+    }
+  }
 }
 
 /**
@@ -200,22 +291,111 @@ export async function broadcastNotification(
 
   if (userId) {
     // Send to specific user
-    const connectionId = Array.from(sessions.entries()).find(
-      ([key, val]) =>
-        val.session.userId === userId &&
-        val.session.liveSessionId === liveSessionId
-    )?.[0];
-
-    if (connectionId) {
-      const { ws } = sessions.get(connectionId)!;
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-      }
-    }
+    broadcastToUser(userId, liveSessionId, message);
   } else {
     // Broadcast to all in session
     broadcastToSession(liveSessionId, message);
   }
+}
+
+/**
+ * Broadcast donation event
+ */
+export function broadcastDonation(
+  liveSessionId: number,
+  donation: {
+    userId: number;
+    amount: number;
+    currency: string;
+    message?: string;
+    anonymous?: boolean;
+  }
+) {
+  broadcastToSession(liveSessionId, {
+    type: "notification",
+    data: {
+      type: "donation",
+      title: "New Donation!",
+      message: donation.message || `${donation.amount} ${donation.currency} donation`,
+      metadata: donation,
+      timestamp: new Date(),
+    },
+  });
+}
+
+/**
+ * Broadcast subscriber event
+ */
+export function broadcastSubscriber(
+  liveSessionId: number,
+  subscriber: {
+    userId: number;
+    username: string;
+    tier: string;
+  }
+) {
+  broadcastToSession(liveSessionId, {
+    type: "notification",
+    data: {
+      type: "subscriber",
+      title: "New Subscriber!",
+      message: `${subscriber.username} subscribed at ${subscriber.tier} tier!`,
+      metadata: subscriber,
+      timestamp: new Date(),
+    },
+  });
+}
+
+/**
+ * Broadcast follower event
+ */
+export function broadcastFollower(
+  liveSessionId: number,
+  follower: {
+    userId: number;
+    username: string;
+  }
+) {
+  broadcastToSession(liveSessionId, {
+    type: "notification",
+    data: {
+      type: "follower",
+      title: "New Follower!",
+      message: `${follower.username} followed!`,
+      metadata: follower,
+      timestamp: new Date(),
+    },
+  });
+}
+
+/**
+ * Broadcast admin action
+ */
+export function broadcastAdminAction(
+  liveSessionId: number,
+  action: {
+    type: "message_deleted" | "message_pinned" | "user_muted" | "user_banned";
+    targetId: number;
+    reason?: string;
+  }
+) {
+  const actionTitles: Record<string, string> = {
+    message_deleted: "Message Deleted",
+    message_pinned: "Message Pinned",
+    user_muted: "User Muted",
+    user_banned: "User Banned",
+  };
+
+  broadcastToSession(liveSessionId, {
+    type: "notification",
+    data: {
+      type: "admin_action",
+      title: actionTitles[action.type],
+      message: `Admin action: ${action.type}`,
+      metadata: action,
+      timestamp: new Date(),
+    },
+  });
 }
 
 /**
@@ -241,4 +421,22 @@ export function closeSessionConnections(liveSessionId: number) {
       sessions.delete(connectionId);
     }
   });
+}
+
+/**
+ * Setup WebSocket server for live chat
+ * Call this in the main server setup
+ */
+export function setupLiveWebSocket(server: any) {
+  const wss = new WebSocketServer({ noServer: true });
+
+  server.on("upgrade", (request: any, socket: any, head: any) => {
+    if (request.url?.startsWith("/ws/live")) {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        initializeLiveWebSocket(wss);
+      });
+    }
+  });
+
+  console.log("[WebSocket] Live chat WebSocket server initialized");
 }

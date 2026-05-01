@@ -17,6 +17,7 @@
 import { asc, desc, eq, gt, lt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo, blogPosts, InsertBlogPost, faqs, InsertFAQ, contactMessages, InsertContactMessage, printfullProducts, InsertPrintfullProduct, merchOrders, InsertMerchOrder, products, refundRequests, InsertRefundRequest, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, liveSessions, InsertLiveSession, cues, InsertCue, platformLiveStatus, InsertPlatformLiveStatus } from "../drizzle/schema";
+import { chatMessages, donations, reactions, polls, pollVotes, leaderboards, notifications, userBadges, streamerStats, customEmotes, raids, socialLinks } from "../drizzle/engagement-schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ENV } from './_core/env';
@@ -3675,4 +3676,70 @@ export async function markRefundAsRefunded(id: number) {
     .where(eq(refundRequests.id, id));
 
   return true;
+}
+
+// Stub implementations for AI features (not yet implemented)
+export async function getUserByOpenId(openId: string) {
+  // TODO: Implement OpenID user lookup
+  return null;
+}
+
+export async function createGovernanceLog(data: any) {
+  // TODO: Implement governance logging
+  return null;
+}
+
+export async function createAIScriptJob(data: any) {
+  // TODO: Implement AI script job creation
+  return { id: Math.random(), ...data };
+}
+
+export async function getAIScriptJob(jobId: string | number) {
+  // TODO: Implement AI script job retrieval
+  return null;
+}
+
+export async function updateAIScriptJob(jobId: string | number, updates: any) {
+  // TODO: Implement AI script job updates
+  return null;
+}
+
+export async function createAIVideoJob(data: any) {
+  // TODO: Implement AI video job creation
+  return { id: Math.random(), ...data };
+}
+
+export async function getAIVideoJob(jobId: string | number) {
+  // TODO: Implement AI video job retrieval
+  return null;
+}
+
+export async function createAIVoiceJob(data: any) {
+  // TODO: Implement AI voice job creation
+  return { id: Math.random(), ...data };
+}
+
+export async function getAIVoiceJob(jobId: string | number) {
+  // TODO: Implement AI voice job retrieval
+  return null;
+}
+
+export async function updateAIVoiceJob(jobId: string | number, updates: any) {
+  // TODO: Implement AI voice job updates
+  return null;
+}
+
+export async function createUserWithPassword(input: any) {
+  // TODO: Implement user creation with password
+  return null;
+}
+
+export async function getAllMixes() {
+  // TODO: Implement get all mixes
+  return [];
+}
+
+export async function getFreeMixes() {
+  // TODO: Implement get free mixes
+  return [];
 }

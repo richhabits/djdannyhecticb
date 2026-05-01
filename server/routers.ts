@@ -15,6 +15,11 @@ import { blogRouter } from "./routers/blogRouter";
 import { faqRouter } from "./routers/faqRouter";
 import { contactRouter } from "./routers/contactRouter";
 import { merchRouter } from "./routers/merchRouter";
+import { liveRouter } from "./routers/liveRouter";
+import { moderationRouter } from "./routers/moderationRouter";
+import { analyticsRouter } from "./routers/analyticsRouter";
+import { donationsRouter } from "./routers/donationsRouter";
+import { supportRouter } from "./routers/supportRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -32,6 +37,10 @@ export const appRouter = router({
   faq: faqRouter,
   contact: contactRouter,
   merch: merchRouter,
+  moderation: moderationRouter,
+  analytics: analyticsRouter,
+  donations: donationsRouter,
+  support: supportRouter,
 
   // Alias for frontend compatibility
   events: router({
@@ -2451,6 +2460,9 @@ export const appRouter = router({
   }),
 
   live: router({
+    // ==========================================
+    // SESSION MANAGEMENT
+    // ==========================================
     getCurrentLive: publicProcedure.query(() => db.getCurrentLiveSession()),
     adminSchedule: adminProcedure
       .input(z.object({
@@ -2503,6 +2515,18 @@ export const appRouter = router({
         limit: z.number().default(50),
       }))
       .query(({ input }) => db.listLiveSessions(input.showId, input.limit)),
+
+    // ==========================================
+    // ENGAGEMENT FEATURES
+    // ==========================================
+    chat: liveRouter.chat,
+    donations: liveRouter.donations,
+    reactions: liveRouter.reactions,
+    polls: liveRouter.polls,
+    leaderboard: liveRouter.leaderboard,
+    stats: liveRouter.stats,
+    notifications: liveRouter.notifications,
+    social: liveRouter.social,
   }),
 
   cues: router({

@@ -25,6 +25,7 @@ import { registerUploadRoutes } from "../routes/upload";
 import { registerWebhookRoutes } from "../routes/webhooks";
 import { registerCronRoutes } from "../routes/cron";
 import streamEventsRouter, { setupStreamWebSocket } from "../routers/streamEventsRouter";
+import { setupLiveWebSocket } from "../routers/liveWebSocket";
 import stripeEventsRouter from "../routers/stripeEventsRouter";
 import youtubeEventsRouter from "../routers/youtubeEventsRouter";
 import ticketmasterRouter from "../routers/ticketmasterRouter";
@@ -66,6 +67,9 @@ async function startServer() {
 
   // Setup WebSocket for stream events
   setupStreamWebSocket(server);
+
+  // Setup WebSocket for live chat and reactions
+  setupLiveWebSocket(server);
 
   // Request ID and Logging (First)
   app.use(requestIdMiddleware);

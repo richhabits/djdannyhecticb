@@ -89,6 +89,9 @@ import AdminHub from "./pages/AdminHub";
 import AdminShop from "./pages/AdminShop";
 import AdminMerch from "./pages/AdminMerch";
 import AdminMusicCatalog from "./pages/AdminMusicCatalog";
+import AdminModeration from "./pages/AdminModeration";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminStreamControl from "./pages/AdminStreamControl";
 import { GlobalBanner } from "./components/GlobalBanner";
 import { LiveAudioPlayer } from "./components/LiveAudioPlayer";
 import { AIDannyFloating } from "./components/AIDannyFloating";
@@ -108,6 +111,7 @@ import VIP from "./pages/VIP";
 import BookingQuote from "./pages/BookingQuote";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import { CartProvider } from "./contexts/CartContext";
+import { StripeProvider } from "./contexts/StripeProvider";
 
 function Router() {
   return (
@@ -204,6 +208,9 @@ function Router() {
       <Route path={"/admin/music-catalog"} component={AdminMusicCatalog} />
       <Route path={"/admin/blog"} component={AdminBlog} />
       <Route path={"/admin/faq"} component={AdminFAQ} />
+      <Route path={"/admin/moderation"} component={AdminModeration} />
+      <Route path={"/admin/analytics"} component={AdminAnalytics} />
+      <Route path={"/admin/stream-control"} component={AdminStreamControl} />
       <Route path={"/vip"} component={VIP} />
       <Route path={"/booking-quote/:id"} component={BookingQuote} />
       <Route path={"/admin/showcase"} component={ComponentShowcase} />
@@ -230,12 +237,13 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <CartProvider>
-        <ThemeProvider
-          defaultTheme="dark"
-        // switchable
-        >
-          <TooltipProvider>
+      <StripeProvider>
+        <CartProvider>
+          <ThemeProvider
+            defaultTheme="dark"
+          // switchable
+          >
+            <TooltipProvider>
             <>
               {/* Skip Link - Accessibility: Jump to main content */}
               <a href="#main-content" className="skip-link">
@@ -258,9 +266,10 @@ function App() {
                 {/* <SocialProofNotifications /> */}
               </div>
             </>
-          </TooltipProvider>
-        </ThemeProvider>
-      </CartProvider>
+            </TooltipProvider>
+          </ThemeProvider>
+        </CartProvider>
+      </StripeProvider>
     </ErrorBoundary>
   );
 }

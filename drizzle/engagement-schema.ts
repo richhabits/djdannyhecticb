@@ -37,6 +37,9 @@ export const userBadgeTypeEnum = pgEnum("user_badge_type", [
   "donation_500",
   "donation_1000",
   "vip",
+  "banned",
+  "muted",
+  "warned",
 ]);
 
 export const reactionTypeEnum = pgEnum("reaction_type", [

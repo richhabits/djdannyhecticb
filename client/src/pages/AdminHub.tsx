@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import {
   Settings, Zap, Radio, Music, ShoppingCart, Brain, BarChart3, Megaphone,
   Users, Cpu, Code, Video, Volume2, Bookmark, Share2, TrendingUp,
-  Lock, AlertCircle, Lightbulb, Monitor, Shield, Package
+  Lock, AlertCircle, Lightbulb, Monitor, Shield, Package, AlertTriangle
 } from "lucide-react";
 
 export default function AdminHub() {
@@ -82,7 +82,7 @@ export default function AdminHub() {
     {
       name: "Podcasts",
       description: "Podcast publishing & episodes",
-      icon: Microphone,
+      icon: Volume2,
       href: "/admin/podcasts",
       category: "broadcast",
       color: "text-violet-500",
@@ -114,7 +114,7 @@ export default function AdminHub() {
     {
       name: "AI Voice",
       description: "Voice synthesis & narration",
-      icon: Microphone,
+      icon: Volume2,
       href: "/admin/ai-voice",
       category: "ai",
       color: "text-teal-500",
@@ -190,6 +190,30 @@ export default function AdminHub() {
       href: "/admin/music-catalog",
       category: "integrations",
       color: "text-purple-400",
+    },
+    {
+      name: "Moderation",
+      description: "Chat moderation, bans, mutes & warnings",
+      icon: AlertTriangle,
+      href: "/admin/moderation",
+      category: "engagement",
+      color: "text-red-500",
+    },
+    {
+      name: "Analytics",
+      description: "Stream metrics, chat stats & donations",
+      icon: BarChart3,
+      href: "/admin/analytics",
+      category: "business",
+      color: "text-green-500",
+    },
+    {
+      name: "Stream Control",
+      description: "Live stream management & quality control",
+      icon: Radio,
+      href: "/admin/stream-control",
+      category: "broadcast",
+      color: "text-red-600",
     },
   ];
 
