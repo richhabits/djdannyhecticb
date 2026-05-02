@@ -4,7 +4,7 @@ import {
   Heart,
   Flame,
   Smile,
-  HandThumbsUp,
+  ThumbsUp,
   BarChart3,
 } from "lucide-react";
 

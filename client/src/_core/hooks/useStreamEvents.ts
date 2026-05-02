@@ -21,7 +21,7 @@ interface StreamEventHandlers {
 
 export function useStreamEvents(handlers: StreamEventHandlers) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const connectWebSocket = useCallback(() => {
     try {

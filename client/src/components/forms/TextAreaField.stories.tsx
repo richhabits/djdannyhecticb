@@ -110,7 +110,7 @@ function InteractiveTextAreaWrapper() {
     ? `Message must be at least ${minLength} characters`
     : undefined;
 
-  const success = touched && value && value.length >= minLength;
+  const success = !!(touched && value && value.length >= minLength);
 
   return (
     <TextAreaField

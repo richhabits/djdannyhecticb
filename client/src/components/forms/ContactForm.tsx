@@ -76,7 +76,7 @@ export function ContactForm() {
     setTouched((prev) => ({ ...prev, [field]: true }));
 
     const fieldErrors = validateForm(
-      formData,
+      formData as unknown as Record<string, string>,
       { [field]: validationRules[field as keyof ContactFormData] }
     );
 
@@ -88,7 +88,7 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validationErrors = validateForm(formData, validationRules);
+    const validationErrors = validateForm(formData as unknown as Record<string, string>, validationRules);
     setErrors(validationErrors);
     setTouched({
       name: true,

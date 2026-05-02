@@ -47,7 +47,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!isVisible || prefersReducedMotion) return;
+    if (!isVisible || prefersReducedMotion || !onTransitionComplete) return;
 
     const timer = setTimeout(onTransitionComplete, duration);
     return () => clearTimeout(timer);

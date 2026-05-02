@@ -132,7 +132,7 @@ function InteractiveFieldWrapper() {
     ? 'Please enter a valid email address'
     : undefined;
 
-  const success = touched && value && validateEmail(value);
+  const success = !!(touched && value && validateEmail(value));
 
   return (
     <FormField

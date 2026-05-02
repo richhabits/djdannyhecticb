@@ -65,7 +65,6 @@ export {
   PageTransition,
   FadeInUp,
   FadeOutDown,
-  StaggeredTransition,
 } from './PageTransition';
 
 export {

@@ -74,7 +74,7 @@ export function DonationForm() {
     setTouched((prev) => ({ ...prev, [field]: true }));
 
     const fieldErrors = validateForm(
-      formData,
+      formData as unknown as Record<string, string>,
       { [field]: validationRules[field as keyof DonationFormData] }
     );
 
@@ -86,7 +86,7 @@ export function DonationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validationErrors = validateForm(formData, validationRules);
+    const validationErrors = validateForm(formData as unknown as Record<string, string>, validationRules);
     setErrors(validationErrors);
     setTouched({
       donorName: true,

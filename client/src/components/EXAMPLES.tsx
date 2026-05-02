@@ -3,7 +3,7 @@
  * Real-world examples of implementing the live streaming system
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StreamerLiveLayout } from "./StreamerLiveLayout";
 import { VideoPlayerSection } from "./VideoPlayerSection";
 import { ViewerStats } from "./ViewerStats";
@@ -389,7 +389,7 @@ export function MobileBottomSheetExample() {
 export function ResponsiveLayoutExample() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024);
     };
