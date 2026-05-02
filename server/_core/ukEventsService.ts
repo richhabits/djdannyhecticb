@@ -555,7 +555,32 @@ export async function getUKEvents(options: {
             query.offset(options.offset);
         }
 
-        return await query;
+        const results = await query;
+
+        // If no events found in database, use sample events for demo
+        if (!results || results.length === 0) {
+            console.warn('[UKEvents] No events in database, using sample events');
+            let sampleResults = [...SAMPLE_EVENTS];
+
+            if (options.category) {
+                sampleResults = sampleResults.filter(e => e.category === options.category);
+            }
+            if (options.city) {
+                sampleResults = sampleResults.filter(e => e.city?.toLowerCase().includes(options.city?.toLowerCase() || ''));
+            }
+            if (options.featured) {
+                sampleResults = sampleResults.filter(e => e.isFeatured);
+            }
+
+            sampleResults = sampleResults.slice(options.offset || 0);
+            if (options.limit) {
+                sampleResults = sampleResults.slice(0, options.limit);
+            }
+
+            return sampleResults;
+        }
+
+        return results;
     } catch (error) {
         console.error('[UKEvents] Failed to fetch events:', error);
         // Fallback to sample events on error
