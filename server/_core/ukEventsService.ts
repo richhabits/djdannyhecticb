@@ -503,89 +503,23 @@ export async function getUKEvents(options: {
     offset?: number;
     featured?: boolean;
 }): Promise<UKEvent[]> {
-    const db = await getDb();
-    if (!db) {
-        // Return sample events when database is unavailable
-        console.warn('[UKEvents] Database unavailable, returning sample events for demo');
-        let results = [...SAMPLE_EVENTS];
+    // Always use sample events for now - demo mode
+    let results = [...SAMPLE_EVENTS];
 
-        if (options.category) {
-            results = results.filter(e => e.category === options.category);
-        }
-        if (options.city) {
-            results = results.filter(e => e.city?.toLowerCase().includes(options.city?.toLowerCase() || ''));
-        }
-        if (options.featured) {
-            results = results.filter(e => e.isFeatured);
-        }
-
-        results = results.slice(options.offset || 0);
-        if (options.limit) {
-            results = results.slice(0, options.limit);
-        }
-
-        return results;
+    if (options.category) {
+        results = results.filter(e => e.category === options.category);
+    }
+    if (options.city) {
+        results = results.filter(e => e.city?.toLowerCase().includes(options.city?.toLowerCase() || ''));
+    }
+    if (options.featured) {
+        results = results.filter(e => e.isFeatured);
     }
 
-    try {
-        const conditions = [gt(ukEvents.eventDate, new Date())];
+    const offset = options.offset || 0;
+    const limit = options.limit || 20;
 
-        if (options.category) {
-            conditions.push(eq(ukEvents.category, options.category));
-        }
-
-        if (options.city) {
-            conditions.push(ilike(ukEvents.city, `%${options.city}%`));
-        }
-
-        if (options.featured) {
-            conditions.push(eq(ukEvents.isFeatured, true));
-        }
-
-        const query = db.select()
-            .from(ukEvents)
-            .where(and(...conditions))
-            .orderBy(desc(ukEvents.eventDate));
-
-        if (options.limit) {
-            query.limit(options.limit);
-        }
-
-        if (options.offset) {
-            query.offset(options.offset);
-        }
-
-        const results = await query;
-
-        // If no events found in database, use sample events for demo
-        if (!results || results.length === 0) {
-            console.warn('[UKEvents] No events in database, using sample events');
-            let sampleResults = [...SAMPLE_EVENTS];
-
-            if (options.category) {
-                sampleResults = sampleResults.filter(e => e.category === options.category);
-            }
-            if (options.city) {
-                sampleResults = sampleResults.filter(e => e.city?.toLowerCase().includes(options.city?.toLowerCase() || ''));
-            }
-            if (options.featured) {
-                sampleResults = sampleResults.filter(e => e.isFeatured);
-            }
-
-            sampleResults = sampleResults.slice(options.offset || 0);
-            if (options.limit) {
-                sampleResults = sampleResults.slice(0, options.limit);
-            }
-
-            return sampleResults;
-        }
-
-        return results;
-    } catch (error) {
-        console.error('[UKEvents] Failed to fetch events:', error);
-        // Fallback to sample events on error
-        return SAMPLE_EVENTS.slice(0, options.limit || 10);
-    }
+    return results.slice(offset, offset + limit);
 }
 
 /**
