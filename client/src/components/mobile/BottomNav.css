@@ -1,0 +1,156 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #0a0a0a;
+  border-top: 1px solid #333;
+  z-index: 250;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(10, 10, 10, 0.95);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.bottom-nav__container {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.5rem 0;
+  height: 100%;
+}
+
+.bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  flex: 1;
+  max-width: 64px;
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+  border-radius: 8px;
+  margin: 0 4px;
+
+  /* Minimum touch target size: 48px */
+  min-height: 48px;
+  min-width: 48px;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: rgba(249, 115, 22, 0.1);
+      color: #f97316;
+    }
+  }
+
+  &:active {
+    background-color: rgba(249, 115, 22, 0.15);
+    transform: scale(0.95);
+  }
+}
+
+.bottom-nav__item--active {
+  color: #f97316;
+  font-weight: 600;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #f97316;
+    border-radius: 2px 2px 0 0;
+  }
+}
+
+.bottom-nav__icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: transform 200ms ease-out;
+
+  .bottom-nav__item--active & {
+    transform: scale(1.1);
+  }
+}
+
+.bottom-nav__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ff4444;
+  color: white;
+  border-radius: 9999px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #0a0a0a;
+  animation: pulse 2s infinite;
+}
+
+.bottom-nav__label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 68, 68, 0);
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .bottom-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav__item {
+    padding: 0.5rem 0.25rem;
+    min-width: 44px;
+  }
+
+  .bottom-nav__label {
+    font-size: 11px;
+  }
+}
+
+/* Safe area for notch and home indicator */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}

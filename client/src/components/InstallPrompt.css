@@ -1,0 +1,195 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+.install-prompt {
+  position: fixed;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  margin: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+  border: 1px solid #333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 240;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.install-prompt--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.install-prompt__content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.install-prompt__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.install-prompt__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.install-prompt__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 200ms;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(249, 115, 22, 0.2);
+    transform: rotate(90deg);
+  }
+
+  &:active {
+    transform: rotate(90deg) scale(0.95);
+  }
+}
+
+.install-prompt__description {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.install-prompt__benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.install-prompt__benefit {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.install-prompt__benefit-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.install-prompt__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.install-prompt__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms;
+  min-height: 44px;
+  -webkit-user-select: none;
+  user-select: none;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.install-prompt__btn--primary {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
+  }
+}
+
+.install-prompt__btn--secondary {
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.2);
+
+  &:hover {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: rgba(249, 115, 22, 0.3);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .install-prompt {
+    bottom: 80px;
+    left: 0.5rem;
+    right: 0.5rem;
+    margin: 0;
+  }
+
+  .install-prompt__content {
+    padding: 1rem;
+  }
+
+  .install-prompt__title {
+    font-size: 16px;
+  }
+
+  .install-prompt__description {
+    font-size: 13px;
+  }
+}
+
+/* Safe area handling for notch */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .install-prompt {
+    margin-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .install-prompt {
+    transition: opacity 200ms;
+  }
+
+  .install-prompt__close {
+    transition: none;
+  }
+
+  .install-prompt__btn {
+    transition: none;
+  }
+}

@@ -412,3 +412,293 @@ export const socialLinks = pgTable(
 
 export type SocialLink = typeof socialLinks.$inferSelect;
 export type InsertSocialLink = typeof socialLinks.$inferInsert;
+
+// ==========================================
+// USER PROFILES (Extended Profile Data)
+// ==========================================
+export const userProfiles = pgTable(
+  "user_profiles_extended",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().unique(),
+    bio: varchar("bio", { length: 500 }),
+    avatarUrl: varchar("avatar_url", { length: 512 }),
+    bannerUrl: varchar("banner_url", { length: 512 }),
+    pronouns: varchar("pronouns", { length: 50 }),
+    location: varchar("location", { length: 255 }),
+    verified: boolean("verified").default(false).notNull(),
+    verificationBadge: varchar("verification_badge", { length: 50 }), // dj, creator, artist, etc
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("user_profiles_user_idx").on(table.userId),
+    verifiedIdx: index("user_profiles_verified_idx").on(table.verified),
+  })
+);
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
+
+// ==========================================
+// FOLLOWS (Follow Relationships)
+// ==========================================
+export const follows = pgTable(
+  "follows",
+  {
+    id: serial("id").primaryKey(),
+    followerId: integer("follower_id").notNull(),
+    followingId: integer("following_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    followerIdx: index("follows_follower_idx").on(table.followerId),
+    followingIdx: index("follows_following_idx").on(table.followingId),
+    uniqueFollow: unique("follows_unique").on(table.followerId, table.followingId),
+  })
+);
+
+export type Follow = typeof follows.$inferSelect;
+export type InsertFollow = typeof follows.$inferInsert;
+
+// ==========================================
+// DIRECT MESSAGES (Private Messaging)
+// ==========================================
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: serial("id").primaryKey(),
+    user1Id: integer("user1_id").notNull(),
+    user2Id: integer("user2_id").notNull(),
+    lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    user1Idx: index("conversations_user1_idx").on(table.user1Id),
+    user2Idx: index("conversations_user2_idx").on(table.user2Id),
+    uniqueConversation: unique("conversations_unique").on(table.user1Id, table.user2Id),
+  })
+);
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+
+export const directMessages = pgTable(
+  "direct_messages",
+  {
+    id: serial("id").primaryKey(),
+    conversationId: integer("conversation_id").notNull(),
+    senderId: integer("sender_id").notNull(),
+    content: text("content").notNull(),
+    imageUrl: varchar("image_url", { length: 512 }),
+    readAt: timestamp("read_at"),
+    deletedAt: timestamp("deleted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    conversationIdx: index("direct_messages_conversation_idx").on(table.conversationId),
+    senderIdx: index("direct_messages_sender_idx").on(table.senderId),
+    readIdx: index("direct_messages_read_idx").on(table.readAt),
+  })
+);
+
+export type DirectMessage = typeof directMessages.$inferSelect;
+export type InsertDirectMessage = typeof directMessages.$inferInsert;
+
+// ==========================================
+// CLIP COMMENTS (Comment System)
+// ==========================================
+export const clipComments = pgTable(
+  "clip_comments",
+  {
+    id: serial("id").primaryKey(),
+    clipId: integer("clip_id").notNull(),
+    userId: integer("user_id").notNull(),
+    content: text("content").notNull(),
+    parentCommentId: integer("parent_comment_id"), // For threaded replies
+    likeCount: integer("like_count").default(0).notNull(),
+    isDeleted: boolean("is_deleted").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    clipIdx: index("clip_comments_clip_idx").on(table.clipId),
+    userIdx: index("clip_comments_user_idx").on(table.userId),
+    parentIdx: index("clip_comments_parent_idx").on(table.parentCommentId),
+  })
+);
+
+export type ClipComment = typeof clipComments.$inferSelect;
+export type InsertClipComment = typeof clipComments.$inferInsert;
+
+export const commentLikes = pgTable(
+  "comment_likes",
+  {
+    id: serial("id").primaryKey(),
+    commentId: integer("comment_id").notNull(),
+    userId: integer("user_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    commentIdx: index("comment_likes_comment_idx").on(table.commentId),
+    userIdx: index("comment_likes_user_idx").on(table.userId),
+    uniqueLike: unique("comment_likes_unique").on(table.commentId, table.userId),
+  })
+);
+
+export type CommentLike = typeof commentLikes.$inferSelect;
+export type InsertCommentLike = typeof commentLikes.$inferInsert;
+
+// ==========================================
+// REPORTS (Safety & Moderation)
+// ==========================================
+export const reportReasonEnum = pgEnum("report_reason", [
+  "spam",
+  "harassment",
+  "hate_speech",
+  "inappropriate_content",
+  "misinformation",
+  "impersonation",
+  "scam",
+  "other",
+]);
+
+export const reportStatusEnum = pgEnum("report_status", [
+  "open",
+  "reviewing",
+  "resolved",
+  "dismissed",
+]);
+
+export const reports = pgTable(
+  "reports",
+  {
+    id: serial("id").primaryKey(),
+    reporterId: integer("reporter_id").notNull(),
+    reportedUserId: integer("reported_user_id"),
+    reportedCommentId: integer("reported_comment_id"),
+    reason: reportReasonEnum("reason").notNull(),
+    description: text("description"),
+    status: reportStatusEnum("status").default("open").notNull(),
+    reviewedBy: integer("reviewed_by"),
+    reviewNote: text("review_note"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    resolvedAt: timestamp("resolved_at"),
+  },
+  (table) => ({
+    reporterIdx: index("reports_reporter_idx").on(table.reporterId),
+    reportedUserIdx: index("reports_reported_user_idx").on(table.reportedUserId),
+    reportedCommentIdx: index("reports_reported_comment_idx").on(table.reportedCommentId),
+    statusIdx: index("reports_status_idx").on(table.status),
+  })
+);
+
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
+
+export const userBans = pgTable(
+  "user_bans",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    reason: text("reason").notNull(),
+    bannedBy: integer("banned_by").notNull(),
+    startDate: timestamp("start_date").defaultNow().notNull(),
+    endDate: timestamp("end_date"),
+    appealedAt: timestamp("appealed_at"),
+    appealReason: text("appeal_reason"),
+    appealStatus: varchar("appeal_status", { length: 50 }), // pending, approved, denied
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("user_bans_user_idx").on(table.userId),
+    endDateIdx: index("user_bans_end_date_idx").on(table.endDate),
+  })
+);
+
+export type UserBan = typeof userBans.$inferSelect;
+export type InsertUserBan = typeof userBans.$inferInsert;
+
+// ==========================================
+// REPUTATION & BADGES
+// ==========================================
+export const reputationScores = pgTable(
+  "reputation_scores",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().unique(),
+    score: integer("score").default(0).notNull(),
+    trustLevel: varchar("trust_level", { length: 50 }).default("new").notNull(), // new, contributor, trusted, influencer
+    messagesCount: integer("messages_count").default(0).notNull(),
+    clipsCount: integer("clips_count").default(0).notNull(),
+    donationsCount: integer("donations_count").default(0).notNull(),
+    violationsCount: integer("violations_count").default(0).notNull(),
+    lastUpdatedAt: timestamp("last_updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("reputation_scores_user_idx").on(table.userId),
+    scoreIdx: index("reputation_scores_score_idx").on(table.score),
+  })
+);
+
+export type ReputationScore = typeof reputationScores.$inferSelect;
+export type InsertReputationScore = typeof reputationScores.$inferInsert;
+
+export const reputationBadgeTypeEnum = pgEnum("reputation_badge_type", [
+  "trusted",
+  "contributor",
+  "influencer",
+  "moderator",
+  "verified",
+  "early_supporter",
+  "community_champion",
+]);
+
+export const reputationBadges = pgTable(
+  "reputation_badges",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    badgeType: reputationBadgeTypeEnum("badge_type").notNull(),
+    earnedAt: timestamp("earned_at").defaultNow().notNull(),
+    metadata: json("metadata").$type<Record<string, any>>().default({}),
+  },
+  (table) => ({
+    userIdx: index("reputation_badges_user_idx").on(table.userId),
+    badgeIdx: index("reputation_badges_badge_idx").on(table.badgeType),
+    uniqueBadge: unique("reputation_badges_unique").on(table.userId, table.badgeType),
+  })
+);
+
+export type ReputationBadge = typeof reputationBadges.$inferSelect;
+export type InsertReputationBadge = typeof reputationBadges.$inferInsert;
+
+// ==========================================
+// COMMUNITY HIGHLIGHTS
+// ==========================================
+export const communityHighlights = pgTable(
+  "community_highlights",
+  {
+    id: serial("id").primaryKey(),
+    type: varchar("type", { length: 50 }).notNull(), // clip_of_week, top_contributor, comment_of_day, top_donor
+    featuredUserId: integer("featured_user_id"),
+    featuredCommentId: integer("featured_comment_id"),
+    featuredClipId: integer("featured_clip_id"),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    reason: text("reason"),
+    featuredBy: integer("featured_by").notNull(), // Admin user ID
+    startDate: timestamp("start_date").defaultNow().notNull(),
+    endDate: timestamp("end_date"),
+    viewCount: integer("view_count").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("community_highlights_user_idx").on(table.featuredUserId),
+    commentIdx: index("community_highlights_comment_idx").on(table.featuredCommentId),
+    typeIdx: index("community_highlights_type_idx").on(table.type),
+  })
+);
+
+export type CommunityHighlight = typeof communityHighlights.$inferSelect;
+export type InsertCommunityHighlight = typeof communityHighlights.$inferInsert;

@@ -1,0 +1,149 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #fff;
+  position: relative;
+}
+
+.app-shell--full-height {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-shell__header {
+  flex-shrink: 0;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  background-color: #0a0a0a;
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.app-shell__main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.app-shell__content {
+  width: 100%;
+  height: 100%;
+  padding-left: max(0, env(safe-area-inset-left));
+  padding-right: max(0, env(safe-area-inset-right));
+}
+
+.app-shell__bottom-nav-spacer {
+  height: max(80px, calc(80px + env(safe-area-inset-bottom)));
+  flex-shrink: 0;
+}
+
+/* Safe area view */
+.safe-area-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Viewport dimensions accounting for safe areas */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .app-shell {
+    padding-left: max(0, env(safe-area-inset-left));
+    padding-right: max(0, env(safe-area-inset-right));
+  }
+
+  .app-shell__header {
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .app-shell__header {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  .app-shell__main {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  .app-shell__header {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+
+  .app-shell__bottom-nav-spacer {
+    height: max(64px, calc(64px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* Dark mode (already dark by default) */
+@media (prefers-color-scheme: dark) {
+  .app-shell {
+    background-color: #0a0a0a;
+    color: #fff;
+  }
+
+  .app-shell__header {
+    background-color: #0a0a0a;
+    border-bottom-color: #333;
+  }
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+  .app-shell {
+    background-color: #f5f5f5;
+    color: #000;
+  }
+
+  .app-shell__header {
+    background-color: #f5f5f5;
+    border-bottom-color: #e0e0e0;
+  }
+}
+
+/* Status bar theming (for supported browsers) */
+@supports (border-top: 1px solid black) {
+  @media (max-width: 768px) {
+    .app-shell {
+      /* iOS status bar theming via meta tag and CSS */
+      --status-bar-bg: #0a0a0a;
+      --status-bar-text: white;
+    }
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: more) {
+  .app-shell__header {
+    border-bottom-color: #666;
+  }
+
+  .app-shell {
+    background-color: #000;
+  }
+}

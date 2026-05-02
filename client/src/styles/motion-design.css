@@ -1,0 +1,787 @@
+/**
+ * Advanced Motion Design System
+ * 50+ motion patterns for page transitions, interactions, and micro-animations
+ * Last updated: 2026-05-01
+ */
+
+/* ============================================================================
+   PAGE TRANSITION ANIMATIONS
+   ============================================================================ */
+
+/* Fade transition (generic, safe) */
+@keyframes pageTransitionFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pageTransitionFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.page-transition-fade {
+  animation: pageTransitionFadeIn 300ms ease-out forwards;
+}
+
+.page-transition-fade-exit {
+  animation: pageTransitionFadeOut 300ms ease-in forwards;
+}
+
+/* Slide in from left (navigation forward) */
+@keyframes pageTransitionSlideInFromLeft {
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pageTransitionSlideOutToRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+}
+
+.page-transition-slide-in-left {
+  animation: pageTransitionSlideInFromLeft 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.page-transition-slide-out-right {
+  animation: pageTransitionSlideOutToRight 400ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* Slide in from right (navigation backward) */
+@keyframes pageTransitionSlideInFromRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pageTransitionSlideOutToLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+}
+
+.page-transition-slide-in-right {
+  animation: pageTransitionSlideInFromRight 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.page-transition-slide-out-left {
+  animation: pageTransitionSlideOutToLeft 400ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* Scale and fade (entrance/exit emphasis) */
+@keyframes pageTransitionScaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pageTransitionScaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.page-transition-scale-in {
+  animation: pageTransitionScaleIn 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.page-transition-scale-out {
+  animation: pageTransitionScaleOut 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* Vertical slide (modal/panel appearance) */
+@keyframes pageTransitionSlideInFromBottom {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pageTransitionSlideOutToBottom {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+.page-transition-slide-in-bottom {
+  animation: pageTransitionSlideInFromBottom 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.page-transition-slide-out-bottom {
+  animation: pageTransitionSlideOutToBottom 400ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes pageTransitionSlideInFromTop {
+  from {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.page-transition-slide-in-top {
+  animation: pageTransitionSlideInFromTop 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ============================================================================
+   CONTENT REVEAL ANIMATIONS (Stagger Effects)
+   ============================================================================ */
+
+/* Staggered fade-in for list items */
+@keyframes contentRevealFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.content-reveal-fade {
+  animation: contentRevealFade 300ms ease-out forwards;
+}
+
+/* Stagger each child element */
+.stagger-container > * {
+  animation: contentRevealFade 300ms ease-out forwards;
+}
+
+.stagger-container > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.stagger-container > *:nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.stagger-container > *:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.stagger-container > *:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+.stagger-container > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+
+.stagger-container > *:nth-child(6) {
+  animation-delay: 250ms;
+}
+
+.stagger-container > *:nth-child(n+7) {
+  animation-delay: 300ms;
+}
+
+/* Slide-in stagger (from left) */
+@keyframes contentRevealSlideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.stagger-slide-left > * {
+  animation: contentRevealSlideInLeft 300ms ease-out forwards;
+}
+
+.stagger-slide-left > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-slide-left > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-slide-left > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-slide-left > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-slide-left > *:nth-child(5) { animation-delay: 200ms; }
+
+/* Scale-in stagger (grows from center) */
+@keyframes contentRevealScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.stagger-scale > * {
+  animation: contentRevealScaleIn 300ms ease-out forwards;
+  transform-origin: center;
+}
+
+.stagger-scale > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-scale > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-scale > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-scale > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-scale > *:nth-child(5) { animation-delay: 200ms; }
+
+/* ============================================================================
+   SCROLL-TRIGGERED ANIMATIONS
+   ============================================================================ */
+
+/* Fade in on scroll */
+@keyframes scrollFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.scroll-fade-in {
+  opacity: 0;
+  animation: scrollFadeIn 500ms ease-out forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+/* Slide in from bottom on scroll */
+@keyframes scrollSlideInBottom {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.scroll-slide-in-bottom {
+  opacity: 0;
+  animation: scrollSlideInBottom 600ms ease-out forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+/* Slide in from left on scroll */
+@keyframes scrollSlideInLeft {
+  from {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.scroll-slide-in-left {
+  opacity: 0;
+  animation: scrollSlideInLeft 600ms ease-out forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+/* Slide in from right on scroll */
+@keyframes scrollSlideInRight {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.scroll-slide-in-right {
+  opacity: 0;
+  animation: scrollSlideInRight 600ms ease-out forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+/* Scale in on scroll */
+@keyframes scrollScaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.scroll-scale-in {
+  opacity: 0;
+  animation: scrollScaleIn 600ms ease-out forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+/* ============================================================================
+   PARALLAX EFFECTS (Performance-optimized)
+   ============================================================================ */
+
+/* Subtle parallax (slower scroll speed) */
+.parallax-slow {
+  animation: parallaxSlow linear forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 100%;
+}
+
+@keyframes parallaxSlow {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(20px);
+  }
+}
+
+/* Medium parallax */
+.parallax-medium {
+  animation: parallaxMedium linear forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 100%;
+}
+
+@keyframes parallaxMedium {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(40px);
+  }
+}
+
+/* Fast parallax (more dramatic) */
+.parallax-fast {
+  animation: parallaxFast linear forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 100%;
+}
+
+@keyframes parallaxFast {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(60px);
+  }
+}
+
+/* ============================================================================
+   NUMBER COUNTER ANIMATIONS
+   ============================================================================ */
+
+@keyframes counterCount {
+  from {
+    counter-increment: counter 0;
+  }
+  to {
+    counter-increment: counter var(--counter-end);
+  }
+}
+
+.counter {
+  --counter-start: 0;
+  --counter-end: 100;
+  counter-reset: counter var(--counter-start);
+  animation: counterCount 2s ease-out forwards;
+  animation-timeline: view();
+  animation-range: entry 0% cover 50%;
+}
+
+.counter::before {
+  content: counter(counter);
+}
+
+/* ============================================================================
+   PROGRESS INDICATORS & LOADING STATES
+   ============================================================================ */
+
+@keyframes progressBarSlide {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 80%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.progress-bar-animate {
+  animation: progressBarSlide 2.5s ease-in-out forwards;
+}
+
+@keyframes progressPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.progress-pulse {
+  animation: progressPulse 1s ease-in-out infinite;
+}
+
+@keyframes progressBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.progress-bounce {
+  animation: progressBounce 1.5s ease-in-out infinite;
+}
+
+/* ============================================================================
+   NOTIFICATION & TOAST ANIMATIONS
+   ============================================================================ */
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-enter {
+  animation: toastSlideIn 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+.toast-exit {
+  animation: toastSlideOut 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes toastShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+.toast-error {
+  animation: toastShake 500ms ease-in-out 1;
+}
+
+/* ============================================================================
+   HOVER INTERACTION ANIMATIONS
+   ============================================================================ */
+
+@keyframes hoverLift {
+  to {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.hover-lift {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.hover-lift:hover {
+  animation: hoverLift 200ms ease-out forwards;
+}
+
+@keyframes hoverGrow {
+  to {
+    transform: scale(1.05);
+  }
+}
+
+.hover-grow {
+  transition: transform 200ms ease-out;
+  transform-origin: center;
+}
+
+.hover-grow:hover {
+  animation: hoverGrow 200ms ease-out forwards;
+}
+
+@keyframes hoverShrink {
+  to {
+    transform: scale(0.95);
+  }
+}
+
+.hover-shrink {
+  transition: transform 200ms ease-out;
+  transform-origin: center;
+}
+
+.hover-shrink:active {
+  animation: hoverShrink 200ms ease-out forwards;
+}
+
+/* ============================================================================
+   FOCUS STATE ANIMATIONS
+   ============================================================================ */
+
+@keyframes focusRing {
+  from {
+    outline-offset: 2px;
+    outline-width: 2px;
+  }
+  to {
+    outline-offset: 4px;
+    outline-width: 3px;
+  }
+}
+
+*:focus-visible {
+  animation: focusRing 200ms ease-out forwards;
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   MODAL & DIALOG ANIMATIONS
+   ============================================================================ */
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+.modal-backdrop-enter {
+  animation: modalBackdropFadeIn 300ms ease-out forwards;
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-enter {
+  animation: modalScaleIn 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes modalScaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.modal-exit {
+  animation: modalScaleOut 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* ============================================================================
+   DROPDOWN & MENU ANIMATIONS
+   ============================================================================ */
+
+@keyframes dropdownSlideIn {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.dropdown-enter {
+  animation: dropdownSlideIn 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes dropdownSlideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}
+
+.dropdown-exit {
+  animation: dropdownSlideOut 200ms cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* ============================================================================
+   ACCESSIBILITY: PREFERS-REDUCED-MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations for users who prefer reduced motion */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep the visual end state, just no animation */
+  .page-transition-fade,
+  .page-transition-slide-in-left,
+  .page-transition-slide-in-right,
+  .page-transition-scale-in,
+  .scroll-fade-in,
+  .scroll-slide-in-bottom,
+  .scroll-slide-in-left,
+  .scroll-slide-in-right {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Remove parallax effects */
+  .parallax-slow,
+  .parallax-medium,
+  .parallax-fast {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATION: WILL-CHANGE HINTS
+   ============================================================================ */
+
+.will-animate-opacity {
+  will-change: opacity;
+}
+
+.will-animate-transform {
+  will-change: transform;
+}
+
+.will-animate-filter {
+  will-change: filter;
+}
+
+/* Remove will-change after animation completes to free memory */
+.animation-complete {
+  will-change: auto;
+}
+
+/* ============================================================================
+   MOTION DESIGN UTILITY CLASSES
+   ============================================================================ */
+
+/* Smooth transitions on all properties */
+.transition-smooth {
+  transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Fast transitions (150ms) */
+.transition-fast {
+  transition: all 150ms ease-out;
+}
+
+/* Slow transitions (400ms) */
+.transition-slow {
+  transition: all 400ms ease-out;
+}
+
+/* Only color transition */
+.transition-colors-only {
+  transition: color 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out;
+}
+
+/* Only transform transition */
+.transition-transform-only {
+  transition: transform 200ms ease-out;
+}
+
+/* Only opacity transition */
+.transition-opacity-only {
+  transition: opacity 200ms ease-out;
+}

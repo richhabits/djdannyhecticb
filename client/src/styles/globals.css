@@ -1,9 +1,14 @@
 /**
  * Global Base Styles
  * Applied with token variables for consistent theming
+ * Last updated: 2026-05-01
  */
 
 @import './tokens.css';
+@import './themes.css';
+@import './typography-advanced.css';
+@import './motion-design.css';
+@import './accessibility-aaa.css';
 
 * {
   margin: 0;

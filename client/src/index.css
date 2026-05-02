@@ -8,6 +8,7 @@
 @import "./styles/advanced-animations.css";
 @import "./styles/accessibility.css";
 @import "./styles/responsive.css";
+@import "./styles/mobile.css";
 
 @custom-variant dark (&:is(.dark *));
 

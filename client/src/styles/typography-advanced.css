@@ -1,0 +1,542 @@
+/**
+ * Advanced Typography System
+ * Optical sizing, kerning optimization, and advanced typographic features
+ * Last updated: 2026-05-01
+ */
+
+:root {
+  /* Font Loading Strategy: System first, then Inter for specific uses */
+  --font-family-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-family-inter: 'Inter', system-ui, sans-serif;
+  --font-family-outfit: 'Outfit', system-ui, sans-serif;
+
+  /* Optical Sizing Adjustments (font-size-adjust for better vertical rhythm) */
+  --optical-adjust-default: 0.5;
+  --optical-adjust-display: 0.52;
+  --optical-adjust-heading: 0.51;
+
+  /* Kerning Pairs - Letter spacing by size (micro adjustment) */
+  --ls-display: -0.02em; /* 36px: tight kerning for large text */
+  --ls-h1: -0.01em;      /* 28px: subtle kerning */
+  --ls-h2: 0em;          /* 20px: normal kerning */
+  --ls-h3: 0em;          /* 16px: normal kerning */
+  --ls-body: 0em;        /* 14px: normal kerning */
+  --ls-caption: 0.02em;  /* 12px: looser for small text */
+  --ls-micro: 0.03em;    /* 10px: even looser for micro */
+
+  /* Line Height Multiplier System (optimal readability) */
+  /* Formula: Use 1.4-1.8x font size for comfortable reading */
+  --lh-tight: 1.2;       /* Headers, display text */
+  --lh-normal: 1.5;      /* Standard body text */
+  --lh-relaxed: 1.6;     /* Long-form content */
+  --lh-loose: 1.8;       /* Dyslexia-friendly (WCAG AAA text spacing) */
+
+  /* Font Weight & Style Combinations */
+  --font-weight-thin: 100;
+  --font-weight-extralight: 200;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* Text Transform Enhancements */
+  --text-transform-uppercase-tracking: 0.08em;
+  --text-transform-small-caps-tracking: 0.04em;
+
+  /* Word & Character Spacing (dyslexia support) */
+  --word-spacing-normal: 0.25em;
+  --word-spacing-loose: 0.35em;
+  --char-spacing-normal: 0em;
+  --char-spacing-loose: 0.05em;
+
+  /* Font Feature Settings */
+  --font-feature-display: 'ss01', 'liga', 'calt';
+  --font-feature-body: 'liga', 'calt';
+  --font-feature-number: 'tnum';
+
+  /* Text Decoration Skip Ink (better underline appearance) */
+  --text-decoration-skip: ink;
+}
+
+/* ============================================================================
+   FONT PRELOADING & LOADING STRATEGY
+   ============================================================================ */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+  font-variation-settings: 'slnt' 0;
+}
+
+@font-face {
+  font-family: 'Outfit';
+  src: url('/fonts/outfit-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+  font-variation-settings: 'wght' 400;
+}
+
+/* ============================================================================
+   DISPLAY TEXT OPTIMIZATION (Hero, Landing Page Headers)
+   ============================================================================ */
+
+.text-display,
+h1.display {
+  font-size: 36px;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  font-weight: 700;
+  font-size-adjust: var(--optical-adjust-display);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* OpenType features for display text */
+  font-feature-settings: 'ss01' 1, 'liga' 1, 'calt' 1, 'swsh' 1;
+  font-variant-numeric: lining-nums tabular-nums;
+
+  /* Better hyphens for long titles */
+  hyphens: auto;
+  hyphenate-limit-chars: 20 5 2;
+  word-break: break-word;
+}
+
+/* Display text with ligatures and stylistic alternates */
+.text-display-fancy {
+  font-feature-settings: 'ss01' 1, 'ss02' 1, 'liga' 1, 'calt' 1, 'swsh' 1, 'cswh' 1;
+}
+
+/* ============================================================================
+   HEADING TEXT OPTIMIZATION (H1, H2, H3)
+   ============================================================================ */
+
+h1,
+.text-h1 {
+  font-size: 28px;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-h1);
+  font-weight: 700;
+  font-size-adjust: var(--optical-adjust-heading);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  word-spacing: var(--word-spacing-normal);
+}
+
+h2,
+.text-h2 {
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: var(--ls-h2);
+  font-weight: 700;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+h3,
+.text-h3 {
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: var(--ls-h3);
+  font-weight: 600;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+/* ============================================================================
+   BODY TEXT OPTIMIZATION (Paragraphs, Long-Form Content)
+   ============================================================================ */
+
+body,
+p,
+.text-body {
+  font-size: 14px;
+  line-height: var(--lh-normal);
+  letter-spacing: var(--ls-body);
+  font-weight: 400;
+  -webkit-font-smoothing: subpixel-antialiased;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  word-spacing: var(--word-spacing-normal);
+}
+
+/* Long-form content with enhanced readability */
+.text-body-readable {
+  line-height: var(--lh-relaxed);
+  letter-spacing: 0.01em;
+  font-size: 15px; /* Slightly larger for comfort */
+  word-spacing: var(--word-spacing-loose);
+}
+
+/* Dyslexia-friendly text (WCAG AAA text spacing) */
+.text-dyslexia-friendly {
+  line-height: var(--lh-loose);
+  letter-spacing: var(--char-spacing-loose);
+  word-spacing: var(--word-spacing-loose);
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* ============================================================================
+   CAPTION & MICRO TEXT OPTIMIZATION
+   ============================================================================ */
+
+.text-caption,
+small,
+caption {
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: var(--ls-caption);
+  font-weight: 400;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.text-micro {
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: var(--ls-micro);
+  font-weight: 500;
+  text-transform: uppercase;
+  text-transform: uppercase;
+  font-feature-settings: 'smcp' 1, 'c2sc' 1; /* Small caps */
+}
+
+/* ============================================================================
+   NUMERIC TYPOGRAPHY (Tabular vs Proportional)
+   ============================================================================ */
+
+/* Tabular numbers (align in tables/financial) */
+.numeric-tabular {
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lining numbers (default) */
+.numeric-lining {
+  font-variant-numeric: lining-nums;
+}
+
+/* Old-style numbers (optional, elegant) */
+.numeric-oldstyle {
+  font-variant-numeric: oldstyle-nums;
+}
+
+/* ============================================================================
+   FONT VARIANT STYLES
+   ============================================================================ */
+
+/* Bold with proper weight rendering */
+strong,
+.font-bold,
+b {
+  font-weight: 700;
+  font-size-adjust: var(--optical-adjust-default);
+}
+
+/* Semibold */
+.font-semibold {
+  font-weight: 600;
+  font-size-adjust: var(--optical-adjust-default);
+}
+
+/* Medium (between normal and semibold) */
+.font-medium {
+  font-weight: 500;
+}
+
+/* Italic (with proper fallback) */
+em,
+i,
+.italic {
+  font-style: italic;
+  /* Fallback if italic not available */
+  font-synthesis: style;
+}
+
+/* Small caps (typographic elegance) */
+.text-small-caps {
+  font-variant-caps: small-caps;
+  font-feature-settings: 'smcp' 1, 'c2sc' 1;
+  letter-spacing: var(--text-transform-small-caps-tracking);
+}
+
+/* All caps with proper tracking */
+.text-uppercase {
+  text-transform: uppercase;
+  letter-spacing: var(--text-transform-uppercase-tracking);
+  font-weight: 600;
+}
+
+/* ============================================================================
+   CONTEXTUAL ALTERNATES & STYLISTIC SETS
+   ============================================================================ */
+
+/* Elegant alternates (for Inter font) */
+.font-elegant {
+  font-feature-settings: 'ss01' 1, 'ss02' 1, 'calt' 1, 'swsh' 1;
+}
+
+/* Geometric alternates */
+.font-geometric {
+  font-feature-settings: 'ss02' 1, 'calt' 1;
+}
+
+/* Monospace for code/data (lining numbers, tabular) */
+code,
+kbd,
+pre,
+.font-mono {
+  font-family: 'Fira Code', 'Monaco', 'Courier New', monospace;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* ============================================================================
+   TEXT DECORATION & EMPHASIS
+   ============================================================================ */
+
+/* Underline with text decoration skip ink (avoids underlining descenders) */
+a,
+.underline {
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Strikethrough */
+.line-through {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: auto;
+}
+
+/* Overline (rare but supported) */
+.overline {
+  text-decoration: overline;
+  text-decoration-thickness: 1px;
+}
+
+/* ============================================================================
+   WORD BREAKING & HYPHENATION
+   ============================================================================ */
+
+/* Smart hyphenation for long text */
+.hyphens-auto {
+  hyphens: auto;
+  hyphenate-limit-chars: 20 5 2;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Prevent word break */
+.whitespace-nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Prevent breaking long words */
+.break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ============================================================================
+   CONTRAST & EMPHASIS
+   ============================================================================ */
+
+/* High contrast text (enhanced emphasis) */
+.text-high-contrast {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Muted text (reduced emphasis) */
+.text-muted {
+  color: var(--color-text-tertiary);
+  opacity: 0.75;
+}
+
+/* ============================================================================
+   RESPONSIVE TYPOGRAPHY SCALE
+   ============================================================================ */
+
+/* Mobile typography (smaller base) */
+@media (max-width: 768px) {
+  .text-display {
+    font-size: 28px;
+  }
+
+  .text-h1 {
+    font-size: 24px;
+  }
+
+  .text-h2 {
+    font-size: 18px;
+  }
+
+  .text-h3 {
+    font-size: 15px;
+  }
+
+  body,
+  .text-body {
+    font-size: 13px;
+  }
+
+  .text-caption {
+    font-size: 11px;
+  }
+}
+
+/* Tablet typography (medium scaling) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .text-display {
+    font-size: 32px;
+  }
+
+  .text-h1 {
+    font-size: 26px;
+  }
+
+  .text-h2 {
+    font-size: 19px;
+  }
+}
+
+/* Desktop typography (full scale) */
+@media (min-width: 1024px) {
+  .text-display {
+    font-size: 36px;
+  }
+
+  .text-h1 {
+    font-size: 28px;
+  }
+
+  .text-h2 {
+    font-size: 20px;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY: PREFERS-REDUCED-MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* No special typography changes needed, but document for consistency */
+}
+
+/* ============================================================================
+   ACCESSIBILITY: HIGH CONTRAST MODE
+   ============================================================================ */
+
+@media (prefers-contrast: more) {
+  body {
+    letter-spacing: 0.02em;
+    word-spacing: 0.3em;
+  }
+
+  .text-dyslexia-friendly {
+    font-weight: 500; /* Slightly heavier */
+  }
+}
+
+/* ============================================================================
+   FONT RENDERING OPTIMIZATION
+   ============================================================================ */
+
+/* Default text rendering strategy */
+* {
+  text-rendering: optimizeLegibility;
+}
+
+/* Specific optimization for different text types */
+h1, h2, h3, h4, h5, h6 {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body, p, span, .text-body {
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* ============================================================================
+   PLACEHOLDER TEXT STYLING
+   ============================================================================ */
+
+::placeholder {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+  font-style: normal;
+  opacity: 1;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 0.8;
+}
+
+/* ============================================================================
+   SELECTION STYLING (Text Selection Color)
+   ============================================================================ */
+
+::selection {
+  background-color: var(--color-accent-primary);
+  color: var(--color-text-primary);
+  text-shadow: none;
+}
+
+::-moz-selection {
+  background-color: var(--color-accent-primary);
+  color: var(--color-text-primary);
+  text-shadow: none;
+}
+
+/* ============================================================================
+   LINE CLAMPING (Truncate text to N lines)
+   ============================================================================ */
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

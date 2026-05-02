@@ -14,11 +14,25 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 import { initCopyProtection, addCopyrightWatermark } from "./lib/copyProtection";
+import { registerServiceWorker } from "./utils/serviceWorkerManager";
+import { initializeOfflineStorage } from "./utils/offlineStorage";
 
 
 // Initialize copy protection
 initCopyProtection();
 addCopyrightWatermark();
+
+// Initialize offline storage and service worker for PWA
+initializeOfflineStorage().catch(error => {
+  console.warn("Failed to initialize offline storage:", error);
+});
+
+registerServiceWorker({
+  enableAutoUpdate: true,
+  updateCheckInterval: 60000, // Check for updates every minute
+}).catch(error => {
+  console.warn("Failed to register service worker:", error);
+});
 
 const queryClient = new QueryClient();
 
@@ -64,21 +78,12 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Register Service Worker for PWA
-if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        if (process.env.NODE_ENV === "development") {
-          console.log("SW registered: ", registration);
-        }
-      })
-      .catch((registrationError) => {
-        if (process.env.NODE_ENV === "development") {
-          console.log("SW registration failed: ", registrationError);
-        }
-      });
+// Listen for service worker updates
+if (typeof window !== "undefined") {
+  window.addEventListener("sw-update-available", () => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Service Worker update available");
+    }
   });
 }
 

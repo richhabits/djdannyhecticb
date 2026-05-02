@@ -1,0 +1,220 @@
+/**
+ * COPYRIGHT NOTICE
+ * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
+ * All rights reserved. Unauthorized copying, distribution, or use prohibited.
+ */
+
+/**
+ * Mobile PWA Optimization Styles
+ * - Safe area insets for notched devices
+ * - Touch-friendly tap targets (min 44x44)
+ * - Mobile-first responsive design
+ * - Viewport-fit cover for edge-to-edge
+ */
+
+/* Safe Area Variables for Easy Access */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+
+  /* Minimum tap target sizes */
+  --min-tap-target: 44px;
+}
+
+/* Apply safe area insets to body */
+html {
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+  padding-top: var(--safe-area-inset-top);
+}
+
+body {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* Utility classes for safe areas */
+.safe-area {
+  padding-left: max(1rem, var(--safe-area-inset-left));
+  padding-right: max(1rem, var(--safe-area-inset-right));
+}
+
+.safe-area-top {
+  padding-top: max(1rem, var(--safe-area-inset-top));
+}
+
+.safe-area-bottom {
+  padding-bottom: max(1rem, var(--safe-area-inset-bottom));
+}
+
+.safe-area-left {
+  padding-left: max(1rem, var(--safe-area-inset-left));
+}
+
+.safe-area-right {
+  padding-right: max(1rem, var(--safe-area-inset-right));
+}
+
+/* Ensure bottom nav doesn't overlap content */
+@media (max-width: 767px) {
+  main,
+  [role="main"] {
+    padding-bottom: calc(4rem + var(--safe-area-inset-bottom));
+  }
+}
+
+/* Mobile-first tap targets (44x44 minimum) */
+button,
+a,
+[role="button"],
+[role="link"],
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: var(--min-tap-target);
+  min-width: var(--min-tap-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure clickable areas are properly sized */
+[role="tab"],
+[role="menuitem"],
+[role="option"] {
+  min-height: var(--min-tap-target);
+  padding: 0.5rem 1rem;
+}
+
+/* Prevent double-tap zoom on iOS */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+  font-size: 16px; /* Prevents auto-zoom on iOS */
+}
+
+/* Mobile viewport optimizations */
+@media (max-width: 375px) {
+  /* Extra padding on very small screens */
+  body {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  main,
+  [role="main"] {
+    padding-bottom: 0;
+  }
+}
+
+/* Hide mobile-only elements on desktop */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Show desktop-only elements only on desktop */
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Responsive text sizes for mobile */
+@media (max-width: 375px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Touch-friendly spacing */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    background-color: inherit;
+  }
+
+  /* Add active states for touch feedback */
+  button:active,
+  a:active,
+  [role="button"]:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* Improve scrolling performance */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Prevent layout shift from scrollbar */
+html {
+  overflow-y: scroll;
+}
+
+/* PWA Standalone Mode Optimizations */
+@media (display-mode: standalone) {
+  /* Hide browser UI elements */
+  .browser-ui {
+    display: none;
+  }
+
+  /* Make app feel more like native */
+  body {
+    background-color: #0a0a0a;
+    color: #ffffff;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce padding in landscape on small screens */
+  main,
+  [role="main"] {
+    padding-bottom: calc(3rem + var(--safe-area-inset-bottom));
+  }
+}
+
+/* High DPI adjustments */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Optimize for high DPI screens */
+  border-width: 0.5px;
+}
+
+/* Notch-aware layout */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  nav {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}

@@ -33,12 +33,21 @@
 
     <!-- Icons and App Meta -->
     <link rel="icon" type="image/png" href="%VITE_APP_LOGO%" />
-    <link rel="apple-touch-icon" href="%VITE_APP_LOGO%" />
+    <link rel="apple-touch-icon" href="/logo-danny-hectic-b.png" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#f97316" />
+    <meta name="theme-color" content="#0A0A0A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Hectic Radio" />
+    <meta name="apple-mobile-web-app-title" content="DJ Danny" />
+
+    <!-- PWA and Mobile Optimizations -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="DJ Danny Hectic B" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    <meta name="msapplication-TileColor" content="#0A0A0A" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="email=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover" />
 
     <title>%VITE_APP_TITLE%</title>
 
@@ -56,6 +65,13 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- Analytics script - conditionally loaded via main.tsx to avoid dev mode issues -->
+
+    <!-- Prevent zoom on double-tap in iOS -->
+    <script>
+      document.addEventListener('touchstart', function() {}, { passive: true });
+      document.addEventListener('touchmove', function() {}, { passive: true });
+      document.addEventListener('touchend', function() {}, { passive: true });
+    </script>
   </body>
 
 </html>

@@ -20,6 +20,16 @@ import { moderationRouter } from "./routers/moderationRouter";
 import { analyticsRouter } from "./routers/analyticsRouter";
 import { donationsRouter } from "./routers/donationsRouter";
 import { supportRouter } from "./routers/supportRouter";
+import { profileRouter } from "./routers/profileRouter";
+import { messagesRouter } from "./routers/messagesRouter";
+import { commentsRouter } from "./routers/commentsRouter";
+import { communityRouter } from "./routers/communityRouter";
+// Revenue streams
+import { subscriptionRouter } from "./routers/subscriptionRouter";
+import { affiliateRouter } from "./routers/affiliateRouter";
+import { sponsorshipRouter } from "./routers/sponsorshipRouter";
+import { premiumRouter } from "./routers/premiumRouter";
+import { revenueRouter } from "./routers/revenueRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -41,6 +51,16 @@ export const appRouter = router({
   analytics: analyticsRouter,
   donations: donationsRouter,
   support: supportRouter,
+  profile: profileRouter,
+  messages: messagesRouter,
+  comments: commentsRouter,
+  community: communityRouter,
+  // Revenue streams
+  subscriptions: subscriptionRouter,
+  affiliates: affiliateRouter,
+  sponsorships: sponsorshipRouter,
+  premium: premiumRouter,
+  revenue: revenueRouter,
 
   // Alias for frontend compatibility
   events: router({

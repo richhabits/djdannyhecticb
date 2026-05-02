@@ -41,6 +41,9 @@ import {
   aiRateLimit
 } from "./middleware/rateLimit";
 import { serveStatic, setupVite } from "./vite";
+import { initializeRedis } from "./cache/redis-client";
+import { httpCacheMiddleware } from "./cache/http-cache-middleware";
+import { performanceMonitoringMiddleware } from "./monitoring/core-web-vitals";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -64,6 +67,16 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Initialize Redis for caching (non-blocking with graceful fallback)
+  if (process.env.NODE_ENV !== "development" || process.env.REDIS_HOST) {
+    try {
+      await initializeRedis();
+      console.log('[CACHE] Redis initialized successfully');
+    } catch (error) {
+      console.warn('[CACHE] Redis initialization failed - caching disabled', error);
+    }
+  }
 
   // Setup WebSocket for stream events
   setupStreamWebSocket(server);
@@ -115,6 +128,11 @@ async function startServer() {
   // Disable unnecessary features to save resources
   app.disable("x-powered-by");
   app.disable("etag"); // Let nginx handle caching
+
+  // Performance monitoring (track response times, resource usage)
+  if (process.env.NODE_ENV === "production") {
+    app.use(performanceMonitoringMiddleware());
+  }
 
 
   // Global Rate Limiting (DDoS Protection)

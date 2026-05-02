@@ -223,6 +223,10 @@ function Router() {
 import { initGA, logPageView } from "./lib/analytics";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { MobileBottomNav } from "./components/MobileBottomNav";
+import { InstallPromptBanner } from "./components/InstallPromptBanner";
+import { OfflineIndicator, SlowConnectionIndicator } from "./components/OfflineIndicator";
+import "@/styles/mobile-pwa.css";
 
 function App() {
   const [location] = useLocation();
@@ -245,6 +249,11 @@ function App() {
           >
             <TooltipProvider>
             <>
+              {/* PWA Components */}
+              <OfflineIndicator />
+              <SlowConnectionIndicator />
+              <InstallPromptBanner />
+
               {/* Skip Link - Accessibility: Jump to main content */}
               <a href="#main-content" className="skip-link">
                 Skip to main content
@@ -255,7 +264,7 @@ function App() {
                 <Toaster />
                 <GlobalBanner />
                 <GlobalNav />
-                <main id="main-content" role="main" className="flex-1">
+                <main id="main-content" role="main" className="flex-1 pb-20 max-md:pb-24">
                   <Router />
                 </main>
                 <Footer />
@@ -264,6 +273,9 @@ function App() {
                 <HecticOnboarding />
                 {/* DELETED COMPONENT: SocialProofNotifications - deleted router: socialProof */}
                 {/* <SocialProofNotifications /> */}
+
+                {/* Mobile PWA Navigation */}
+                <MobileBottomNav />
               </div>
             </>
             </TooltipProvider>
