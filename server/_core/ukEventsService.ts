@@ -503,23 +503,42 @@ export async function getUKEvents(options: {
     offset?: number;
     featured?: boolean;
 }): Promise<UKEvent[]> {
-    // Always use sample events for now - demo mode
-    let results = [...SAMPLE_EVENTS];
-
-    if (options.category) {
-        results = results.filter(e => e.category === options.category);
-    }
-    if (options.city) {
-        results = results.filter(e => e.city?.toLowerCase().includes(options.city?.toLowerCase() || ''));
-    }
-    if (options.featured) {
-        results = results.filter(e => e.isFeatured);
+    const db = await getDb();
+    if (!db) {
+        console.warn('[UKEvents] Database unavailable in getUKEvents');
+        return [];
     }
 
-    const offset = options.offset || 0;
-    const limit = options.limit || 20;
+    try {
+        const conditions = [
+            gt(ukEvents.eventDate, new Date()),
+        ];
 
-    return results.slice(offset, offset + limit);
+        if (options.category) {
+            conditions.push(eq(ukEvents.category, options.category));
+        }
+
+        if (options.city) {
+            conditions.push(ilike(ukEvents.city, `%${options.city}%`));
+        }
+
+        if (options.featured) {
+            conditions.push(eq(ukEvents.isFeatured, true));
+        }
+
+        const offset = options.offset || 0;
+        const limit = options.limit || 20;
+
+        return await db.select()
+            .from(ukEvents)
+            .where(and(...conditions))
+            .orderBy(desc(ukEvents.eventDate))
+            .offset(offset)
+            .limit(limit);
+    } catch (error) {
+        console.error('[UKEvents] Failed to fetch events:', error);
+        return [];
+    }
 }
 
 /**
@@ -548,9 +567,8 @@ export async function getUKEventById(id: number): Promise<UKEvent | null> {
 export async function getFeaturedUKEvents(limit: number = 6): Promise<UKEvent[]> {
     const db = await getDb();
     if (!db) {
-        // Return sample featured events when database is unavailable
-        console.warn('[UKEvents] Database unavailable, returning sample featured events for demo');
-        return SAMPLE_EVENTS.filter(e => e.isFeatured).slice(0, limit);
+        console.warn('[UKEvents] Database unavailable in getFeaturedUKEvents');
+        return [];
     }
 
     try {
@@ -564,8 +582,7 @@ export async function getFeaturedUKEvents(limit: number = 6): Promise<UKEvent[]>
             .limit(limit);
     } catch (error) {
         console.error('[UKEvents] Failed to fetch featured events:', error);
-        // Fallback to sample featured events on error
-        return SAMPLE_EVENTS.filter(e => e.isFeatured).slice(0, limit);
+        return [];
     }
 }
 

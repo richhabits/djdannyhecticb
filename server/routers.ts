@@ -993,7 +993,7 @@ export const appRouter = router({
       .input(z.object({
         name: z.string().min(1).max(255),
         description: z.string().optional(),
-        type: z.enum(["drop", "soundpack", "preset", "course", "bundle", "other"]),
+        type: z.enum(["drop", "soundpack", "preset", "course", "bundle", "vinyl", "merch", "other"]),
         price: z.string().min(1),
         currency: z.string().default("GBP"),
         downloadUrl: z.string().optional(),

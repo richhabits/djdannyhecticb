@@ -4,7 +4,7 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import * as db from "../server/db";
+import { getDb } from "../server/db";
 import {
   hecticLeads,
   jarvisInsights,
@@ -21,7 +21,7 @@ async function run() {
   console.log("🧠 [JOB] Starting Jarvis daily insights generation...");
 
   try {
-    const conn = await db.getDb();
+    const conn = await getDb();
     if (!conn) throw new Error("Database connection failed");
 
     // Analyze last 7 days of leads

@@ -3,7 +3,7 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import * as db from "../server/db";
+import { getDb, checkFeatureFlag } from "../server/db";
 import { users, userSignalMetrics, invites, supporterScores } from "../drizzle/schema";
 import { eq, sql, and } from "drizzle-orm";
 
@@ -14,14 +14,14 @@ import { eq, sql, and } from "drizzle-orm";
 async function run() {
     console.log("🎖️ [JOB] Starting weekly supporter scoring (Phase D Tuning)...");
 
-    const isEnabled = await db.checkFeatureFlag("auto_supporter_elevation");
+    const isEnabled = await checkFeatureFlag("auto_supporter_elevation");
     if (!isEnabled) {
         console.log("⚠️ [JOB] Auto elevation disabled.");
         return;
     }
 
     try {
-        const dbConn = await db.getDb();
+        const dbConn = await getDb();
         if (!dbConn) return;
 
         const allUsers = await dbConn.select().from(users);

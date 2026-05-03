@@ -3,7 +3,7 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import * as db from "../server/db";
+import { getDb } from "../server/db";
 import { sql } from "drizzle-orm";
 import { userSignalMetrics } from "../drizzle/schema";
 
@@ -15,7 +15,7 @@ async function run() {
     console.log("📊 [JOB] Starting hourly analytics rollup...");
 
     try {
-        const conn = await db.getDb();
+        const conn = await getDb();
         if (!conn) return;
 
         // Fetch recent metrics that haven't been rolled up yet

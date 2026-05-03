@@ -4,7 +4,7 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import * as db from "../server/db";
+import { getDb } from "../server/db";
 import { hecticLeads } from "../drizzle/schema";
 import { sql } from "drizzle-orm";
 
@@ -17,7 +17,7 @@ async function run() {
   console.log("📧 [JOB] Starting Hectic lead follow-up...");
 
   try {
-    const conn = await db.getDb();
+    const conn = await getDb();
     if (!conn) throw new Error("Database connection failed");
 
     // Get leads from last 24h that haven't been followed up yet

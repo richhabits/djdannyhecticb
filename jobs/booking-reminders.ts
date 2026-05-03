@@ -4,7 +4,7 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import * as db from "../server/db";
+import { getDb } from "../server/db";
 import { eventBookings } from "../drizzle/schema";
 import { sql } from "drizzle-orm";
 
@@ -17,7 +17,7 @@ async function run() {
   console.log("🔔 [JOB] Starting booking reminder emails...");
 
   try {
-    const conn = await db.getDb();
+    const conn = await getDb();
     if (!conn) throw new Error("Database connection failed");
 
     // Find confirmed bookings within 7 days

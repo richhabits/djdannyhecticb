@@ -84,10 +84,8 @@ function CheckoutForm({
   const handleCreateIntent = () => {
     if (intentCreating || intentCreated || !fanName || !email) return;
     setIntentCreating(true);
-    const totalAmountPence = Math.round((totalAmount + (shippingRequired && !useDigitalOnly ? shippingCost : 0)) * 100);
     createPaymentIntent.mutate({
       productId: items[0].productId,
-      totalAmountPence,
       fanName,
       email,
       fanId: user?.id,

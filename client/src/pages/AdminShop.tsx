@@ -10,7 +10,7 @@ export default function AdminShop() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: 0,
+    price: "",
     currency: "GBP",
     type: "drop",
     thumbnailUrl: "",
@@ -23,7 +23,7 @@ export default function AdminShop() {
       setFormData({
         name: "",
         description: "",
-        price: 0,
+        price: "",
         currency: "GBP",
         type: "drop",
         thumbnailUrl: "",
@@ -42,7 +42,7 @@ export default function AdminShop() {
       setFormData({
         name: "",
         description: "",
-        price: 0,
+        price: "",
         currency: "GBP",
         type: "drop",
         thumbnailUrl: "",
@@ -95,7 +95,7 @@ export default function AdminShop() {
     setFormData({
       name: "",
       description: "",
-      price: 0,
+      price: "",
       currency: "GBP",
       type: "drop",
       thumbnailUrl: "",
@@ -162,11 +162,10 @@ export default function AdminShop() {
                 <div>
                   <label className="block text-xs uppercase font-black mb-2">Price *</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                    placeholder="0.00"
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="e.g., 9.99"
                     className="w-full px-4 py-3 border-2 border-white bg-black text-white placeholder-white/40 font-mono focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>

@@ -4,7 +4,7 @@
  */
 
 import { observability } from "./observability";
-import * as db from "../db";
+import { getDb } from "../db";
 import { exec } from "child_process";
 import { promisify } from "util";
 
@@ -44,7 +44,7 @@ class AutonomousEngine {
 
     private async performChecks() {
         const metrics = observability.getMetrics();
-        const dbConn = await db.getDb();
+        const dbConn = await getDb();
 
         return {
             dbAlive: !!dbConn,
@@ -83,7 +83,7 @@ class AutonomousEngine {
     }
 
     private async enforceKillSwitch(reason: string) {
-        const dbConn = await db.getDb();
+        const dbConn = await getDb();
         if (!dbConn) return;
 
         console.warn(`🛑 [SENTRY] ACTIVATING KILL-SWITCH: ${reason}`);
