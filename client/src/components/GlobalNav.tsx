@@ -6,31 +6,16 @@ import { GlobalSearch } from "./GlobalSearch";
 import { Menu, X, Zap, ShoppingCart, Phone, Instagram } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 
-/**
- * GlobalNav - Responsive navigation with clear mobile-first design
- *
- * Responsive Strategy:
- * - Mobile (<640px): Logo + Hamburger only
- * - Tablet (640-1024px): Logo + 4 menu items + Hamburger
- * - Desktop (1024px+): Logo + Full menu + All actions
- *
- * Fixed header heights:
- * - Mobile: 56px (sm:)
- * - Tablet: 64px (md:)
- * - Desktop: 72px (lg:)
- */
 export function GlobalNav() {
   const { isAuthenticated } = useAuth();
   const { count } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
 
-  // Close menu when location changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -42,7 +27,6 @@ export function GlobalNav() {
     };
   }, [mobileMenuOpen]);
 
-  // Desktop menu items - shown on lg+ screens
   const desktopMenuItems = [
     { href: "/mixes", label: "MIXES" },
     { href: "/live-studio", label: "LIVE" },
@@ -52,7 +36,6 @@ export function GlobalNav() {
     { href: "/contact", label: "CONTACT" },
   ];
 
-  // Tablet menu items - compact version for md breakpoint
   const tabletMenuItems = [
     { href: "/mixes", label: "MIXES" },
     { href: "/live-studio", label: "LIVE" },
@@ -64,17 +47,12 @@ export function GlobalNav() {
     href,
     label,
     isActive = false,
-    variant = "default"
   }: {
     href: string
     label: string
     isActive?: boolean
-    variant?: "default" | "tablet"
   }) => {
-    const baseClasses = "tape-strip transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white font-bold";
-    const sizeClasses = variant === "tablet"
-      ? "px-2 py-1 text-xs"
-      : "px-3 py-1.5 text-sm";
+    const baseClasses = "tape-strip px-3 py-2 text-xs sm:text-xs md:text-sm lg:text-sm transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white font-bold";
     const colorClasses = isActive
       ? "bg-accent text-white border-white"
       : "bg-black text-white border-white hover:bg-white hover:text-black";
@@ -82,7 +60,7 @@ export function GlobalNav() {
     return (
       <Link
         href={href}
-        className={`${baseClasses} ${sizeClasses} ${colorClasses}`}
+        className={`${baseClasses} ${colorClasses}`}
       >
         {label}
       </Link>
@@ -93,9 +71,10 @@ export function GlobalNav() {
     <>
       {/* Fixed navigation bar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 bg-black border-b-2 border-white/20"
+        className="fixed top-0 left-0 right-0 z-50 bg-black border-b-2 border-white/40 shadow-lg"
         role="navigation"
         aria-label="Main navigation"
+        style={{ boxShadow: '0 2px 0 rgba(249, 115, 22, 0.1)' }}
       >
         {/* Header container with consistent padding and height */}
         <div className="flex items-center justify-between h-14 sm:h-16 md:h-16 lg:h-16 px-3 sm:px-4 md:px-5 lg:px-6 gap-2 sm:gap-3 md:gap-4">
@@ -103,11 +82,14 @@ export function GlobalNav() {
           {/* Left: Logo - Always visible */}
           <Link
             href="/"
-            className="flex items-center gap-1 font-bold flex-shrink-0 text-white hover:text-accent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="flex items-center gap-1 sm:gap-2 font-bold flex-shrink-0 text-white hover:text-accent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white py-2 px-1 sm:px-2 min-h-[44px] min-w-[44px] justify-center sm:justify-start"
             aria-label="DJ Danny Hectic B - Home"
           >
-            <Zap className="w-5 h-5 fill-white text-white flex-shrink-0" aria-hidden="true" />
-            <span className="text-sm hidden sm:inline">DJ DANNY</span>
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 fill-white text-white flex-shrink-0" aria-hidden="true" />
+            <span className="text-xs sm:text-sm font-bold">
+              <span className="sm:hidden">DJ</span>
+              <span className="hidden sm:inline">DJ DANNY</span>
+            </span>
           </Link>
 
           {/* Center: Desktop Menu (lg+) - Hidden on tablet and mobile */}
@@ -123,14 +105,13 @@ export function GlobalNav() {
           </div>
 
           {/* Center: Tablet Menu (md-lg) - 4 compact menu items */}
-          <div className="hidden md:flex lg:hidden items-center gap-1.5 flex-wrap justify-center flex-1">
+          <div className="hidden md:flex lg:hidden items-center gap-1 flex-wrap justify-center flex-1">
             {tabletMenuItems.map((item) => (
               <MenuItem
                 key={item.href}
                 href={item.href}
                 label={item.label}
                 isActive={location === item.href}
-                variant="tablet"
               />
             ))}
           </div>
@@ -147,10 +128,10 @@ export function GlobalNav() {
             <a
               href="tel:+447957432842"
               aria-label="Call"
-              className="hidden md:flex tape-strip bg-black text-white border-white p-2.5 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="hidden md:flex items-center justify-center tape-strip bg-black text-white border-white p-3 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
               title="Call us"
             >
-              <Phone className="w-4 h-4" aria-hidden="true" />
+              <Phone className="w-5 h-5" aria-hidden="true" />
             </a>
 
             {/* Instagram button - Tablet+ */}
@@ -159,22 +140,22 @@ export function GlobalNav() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="hidden md:flex tape-strip bg-black text-white border-white p-2.5 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="hidden md:flex items-center justify-center tape-strip bg-black text-white border-white p-3 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
               title="Follow us on Instagram"
             >
-              <Instagram className="w-4 h-4" aria-hidden="true" />
+              <Instagram className="w-5 h-5" aria-hidden="true" />
             </a>
 
             {/* Cart - Always visible */}
             <Link
               href="/cart"
-              className="relative tape-strip bg-black text-white border-white p-2.5 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="relative inline-flex items-center justify-center tape-strip bg-black text-white border-white p-3 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
               aria-label={`Shopping cart${count > 0 ? ` - ${count} items` : ''}`}
             >
-              <ShoppingCart className="w-4 h-4" aria-hidden="true" />
+              <ShoppingCart className="w-5 h-5" aria-hidden="true" />
               {count > 0 && (
                 <span
-                  className="absolute -top-2 -right-2 bg-accent text-black text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
+                  className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 bg-accent text-black text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-black"
                   aria-hidden="true"
                 >
                   {count}
@@ -207,12 +188,12 @@ export function GlobalNav() {
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              className="md:hidden tape-strip bg-accent text-white border-white p-2.5 hover:bg-white hover:text-black transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white flex-shrink-0"
+              className="md:hidden tape-strip bg-accent text-white border-white p-3 hover:bg-white hover:text-black transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? (
-                <X className="w-4 h-4" aria-hidden="true" />
+                <X className="w-5 h-5" aria-hidden="true" />
               ) : (
-                <Menu className="w-4 h-4" aria-hidden="true" />
+                <Menu className="w-5 h-5" aria-hidden="true" />
               )}
             </button>
           </div>
