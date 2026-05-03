@@ -913,80 +913,6 @@ export const appRouter = router({
   // ============================================
   // PHASE 5: EMPIRE MODE - REVENUE STACK
   // ============================================
-  // ============================================
-  // PHASE 5: REVENUE STACK (Flattened)
-  // ============================================
-
-  support: router({
-    createPaymentIntent: publicProcedure
-      .input(z.object({
-        amount: z.string(),
-        currency: z.string().default("GBP"),
-        fanName: z.string().min(1).max(255),
-        email: z.string().email().optional(),
-        message: z.string().optional(),
-        fanId: z.number().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Parse amount (assuming format like "9.99" or "10.00")
-        const amountStr = input.amount.replace(/[£$€,]/g, "");
-        const amount = Math.round(parseFloat(amountStr) * 100); // Convert to pence/cents
-
-        if (isNaN(amount) || amount <= 0) {
-          throw new Error("Invalid amount");
-        }
-
-        try {
-          console.log("[Support] Starting createPaymentIntent", { amount: input.amount, stringAmount: amountStr });
-          const { createSupportPaymentIntent } = await import("./lib/payments");
-          const result = await createSupportPaymentIntent({
-            amount,
-            currency: input.currency || "GBP",
-            fanName: input.fanName,
-            email: input.email,
-            message: input.message,
-            fanId: input.fanId || ctx.user?.id,
-          });
-          console.log("[Support] Success", result);
-          await db.createAuditLog({
-            action: "create_support_payment_intent",
-            entityType: "support_event",
-            entityId: result.supportEventId,
-            actorId: ctx.user?.id,
-            actorName: input.fanName,
-            afterSnapshot: JSON.stringify({ paymentIntentId: result.paymentIntentId }),
-          });
-
-          return result;
-        } catch (error) {
-          console.error("[Support] CRITICAL ERROR:", error);
-          throw error;
-        }
-      }),
-    create: publicProcedure
-      .input(z.object({
-        fanName: z.string().min(1).max(255),
-        email: z.string().email().max(255).optional(),
-        amount: z.string().min(1),
-        currency: z.string().default("GBP"),
-        message: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const event = await db.createSupportEvent(input);
-        await db.createAuditLog({
-          action: "create_support_event",
-          entityType: "support_event",
-          entityId: event.id,
-          actorName: input.fanName,
-          afterSnapshot: JSON.stringify({ amount: input.amount, currency: input.currency }),
-        });
-        return event;
-      }),
-    list: adminProcedure.query(() => db.listSupportEvents()),
-    total: adminProcedure
-      .input(z.object({ currency: z.string().default("GBP") }))
-      .query(({ input }) => db.getSupportEventTotal(input.currency)),
-  }),
 
   products: router({
     create: adminProcedure
@@ -1160,58 +1086,6 @@ export const appRouter = router({
           actorId: ctx.user?.id,
           actorName: ctx.user?.name || "Admin",
           afterSnapshot: JSON.stringify({ status: input.status }),
-        });
-        return updated;
-      }),
-  }),
-
-  subscriptions: router({
-    create: publicProcedure
-      .input(z.object({
-        fanName: z.string().min(1).max(255),
-        email: z.string().email().max(255).optional(),
-        tier: z.enum(["hectic_regular", "hectic_royalty", "inner_circle"]),
-        amount: z.string().min(1),
-        currency: z.string().default("GBP"),
-        endAt: z.string().optional(), // ISO date string
-      }))
-      .mutation(async ({ input }) => {
-        const subscription = await db.createSubscription({
-          ...input,
-          endAt: input.endAt ? new Date(input.endAt) : undefined,
-          status: "active",
-        });
-        await db.createAuditLog({
-          action: "create_subscription",
-          entityType: "subscription",
-          entityId: subscription.id,
-          actorName: input.fanName,
-          afterSnapshot: JSON.stringify({ tier: input.tier, amount: input.amount }),
-        });
-        return subscription;
-      }),
-    list: adminProcedure
-      .input(z.object({ activeOnly: z.boolean().default(false) }))
-      .query(({ input }) => db.listSubscriptions(input.activeOnly)),
-    update: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        updates: z.object({
-          status: z.enum(["active", "cancelled", "expired"]).optional(),
-          endAt: z.string().optional(),
-        }).partial(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const updates = { ...input.updates } as any;
-        if (input.updates.endAt) updates.endAt = new Date(input.updates.endAt);
-        const updated = await db.updateSubscription(input.id, updates);
-        await db.createAuditLog({
-          action: "update_subscription",
-          entityType: "subscription",
-          entityId: input.id,
-          actorId: ctx.user?.id,
-          actorName: ctx.user?.name || "Admin",
-          afterSnapshot: JSON.stringify(input.updates),
         });
         return updated;
       }),
@@ -1976,29 +1850,6 @@ export const appRouter = router({
           });
           return updated;
         }),
-    }),
-  }),
-
-  analytics: router({
-    traffic: router({
-      log: publicProcedure
-        .input(z.object({
-          route: z.string().optional(),
-          utmSource: z.string().optional(),
-          utmMedium: z.string().optional(),
-          utmCampaign: z.string().optional(),
-          referrer: z.string().optional(),
-        }))
-        .mutation(({ input, ctx }) => {
-          return db.createTrafficEvent({
-            ...input,
-            userAgent: ctx.req.headers["user-agent"],
-            ipAddress: ctx.req.ip || ctx.req.socket.remoteAddress,
-          });
-        }),
-      stats: adminProcedure
-        .input(z.object({ days: z.number().default(7) }))
-        .query(({ input }) => db.getTrafficStats(input.days)),
     }),
   }),
 

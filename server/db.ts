@@ -3743,3 +3743,28 @@ export async function getFreeMixes() {
   // TODO: Implement get free mixes
   return [];
 }
+
+export async function updateAIVideoJob(jobId: string | number, updates: any) {
+  // TODO: Implement AI video job updates
+  return null;
+}
+
+export async function addUserCollectible(input: any) {
+  // TODO: Implement adding user collectible
+  return null;
+}
+
+export async function listAchievements(activeOnly: boolean = false) {
+  // TODO: Implement list achievements
+  return [];
+}
+
+export async function getUserAchievements(userId: number) {
+  // TODO: Implement get user achievements
+  return [];
+}
+
+export async function unlockAchievement(userId: number, achievementId: string) {
+  // TODO: Implement unlock achievement
+  return null;
+}
