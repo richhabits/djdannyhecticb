@@ -50,28 +50,20 @@
       ]
     },
     {
-      "source": "^/assets/.*\\.(js|css)$",
+      "source": "/assets/*.(js|css)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
-        },
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
         }
       ]
     },
     {
-      "source": "^/assets/.*\\.(png|jpg|jpeg|gif|webp|svg)$",
+      "source": "/assets/*.(png|jpg|jpeg|gif|webp|svg)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=2592000, immutable"
-        },
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
         }
       ]
     },
@@ -103,7 +95,7 @@
       ]
     },
     {
-      "source": "^/(robots.txt|sitemap.xml|feed.xml|manifest.json)$",
+      "source": "/(robots.txt|sitemap.xml|feed.xml|manifest.json)",
       "headers": [
         {
           "key": "Cache-Control",
