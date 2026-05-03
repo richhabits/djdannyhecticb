@@ -103,11 +103,11 @@ export function GlobalNav() {
           {/* Left: Logo - Always visible */}
           <Link
             href="/"
-            className="tape-strip bg-white text-black border-black px-2 sm:px-2.5 py-1 flex items-center gap-1 text-xs sm:text-sm font-bold flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="flex items-center gap-1 font-bold flex-shrink-0 text-white hover:text-accent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             aria-label="DJ Danny Hectic B - Home"
           >
-            <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-black" aria-hidden="true" />
-            <span className="hidden sm:inline">DJ DANNY</span>
+            <Zap className="w-5 h-5 fill-white text-white flex-shrink-0" aria-hidden="true" />
+            <span className="text-sm hidden sm:inline">DJ DANNY</span>
           </Link>
 
           {/* Center: Desktop Menu (lg+) - Hidden on tablet and mobile */}
