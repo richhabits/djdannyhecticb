@@ -264,7 +264,7 @@ function App() {
                 <Toaster />
                 <GlobalBanner />
                 <GlobalNav />
-                <main id="main-content" role="main" className="flex-1 pb-20 max-md:pb-24 pt-16">
+                <main id="main-content" role="main" className="flex-1 pb-20 max-md:pb-24 pt-14 sm:pt-16 md:pt-16 lg:pt-16">
                   <Router />
                 </main>
                 <Footer />

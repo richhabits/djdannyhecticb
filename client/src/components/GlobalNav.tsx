@@ -98,7 +98,7 @@ export function GlobalNav() {
         aria-label="Main navigation"
       >
         {/* Header container with consistent padding and height */}
-        <div className="flex items-center justify-between h-14 sm:h-16 md:h-18 lg:h-[72px] px-3 sm:px-4 md:px-5 lg:px-6 gap-2 sm:gap-3 md:gap-4">
+        <div className="flex items-center justify-between h-14 sm:h-16 md:h-16 lg:h-16 px-3 sm:px-4 md:px-5 lg:px-6 gap-2 sm:gap-3 md:gap-4">
 
           {/* Left: Logo - Always visible */}
           <Link
@@ -111,7 +111,7 @@ export function GlobalNav() {
           </Link>
 
           {/* Center: Desktop Menu (lg+) - Hidden on tablet and mobile */}
-          <div className="hidden lg:flex items-center gap-2 flex-wrap justify-center">
+          <div className="hidden lg:flex items-center gap-1 flex-wrap justify-center">
             {desktopMenuItems.map((item) => (
               <MenuItem
                 key={item.href}
@@ -224,7 +224,7 @@ export function GlobalNav() {
         <div
           id="mobile-menu"
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 top-14 sm:top-16 md:top-18 lg:top-[72px] bg-black/98 z-40 overflow-y-auto pirate-scanlines"
+          className="fixed inset-0 top-14 sm:top-16 md:top-16 lg:top-16 bg-black/98 z-40 overflow-y-auto pirate-scanlines"
           role="dialog"
           aria-label="Mobile navigation menu"
           aria-modal="true"
