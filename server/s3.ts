@@ -64,7 +64,7 @@ export async function uploadFile(
         Key: key,
         Body: body,
         ContentType: contentType,
-        ACL: "public-read", // Optional: depending on bucket policy
+        // ACL set to private - all access via presigned URLs for security
     });
 
     try {
