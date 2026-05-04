@@ -1,0 +1,259 @@
+{
+  "backup_configuration": {
+    "project_name": "dj-danny-hectic-b",
+    "project_id": "ujxncnmoccotlssnqzwx",
+    "project_ref": "ujxncnmoccotlssnqzwx",
+    "organization_id": "uktnolsmfxxdfuqbyvbv",
+    "region": "eu-west-1",
+    "database_engine": "PostgreSQL 17.6.1",
+    "created_at": "2026-04-29T15:17:22.692755Z"
+  },
+  "backup_strategy": {
+    "primary": {
+      "type": "automated_supabase",
+      "frequency": "daily",
+      "time_utc": "02:00",
+      "retention_days": 7,
+      "coverage": "full_database",
+      "rpo_hours": 24,
+      "cost": "included"
+    },
+    "secondary": {
+      "type": "github_actions",
+      "frequency": "daily",
+      "time_utc": "02:00",
+      "retention_days": 7,
+      "storage": "github_artifacts",
+      "coverage": "full_database",
+      "cost": "free_tier"
+    },
+    "tertiary": {
+      "type": "s3_archive",
+      "enabled": false,
+      "frequency": "daily",
+      "retention_days": 90,
+      "storage": "aws_s3",
+      "encryption": "AES256",
+      "acl": "private",
+      "cost_per_gb_month": 0.023,
+      "requires_setup": true
+    }
+  },
+  "recovery_objectives": {
+    "rto_full_restore_minutes": 30,
+    "rto_point_in_time_minutes": 15,
+    "rto_selective_table_minutes": 10,
+    "rpo_automated_hours": 24,
+    "rpo_manual_on_demand": true,
+    "recovery_windows": {
+      "point_in_time": "last_7_days",
+      "full_database": "last_7_days",
+      "transaction_log": "last_7_days"
+    }
+  },
+  "backup_scope": {
+    "schemas": ["public"],
+    "include_sequences": true,
+    "include_indexes": true,
+    "include_functions": true,
+    "include_triggers": true,
+    "include_views": true,
+    "include_extensions": true,
+    "exclude_system_schemas": true,
+    "tables_count": 13,
+    "total_size_mb": 5
+  },
+  "critical_tables": [
+    {
+      "name": "donations",
+      "schema": "public",
+      "criticality": "critical",
+      "sensitivity": "pii_financial",
+      "retention_policy": "permanent",
+      "backup_frequency": "daily",
+      "description": "Payment and donation records"
+    },
+    {
+      "name": "live_sessions",
+      "schema": "public",
+      "criticality": "high",
+      "sensitivity": "event_data",
+      "retention_policy": "permanent",
+      "backup_frequency": "daily",
+      "description": "Streaming session history"
+    },
+    {
+      "name": "chat_messages",
+      "schema": "public",
+      "criticality": "high",
+      "sensitivity": "user_generated_content",
+      "retention_policy": "permanent",
+      "backup_frequency": "daily",
+      "description": "Chat and messaging data"
+    },
+    {
+      "name": "streamer_stats",
+      "schema": "public",
+      "criticality": "high",
+      "sensitivity": "analytics",
+      "retention_policy": "permanent",
+      "backup_frequency": "daily",
+      "description": "Aggregated streamer statistics"
+    }
+  ],
+  "automation": {
+    "github_actions": {
+      "enabled": true,
+      "workflows": [
+        {
+          "name": "database-backup.yml",
+          "description": "Create and validate daily backups",
+          "schedule": "0 2 * * *",
+          "timezone": "UTC",
+          "can_be_triggered_manually": true
+        },
+        {
+          "name": "backup-monitoring.yml",
+          "description": "Monitor backup health and alert on failures",
+          "schedule": "0 */6 * * *",
+          "timezone": "UTC",
+          "can_be_triggered_manually": true
+        }
+      ]
+    },
+    "restore_testing": {
+      "frequency": "monthly",
+      "scheduled_dates": [3, 10, 17, 24],
+      "required_for_soc2": true,
+      "documentation": "docs/DATABASE_BACKUPS.md"
+    },
+    "maintenance": {
+      "frequency": "monthly",
+      "tasks": [
+        "cleanup_old_artifacts",
+        "verify_backup_integrity",
+        "test_restore_procedure",
+        "update_metrics"
+      ]
+    }
+  },
+  "monitoring_alerts": {
+    "backup_failed": {
+      "severity": "critical",
+      "threshold": "backup_not_completed_in_25h",
+      "action": "create_github_issue",
+      "escalation": "immediate"
+    },
+    "database_unreachable": {
+      "severity": "critical",
+      "threshold": "connection_timeout",
+      "action": "create_github_issue",
+      "escalation": "immediate"
+    },
+    "backup_growth_anomaly": {
+      "severity": "warning",
+      "threshold": "size_increase_gt_50_percent_monthly",
+      "action": "create_github_issue",
+      "escalation": "8_hours"
+    },
+    "backup_stale": {
+      "severity": "critical",
+      "threshold": "no_backup_in_48h",
+      "action": "create_github_issue",
+      "escalation": "immediate"
+    }
+  },
+  "manual_procedures": {
+    "create_backup": {
+      "method": "supabase_cli",
+      "command": "supabase db dump --project-ref ujxncnmoccotlssnqzwx --format sql > backup_$(date +%Y%m%d_%H%M%S).sql",
+      "estimated_time_minutes": 2,
+      "requires_authentication": true
+    },
+    "restore_backup": {
+      "method": "psql",
+      "command": "psql $DATABASE_URL < backup_file.sql",
+      "estimated_time_minutes": 30,
+      "requires_confirmation": true,
+      "destructive": true
+    },
+    "validate_backup": {
+      "script": "scripts/backup-test.sh --validate",
+      "estimated_time_minutes": 5,
+      "non_destructive": true
+    }
+  },
+  "upgrade_recommendations": {
+    "current_plan": "free",
+    "next_plan": "supabase_pro",
+    "benefits": [
+      "30-day backup retention (vs 7 days)",
+      "Point-in-time recovery",
+      "Priority support",
+      "Advanced monitoring"
+    ],
+    "cost_per_month": 25,
+    "trigger_upgrade_when": [
+      "database_size_gt_50gb",
+      "need_extended_retention",
+      "advanced_features_needed",
+      "production_critical_workload"
+    ]
+  },
+  "security": {
+    "backup_encryption": "aes256",
+    "access_control": {
+      "backup_creation": "github_actions",
+      "backup_download": "authorized_users_only",
+      "restore_operations": "manual_approval_required"
+    },
+    "compliance": {
+      "soc2": true,
+      "gdpr": true,
+      "ccpa": true,
+      "data_residency": "eu-west-1"
+    },
+    "audit_logging": {
+      "backup_creation": "enabled",
+      "restore_operations": "enabled",
+      "retention_days": 365
+    }
+  },
+  "disaster_recovery": {
+    "scenarios": [
+      {
+        "scenario": "accidental_data_deletion",
+        "rto_minutes": 15,
+        "recovery_method": "selective_restore",
+        "procedure": "extract_table_from_backup"
+      },
+      {
+        "scenario": "database_corruption",
+        "rto_minutes": 30,
+        "recovery_method": "full_database_restore",
+        "procedure": "restore_from_backup"
+      },
+      {
+        "scenario": "complete_data_loss",
+        "rto_minutes": 45,
+        "recovery_method": "full_restore_new_instance",
+        "procedure": "restore_to_new_database"
+      }
+    ]
+  },
+  "documentation": {
+    "backup_guide": "docs/DATABASE_BACKUPS.md",
+    "restore_procedures": "docs/DATABASE_BACKUPS.md#restore-procedures",
+    "disaster_recovery": "docs/DATABASE_BACKUPS.md#disaster-recovery-scenarios",
+    "test_schedule": "docs/DATABASE_BACKUPS.md#backup-testing-schedule"
+  },
+  "contacts": {
+    "database_owner": "richhabitslondon@gmail.com",
+    "supabase_support": "https://supabase.com/support",
+    "github_issues": "report_backup_issues_here"
+  },
+  "version": "1.0",
+  "last_updated": "2026-05-03T00:00:00Z",
+  "next_review_date": "2026-06-03",
+  "reviewed_by": "Database Infrastructure Team"
+}

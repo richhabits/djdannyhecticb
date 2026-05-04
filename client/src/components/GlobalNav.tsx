@@ -77,7 +77,7 @@ export function GlobalNav() {
         style={{ boxShadow: '0 2px 0 rgba(249, 115, 22, 0.1)' }}
       >
         {/* Header container with consistent padding and height */}
-        <div className="flex items-center justify-between h-14 sm:h-16 md:h-16 lg:h-16 px-3 sm:px-4 md:px-5 lg:px-6 gap-2 sm:gap-3 md:gap-4">
+        <div className="flex items-center justify-between h-16 sm:h-20 md:h-20 lg:h-20 px-4 sm:px-6 md:px-8 lg:px-8 gap-3 sm:gap-4 md:gap-6">
 
           {/* Left: Logo - Always visible */}
           <Link

@@ -329,7 +329,8 @@ function ViewerMode() {
             {/* Stream Display */}
             <div className="relative rounded-lg overflow-hidden bg-black aspect-video mb-6 border border-border">
               {/* Visualizer Placeholder / Stream if Active */}
-              <div className="w-full h-full bg-gradient-to-br from-orange-900 via-black to-amber-900 flex items-center justify-center relative">
+              <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center relative">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/10 to-transparent opacity-60" />
                 <div className="relative z-10 text-center space-y-6">
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2 mb-4">
