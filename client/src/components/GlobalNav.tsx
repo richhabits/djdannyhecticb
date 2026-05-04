@@ -52,7 +52,7 @@ export function GlobalNav() {
     label: string
     isActive?: boolean
   }) => {
-    const baseClasses = "tape-strip px-3 py-2 text-xs sm:text-xs md:text-sm lg:text-sm transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white font-bold";
+    const baseClasses = "tape-strip px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-xs md:text-sm lg:text-sm transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white font-bold min-h-[44px] flex items-center justify-center";
     const colorClasses = isActive
       ? "bg-accent text-white border-white"
       : "bg-black text-white border-white hover:bg-white hover:text-black";

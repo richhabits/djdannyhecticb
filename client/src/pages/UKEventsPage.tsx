@@ -132,8 +132,8 @@ function EventCard({ event, index }: { event: any; index: number }) {
             </div>
 
             {/* Content Section */}
-            <div className="p-6 space-y-4">
-                <h3 className="text-xl font-black uppercase italic line-clamp-2 group-hover:text-accent transition-colors">
+            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <h3 className="text-base sm:text-xl font-black uppercase italic line-clamp-2 group-hover:text-accent transition-colors">
                     {event.title}
                 </h3>
 
@@ -863,7 +863,7 @@ export default function UKEventsPage() {
 
                         {/* Loading State */}
                         {isLoading && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                                 {[...Array(8)].map((_, i) => (
                                     <div key={i} className="flyer-card animate-pulse">
                                         <div className="aspect-[4/3] bg-white/10" />

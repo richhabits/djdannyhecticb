@@ -5,9 +5,9 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-black text-white border-t border-white mt-16">
-      <div className="container max-w-7xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
+    <footer className="bg-black text-white border-t border-white mt-12 sm:mt-16">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-8">
           {/* Brand Info */}
           <div>
             <h3 className="font-black text-xl mb-4 tape-strip inline-block bg-accent text-black px-3 py-1">

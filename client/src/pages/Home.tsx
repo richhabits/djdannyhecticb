@@ -75,13 +75,13 @@ export default function Home() {
             <DannyStatus />
           </div>
 
-          <div className="relative z-10 p-4 md:p-6 pb-12 md:pb-20">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl leading-[0.8] font-black uppercase tracking-tighter text-white mix-blend-difference mb-4">
+          <div className="relative z-10 p-4 sm:p-6 md:p-8 pb-12 sm:pb-16 md:pb-20">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[0.85] font-black uppercase tracking-tight text-white mix-blend-difference mb-4 sm:mb-6">
               HECTIC<br />EMPIRE
             </h1>
             <div className="mt-6 max-w-2xl">
-              <p className="text-xs tracking-[0.3em] text-white/60 uppercase mb-3">NEW CHAPTER</p>
-              <p className="text-white text-base md:text-lg leading-relaxed mb-6 max-w-2xl">
+              <p className="text-xs sm:text-xs tracking-[0.25em] text-white/60 uppercase mb-3 sm:mb-4">NEW CHAPTER</p>
+              <p className="text-sm sm:text-base md:text-lg leading-relaxed mb-6 max-w-2xl text-white/90">
                 Thirty years in music taught me what matters: control, sound, and truth. I'm not here to replay the past. This era is electro, pressure-tested, and built for rooms that want something real. Fewer distractions. Cleaner execution. Sharper energy. If you knew me before, you'll hear the difference. If you're new here — start with the story, then go straight to the mixes.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -101,10 +101,10 @@ export default function Home() {
         </section>
 
         {/* UTILITY GRID: The Feed */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-foreground border-b border-foreground">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-foreground border-b border-foreground">
 
           {/* Item 1: Latest Drop */}
-          <div className="bg-background aspect-square relative group cursor-pointer border-r border-foreground md:border-none">
+          <div className="bg-background aspect-square relative group cursor-pointer border-r border-foreground lg:border-r">
             <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=2670&auto=format&fit=crop"
               className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150" />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 transition-opacity duration-150">
