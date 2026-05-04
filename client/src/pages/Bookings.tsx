@@ -19,9 +19,9 @@ const GENRES = [
 export default function Bookings() {
   const { isAuthenticated, user } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
 
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     name: "",
     eventDate: "",
     location: "",
@@ -100,31 +100,31 @@ export default function Bookings() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-accent pirate-scanlines pt-32 pb-20 px-6">
-      <div className="max-w-7xl mx-auto flex flex-col gap-16">
+    <div className="min-h-screen bg-black text-white selection:bg-accent pirate-scanlines pt-20 sm:pt-24 md:pt-28 pb-20 px-4 sm:px-6 md:px-8">
+      <div className="max-w-7xl mx-auto flex flex-col gap-8 sm:gap-12 md:gap-16">
 
         {/* HERO SECTION */}
-        <section className="relative border-b-4 border-white pb-16">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
-            <div className="space-y-6">
-              <div className="tape-strip bg-accent text-white border-white">ESTABLISHED 1994</div>
-              <h1 className="text-8xl md:text-[12rem] font-black uppercase tracking-tighter leading-[0.75] italic">
+        <section className="relative border-b-4 border-white pb-8 sm:pb-12 md:pb-16">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start md:items-end gap-6 sm:gap-8 md:gap-12">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="tape-strip bg-accent text-white border-white text-xs">ESTABLISHED 1994</div>
+              <h1 className="text-4xl sm:text-6xl md:text-9xl font-black uppercase tracking-tight leading-[0.85] italic">
                 BOOKING<br />DESK
               </h1>
             </div>
-            <div className="max-w-md space-y-4">
-              <p className="text-lg font-bold uppercase bg-white text-black px-4 py-2 inline-block">SECURE THE SIGNAL</p>
-              <p className="text-white/60 font-medium uppercase leading-tight">
+            <div className="max-w-md space-y-3 sm:space-y-4">
+              <p className="text-base sm:text-lg font-bold uppercase bg-white text-black px-3 sm:px-4 py-2 inline-block">SECURE THE SIGNAL</p>
+              <p className="text-xs sm:text-sm text-white/60 font-medium uppercase leading-tight">
                 PROFESSIONAL AUDIO DELIVERY FOR CLUBS, FESTIVALS, AND PRIVATE OPS. FULL TECH RIDER AVAILABLE UPON REQUEST.
               </p>
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12 md:gap-16">
           {/* LEFT: INFO & DATES */}
-          <div className="lg:col-span-1 space-y-12">
-            <div className="flyer-card p-8 space-y-6">
+          <div className="lg:col-span-1 space-y-6 sm:space-y-8 md:space-y-12">
+            <div className="flyer-card p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
               <div className="tape-strip bg-white text-black border-black">LIVE_AVAILABILITY</div>
               <BookingCalendar
                 selected={formData.eventDate ? new Date(formData.eventDate) : undefined}
@@ -156,7 +156,7 @@ export default function Bookings() {
 
           {/* RIGHT: THE BRUTAL FORM */}
           <div className="lg:col-span-2">
-            <div className="bg-black border-4 border-white p-12 space-y-12 shadow-[20px_20px_0px_#F97316]">
+            <div className="bg-black border-4 border-white p-6 sm:p-8 md:p-12 space-y-6 sm:space-y-8 md:space-y-12 shadow-[20px_20px_0px_#F97316]">
               <div className="flex justify-between items-start">
                 <div className="tape-strip bg-white text-black border-black text-2xl">INQUIRY_FORM_v2.0</div>
                 <Zap className="w-8 h-8 text-accent animate-pulse" />

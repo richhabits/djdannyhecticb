@@ -12,16 +12,16 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-black text-white pt-20 sm:pt-24 md:pt-28 pb-20 px-4 sm:px-6 md:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <BackButton />
 
-        <section className="mb-12">
-          <div className="tape-strip bg-accent text-white border-white mb-6 inline-block text-xs">
+        <section className="mb-8 sm:mb-12">
+          <div className="tape-strip bg-accent text-white border-white mb-4 sm:mb-6 inline-block text-xs">
             SHOPPING_CART
           </div>
-          <h1 className="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.75] italic">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black uppercase tracking-tight leading-[0.85] italic">
             YOUR<br />CART
           </h1>
         </section>
@@ -40,9 +40,9 @@ export default function Cart() {
         ) : (
           <>
             {/* Cart Items */}
-            <section className="mb-12 border-2 border-white divide-y divide-white">
+            <section className="mb-8 sm:mb-12 border-2 border-white divide-y divide-white">
               {items.map((item) => (
-                <div key={item.productId} className="p-6 flex items-center justify-between hover:bg-white/5 transition-colors">
+                <div key={item.productId} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 hover:bg-white/5 transition-colors">
                   <div className="flex items-center gap-6 flex-1">
                     {item.thumbnailUrl && (
                       <img

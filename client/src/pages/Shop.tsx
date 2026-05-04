@@ -68,16 +68,16 @@ export default function Shop() {
         description="Official Hectic Radio Merchandise. Vinyl, Digital, Apparel."
         url="/shop"
       />
-      <div className="min-h-screen bg-background text-foreground font-mono pt-14">
+      <div className="min-h-screen bg-background text-foreground font-mono pt-16 sm:pt-20">
         {/* Brutalist Header */}
-        <section className="border-b border-foreground px-4 py-8 md:px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8">
+        <section className="border-b border-foreground px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-8 mb-8">
             <div>
-              <h1 className="text-6xl md:text-9xl font-black uppercase leading-[0.8] tracking-tighter">
+              <h1 className="text-4xl sm:text-6xl md:text-8xl font-black uppercase leading-[0.85] tracking-tight">
                 Empire<br />Supply
               </h1>
             </div>
-            <div className="md:text-right">
+            <div className="sm:text-right">
               <p className="text-sm font-bold uppercase tracking-widest mb-2 text-muted-foreground">Status</p>
               <p className="text-xl font-bold uppercase">Online Store v2.0</p>
             </div>
