@@ -47,15 +47,14 @@ export function GlobalNav() {
     label: string
     isActive?: boolean
   }) => {
-    const baseClasses = "tape-strip px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-xs md:text-sm lg:text-sm transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white font-bold min-h-[44px] flex items-center justify-center";
     const colorClasses = isActive
-      ? "bg-accent text-white border-white"
-      : "bg-black text-white border-white hover:bg-white hover:text-black";
+      ? "text-accent border-b-2 border-accent"
+      : "text-white border-b-2 border-transparent hover:text-accent hover:border-accent";
 
     return (
       <Link
         href={href}
-        className={`${baseClasses} ${colorClasses}`}
+        className={`px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-xs md:text-sm lg:text-sm transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white font-bold min-h-[44px] flex items-center justify-center ${colorClasses}`}
       >
         {label}
       </Link>
@@ -123,7 +122,7 @@ export function GlobalNav() {
             <a
               href="tel:+447957432842"
               aria-label="Call"
-              className="hidden md:flex items-center justify-center tape-strip bg-black text-white border-white p-3 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
+              className="hidden md:flex items-center justify-center bg-black text-white p-3 hover:text-accent transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
               title="Call us"
             >
               <Phone className="w-5 h-5" aria-hidden="true" />
@@ -135,7 +134,7 @@ export function GlobalNav() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="hidden md:flex items-center justify-center tape-strip bg-black text-white border-white p-3 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
+              className="hidden md:flex items-center justify-center bg-black text-white p-3 hover:text-accent transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
               title="Follow us on Instagram"
             >
               <Instagram className="w-5 h-5" aria-hidden="true" />
@@ -144,7 +143,7 @@ export function GlobalNav() {
             {/* Cart - Always visible */}
             <Link
               href="/cart"
-              className="relative inline-flex items-center justify-center tape-strip bg-black text-white border-white p-3 hover:bg-accent transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
+              className="relative inline-flex items-center justify-center bg-black text-white p-3 hover:text-accent transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-w-[44px] min-h-[44px]"
               aria-label={`Shopping cart${count > 0 ? ` - ${count} items` : ''}`}
             >
               <ShoppingCart className="w-5 h-5" aria-hidden="true" />
@@ -162,7 +161,7 @@ export function GlobalNav() {
             {isAuthenticated ? (
               <Link
                 href="/dashboard"
-                className="hidden sm:flex items-center justify-center tape-strip bg-white text-black border-black text-xs px-3 sm:px-3.5 py-2 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
+                className="hidden sm:flex items-center justify-center bg-white text-black text-xs px-3 sm:px-3.5 py-2 font-bold hover:bg-accent hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
                 aria-label="Dashboard"
               >
                 DASH
@@ -170,7 +169,7 @@ export function GlobalNav() {
             ) : (
               <a
                 href={getLoginUrl()}
-                className="hidden sm:flex items-center justify-center tape-strip bg-accent text-white border-white text-xs px-3 sm:px-3.5 py-2 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
+                className="hidden sm:flex items-center justify-center bg-accent text-white text-xs px-3 sm:px-3.5 py-2 font-bold hover:bg-white hover:text-black transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
                 aria-label="Login"
               >
                 LOGIN
@@ -200,7 +199,7 @@ export function GlobalNav() {
         <div
           id="mobile-menu"
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 top-16 sm:top-20 md:top-20 lg:top-20 bg-black/98 z-40 overflow-y-auto pirate-scanlines"
+          className="lg:hidden fixed inset-0 top-16 sm:top-20 md:top-20 bg-black/98 z-40 overflow-y-auto pirate-scanlines"
           role="dialog"
           aria-label="Mobile navigation menu"
           aria-modal="true"
