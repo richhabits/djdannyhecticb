@@ -14,10 +14,25 @@ export interface CacheOptions {
 }
 
 export class CacheManager {
-  private client: any;
+  private client: any | null = null;
+  private initialized = false;
 
   constructor() {
-    this.client = getRedisClient();
+    // Lazy-load Redis client on first use instead of constructor
+  }
+
+  private getClient() {
+    if (!this.initialized) {
+      try {
+        this.client = getRedisClient();
+        this.initialized = true;
+      } catch (error) {
+        logger.warn('Redis not available - caching disabled', { error });
+        this.client = null;
+        this.initialized = true;
+      }
+    }
+    return this.client;
   }
 
   /**
@@ -25,8 +40,11 @@ export class CacheManager {
    * Returns null if key doesn't exist or has expired
    */
   async get<T = any>(key: string): Promise<T | null> {
+    const client = this.getClient();
+    if (!client) return null; // Redis not available
+
     try {
-      const value = await this.client.get(key);
+      const value = await client.get(key);
       if (!value) return null;
 
       // Parse JSON if it looks like JSON
@@ -46,22 +64,25 @@ export class CacheManager {
    * Set a value in cache with TTL
    */
   async set<T = any>(key: string, value: T, options: CacheOptions = {}): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) return false; // Redis not available
+
     try {
       const ttl = options.ttl || CACHE_TTL.STANDARD;
       const serialized = JSON.stringify(value);
 
       if (ttl === CACHE_TTL.INDEFINITE || ttl === -1) {
         // No expiration
-        await this.client.set(key, serialized);
+        await client.set(key, serialized);
       } else {
         // Set with expiration (EX for seconds)
-        await this.client.setEx(key, ttl, serialized);
+        await client.setEx(key, ttl, serialized);
       }
 
       // Add tags if provided (for batch invalidation)
       if (options.tags?.length) {
         for (const tag of options.tags) {
-          await this.client.sAdd(`tags:${tag}`, key);
+          await client.sAdd(`tags:${tag}`, key);
         }
       }
 
@@ -102,8 +123,11 @@ export class CacheManager {
    * Batch get multiple keys
    */
   async mGet<T = any>(keys: string[]): Promise<Map<string, T | null>> {
+    const client = this.getClient();
+    if (!client) return new Map(keys.map((k) => [k, null])); // Redis not available
+
     try {
-      const values = await this.client.mGet(keys);
+      const values = await client.mGet(keys);
       const result = new Map<string, T | null>();
 
       keys.forEach((key, index) => {
@@ -130,9 +154,12 @@ export class CacheManager {
     entries: Array<[string, T]>,
     options: CacheOptions = {}
   ): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) return false; // Redis not available
+
     try {
       const ttl = options.ttl || CACHE_TTL.STANDARD;
-      const pipeline = this.client.multi();
+      const pipeline = client.multi();
 
       for (const [key, value] of entries) {
         const serialized = JSON.stringify(value);
@@ -155,8 +182,11 @@ export class CacheManager {
    * Delete a single key
    */
   async delete(key: string): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) return false; // Redis not available
+
     try {
-      await this.client.del(key);
+      await client.del(key);
       return true;
     } catch (error) {
       logger.error('Cache delete error', { key, error });
@@ -168,9 +198,12 @@ export class CacheManager {
    * Batch delete multiple keys
    */
   async mDelete(keys: string[]): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) return false; // Redis not available
+
     try {
       if (keys.length === 0) return true;
-      await this.client.del(keys);
+      await client.del(keys);
       return true;
     } catch (error) {
       logger.error('Cache mdelete error', { count: keys.length, error });
@@ -183,11 +216,14 @@ export class CacheManager {
    * WARNING: Use sparingly, can be slow on large datasets
    */
   async deletePattern(pattern: string): Promise<number> {
+    const client = this.getClient();
+    if (!client) return 0; // Redis not available
+
     try {
-      const keys = await this.client.keys(pattern);
+      const keys = await client.keys(pattern);
       if (keys.length === 0) return 0;
 
-      await this.client.del(keys);
+      await client.del(keys);
       logger.info('Cache pattern deleted', { pattern, count: keys.length });
       return keys.length;
     } catch (error) {
@@ -200,8 +236,11 @@ export class CacheManager {
    * Get all keys matching a pattern (for debugging)
    */
   async findKeys(pattern: string, limit: number = 1000): Promise<string[]> {
+    const client = this.getClient();
+    if (!client) return []; // Redis not available
+
     try {
-      const keys = await this.client.keys(pattern);
+      const keys = await client.keys(pattern);
       return keys.slice(0, limit);
     } catch (error) {
       logger.error('Cache findKeys error', { pattern, error });
@@ -213,8 +252,11 @@ export class CacheManager {
    * Check if key exists
    */
   async exists(key: string): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) return false; // Redis not available
+
     try {
-      const exists = await this.client.exists(key);
+      const exists = await client.exists(key);
       return exists === 1;
     } catch (error) {
       logger.error('Cache exists error', { key, error });
@@ -230,9 +272,12 @@ export class CacheManager {
     keysCount: number;
     hitRate?: number;
   }> {
+    const client = this.getClient();
+    if (!client) return { memoryUsage: 0, keysCount: 0 }; // Redis not available
+
     try {
-      const info = await this.client.info('memory');
-      const dbSize = await this.client.dbSize();
+      const info = await client.info('memory');
+      const dbSize = await client.dbSize();
 
       // Parse memory info
       const memoryMatch = info.match(/used_memory:(\d+)/);
@@ -252,8 +297,11 @@ export class CacheManager {
    * Clear all cache (emergency only)
    */
   async clear(): Promise<boolean> {
+    const client = this.getClient();
+    if (!client) return false; // Redis not available
+
     try {
-      await this.client.flushDb();
+      await client.flushDb();
       logger.warn('Cache cleared (FLUSH_DB)');
       return true;
     } catch (error) {
@@ -266,11 +314,14 @@ export class CacheManager {
    * Invalidate cache by tag
    */
   async invalidateByTag(tag: string): Promise<number> {
+    const client = this.getClient();
+    if (!client) return 0; // Redis not available
+
     try {
-      const keys = await this.client.sMembers(`tags:${tag}`);
+      const keys = await client.sMembers(`tags:${tag}`);
       if (keys.length === 0) return 0;
 
-      await this.client.del([...keys, `tags:${tag}`]);
+      await client.del([...keys, `tags:${tag}`]);
       logger.info('Cache tag invalidated', { tag, count: keys.length });
       return keys.length;
     } catch (error) {
