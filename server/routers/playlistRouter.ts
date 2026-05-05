@@ -7,8 +7,8 @@
  */
 
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import { eq, desc, and, count, isNull } from "drizzle-orm";
 import {
   playlists,
@@ -74,9 +74,7 @@ const playlistRouter = router({
   // Create new playlist
   create: protectedProcedure
     .input(CreatePlaylistInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const playlistId = nanoid();
       const now = new Date();
@@ -94,7 +92,7 @@ const playlistRouter = router({
         updatedAt: now,
       };
 
-      await db.insert(playlists).values(playlist);
+      await ctx.db.insert(playlists).values(playlist);
 
       return { id: playlistId };
     }),
@@ -102,12 +100,9 @@ const playlistRouter = router({
   // Get my playlists
   myPlaylists: protectedProcedure
     .input(GetPlaylistsInput)
-    .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const results = await db
-        .select({
+      const results = await ctx.db.select({
           playlist: playlists,
           itemCount: count(playlistItems.id),
           followerCount: count(playlistFollowers.id),
@@ -134,12 +129,9 @@ const playlistRouter = router({
   // Get public playlists
   public: publicProcedure
     .input(GetPlaylistsInput)
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const results = await db
-        .select({
+      const results = await ctx.db.select({
           playlist: playlists,
           creator: {
             id: users.id,
@@ -174,11 +166,9 @@ const playlistRouter = router({
   // Get playlist by ID with all clips
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.id),
       });
 
@@ -192,12 +182,11 @@ const playlistRouter = router({
         return null;
       }
 
-      const creator = await db.query.users.findFirst({
+      const creator = await ctx.db.query.users.findFirst({
         where: eq(users.id, playlist.userId),
       });
 
-      const items = await db
-        .select({
+      const items = await ctx.db.select({
           item: playlistItems,
           clip: clips,
         })
@@ -206,13 +195,12 @@ const playlistRouter = router({
         .where(eq(playlistItems.playlistId, input.id))
         .orderBy(playlistItems.order);
 
-      const followerCount = await db
-        .select({ count: count() })
+      const followerCount = await ctx.db.select({ count: count() })
         .from(playlistFollowers)
         .where(eq(playlistFollowers.playlistId, input.id));
 
       const isFollowing = ctx.user
-        ? await db.query.playlistFollowers.findFirst({
+        ? await ctx.db.query.playlistFollowers.findFirst({
             where: and(
               eq(playlistFollowers.playlistId, input.id),
               eq(playlistFollowers.userId, ctx.user.id)
@@ -232,11 +220,9 @@ const playlistRouter = router({
   // Update playlist details
   update: protectedProcedure
     .input(UpdatePlaylistInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.playlistId),
       });
 
@@ -255,8 +241,7 @@ const playlistRouter = router({
       if (input.coverImageUrl !== undefined)
         updates.coverImageUrl = input.coverImageUrl;
 
-      await db
-        .update(playlists)
+      await ctx.db.update(playlists)
         .set(updates)
         .where(eq(playlists.id, input.playlistId));
 
@@ -266,11 +251,9 @@ const playlistRouter = router({
   // Add clip to playlist
   addClip: protectedProcedure
     .input(AddClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.playlistId),
       });
 
@@ -280,8 +263,7 @@ const playlistRouter = router({
       }
 
       // Get next order
-      const lastItem = await db
-        .select()
+      const lastItem = await ctx.db.select()
         .from(playlistItems)
         .where(eq(playlistItems.playlistId, input.playlistId))
         .orderBy(desc(playlistItems.order))
@@ -289,7 +271,7 @@ const playlistRouter = router({
 
       const nextOrder = lastItem.length > 0 ? lastItem[0].order + 1 : 0;
 
-      await db.insert(playlistItems).values({
+      await ctx.db.insert(playlistItems).values({
         playlistId: input.playlistId,
         clipId: input.clipId,
         order: nextOrder,
@@ -302,11 +284,9 @@ const playlistRouter = router({
   // Remove clip from playlist
   removeClip: protectedProcedure
     .input(RemoveClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.playlistId),
       });
 
@@ -315,8 +295,7 @@ const playlistRouter = router({
         throw new Error("Unauthorized");
       }
 
-      await db
-        .delete(playlistItems)
+      await ctx.db.delete(playlistItems)
         .where(
           and(
             eq(playlistItems.playlistId, input.playlistId),
@@ -330,11 +309,9 @@ const playlistRouter = router({
   // Reorder clips
   reorderClip: protectedProcedure
     .input(ReorderClipsInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.playlistId),
       });
 
@@ -343,8 +320,7 @@ const playlistRouter = router({
         throw new Error("Unauthorized");
       }
 
-      await db
-        .update(playlistItems)
+      await ctx.db.update(playlistItems)
         .set({ order: input.newOrder })
         .where(
           and(
@@ -359,11 +335,9 @@ const playlistRouter = router({
   // Publish playlist (make public)
   publish: protectedProcedure
     .input(PublishPlaylistInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.playlistId),
       });
 
@@ -372,8 +346,7 @@ const playlistRouter = router({
         throw new Error("Unauthorized");
       }
 
-      await db
-        .update(playlists)
+      await ctx.db.update(playlists)
         .set({
           status: "published",
           publishedAt: new Date(),
@@ -387,11 +360,9 @@ const playlistRouter = router({
   // Follow playlist
   follow: protectedProcedure
     .input(FollowPlaylistInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const existing = await db.query.playlistFollowers.findFirst({
+      const existing = await ctx.db.query.playlistFollowers.findFirst({
         where: and(
           eq(playlistFollowers.playlistId, input.playlistId),
           eq(playlistFollowers.userId, ctx.user.id)
@@ -400,8 +371,7 @@ const playlistRouter = router({
 
       if (existing) {
         // Unfollow
-        await db
-          .delete(playlistFollowers)
+        await ctx.db.delete(playlistFollowers)
           .where(
             and(
               eq(playlistFollowers.playlistId, input.playlistId),
@@ -411,7 +381,7 @@ const playlistRouter = router({
         return { following: false };
       } else {
         // Follow
-        await db.insert(playlistFollowers).values({
+        await ctx.db.insert(playlistFollowers).values({
           playlistId: input.playlistId,
           userId: ctx.user.id,
           followedAt: new Date(),
@@ -423,11 +393,9 @@ const playlistRouter = router({
   // Delete playlist
   delete: protectedProcedure
     .input(z.object({ playlistId: z.string() }))
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const playlist = await db.query.playlists.findFirst({
+      const playlist = await ctx.db.query.playlists.findFirst({
         where: eq(playlists.id, input.playlistId),
       });
 
@@ -437,17 +405,15 @@ const playlistRouter = router({
       }
 
       // Delete items first
-      await db
-        .delete(playlistItems)
+      await ctx.db.delete(playlistItems)
         .where(eq(playlistItems.playlistId, input.playlistId));
 
       // Delete followers
-      await db
-        .delete(playlistFollowers)
+      await ctx.db.delete(playlistFollowers)
         .where(eq(playlistFollowers.playlistId, input.playlistId));
 
       // Delete playlist
-      await db.delete(playlists).where(eq(playlists.id, input.playlistId));
+      await ctx.db.delete(playlists).where(eq(playlists.id, input.playlistId));
 
       return { success: true };
     }),

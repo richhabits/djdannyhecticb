@@ -18,12 +18,14 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
 import { authenticateSession } from "./adminAuth";
+import { getDb } from "../db";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
   ipAddress?: string;
+  db: ReturnType<typeof getDb> extends Promise<infer T> ? T : never;
 };
 
 export async function createContext(
@@ -53,10 +55,14 @@ export async function createContext(
     opts.req.socket?.remoteAddress ||
     "unknown";
 
+  // Inject database instance into context (dependency injection pattern)
+  const db = await getDb();
+
   return {
     req: opts.req,
     res: opts.res,
     user,
     ipAddress,
+    db,
   };
 }

@@ -7,8 +7,8 @@
  */
 
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import { eq, desc, and, isNull, gte, lte, sql, count } from "drizzle-orm";
 import { clips, clipComments, clipLikes, clipViews } from "../../drizzle/content-schema";
 import { users } from "../../drizzle/schema";
@@ -61,14 +61,12 @@ const clipsRouter = router({
   // Create a new clip from VOD session
   create: protectedProcedure
     .input(CreateClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const clipId = nanoid();
       const now = new Date();
 
-      await db.insert(clips).values({
+      await ctx.db.insert(clips).values({
         id: clipId,
         sessionId: input.sessionId,
         userId: ctx.user.id,
@@ -88,9 +86,7 @@ const clipsRouter = router({
   // Get clips (user's own or from specific session)
   list: publicProcedure
     .input(GetClipsInput)
-    .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const conditions = [];
 
@@ -106,8 +102,7 @@ const clipsRouter = router({
         conditions.push(eq(clips.publishedAt, isNull(false)));
       }
 
-      const results = await db
-        .select({
+      const results = await ctx.db.select({
           clip: clips,
           creator: {
             id: users.id,
@@ -132,11 +127,9 @@ const clipsRouter = router({
   // Publish a clip (make it public)
   publish: protectedProcedure
     .input(PublishClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const clip = await db.query.clips.findFirst({
+      const clip = await ctx.db.query.clips.findFirst({
         where: eq(clips.id, input.clipId),
       });
 
@@ -145,8 +138,7 @@ const clipsRouter = router({
         throw new Error("Unauthorized");
       }
 
-      await db
-        .update(clips)
+      await ctx.db.update(clips)
         .set({
           publishedAt: new Date(),
           status: "published",
@@ -160,14 +152,11 @@ const clipsRouter = router({
   // Get popular/trending clips
   trending: publicProcedure
     .input(GetPopularClipsInput)
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const cutoffDate = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000);
 
-      const results = await db
-        .select({
+      const results = await ctx.db.select({
           clip: clips,
           likesCount: count(clipLikes.id),
           viewsCount: count(clipViews.id),
@@ -208,12 +197,9 @@ const clipsRouter = router({
   // Get clip by ID with stats
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const result = await db
-        .select({
+      const result = await ctx.db.select({
           clip: clips,
           creator: {
             id: users.id,
@@ -248,16 +234,14 @@ const clipsRouter = router({
   // Record view
   view: publicProcedure
     .input(ViewClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const userId = ctx.user?.id;
       const now = new Date();
 
       // Check if user already viewed in last 24 hours
       if (userId) {
-        const recentView = await db.query.clipViews.findFirst({
+        const recentView = await ctx.db.query.clipViews.findFirst({
           where: and(
             eq(clipViews.clipId, input.clipId),
             eq(clipViews.userId, userId),
@@ -271,7 +255,7 @@ const clipsRouter = router({
         if (recentView) return { success: true };
       }
 
-      await db.insert(clipViews).values({
+      await ctx.db.insert(clipViews).values({
         clipId: input.clipId,
         userId: userId || null,
         viewedAt: now,
@@ -283,11 +267,9 @@ const clipsRouter = router({
   // Like/unlike a clip
   toggleLike: protectedProcedure
     .input(LikeClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const existing = await db.query.clipLikes.findFirst({
+      const existing = await ctx.db.query.clipLikes.findFirst({
         where: and(
           eq(clipLikes.clipId, input.clipId),
           eq(clipLikes.userId, ctx.user.id)
@@ -295,8 +277,7 @@ const clipsRouter = router({
       });
 
       if (existing) {
-        await db
-          .delete(clipLikes)
+        await ctx.db.delete(clipLikes)
           .where(
             and(
               eq(clipLikes.clipId, input.clipId),
@@ -305,7 +286,7 @@ const clipsRouter = router({
           );
         return { liked: false };
       } else {
-        await db.insert(clipLikes).values({
+        await ctx.db.insert(clipLikes).values({
           clipId: input.clipId,
           userId: ctx.user.id,
           likedAt: new Date(),
@@ -317,14 +298,12 @@ const clipsRouter = router({
   // Comment on clip
   addComment: protectedProcedure
     .input(CommentOnClipInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const commentId = nanoid();
       const now = new Date();
 
-      await db.insert(clipComments).values({
+      await ctx.db.insert(clipComments).values({
         id: commentId,
         clipId: input.clipId,
         userId: ctx.user.id,
@@ -342,12 +321,9 @@ const clipsRouter = router({
       limit: z.number().min(1).max(100).default(20),
       offset: z.number().min(0).default(0),
     }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return await db
-        .select({
+      return await ctx.db.select({
           comment: clipComments,
           author: {
             id: users.id,
@@ -367,11 +343,9 @@ const clipsRouter = router({
   // Delete a clip (owner only)
   delete: protectedProcedure
     .input(z.object({ clipId: z.string() }))
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const clip = await db.query.clips.findFirst({
+      const clip = await ctx.db.query.clips.findFirst({
         where: eq(clips.id, input.clipId),
       });
 
@@ -380,7 +354,7 @@ const clipsRouter = router({
         throw new Error("Unauthorized");
       }
 
-      await db.delete(clips).where(eq(clips.id, input.clipId));
+      await ctx.db.delete(clips).where(eq(clips.id, input.clipId));
       return { success: true };
     }),
 });

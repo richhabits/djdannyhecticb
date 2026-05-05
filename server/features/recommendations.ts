@@ -7,7 +7,6 @@
  * Uses content-based, collaborative, and trending algorithms
  */
 
-import { getDb } from "../db";
 import {
   recommendations,
   InsertRecommendation,
@@ -28,7 +27,7 @@ interface RecommendationScore {
  * Recommends similar content to what user has already watched/liked
  */
 async function getContentBasedRecommendations(
-  userId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
   limit: number = 5
 ): Promise<RecommendationScore[]> {
   const db = await getDb();
@@ -78,7 +77,7 @@ async function getCollaborativeRecommendations(
  * What's popular right now
  */
 async function getTrendingRecommendations(
-  userId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
   limit: number = 5
 ): Promise<RecommendationScore[]> {
   const db = await getDb();
@@ -115,7 +114,7 @@ async function getPersonalizedRecommendations(
  * Generate recommendations for a user
  */
 export async function generateRecommendations(
-  userId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
   limit: number = 10
 ): Promise<InsertRecommendation[]> {
   const db = await getDb();
@@ -162,7 +161,7 @@ export async function generateRecommendations(
  * Get recommendations for a user
  */
 export async function getUserRecommendations(
-  userId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
   limit: number = 10
 ) {
   const db = await getDb();
@@ -179,7 +178,7 @@ export async function getUserRecommendations(
 /**
  * Record that a recommendation was clicked
  */
-export async function recordRecommendationClick(recommendationId: number) {
+export async function recordRecommendationClick(db?: Awaited<ReturnType<typeof getDb>>, recommendationId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -203,7 +202,7 @@ export async function recordRecommendationClick(recommendationId: number) {
 /**
  * Track recommendation impression (view)
  */
-export async function recordRecommendationImpression(recommendationId: number) {
+export async function recordRecommendationImpression(db?: Awaited<ReturnType<typeof getDb>>, recommendationId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -225,7 +224,7 @@ export async function recordRecommendationImpression(recommendationId: number) {
 /**
  * Get recommendation analytics
  */
-export async function getRecommendationAnalytics(userId?: number) {
+export async function getRecommendationAnalytics(db?: Awaited<ReturnType<typeof getDb>>, userId?: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -265,7 +264,7 @@ export async function getRecommendationAnalytics(userId?: number) {
 /**
  * Recommend users to follow
  */
-export async function getUserRecommendations_Users(userId: number) {
+export async function getUserRecommendations_Users(db?: Awaited<ReturnType<typeof getDb>>, userId: number) {
   const db = await getDb();
   if (!db) return [];
 

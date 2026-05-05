@@ -7,8 +7,8 @@
  */
 
 import { router, publicProcedure, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
 import {
   highlights,
@@ -66,9 +66,7 @@ const highlightsRouter = router({
   // Generate highlight reel from session metrics
   generate: adminProcedure
     .input(GenerateHighlightInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const highlightId = nanoid();
       const now = new Date();
@@ -89,7 +87,7 @@ const highlightsRouter = router({
         updatedAt: now,
       };
 
-      await db.insert(highlights).values(highlight);
+      await ctx.db.insert(highlights).values(highlight);
 
       // Schedule async processing job
       // This would typically be queued for background processing
@@ -101,17 +99,14 @@ const highlightsRouter = router({
   // Get highlights (public view)
   list: publicProcedure
     .input(GetHighlightsInput)
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const conditions = [eq(highlights.status, "published")];
       if (input.sessionId) {
         conditions.push(eq(highlights.sessionId, input.sessionId));
       }
 
-      return await db
-        .select()
+      return await ctx.db.select()
         .from(highlights)
         .where(and(...conditions))
         .orderBy(desc(highlights.publishedAt))
@@ -122,18 +117,15 @@ const highlightsRouter = router({
   // Get highlight by ID with moments
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const highlight = await db.query.highlights.findFirst({
+      const highlight = await ctx.db.query.highlights.findFirst({
         where: eq(highlights.id, input.id),
       });
 
       if (!highlight) return null;
 
-      const moments = await db
-        .select()
+      const moments = await ctx.db.select()
         .from(highlightMoments)
         .where(eq(highlightMoments.highlightId, input.id))
         .orderBy(sql`${highlightMoments.startTime}`);
@@ -145,14 +137,11 @@ const highlightsRouter = router({
     }),
 
   // Get weekly/monthly highlights
-  weekly: publicProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
+  weekly: publicProcedure.query(async ({ ctx }) => {    if (!ctx.db) throw new Error("Database not available");
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    return await db
-      .select()
+    return await ctx.db.select()
       .from(highlights)
       .where(
         and(
@@ -163,14 +152,11 @@ const highlightsRouter = router({
       .orderBy(desc(highlights.publishedAt));
   }),
 
-  monthly: publicProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
+  monthly: publicProcedure.query(async ({ ctx }) => {    if (!ctx.db) throw new Error("Database not available");
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    return await db
-      .select()
+    return await ctx.db.select()
       .from(highlights)
       .where(
         and(
@@ -184,12 +170,9 @@ const highlightsRouter = router({
   // Publish a generated highlight
   publish: adminProcedure
     .input(PublishHighlightInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      await db
-        .update(highlights)
+      await ctx.db.update(highlights)
         .set({
           status: "published",
           publishedAt: new Date(),
@@ -203,12 +186,9 @@ const highlightsRouter = router({
   // Archive a highlight
   archive: adminProcedure
     .input(z.object({ highlightId: z.string() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      await db
-        .update(highlights)
+      await ctx.db.update(highlights)
         .set({
           status: "archived",
           updatedAt: new Date(),
@@ -221,11 +201,9 @@ const highlightsRouter = router({
   // Get highlight statistics
   stats: adminProcedure
     .input(z.object({ highlightId: z.string() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const highlight = await db.query.highlights.findFirst({
+      const highlight = await ctx.db.query.highlights.findFirst({
         where: eq(highlights.id, input.highlightId),
       });
 

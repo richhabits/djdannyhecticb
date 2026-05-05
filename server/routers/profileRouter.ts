@@ -6,7 +6,6 @@
 
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
 import { userProfiles, follows, reputationScores, reputationBadges, donations, chatMessages, clipComments } from "../../drizzle/engagement-schema";
 import { eq, desc, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -23,11 +22,10 @@ export const profileRouter = router({
   // Get a user's profile
   getProfile: publicProcedure
     .input(z.object({ userId: z.number() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const [profile] = await db
+      const [profile] = await ctx.db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, input.userId))
@@ -53,11 +51,10 @@ export const profileRouter = router({
   // Get user's follower count
   getFollowerCount: publicProcedure
     .input(z.object({ userId: z.number() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const followerCount = await db
+      const followerCount = await ctx.db
         .select()
         .from(follows)
         .where(eq(follows.followingId, input.userId));
@@ -68,9 +65,8 @@ export const profileRouter = router({
   // Get user's following count
   getFollowingCount: publicProcedure
     .input(z.object({ userId: z.number() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const followingCount = await db
         .select()
@@ -87,9 +83,8 @@ export const profileRouter = router({
       limit: z.number().default(20),
       offset: z.number().default(0),
     }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const followers = await db
         .select()
@@ -108,9 +103,8 @@ export const profileRouter = router({
       limit: z.number().default(20),
       offset: z.number().default(0),
     }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const following = await db
         .select()
@@ -125,9 +119,8 @@ export const profileRouter = router({
   // Get profile stats (clips, followers, donations)
   getProfileStats: publicProcedure
     .input(z.object({ userId: z.number() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get reputation score
       const [reputation] = await db
@@ -169,8 +162,7 @@ export const profileRouter = router({
   updateProfile: protectedProcedure
     .input(profileUpdateSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -214,8 +206,7 @@ export const profileRouter = router({
   isFollowing: protectedProcedure
     .input(z.object({ targetUserId: z.number() }))
     .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -238,8 +229,7 @@ export const profileRouter = router({
   followUser: protectedProcedure
     .input(z.object({ targetUserId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -265,8 +255,7 @@ export const profileRouter = router({
   unfollowUser: protectedProcedure
     .input(z.object({ targetUserId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -288,9 +277,8 @@ export const profileRouter = router({
     .input(z.object({
       limit: z.number().default(10),
     }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get top users by reputation score
       const topUsers = await db
@@ -309,8 +297,7 @@ export const profileRouter = router({
       badge: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const [existing] = await db
         .select()

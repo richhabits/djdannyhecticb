@@ -8,7 +8,6 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { getDb } from "../db";
 import {
   churnPredictions,
   contentAnalytics,
@@ -35,7 +34,7 @@ interface UserEngagementMetrics {
 /**
  * Calculate user engagement metrics
  */
-async function getUserEngagementMetrics(userId: number): Promise<UserEngagementMetrics> {
+async function getUserEngagementMetrics(db?: Awaited<ReturnType<typeof getDb>>, userId: number): Promise<UserEngagementMetrics> {
   const db = await getDb();
   if (!db) return {
     userId,
@@ -100,7 +99,7 @@ async function getUserEngagementMetrics(userId: number): Promise<UserEngagementM
 /**
  * Predict churn risk for a user
  */
-export async function predictChurnRisk(userId: number): Promise<InsertChurnPrediction> {
+export async function predictChurnRisk(db?: Awaited<ReturnType<typeof getDb>>, userId: number): Promise<InsertChurnPrediction> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -164,7 +163,7 @@ export async function predictChurnRisk(userId: number): Promise<InsertChurnPredi
 /**
  * Get high-risk churn users
  */
-export async function getChurnRiskUsers(threshold: number = 0.7) {
+export async function getChurnRiskUsers(db?: Awaited<ReturnType<typeof getDb>>, threshold: number = 0.7) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -179,7 +178,7 @@ export async function getChurnRiskUsers(threshold: number = 0.7) {
  * Analyze content performance
  */
 export async function analyzeContentPerformance(
-  liveSessionId: number
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number
 ): Promise<InsertContentAnalytics> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -287,7 +286,7 @@ Provide a JSON response:
  * Get revenue forecast
  */
 export async function getRevenueForecast(
-  period: "7d" | "30d" | "90d" = "30d"
+  db?: Awaited<ReturnType<typeof getDb>>, period: "7d" | "30d" | "90d" = "30d"
 ): Promise<{
   period: string;
   forecast: number;
@@ -346,7 +345,7 @@ export async function getPredictiveInsights() {
 /**
  * Get user engagement trend
  */
-export async function getUserEngagementTrend(userId: number) {
+export async function getUserEngagementTrend(db?: Awaited<ReturnType<typeof getDb>>, userId: number) {
   const db = await getDb();
   if (!db) return null;
 

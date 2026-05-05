@@ -7,8 +7,8 @@
  */
 
 import { router, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import { eq, desc, and } from "drizzle-orm";
 import {
   simulcasts,
@@ -54,9 +54,7 @@ const simulcastRouter = router({
   // Create new simulcast event
   create: adminProcedure
     .input(CreateSimulcastInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const simulcastId = nanoid();
       const now = new Date();
@@ -78,7 +76,7 @@ const simulcastRouter = router({
         updatedAt: now,
       };
 
-      await db.insert(simulcasts).values(simulcast);
+      await ctx.db.insert(simulcasts).values(simulcast);
 
       // Create stream entries for each platform
       // Platform-specific RTMP URLs would be obtained from each service's API
@@ -124,7 +122,7 @@ const simulcastRouter = router({
         };
       });
 
-      await db.insert(simulcastStreams).values(streams);
+      await ctx.db.insert(simulcastStreams).values(streams);
 
       return {
         id: simulcastId,
@@ -136,18 +134,15 @@ const simulcastRouter = router({
   // Get simulcast by ID
   byId: adminProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const simulcast = await db.query.simulcasts.findFirst({
+      const simulcast = await ctx.db.query.simulcasts.findFirst({
         where: eq(simulcasts.id, input.id),
       });
 
       if (!simulcast) return null;
 
-      const streams = await db
-        .select()
+      const streams = await ctx.db.select()
         .from(simulcastStreams)
         .where(eq(simulcastStreams.simulcastId, input.id));
 
@@ -165,12 +160,9 @@ const simulcastRouter = router({
         offset: z.number().min(0).default(0),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return await db
-        .select()
+      return await ctx.db.select()
         .from(simulcasts)
         .orderBy(desc(simulcasts.createdAt))
         .limit(input.limit)
@@ -180,11 +172,9 @@ const simulcastRouter = router({
   // Start simulcast (go live on all platforms)
   start: adminProcedure
     .input(StartSimulcastInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const simulcast = await db.query.simulcasts.findFirst({
+      const simulcast = await ctx.db.query.simulcasts.findFirst({
         where: eq(simulcasts.id, input.simulcastId),
       });
 
@@ -193,8 +183,7 @@ const simulcastRouter = router({
       const now = new Date();
 
       // Update simulcast status
-      await db
-        .update(simulcasts)
+      await ctx.db.update(simulcasts)
         .set({
           status: "live",
           startedAt: now,
@@ -203,8 +192,7 @@ const simulcastRouter = router({
         .where(eq(simulcasts.id, input.simulcastId));
 
       // Update all stream statuses to "connecting"
-      await db
-        .update(simulcastStreams)
+      await ctx.db.update(simulcastStreams)
         .set({ status: "connecting" })
         .where(eq(simulcastStreams.simulcastId, input.simulcastId));
 
@@ -222,14 +210,11 @@ const simulcastRouter = router({
   // End simulcast
   end: adminProcedure
     .input(z.object({ simulcastId: z.string() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const now = new Date();
 
-      await db
-        .update(simulcasts)
+      await ctx.db.update(simulcasts)
         .set({
           status: "completed",
           endedAt: now,
@@ -238,8 +223,7 @@ const simulcastRouter = router({
         .where(eq(simulcasts.id, input.simulcastId));
 
       // Update stream statuses
-      await db
-        .update(simulcastStreams)
+      await ctx.db.update(simulcastStreams)
         .set({ status: "stopped" })
         .where(eq(simulcastStreams.simulcastId, input.simulcastId));
 
@@ -251,9 +235,7 @@ const simulcastRouter = router({
   // Update individual stream status and metrics
   updateStreamStatus: adminProcedure
     .input(UpdateStreamStatusInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const updates: Record<string, unknown> = {
         status: input.status,
@@ -267,7 +249,7 @@ const simulcastRouter = router({
         updates.healthScore = input.healthScore;
       }
 
-      const stream = await db.query.simulcastStreams.findFirst({
+      const stream = await ctx.db.query.simulcastStreams.findFirst({
         where: eq(simulcastStreams.id, input.streamId),
       });
 
@@ -275,8 +257,7 @@ const simulcastRouter = router({
         updates.peakViewers = input.currentViewers;
       }
 
-      await db
-        .update(simulcastStreams)
+      await ctx.db.update(simulcastStreams)
         .set(updates)
         .where(eq(simulcastStreams.id, input.streamId));
 
@@ -286,18 +267,15 @@ const simulcastRouter = router({
   // Get aggregated stats
   getStats: adminProcedure
     .input(GetSimulcastStatsInput)
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const simulcast = await db.query.simulcasts.findFirst({
+      const simulcast = await ctx.db.query.simulcasts.findFirst({
         where: eq(simulcasts.id, input.simulcastId),
       });
 
       if (!simulcast) throw new Error("Simulcast not found");
 
-      const streams = await db
-        .select()
+      const streams = await ctx.db.select()
         .from(simulcastStreams)
         .where(eq(simulcastStreams.simulcastId, input.simulcastId));
 
@@ -331,12 +309,9 @@ const simulcastRouter = router({
   // Get all stats for a simulcast (for admin dashboard)
   allStats: adminProcedure
     .input(z.object({ limit: z.number().min(1).max(50).default(10) }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const recentSimulcasts = await db
-        .select()
+      const recentSimulcasts = await ctx.db.select()
         .from(simulcasts)
         .where(eq(simulcasts.status, "completed"))
         .orderBy(desc(simulcasts.endedAt))
@@ -344,8 +319,7 @@ const simulcastRouter = router({
 
       return await Promise.all(
         recentSimulcasts.map(async (s) => {
-          const stats = await db
-            .select()
+          const stats = await ctx.db.select()
             .from(simulcastStats)
             .where(eq(simulcastStats.simulcastId, s.id));
 

@@ -8,7 +8,6 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { getDb } from "../db";
 import {
   streamTranscripts,
   streamTags,
@@ -105,7 +104,7 @@ Return as JSON with these keys:
  * Store transcript
  */
 export async function storeTranscript(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   fullText: string,
   sourceType: string = "whisper",
   language: string = "en",
@@ -134,7 +133,7 @@ export async function storeTranscript(
  * Extract and tag metadata from transcript
  */
 export async function extractAndTagTranscript(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   transcript: string
 ): Promise<InsertStreamTag[]> {
   const db = await getDb();
@@ -221,7 +220,7 @@ export async function extractAndTagTranscript(
 /**
  * Get transcript for a stream
  */
-export async function getStreamTranscript(liveSessionId: number) {
+export async function getStreamTranscript(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -237,7 +236,7 @@ export async function getStreamTranscript(liveSessionId: number) {
  * Get all tags for a stream
  */
 export async function getStreamTags(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   tagType?: string
 ) {
   const db = await getDb();
@@ -259,7 +258,7 @@ export async function getStreamTags(
  * Search streams by tag
  */
 export async function searchStreamsByTag(
-  tagValue: string,
+  db?: Awaited<ReturnType<typeof getDb>>, tagValue: string,
   tagType?: string
 ): Promise<number[]> {
   const db = await getDb();
@@ -281,7 +280,7 @@ export async function searchStreamsByTag(
 /**
  * Get all songs played in a stream
  */
-export async function getStreamSongs(liveSessionId: number) {
+export async function getStreamSongs(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -305,7 +304,7 @@ export async function getStreamSongs(liveSessionId: number) {
 /**
  * Get all artists mentioned in a stream
  */
-export async function getStreamArtists(liveSessionId: number) {
+export async function getStreamArtists(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -318,7 +317,7 @@ export async function getStreamArtists(liveSessionId: number) {
 /**
  * Get stream guests
  */
-export async function getStreamGuests(liveSessionId: number) {
+export async function getStreamGuests(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

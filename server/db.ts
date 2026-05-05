@@ -794,29 +794,8 @@ export async function listFanBadges(limit: number = 50) {
     .limit(limit);
 }
 
-// AI Mixes queries
-export async function createAIMix(mix: InsertAIMix) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(aiMixes).values({
-    ...mix,
-    setlist: typeof mix.setlist === "string" ? mix.setlist : JSON.stringify(mix.setlist),
-    genres: typeof mix.genres === "string" ? mix.genres : JSON.stringify(mix.genres),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(aiMixes).where(eq(aiMixes.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function listAIMixes(limit: number = 20) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db
-    .select()
-    .from(aiMixes)
-    .orderBy(desc(aiMixes.createdAt))
-    .limit(limit);
-}
+// AI Mixes queries - moved to db/mixes.ts
+export { createAIMix, listAIMixes } from "./db/mixes";
 
 // Danny Reacts queries
 export async function createDannyReact(react: InsertDannyReact) {
@@ -1356,28 +1335,8 @@ export async function setDefaultBrand(id: number) {
 // PHASE 5: EMPIRE MODE - SAFETY & REPUTATION
 // ============================================
 
-export async function createAuditLog(log: InsertAuditLog) {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Audit] Database not available, skipping audit log");
-    return;
-  }
-  try {
-    await db.insert(auditLogs).values({
-      ...log,
-      beforeSnapshot: typeof log.beforeSnapshot === "string" ? log.beforeSnapshot : JSON.stringify(log.beforeSnapshot || {}),
-      afterSnapshot: typeof log.afterSnapshot === "string" ? log.afterSnapshot : JSON.stringify(log.afterSnapshot || {}),
-    });
-  } catch (error) {
-    console.error("[Audit] Failed to create audit log:", error);
-  }
-}
-
-export async function listAuditLogs(limit: number = 100) {
-  const db = await getDb();
-  if (!db) return [];
-  return await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(limit);
-}
+// Audit logging - moved to db/audit.ts
+export { createAuditLog, listAuditLogs } from "./db/audit";
 
 export async function getEmpireSetting(key: string) {
   const db = await getDb();
@@ -1587,51 +1546,15 @@ export async function getUnreadNotificationCount(fanId?: number) {
 // PHASE 5: EMPIRE MODE - EMPIRE API
 // ============================================
 
-export async function createApiKey(apiKey: InsertApiKey) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(apiKeys).values({
-    ...apiKey,
-    scopes: typeof apiKey.scopes === "string" ? apiKey.scopes : JSON.stringify(apiKey.scopes || []),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(apiKeys).where(eq(apiKeys.id, insertedId)).limit(1);
-  return created[0];
-}
-
-export async function listApiKeys(activeOnly: boolean = false) {
-  const db = await getDb();
-  if (!db) return [];
-  if (activeOnly) {
-    return await db.select().from(apiKeys).where(eq(apiKeys.isActive, true)).orderBy(desc(apiKeys.createdAt));
-  }
-  return await db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt));
-}
-
-export async function getApiKeyByKey(key: string) {
-  const db = await getDb();
-  if (!db) return undefined;
-  const result = await db.select().from(apiKeys).where(eq(apiKeys.key, key)).limit(1);
-  return result[0];
-}
-
-export async function updateApiKeyLastUsed(key: string) {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(apiKeys).set({ lastUsedAt: new Date(), updatedAt: new Date() }).where(eq(apiKeys.key, key));
-}
-
-export async function deactivateApiKey(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.update(apiKeys).set({ isActive: false, updatedAt: new Date() }).where(eq(apiKeys.id, id));
-}
-
-export async function deleteApiKey(id: number) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  await db.delete(apiKeys).where(eq(apiKeys.id, id));
-}
+// API key management - moved to db/api-keys.ts
+export {
+  createApiKey,
+  listApiKeys,
+  getApiKeyByKey,
+  updateApiKeyLastUsed,
+  deactivateApiKey,
+  deleteApiKey,
+} from "./db/api-keys";
 
 // ============================================
 // PHASE 5: EMPIRE MODE - EMPIRE OVERVIEW (AGGREGATE METRICS)
@@ -3572,111 +3495,16 @@ export async function listMerchOrders(filters?: { status?: string; limit?: numbe
     .offset(offset);
 }
 
-// Refund Requests
-
-export async function createRefundRequest(data: InsertRefundRequest) {
-  const db = await getDb();
-  if (!db) {
-    throw new Error(getDatabaseErrorMessage("refund requests"));
-  }
-
-  const result = await db
-    .insert(refundRequests)
-    .values(data)
-    .returning({ id: refundRequests.id });
-
-  return result[0] || null;
-}
-
-export async function getRefundRequest(id: number) {
-  const db = await getDb();
-  if (!db) return null;
-
-  const result = await db.select().from(refundRequests).where(eq(refundRequests.id, id));
-  return result[0] || null;
-}
-
-export async function listRefundRequests(filters?: { status?: string; limit?: number; offset?: number }) {
-  const db = await getDb();
-  if (!db) return [];
-
-  let query = db.select().from(refundRequests);
-
-  if (filters?.status) {
-    query = query.where(eq(refundRequests.status, filters.status as any)) as any;
-  }
-
-  const limit = filters?.limit || 20;
-  const offset = filters?.offset || 0;
-
-  return await query
-    .orderBy(desc(refundRequests.requestedAt))
-    .limit(limit)
-    .offset(offset);
-}
-
-export async function listRefundRequestsByPurchase(purchaseId: number, limit = 10) {
-  const db = await getDb();
-  if (!db) return [];
-
-  return await db
-    .select()
-    .from(refundRequests)
-    .where(eq(refundRequests.purchaseId, purchaseId))
-    .orderBy(desc(refundRequests.requestedAt))
-    .limit(limit);
-}
-
-export async function approveRefund(id: number, adminId: number, notes?: string) {
-  const db = await getDb();
-  if (!db) return false;
-
-  await db
-    .update(refundRequests)
-    .set({
-      status: "approved",
-      adminId,
-      responseNotes: notes || null,
-      respondedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(refundRequests.id, id));
-
-  return true;
-}
-
-export async function denyRefund(id: number, adminId: number, notes?: string) {
-  const db = await getDb();
-  if (!db) return false;
-
-  await db
-    .update(refundRequests)
-    .set({
-      status: "denied",
-      adminId,
-      responseNotes: notes || null,
-      respondedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(refundRequests.id, id));
-
-  return true;
-}
-
-export async function markRefundAsRefunded(id: number) {
-  const db = await getDb();
-  if (!db) return false;
-
-  await db
-    .update(refundRequests)
-    .set({
-      status: "refunded",
-      updatedAt: new Date(),
-    })
-    .where(eq(refundRequests.id, id));
-
-  return true;
-}
+// Refund Request handling - moved to db/refund-handler.ts
+export {
+  createRefundRequest,
+  getRefundRequest,
+  listRefundRequests,
+  listRefundRequestsByPurchase,
+  approveRefund,
+  denyRefund,
+  markRefundAsRefunded,
+} from "./db/refund-handler";
 
 // Stub implementations for AI features (not yet implemented)
 export async function getUserByOpenId(openId: string) {
@@ -3767,4 +3595,54 @@ export async function getUserAchievements(userId: number) {
 export async function unlockAchievement(userId: number, achievementId: string) {
   // TODO: Implement unlock achievement
   return null;
+}
+
+export async function createOrUpdateWorldAvatar(input: any) {
+  // TODO: Implement world avatar creation/update
+  return null;
+}
+
+export async function listOnlineWorldAvatars() {
+  // TODO: Implement list online world avatars
+  return [];
+}
+
+export async function createBookingPhase7(input: any) {
+  // TODO: Implement booking phase 7 creation
+  return null;
+}
+
+export async function listBookingsPhase7(input?: any) {
+  // TODO: Implement list bookings phase 7
+  return [];
+}
+
+export async function getBookingPhase7(id: number) {
+  // TODO: Implement get booking phase 7
+  return null;
+}
+
+export async function updateBookingPhase7(id: number, updates: any) {
+  // TODO: Implement update booking phase 7
+  return null;
+}
+
+export async function createEventPhase7(input: any) {
+  // TODO: Implement create event phase 7
+  return null;
+}
+
+export async function listEventsPhase7(upcomingOnly?: boolean) {
+  // TODO: Implement list events phase 7
+  return [];
+}
+
+export async function createAIDannyChat(input: any) {
+  // TODO: Implement AI Danny chat creation
+  return null;
+}
+
+export async function getAIDannyChatHistory(sessionId: number, limit?: number) {
+  // TODO: Implement get AI Danny chat history
+  return [];
 }

@@ -6,7 +6,6 @@
  * Live Chat Handler - Real-time message processing with rate limiting
  */
 
-import { getDb } from "../db";
 import { chatMessages, leaderboards } from "../../drizzle/engagement-schema";
 import { eq, and } from "drizzle-orm";
 
@@ -150,7 +149,7 @@ export function validateChatMessage(data: ChatMessageData): {
  * Returns the saved message or error
  */
 export async function handleChatMessage(
-  data: ChatMessageData,
+  db?: Awaited<ReturnType<typeof getDb>>, data: ChatMessageData,
   userId: number,
   liveSessionId: number
 ): Promise<{
@@ -255,7 +254,7 @@ async function updateLeaderboardMessageCount(
  * Delete a chat message (admin only)
  */
 export async function deleteChatMessage(
-  messageId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, messageId: number,
   adminUserId: number,
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -285,7 +284,7 @@ export async function deleteChatMessage(
 /**
  * Pin a chat message
  */
-export async function pinChatMessage(messageId: number): Promise<{
+export async function pinChatMessage(db?: Awaited<ReturnType<typeof getDb>>, messageId: number): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -313,7 +312,7 @@ export async function pinChatMessage(messageId: number): Promise<{
 /**
  * Unpin a chat message
  */
-export async function unpinChatMessage(messageId: number): Promise<{
+export async function unpinChatMessage(db?: Awaited<ReturnType<typeof getDb>>, messageId: number): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -342,7 +341,7 @@ export async function unpinChatMessage(messageId: number): Promise<{
  * Get recent chat messages for a session
  */
 export async function getRecentChatMessages(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   limit: number = 50
 ): Promise<any[]> {
   try {

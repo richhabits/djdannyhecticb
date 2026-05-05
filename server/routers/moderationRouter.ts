@@ -7,8 +7,8 @@
  */
 
 import { router, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   chatMessages,
   userBadges,
@@ -27,12 +27,9 @@ export const moderationRouter = router({
         reason: z.string().max(255).optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const message = await db
-        .select()
+      const message = await ctx.db.select()
         .from(chatMessages)
         .where(eq(chatMessages.id, input.messageId))
         .then((rows) => rows[0]);
@@ -41,8 +38,7 @@ export const moderationRouter = router({
         throw new Error("Message not found");
       }
 
-      await db
-        .update(chatMessages)
+      await ctx.db.update(chatMessages)
         .set({
           isDeleted: true,
           deletedBy: ctx.user.id,
@@ -71,12 +67,9 @@ export const moderationRouter = router({
         includeDeleted: z.boolean().default(false),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const messages = await db
-        .select({
+      const messages = await ctx.db.select({
           message: chatMessages,
           user: users,
         })
@@ -105,13 +98,10 @@ export const moderationRouter = router({
         duration: z.number().positive().optional(), // minutes, undefined = permanent
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Check user exists
-      const user = await db
-        .select()
+      const user = await ctx.db.select()
         .from(users)
         .where(eq(users.id, input.userId))
         .then((rows) => rows[0]);
@@ -125,7 +115,7 @@ export const moderationRouter = router({
         ? new Date(Date.now() + input.duration * 60000)
         : null;
 
-      await db.insert(userBadges).values({
+      await ctx.db.insert(userBadges).values({
         userId: input.userId,
         badgeType: "banned",
         liveSessionId: input.liveSessionId,
@@ -138,8 +128,7 @@ export const moderationRouter = router({
       });
 
       // Delete any pending messages from this user in this session
-      await db
-        .update(chatMessages)
+      await ctx.db.update(chatMessages)
         .set({
           isDeleted: true,
           deletedBy: ctx.user.id,
@@ -175,13 +164,10 @@ export const moderationRouter = router({
         reason: z.string().max(255).optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Check user exists
-      const user = await db
-        .select()
+      const user = await ctx.db.select()
         .from(users)
         .where(eq(users.id, input.userId))
         .then((rows) => rows[0]);
@@ -192,7 +178,7 @@ export const moderationRouter = router({
 
       const expiresAt = new Date(Date.now() + input.duration * 60000);
 
-      await db.insert(userBadges).values({
+      await ctx.db.insert(userBadges).values({
         userId: input.userId,
         badgeType: "muted",
         liveSessionId: input.liveSessionId,
@@ -225,13 +211,10 @@ export const moderationRouter = router({
         severity: z.enum(["low", "medium", "high"]).default("medium"),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Check user exists
-      const user = await db
-        .select()
+      const user = await ctx.db.select()
         .from(users)
         .where(eq(users.id, input.userId))
         .then((rows) => rows[0]);
@@ -240,7 +223,7 @@ export const moderationRouter = router({
         throw new Error("User not found");
       }
 
-      await db.insert(userBadges).values({
+      await ctx.db.insert(userBadges).values({
         userId: input.userId,
         badgeType: "warned",
         liveSessionId: input.liveSessionId,
@@ -271,12 +254,9 @@ export const moderationRouter = router({
         liveSessionId: z.number().positive().optional(),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const badges = await db
-        .select()
+      const badges = await ctx.db.select()
         .from(userBadges)
         .where(
           and(
@@ -299,14 +279,11 @@ export const moderationRouter = router({
         liveSessionId: z.number().positive(),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const now = new Date();
 
-      const actions = await db
-        .select({
+      const actions = await ctx.db.select({
           badge: userBadges,
           user: users,
         })
@@ -332,12 +309,9 @@ export const moderationRouter = router({
         reason: z.string().max(255).optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const badge = await db
-        .select()
+      const badge = await ctx.db.select()
         .from(userBadges)
         .where(eq(userBadges.id, input.badgeId))
         .then((rows) => rows[0]);
@@ -347,8 +321,7 @@ export const moderationRouter = router({
       }
 
       // Mark as expired
-      await db
-        .update(userBadges)
+      await ctx.db.update(userBadges)
         .set({
           expiresAt: new Date(),
           metadata: {

@@ -7,8 +7,8 @@
  */
 
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import { eq, desc, and, gte, isNull } from "drizzle-orm";
 import {
   podcastEpisodes,
@@ -56,9 +56,7 @@ const podcastRouter = router({
   // Create podcast episode from session
   create: adminProcedure
     .input(CreatePodcastInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const episodeId = nanoid();
       const now = new Date();
@@ -78,7 +76,7 @@ const podcastRouter = router({
         updatedAt: now,
       };
 
-      await db.insert(podcastEpisodes).values(episode);
+      await ctx.db.insert(podcastEpisodes).values(episode);
 
       // Create stats entry
       const stats: InsertPodcastStat = {
@@ -91,7 +89,7 @@ const podcastRouter = router({
         updatedAt: now,
       };
 
-      await db.insert(podcastStats).values(stats);
+      await ctx.db.insert(podcastStats).values(stats);
 
       return { id: episodeId };
     }),
@@ -99,9 +97,7 @@ const podcastRouter = router({
   // Update episode details
   update: adminProcedure
     .input(UpdatePodcastInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const updates: Record<string, unknown> = {
         updatedAt: new Date(),
@@ -111,8 +107,7 @@ const podcastRouter = router({
       if (input.description) updates.description = input.description;
       if (input.transcript) updates.transcript = input.transcript;
 
-      await db
-        .update(podcastEpisodes)
+      await ctx.db.update(podcastEpisodes)
         .set(updates)
         .where(eq(podcastEpisodes.id, input.episodeId));
 
@@ -122,9 +117,7 @@ const podcastRouter = router({
   // Get all episodes
   list: publicProcedure
     .input(GetEpisodesInput)
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const conditions = [];
 
@@ -135,8 +128,7 @@ const podcastRouter = router({
         conditions[0] = eq(podcastEpisodes.status, input.status);
       }
 
-      return await db
-        .select()
+      return await ctx.db.select()
         .from(podcastEpisodes)
         .where(and(...conditions))
         .orderBy(desc(podcastEpisodes.publishedAt))
@@ -147,17 +139,15 @@ const podcastRouter = router({
   // Get episode by ID with stats
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const episode = await db.query.podcastEpisodes.findFirst({
+      const episode = await ctx.db.query.podcastEpisodes.findFirst({
         where: eq(podcastEpisodes.id, input.id),
       });
 
       if (!episode) return null;
 
-      const stats = await db.query.podcastStats.findFirst({
+      const stats = await ctx.db.query.podcastStats.findFirst({
         where: eq(podcastStats.episodeId, input.id),
       });
 
@@ -170,12 +160,9 @@ const podcastRouter = router({
   // Get distributions for episode
   distributions: adminProcedure
     .input(z.object({ episodeId: z.string() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return await db
-        .select()
+      return await ctx.db.select()
         .from(podcastDistributions)
         .where(eq(podcastDistributions.episodeId, input.episodeId))
         .orderBy(desc(podcastDistributions.createdAt));
@@ -184,11 +171,9 @@ const podcastRouter = router({
   // Publish to platforms
   publish: adminProcedure
     .input(PublishPodcastInput)
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const episode = await db.query.podcastEpisodes.findFirst({
+      const episode = await ctx.db.query.podcastEpisodes.findFirst({
         where: eq(podcastEpisodes.id, input.episodeId),
       });
 
@@ -196,8 +181,7 @@ const podcastRouter = router({
       if (!episode.audioUrl) throw new Error("Episode missing audio URL");
 
       // Mark episode as published
-      await db
-        .update(podcastEpisodes)
+      await ctx.db.update(podcastEpisodes)
         .set({
           status: "published",
           publishedAt: new Date(),
@@ -218,7 +202,7 @@ const podcastRouter = router({
         })
       );
 
-      await db.insert(podcastDistributions).values(distributions);
+      await ctx.db.insert(podcastDistributions).values(distributions);
 
       // TODO: Queue actual platform submissions
       // Each platform (Spotify, Apple, etc) has different submission requirements
@@ -229,12 +213,9 @@ const podcastRouter = router({
   // Get latest episodes (RSS feed compatible)
   latest: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(100).default(10) }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return await db
-        .select()
+      return await ctx.db.select()
         .from(podcastEpisodes)
         .where(eq(podcastEpisodes.status, "published"))
         .orderBy(desc(podcastEpisodes.publishedAt))
@@ -251,9 +232,7 @@ const podcastRouter = router({
         url: z.string().url().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const updates: Record<string, unknown> = {
         status: input.status,
@@ -266,8 +245,7 @@ const podcastRouter = router({
         updates.approvedAt = new Date();
       }
 
-      await db
-        .update(podcastDistributions)
+      await ctx.db.update(podcastDistributions)
         .set(updates)
         .where(eq(podcastDistributions.id, input.distributionId));
 
@@ -286,9 +264,7 @@ const podcastRouter = router({
         rating: z.number().min(0).max(5).optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const updates: Record<string, unknown> = {
         updatedAt: new Date(),
@@ -301,8 +277,7 @@ const podcastRouter = router({
       if (input.reviews !== undefined) updates.reviews = input.reviews;
       if (input.rating !== undefined) updates.rating = input.rating;
 
-      await db
-        .update(podcastStats)
+      await ctx.db.update(podcastStats)
         .set(updates)
         .where(eq(podcastStats.episodeId, input.episodeId));
 
@@ -312,12 +287,9 @@ const podcastRouter = router({
   // Archive episode
   archive: adminProcedure
     .input(z.object({ episodeId: z.string() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      await db
-        .update(podcastEpisodes)
+      await ctx.db.update(podcastEpisodes)
         .set({
           status: "archived",
           updatedAt: new Date(),

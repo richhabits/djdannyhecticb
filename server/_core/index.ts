@@ -7,6 +7,30 @@
  * disassembly is strictly prohibited and may result in legal action.
  */
 
+/**
+ * API Facade Exports
+ * ===================
+ * The facade layer provides type-safe boundaries between frontend and backend.
+ * See api-facade.ts for domain groupings and architectural documentation.
+ */
+export type {
+  APIFacade,
+  DomainBoundary,
+  ContentRouters,
+  CommerceRouters,
+  EngagementRouters,
+  StreamingRouters,
+  EventsRouters,
+  MusicRouters,
+  MonetizationRouters,
+  SystemRouters,
+  AIRouters,
+  AuthRouters,
+  AdminRouters,
+  PerformanceRouters,
+} from "./api-facade";
+export { routerDomainMap } from "./api-facade";
+
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";

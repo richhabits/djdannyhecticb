@@ -10,8 +10,8 @@
  */
 
 import { publicProcedure, adminProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import { sponsorships, sponsorshipMetrics } from "../../drizzle/revenue-schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 
@@ -45,7 +45,7 @@ export const sponsorshipRouter = router({
   /**
    * Get sponsorship packages
    */
-  getPackages: publicProcedure.query(async () => {
+  getPackages: publicProcedure.query(async ({ ctx }) => {
     return Object.entries(SPONSORSHIP_TIERS).map(([tier, data]) => ({
       tier,
       ...data,
@@ -55,16 +55,13 @@ export const sponsorshipRouter = router({
   /**
    * Get active sponsorships
    */
-  getActiveSponsorships: publicProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getActiveSponsorships: publicProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return [];
       }
 
       const now = new Date();
-      const active = await db
-        .select()
+      const active = await ctx.db.select()
         .from(sponsorships)
         .where(
           and(
@@ -85,14 +82,12 @@ export const sponsorshipRouter = router({
   /**
    * Get all sponsorships (admin)
    */
-  getAllSponsorships: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getAllSponsorships: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return [];
       }
 
-      const all = await db.select().from(sponsorships).orderBy(desc(sponsorships.createdAt));
+      const all = await ctx.db.select().from(sponsorships).orderBy(desc(sponsorships.createdAt));
 
       return all;
     } catch (error) {
@@ -119,15 +114,12 @@ export const sponsorshipRouter = router({
         specialRequirements: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const deal = await db
-          .insert(sponsorships)
+        const deal = await ctx.db.insert(sponsorships)
           .values({
             brandName: input.brandName,
             tier: input.tier as any,
@@ -160,15 +152,12 @@ export const sponsorshipRouter = router({
    */
   activate: adminProcedure
     .input(z.object({ sponsorshipId: z.number() }))
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        await db
-          .update(sponsorships)
+        await ctx.db.update(sponsorships)
           .set({ status: "active", updatedAt: new Date() })
           .where(eq(sponsorships.id, input.sponsorshipId));
 
@@ -191,15 +180,12 @@ export const sponsorshipRouter = router({
         conversions: z.number().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const metric = await db
-          .insert(sponsorshipMetrics)
+        const metric = await ctx.db.insert(sponsorshipMetrics)
           .values({
             sponsorshipId: input.sponsorshipId,
             date: new Date(),
@@ -228,15 +214,12 @@ export const sponsorshipRouter = router({
         endDate: z.string().optional(),
       })
     )
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return null;
         }
 
-        const sponsorship = await db
-          .select()
+        const sponsorship = await ctx.db.select()
           .from(sponsorships)
           .where(eq(sponsorships.id, input.sponsorshipId))
           .limit(1);
@@ -245,8 +228,7 @@ export const sponsorshipRouter = router({
           throw new Error("Sponsorship not found");
         }
 
-        let query = db
-          .select()
+        let query = ctx.db.select()
           .from(sponsorshipMetrics)
           .where(eq(sponsorshipMetrics.sponsorshipId, input.sponsorshipId));
 
@@ -299,14 +281,12 @@ export const sponsorshipRouter = router({
   /**
    * Get sponsorship revenue stats
    */
-  getRevenueStats: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getRevenueStats: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const all = await db.select().from(sponsorships);
+      const all = await ctx.db.select().from(sponsorships);
 
       const active = all.filter((s) => s.status === "active");
       const totalMonthlyRevenue = active.reduce((sum, s) => sum + parseFloat(s.monthlyAmount.toString()), 0);
@@ -334,15 +314,12 @@ export const sponsorshipRouter = router({
    */
   endDeal: adminProcedure
     .input(z.object({ sponsorshipId: z.number() }))
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        await db
-          .update(sponsorships)
+        await ctx.db.update(sponsorships)
           .set({ status: "cancelled", updatedAt: new Date() })
           .where(eq(sponsorships.id, input.sponsorshipId));
 

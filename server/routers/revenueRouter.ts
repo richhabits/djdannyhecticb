@@ -11,8 +11,8 @@
  */
 
 import { adminProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   revenueSummary,
   subscriptionPayments,
@@ -46,16 +46,14 @@ export const revenueRouter = router({
   /**
    * Get total revenue stats
    */
-  getTotalRevenue: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getTotalRevenue: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const subscriptionPaymentsData = await db.select().from(subscriptionPayments);
-      const affiliateConversionsData = await db.select().from(affiliateConversions);
-      const digitalPurchasesData = await db.select().from(digitalPurchases);
+      const subscriptionPaymentsData = await ctx.db.select().from(subscriptionPayments);
+      const affiliateConversionsData = await ctx.db.select().from(affiliateConversions);
+      const digitalPurchasesData = await ctx.db.select().from(digitalPurchases);
 
       const subRevenue = subscriptionPaymentsData.reduce(
         (sum, p) => sum + parseFloat(p.amount.toString()),
@@ -107,17 +105,15 @@ export const revenueRouter = router({
         endDate: z.string().optional(),
       })
     )
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return [];
         }
 
         const start = input.startDate ? new Date(input.startDate) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
         const end = input.endDate ? new Date(input.endDate) : new Date();
 
-        const results = await db.select().from(revenueSummary).where(
+        const results = await ctx.db.select().from(revenueSummary).where(
           and(
             gte(revenueSummary.createdAt, start),
             lte(revenueSummary.createdAt, end)
@@ -134,10 +130,8 @@ export const revenueRouter = router({
   /**
    * Get monthly revenue trend
    */
-  getMonthlyTrend: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getMonthlyTrend: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return [];
       }
 
@@ -164,7 +158,7 @@ export const revenueRouter = router({
       }
 
       // Aggregate actual data
-      const summaries = await db.select().from(revenueSummary);
+      const summaries = await ctx.db.select().from(revenueSummary);
       summaries.forEach((s) => {
         const period = formatPeriod(s.createdAt);
         if (monthlyData[period]) {
@@ -189,14 +183,12 @@ export const revenueRouter = router({
   /**
    * Get churn analysis
    */
-  getChurnAnalysis: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getChurnAnalysis: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const churnData = await db.select().from(userChurn).orderBy(desc(userChurn.churnDate));
+      const churnData = await ctx.db.select().from(userChurn).orderBy(desc(userChurn.churnDate));
 
       const thisMonth = churnData.filter((c) => {
         const date = new Date(c.churnDate);
@@ -246,10 +238,8 @@ export const revenueRouter = router({
         taxRate: z.number().default(0.2),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
@@ -257,8 +247,7 @@ export const revenueRouter = router({
         const start = new Date(input.year, 0, 1);
         const end = new Date(input.year, 11, 31, 23, 59, 59);
 
-        const summaries = await db
-          .select()
+        const summaries = await ctx.db.select()
           .from(revenueSummary)
           .where(and(gte(revenueSummary.createdAt, start), lte(revenueSummary.createdAt, end)));
 
@@ -266,8 +255,7 @@ export const revenueRouter = router({
         const taxableAmount = grossRevenue * 0.85; // 15% deductions
         const taxAmount = taxableAmount * input.taxRate;
 
-        const report = await db
-          .insert(taxRecords)
+        const report = await ctx.db.insert(taxRecords)
           .values({
             userId: 0, // Would be admin/owner
             year: input.year,
@@ -294,15 +282,13 @@ export const revenueRouter = router({
   /**
    * Get payout stats
    */
-  getPayoutStats: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getPayoutStats: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const payouts = await db.select().from(userPayouts);
-      const affiliatePayoutsData = await db.select().from(affiliatePayouts);
+      const payouts = await ctx.db.select().from(userPayouts);
+      const affiliatePayoutsData = await ctx.db.select().from(affiliatePayouts);
 
       const totalPayouts = payouts.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
       const affiliatePayoutsTotal = affiliatePayoutsData.reduce(
@@ -329,14 +315,12 @@ export const revenueRouter = router({
   /**
    * Get top paying subscribers
    */
-  getTopSubscribers: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getTopSubscribers: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return [];
       }
 
-      const payments = await db.select().from(subscriptionPayments);
+      const payments = await ctx.db.select().from(subscriptionPayments);
 
       const grouped = payments.reduce(
         (acc, p) => {
@@ -363,14 +347,12 @@ export const revenueRouter = router({
   /**
    * Get LTV (Lifetime Value) analysis
    */
-  getLTV: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getLTV: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const payments = await db.select().from(subscriptionPayments);
+      const payments = await ctx.db.select().from(subscriptionPayments);
       const totalUsers = new Set(payments.map((p) => p.userId)).size;
       const totalRevenue = payments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
 
@@ -391,14 +373,12 @@ export const revenueRouter = router({
   /**
    * Get revenue forecasting
    */
-  getRevenueForecast: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getRevenueForecast: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const summaries = await db.select().from(revenueSummary);
+      const summaries = await ctx.db.select().from(revenueSummary);
 
       // Get last 3 months
       const lastThreeMonths = summaries.slice(-90);

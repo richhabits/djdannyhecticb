@@ -7,12 +7,13 @@
  */
 
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createSupportPaymentIntent } from "../lib/payments";
 import { ENV } from "../_core/env";
-import { getDb } from "../db";
 import { donations, userBadges } from "../../drizzle/engagement-schema";
 import { eq } from "drizzle-orm";
+import { getDb } from "../db";
 
 export const donationsRouter = router({
   /**
@@ -30,7 +31,7 @@ export const donationsRouter = router({
         userId: z.number().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!ENV.stripeSecretKey || !ENV.stripeWebhookSecret) {
         throw new Error("Stripe is not configured");
       }
@@ -72,15 +73,14 @@ export const donationsRouter = router({
         userId: z.number().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      const dbInstance = await getDb();
-      if (!dbInstance) {
-        throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       }
 
       try {
         // Find the donation by payment intent ID
-        const donationRecords = await dbInstance
+        const donationRecords = await ctx.db
           .select()
           .from(donations)
           .where(eq(donations.stripePaymentId, input.paymentIntentId));
@@ -167,32 +167,26 @@ export const donationsRouter = router({
    * Get donation history for a user
    */
   getUserDonations: protectedProcedure.query(async ({ ctx }) => {
-    const dbInstance = await getDb();
-    if (!dbInstance || !ctx.user?.id) {
-      throw new Error("User not authenticated");
+    if (!ctx.db || !ctx.user?.id) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "User not authenticated" });
     }
 
-    try {
-      const userDonations = await dbInstance
-        .select()
-        .from(donations)
-        .where(eq(donations.userId, ctx.user.id));
+    const userDonations = await ctx.db
+      .select()
+      .from(donations)
+      .where(eq(donations.userId, ctx.user.id));
 
-      return {
-        success: true,
-        donations: userDonations.map((d) => ({
-          id: d.id,
-          amount: parseFloat(d.amount.toString()),
-          currency: d.currency,
-          message: d.message,
-          status: d.status,
-          createdAt: d.createdAt,
-        })),
-      };
-    } catch (error) {
-      console.error("Failed to fetch user donations:", error);
-      throw new Error("Failed to fetch donations");
-    }
+    return {
+      success: true,
+      donations: userDonations.map((d) => ({
+        id: d.id,
+        amount: parseFloat(d.amount.toString()),
+        currency: d.currency,
+        message: d.message,
+        status: d.status,
+        createdAt: d.createdAt,
+      })),
+    };
   }),
 
   /**
@@ -208,10 +202,9 @@ export const donationsRouter = router({
           .optional(),
       })
     )
-    .query(async ({ input }) => {
-      const dbInstance = await getDb();
-      if (!dbInstance) {
-        throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       }
 
       try {
@@ -251,40 +244,34 @@ export const donationsRouter = router({
   /**
    * Get donation statistics
    */
-  getStats: publicProcedure.query(async () => {
-    const dbInstance = await getDb();
-    if (!dbInstance) {
-      throw new Error("Database not available");
+  getStats: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.db) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
     }
 
-    try {
-      const allDonations = await dbInstance
-        .select()
-        .from(donations)
-        .where(eq(donations.status, "completed"));
+    const allDonations = await ctx.db
+      .select()
+      .from(donations)
+      .where(eq(donations.status, "completed"));
 
-      const totalAmount = allDonations.reduce(
-        (sum, d) => sum + parseFloat(d.amount.toString()),
-        0
-      );
-      const totalDonors = new Set(allDonations.map((d) => d.userId)).size;
+    const totalAmount = allDonations.reduce(
+      (sum, d) => sum + parseFloat(d.amount.toString()),
+      0
+    );
+    const totalDonors = new Set(allDonations.map((d) => d.userId)).size;
 
-      return {
-        success: true,
-        stats: {
-          totalDonations: allDonations.length,
-          totalAmount: parseFloat(totalAmount.toFixed(2)),
-          uniqueDonors: totalDonors,
-          averageDonation:
-            allDonations.length > 0
-              ? parseFloat((totalAmount / allDonations.length).toFixed(2))
-              : 0,
-        },
-      };
-    } catch (error) {
-      console.error("Failed to fetch donation stats:", error);
-      throw new Error("Failed to fetch statistics");
-    }
+    return {
+      success: true,
+      stats: {
+        totalDonations: allDonations.length,
+        totalAmount: parseFloat(totalAmount.toFixed(2)),
+        uniqueDonors: totalDonors,
+        averageDonation:
+          allDonations.length > 0
+            ? parseFloat((totalAmount / allDonations.length).toFixed(2))
+            : 0,
+      },
+    };
   }),
 
   /**
@@ -292,48 +279,41 @@ export const donationsRouter = router({
    */
   getTopDonors: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(100).default(10) }))
-    .query(async ({ input }) => {
-      const dbInstance = await getDb();
-      if (!dbInstance) {
-        throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       }
 
-      try {
-        const allDonations = await dbInstance
-          .select()
-          .from(donations)
-          .where(eq(donations.status, "completed"));
+      const allDonations = await ctx.db
+        .select()
+        .from(donations)
+        .where(eq(donations.status, "completed"));
 
-        // Group by user and sum amounts
-        const donorTotals: Record<number, { total: number; name: string }> =
-          {};
+      // Group by user and sum amounts
+      const donorTotals: Record<number, { total: number; name: string }> = {};
 
-        for (const d of allDonations) {
-          if (!donorTotals[d.userId]) {
-            donorTotals[d.userId] = {
-              total: 0,
-              name: d.anonymous ? "Anonymous" : "", // TODO: get actual name from users table
-            };
-          }
-          donorTotals[d.userId].total += parseFloat(d.amount.toString());
+      for (const d of allDonations) {
+        if (!donorTotals[d.userId]) {
+          donorTotals[d.userId] = {
+            total: 0,
+            name: d.anonymous ? "Anonymous" : "", // TODO: get actual name from users table
+          };
         }
-
-        const sorted = Object.entries(donorTotals)
-          .map(([userId, data]) => ({
-            userId: parseInt(userId),
-            totalDonated: parseFloat(data.total.toFixed(2)),
-            donorName: data.name || "Anonymous",
-          }))
-          .sort((a, b) => b.totalDonated - a.totalDonated)
-          .slice(0, input.limit);
-
-        return {
-          success: true,
-          topDonors: sorted,
-        };
-      } catch (error) {
-        console.error("Failed to fetch top donors:", error);
-        throw new Error("Failed to fetch top donors");
+        donorTotals[d.userId].total += parseFloat(d.amount.toString());
       }
+
+      const sorted = Object.entries(donorTotals)
+        .map(([userId, data]) => ({
+          userId: parseInt(userId),
+          totalDonated: parseFloat(data.total.toFixed(2)),
+          donorName: data.name || "Anonymous",
+        }))
+        .sort((a, b) => b.totalDonated - a.totalDonated)
+        .slice(0, input.limit);
+
+      return {
+        success: true,
+        topDonors: sorted,
+      };
     }),
 });

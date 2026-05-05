@@ -10,8 +10,8 @@
  */
 
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   premiumContent,
   tierFeatures,
@@ -30,14 +30,12 @@ export const premiumRouter = router({
   /**
    * Get tier features mapping
    */
-  getTierFeatures: publicProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getTierFeatures: publicProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return {};
       }
 
-      const features = await db.select().from(tierFeatures);
+      const features = await ctx.db.select().from(tierFeatures);
 
       const grouped: Record<string, any[]> = {};
       features.forEach((f) => {
@@ -64,22 +62,18 @@ export const premiumRouter = router({
   hasAccess: protectedProcedure
     .input(z.object({ feature: z.string() }))
     .query(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           return { hasAccess: false, requiredTier: null };
         }
 
-        const subscription = await db
-          .select()
+        const subscription = await ctx.db.select()
           .from(userSubscriptions)
           .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
           .limit(1);
 
         const userPlan = subscription[0]?.plan || "free";
 
-        const feature = await db
-          .select()
+        const feature = await ctx.db.select()
           .from(tierFeatures)
           .where(eq(tierFeatures.feature, input.feature as any))
           .limit(1);
@@ -116,14 +110,12 @@ export const premiumRouter = router({
         offset: z.number().default(0),
       })
     )
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return [];
         }
 
-        let query = db.select().from(premiumContent);
+        let query = ctx.db.select().from(premiumContent);
 
         if (input.type) {
           query = query.where(eq(premiumContent.contentType, input.type)) as any;
@@ -146,15 +138,12 @@ export const premiumRouter = router({
    */
   getContent: publicProcedure
     .input(z.object({ contentId: z.number() }))
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return null;
         }
 
-        const content = await db
-          .select()
+        const content = await ctx.db.select()
           .from(premiumContent)
           .where(eq(premiumContent.id, input.contentId))
           .limit(1);
@@ -177,14 +166,12 @@ export const premiumRouter = router({
         offset: z.number().default(0),
       })
     )
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return [];
         }
 
-        let query = db.select().from(digitalProducts).where(eq(digitalProducts.isActive, true));
+        let query = ctx.db.select().from(digitalProducts).where(eq(digitalProducts.isActive, true));
 
         if (input.type) {
           query = query.where(eq(digitalProducts.type, input.type as any)) as any;
@@ -207,15 +194,12 @@ export const premiumRouter = router({
    */
   getProduct: publicProcedure
     .input(z.object({ productId: z.number() }))
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return null;
         }
 
-        const product = await db
-          .select()
+        const product = await ctx.db.select()
           .from(digitalProducts)
           .where(eq(digitalProducts.id, input.productId))
           .limit(1);
@@ -233,14 +217,11 @@ export const premiumRouter = router({
   createProductPaymentIntent: protectedProcedure
     .input(z.object({ productId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const product = await db
-          .select()
+        const product = await ctx.db.select()
           .from(digitalProducts)
           .where(eq(digitalProducts.id, input.productId))
           .limit(1);
@@ -281,9 +262,7 @@ export const premiumRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
@@ -295,8 +274,7 @@ export const premiumRouter = router({
 
         const downloadToken = crypto.randomBytes(32).toString("hex");
 
-        const purchase = await db
-          .insert(digitalPurchases)
+        const purchase = await ctx.db.insert(digitalPurchases)
           .values({
             userId: ctx.user?.id,
             productId: input.productId,
@@ -325,14 +303,11 @@ export const premiumRouter = router({
    * Get user's digital purchases
    */
   getMyPurchases: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const db = await getDb();
-      if (!db) {
+    try {      if (!ctx.db) {
         return [];
       }
 
-      const purchases = await db
-        .select()
+      const purchases = await ctx.db.select()
         .from(digitalPurchases)
         .where(eq(digitalPurchases.userId, ctx.user?.id || 0))
         .orderBy(desc(digitalPurchases.createdAt));
@@ -349,15 +324,12 @@ export const premiumRouter = router({
    */
   downloadProduct: publicProcedure
     .input(z.object({ downloadToken: z.string() }))
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return null;
         }
 
-        const purchase = await db
-          .select()
+        const purchase = await ctx.db.select()
           .from(digitalPurchases)
           .where(eq(digitalPurchases.downloadToken, input.downloadToken))
           .limit(1);
@@ -370,8 +342,7 @@ export const premiumRouter = router({
           throw new Error("Download link expired");
         }
 
-        const product = await db
-          .select()
+        const product = await ctx.db.select()
           .from(digitalProducts)
           .where(eq(digitalProducts.id, purchase[0].productId))
           .limit(1);
@@ -381,8 +352,7 @@ export const premiumRouter = router({
         }
 
         // Update download count
-        await db
-          .update(digitalPurchases)
+        await ctx.db.update(digitalPurchases)
           .set({
             downloadCount: (purchase[0].downloadCount || 0) + 1,
             lastDownloadedAt: new Date(),
@@ -417,15 +387,12 @@ export const premiumRouter = router({
         expiresAt: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const content = await db
-          .insert(premiumContent)
+        const content = await ctx.db.insert(premiumContent)
           .values({
             contentId: input.contentId,
             contentType: input.contentType,
@@ -462,15 +429,12 @@ export const premiumRouter = router({
         stock: z.number().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const product = await db
-          .insert(digitalProducts)
+        const product = await ctx.db.insert(digitalProducts)
           .values({
             name: input.name,
             description: input.description,

@@ -7,7 +7,6 @@
  * Real-time detection: copy-paste spam, suspicious links, caps spam, referral spam
  */
 
-import { getDb } from "../db";
 import { chatMessages } from "../../drizzle/engagement-schema";
 import { spamFlags, InsertSpamFlag } from "../../drizzle/ai-features-schema";
 import { eq, and, gte, desc } from "drizzle-orm";
@@ -186,7 +185,7 @@ function checkReferralSpam(message: string): {
  * Main spam detection function
  */
 export async function checkSpam(
-  message: string,
+  db?: Awaited<ReturnType<typeof getDb>>, message: string,
   userId: number,
   liveSessionId: number
 ): Promise<SpamCheckResult> {
@@ -232,7 +231,7 @@ export async function checkSpam(
  * Flag a message as spam in the database
  */
 export async function flagSpamMessage(
-  chatMessageId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, chatMessageId: number,
   liveSessionId: number,
   userId: number,
   flagType: string,
@@ -260,7 +259,7 @@ export async function flagSpamMessage(
  * Get flagged messages for moderator review
  */
 export async function getFlaggedMessages(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   status?: string
 ) {
   const db = await getDb();
@@ -286,7 +285,7 @@ export async function getFlaggedMessages(
  * Approve a flagged message (mark as clean)
  */
 export async function approveFlaggedMessage(
-  flagId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
   moderatorId: number
 ) {
   const db = await getDb();
@@ -308,7 +307,7 @@ export async function approveFlaggedMessage(
  * Delete a flagged message
  */
 export async function deleteFlaggedMessage(
-  flagId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
   moderatorId: number,
   chatMessageId: number
 ) {
@@ -340,7 +339,7 @@ export async function deleteFlaggedMessage(
 /**
  * Get spam statistics
  */
-export async function getSpamStats(liveSessionId: number) {
+export async function getSpamStats(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

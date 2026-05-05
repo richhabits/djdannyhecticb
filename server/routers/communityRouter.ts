@@ -8,7 +8,6 @@
 
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   reports,
   userBans,
@@ -48,8 +47,7 @@ export const communityRouter = router({
   createReport: protectedProcedure
     .input(reportSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -58,7 +56,7 @@ export const communityRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Must report either a user or comment" });
       }
 
-      const [report] = await db
+      const [report] = await ctx.db
         .insert(reports)
         .values({
           reporterId: userId,
@@ -111,11 +109,10 @@ export const communityRouter = router({
     .input(z.object({
       userId: z.number(),
     }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const [reputation] = await db
+      const [reputation] = await ctx.db
         .select()
         .from(reputationScores)
         .where(eq(reputationScores.userId, input.userId))
@@ -139,11 +136,10 @@ export const communityRouter = router({
     .input(z.object({
       userId: z.number(),
     }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const badges = await db
+      const badges = await ctx.db
         .select()
         .from(reputationBadges)
         .where(eq(reputationBadges.userId, input.userId));
@@ -159,8 +155,7 @@ export const communityRouter = router({
       reason: z.string(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Only allow self-updates or admin updates
       const userId = ctx.user?.id;
@@ -168,7 +163,7 @@ export const communityRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const [existing] = await db
+      const [existing] = await ctx.db
         .select()
         .from(reputationScores)
         .where(eq(reputationScores.userId, input.userId))
@@ -177,7 +172,7 @@ export const communityRouter = router({
       const newScore = (existing?.score || 0) + input.scoreChange;
 
       if (existing) {
-        await db
+        await ctx.db
           .update(reputationScores)
           .set({
             score: newScore,
@@ -185,7 +180,7 @@ export const communityRouter = router({
           })
           .where(eq(reputationScores.userId, input.userId));
       } else {
-        await db.insert(reputationScores).values({
+        await ctx.db.insert(reputationScores).values({
           userId: input.userId,
           score: newScore,
         });
@@ -209,8 +204,7 @@ export const communityRouter = router({
       ]),
     }))
     .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       try {
         const [badge] = await db
@@ -234,8 +228,7 @@ export const communityRouter = router({
       offset: z.number().default(0),
     }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const pending = await db
         .select()
@@ -257,13 +250,12 @@ export const communityRouter = router({
       note: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const adminId = ctx.user?.id;
       if (!adminId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const [report] = await db
+      const [report] = await ctx.db
         .select()
         .from(reports)
         .where(eq(reports.id, input.reportId))
@@ -275,7 +267,7 @@ export const communityRouter = router({
       if (input.action === "ban" && report.reportedUserId) {
         const endDate = input.duration ? new Date(Date.now() + input.duration * 24 * 60 * 60 * 1000) : null;
 
-        await db.insert(userBans).values({
+        await ctx.db.insert(userBans).values({
           userId: report.reportedUserId,
           reason: report.reason,
           bannedBy: adminId,
@@ -304,8 +296,7 @@ export const communityRouter = router({
       userId: z.number(),
     }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const now = new Date();
       const [ban] = await db
@@ -326,8 +317,7 @@ export const communityRouter = router({
   appealBan: protectedProcedure
     .input(appealSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -368,8 +358,7 @@ export const communityRouter = router({
       durationDays: z.number().default(7),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const adminId = ctx.user?.id;
       if (!adminId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -402,8 +391,7 @@ export const communityRouter = router({
       limit: z.number().default(10),
     }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const now = new Date();
       const highlights = await db
@@ -428,8 +416,7 @@ export const communityRouter = router({
       timeframeDays: z.number().default(7),
     }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get top donors in timeframe
       const since = new Date(Date.now() - input.timeframeDays * 24 * 60 * 60 * 1000);
@@ -458,12 +445,11 @@ export const communityRouter = router({
 
   // Get community stats
   getCommunityStats: publicProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+    if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-    const totalDonations = await db.select().from(donations);
-    const totalMessages = await db.select().from(chatMessages);
-    const totalComments = await db.select().from(clipComments);
+    const totalDonations = await ctx.db.select().from(donations);
+    const totalMessages = await ctx.db.select().from(chatMessages);
+    const totalComments = await ctx.db.select().from(clipComments);
 
     return {
       totalDonationsAmount: totalDonations.reduce((sum, d) => sum + parseFloat(d.amount), 0),

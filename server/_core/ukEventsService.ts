@@ -272,15 +272,21 @@ async function fetchTicketmasterEvents(options: {
 
 /**
  * Sync UK events from Ticketmaster
+ *
+ * DEPENDENCY INJECTION: Accepts optional db instance parameter for testing.
+ * If not provided, fetches from global getDb(). This pattern enables:
+ * - Unit testing with mock databases
+ * - Decoupling from global state
+ * - Easier service composition
  */
-export async function syncTicketmasterEvents(): Promise<{
+export async function syncTicketmasterEvents(dbInstance?: Awaited<ReturnType<typeof getDb>>): Promise<{
     success: boolean;
     eventsFound: number;
     eventsAdded: number;
     eventsUpdated: number;
     error?: string;
 }> {
-    const db = await getDb();
+    const db = dbInstance ?? (await getDb());
     if (!db) {
         return { success: false, eventsFound: 0, eventsAdded: 0, eventsUpdated: 0, error: 'Database not available' };
     }

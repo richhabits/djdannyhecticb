@@ -8,7 +8,6 @@
 
 import { router, adminProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   chatMessages,
   donations,
@@ -18,6 +17,7 @@ import {
 } from "../../drizzle/engagement-schema";
 import { users } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc, sql, count, sum, avg } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const analyticsRouter = router({
   // Get stream metrics for a session
@@ -27,22 +27,21 @@ export const analyticsRouter = router({
         liveSessionId: z.number().positive(),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const session = await db
+      const session = await ctx.db
         .select()
         .from(liveSessions)
         .where(eq(liveSessions.id, input.liveSessionId))
         .then((rows) => rows[0]);
 
       if (!session) {
-        throw new Error("Session not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
       }
 
       // Get chat stats
-      const chatStats = await db
+      const chatStats = await ctx.db
         .select({
           messageCount: count(chatMessages.id),
           uniqueUsers: count(chatMessages.userId, { distinct: true }),
@@ -57,7 +56,7 @@ export const analyticsRouter = router({
         .then((rows) => rows[0]);
 
       // Get donation stats
-      const donationStats = await db
+      const donationStats = await ctx.db
         .select({
           totalDonations: sum(donations.amount),
           donationCount: count(donations.id),
@@ -68,7 +67,7 @@ export const analyticsRouter = router({
         .then((rows) => rows[0]);
 
       // Get reaction stats
-      const reactionStats = await db
+      const reactionStats = await ctx.db
         .select({
           reactionCount: count(reactions.id),
         })
@@ -120,12 +119,11 @@ export const analyticsRouter = router({
         limit: z.number().min(1).max(100).default(50),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get all sessions in range
-      const sessions = await db
+      const sessions = await ctx.db
         .select()
         .from(liveSessions)
         .where(
@@ -140,13 +138,13 @@ export const analyticsRouter = router({
       // For each session, get key metrics
       const sessionMetrics = await Promise.all(
         sessions.map(async (session) => {
-          const chatCount = await db
+          const chatCount = await ctx.db
             .select({ count: count(chatMessages.id) })
             .from(chatMessages)
             .where(eq(chatMessages.liveSessionId, session.id))
             .then((rows) => rows[0]?.count || 0);
 
-          const donationTotal = await db
+          const donationTotal = await ctx.db
             .select({ total: sum(donations.amount) })
             .from(donations)
             .where(eq(donations.liveSessionId, session.id))
@@ -194,11 +192,10 @@ export const analyticsRouter = router({
         limit: z.number().min(1).max(100).default(10),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const topDonors = await db
+      const topDonors = await ctx.db
         .select({
           userId: donations.userId,
           user: users,
@@ -232,11 +229,10 @@ export const analyticsRouter = router({
         limit: z.number().min(1).max(100).default(10),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const activeChatters = await db
+      const activeChatters = await ctx.db
         .select({
           userId: chatMessages.userId,
           user: users,
@@ -264,11 +260,10 @@ export const analyticsRouter = router({
         liveSessionId: z.number().positive(),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const trends = await db
+      const trends = await ctx.db
         .select({
           reactionType: reactions.reactionType,
           count: count(reactions.id),
@@ -288,12 +283,11 @@ export const analyticsRouter = router({
         liveSessionId: z.number().positive(),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get geography data from user cities
-      const geoData = await db
+      const geoData = await ctx.db
         .select({
           city: users.city,
           count: count(chatMessages.userId, { distinct: true }),
@@ -320,11 +314,10 @@ export const analyticsRouter = router({
         liveSessionId: z.number().positive(),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const trends = await db
+      const trends = await ctx.db
         .select({
           hour: sql<string>`DATE_TRUNC('hour', ${chatMessages.createdAt})`,
           messageCount: count(chatMessages.id),
@@ -349,15 +342,14 @@ export const analyticsRouter = router({
         daysBack: z.number().min(1).max(365).default(30),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - input.daysBack);
 
       // Get active sessions
-      const activeSessions = await db
+      const activeSessions = await ctx.db
         .select({ count: count(liveSessions.id) })
         .from(liveSessions)
         .where(
@@ -369,7 +361,7 @@ export const analyticsRouter = router({
         .then((rows) => rows[0]?.count || 0);
 
       // Get total messages
-      const totalMessages = await db
+      const totalMessages = await ctx.db
         .select({ count: count(chatMessages.id) })
         .from(chatMessages)
         .leftJoin(

@@ -8,7 +8,6 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { getDb } from "../db";
 import { moderationFlags, InsertModerationFlag } from "../../drizzle/ai-features-schema";
 import { eq, desc } from "drizzle-orm";
 import { ENV } from "../_core/env";
@@ -173,7 +172,7 @@ export async function moderateMessage(message: string): Promise<ModerationResult
  * Flag a message for moderation
  */
 export async function flagModerationViolation(
-  chatMessageId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, chatMessageId: number,
   liveSessionId: number,
   userId: number,
   violationType: string,
@@ -205,7 +204,7 @@ export async function flagModerationViolation(
  * Get flagged messages for moderator review
  */
 export async function getModeratorQueue(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   limit: number = 50
 ) {
   const db = await getDb();
@@ -223,7 +222,7 @@ export async function getModeratorQueue(
  * Approve a message (moderator decision)
  */
 export async function approveModerationDecision(
-  flagId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
   moderatorId: number
 ) {
   const db = await getDb();
@@ -244,7 +243,7 @@ export async function approveModerationDecision(
  * Delete a message and update moderation record
  */
 export async function deleteModerationViolation(
-  flagId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
   moderatorId: number
 ) {
   const db = await getDb();
@@ -264,7 +263,7 @@ export async function deleteModerationViolation(
 /**
  * Get moderation statistics
  */
-export async function getModerationStats(liveSessionId: number) {
+export async function getModerationStats(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -305,7 +304,7 @@ export async function getModerationStats(liveSessionId: number) {
  * Tracks moderator approvals/rejections to improve accuracy
  */
 export async function recordModerationDecision(
-  flagId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
   wasCorrect: boolean,
   modelVersion: string
 ) {

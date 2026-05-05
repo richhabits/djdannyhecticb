@@ -7,8 +7,8 @@
  */
 
 import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   chatMessages,
   donations,
@@ -93,9 +93,7 @@ const PollVoteInput = z.object({
 const chatRouter = router({
   send: protectedProcedure
     .input(ChatMessageInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const rateLimitKey = `chat:${ctx.user.id}:${input.liveSessionId}`;
       const isRateLimited = false; // TODO: Implement rate limiting with Redis
@@ -104,8 +102,7 @@ const chatRouter = router({
         throw new Error("Rate limited - please slow down");
       }
 
-      const msg = await db
-        .insert(chatMessages)
+      const msg = await ctx.db.insert(chatMessages)
         .values({
           liveSessionId: input.liveSessionId,
           userId: ctx.user.id,
@@ -116,8 +113,7 @@ const chatRouter = router({
         .returning();
 
       // Get user with badges
-      const userWithBadges = await db
-        .select()
+      const userWithBadges = await ctx.db.select()
         .from(users)
         .where(eq(users.id, ctx.user.id))
         .leftJoin(userBadges, eq(userBadges.userId, users.id))
@@ -143,12 +139,9 @@ const chatRouter = router({
         offset: z.number().min(0).default(0),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const messages = await db
-        .select()
+      const messages = await ctx.db.select()
         .from(chatMessages)
         .where(
           and(
@@ -182,12 +175,9 @@ const chatRouter = router({
         reason: z.string().max(255).optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const result = await db
-        .update(chatMessages)
+      const result = await ctx.db.update(chatMessages)
         .set({
           isDeleted: true,
           deletedBy: ctx.user.id,
@@ -202,12 +192,9 @@ const chatRouter = router({
 
   pinMessage: adminProcedure
     .input(z.object({ messageId: z.number().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const result = await db
-        .update(chatMessages)
+      const result = await ctx.db.update(chatMessages)
         .set({ isPinned: true, updatedAt: new Date() })
         .where(eq(chatMessages.id, input.messageId))
         .returning();
@@ -217,12 +204,9 @@ const chatRouter = router({
 
   unpinMessage: adminProcedure
     .input(z.object({ messageId: z.number().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const result = await db
-        .update(chatMessages)
+      const result = await ctx.db.update(chatMessages)
         .set({ isPinned: false, updatedAt: new Date() })
         .where(eq(chatMessages.id, input.messageId))
         .returning();
@@ -232,12 +216,9 @@ const chatRouter = router({
 
   pinnedMessages: publicProcedure
     .input(z.object({ liveSessionId: z.number().positive() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select()
+      return ctx.db.select()
         .from(chatMessages)
         .where(
           and(
@@ -257,9 +238,7 @@ const chatRouter = router({
 const donationRouter = router({
   create: protectedProcedure
     .input(DonationInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       if (!stripe) throw new Error("Stripe not configured");
 
@@ -276,8 +255,7 @@ const donationRouter = router({
         });
 
         // Create donation record with pending status
-        const donation = await db
-          .insert(donations)
+        const donation = await ctx.db.insert(donations)
           .values({
             liveSessionId: input.liveSessionId,
             userId: ctx.user.id,
@@ -306,12 +284,9 @@ const donationRouter = router({
         paymentIntentId: z.string(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const donation = await db
-        .select()
+      const donation = await ctx.db.select()
         .from(donations)
         .where(eq(donations.id, input.donationId));
 
@@ -320,8 +295,7 @@ const donationRouter = router({
       }
 
       // Update donation status to completed
-      const updated = await db
-        .update(donations)
+      const updated = await ctx.db.update(donations)
         .set({
           status: "completed",
           stripeChargeId: input.paymentIntentId,
@@ -338,8 +312,7 @@ const donationRouter = router({
       if (amount >= 1000) badgeType = "donation_1000";
 
       if (badgeType) {
-        await db
-          .insert(userBadges)
+        await ctx.db.insert(userBadges)
           .values({
             userId: ctx.user.id,
             badgeType: badgeType as any,
@@ -350,7 +323,7 @@ const donationRouter = router({
       }
 
       // Create notification
-      await db.insert(notifications).values({
+      await ctx.db.insert(notifications).values({
         liveSessionId: donation[0].liveSessionId,
         userId: ctx.user.id,
         notificationType: "donation",
@@ -369,12 +342,9 @@ const donationRouter = router({
         offset: z.number().min(0).default(0),
       })
     )
-    .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select()
+      return ctx.db.select()
         .from(donations)
         .where(
           and(
@@ -394,12 +364,9 @@ const donationRouter = router({
         limit: z.number().min(1).max(20).default(10),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select({
+      return ctx.db.select({
           userId: donations.userId,
           userName: users.displayName,
           avatar: users.avatarUrl,
@@ -426,13 +393,10 @@ const donationRouter = router({
 const reactionRouter = router({
   add: protectedProcedure
     .input(ReactionInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Check for recent same reaction from user (combo tracking)
-      const recentReaction = await db
-        .select()
+      const recentReaction = await ctx.db.select()
         .from(reactions)
         .where(
           and(
@@ -454,7 +418,7 @@ const reactionRouter = router({
       let comboMilestone = false;
       if (comboStreak === 3 || comboStreak === 5 || comboStreak === 10) {
         comboMilestone = true;
-        await db.insert(notifications).values({
+        await ctx.db.insert(notifications).values({
           liveSessionId: input.liveSessionId,
           userId: ctx.user.id,
           notificationType: "follower",
@@ -464,8 +428,7 @@ const reactionRouter = router({
         });
       }
 
-      const reaction = await db
-        .insert(reactions)
+      const reaction = await ctx.db.insert(reactions)
         .values({
           liveSessionId: input.liveSessionId,
           userId: ctx.user.id,
@@ -487,14 +450,11 @@ const reactionRouter = router({
         timeWindowSeconds: z.number().default(10),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const cutoff = new Date(Date.now() - input.timeWindowSeconds * 1000);
 
-      const counts = await db
-        .select({
+      const counts = await ctx.db.select({
           reactionType: reactions.reactionType,
           count: sql`COUNT(*)`.as("count"),
         })
@@ -512,12 +472,9 @@ const reactionRouter = router({
 
   topCombos: publicProcedure
     .input(z.object({ liveSessionId: z.number().positive() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select({
+      return ctx.db.select({
           userId: reactions.userId,
           userName: users.displayName,
           avatar: users.avatarUrl,
@@ -540,9 +497,7 @@ const reactionRouter = router({
 const pollRouter = router({
   create: adminProcedure
     .input(PollInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       const expiresAt = new Date(Date.now() + input.durationSeconds * 1000);
 
@@ -551,8 +506,7 @@ const pollRouter = router({
         voteCounts[index.toString()] = 0;
       });
 
-      const poll = await db
-        .insert(polls)
+      const poll = await ctx.db.insert(polls)
         .values({
           liveSessionId: input.liveSessionId,
           createdBy: ctx.user.id,
@@ -565,7 +519,7 @@ const pollRouter = router({
         .returning();
 
       // Notify all viewers
-      await db.insert(notifications).values({
+      await ctx.db.insert(notifications).values({
         liveSessionId: input.liveSessionId,
         notificationType: "follower",
         title: "New Poll",
@@ -578,13 +532,10 @@ const pollRouter = router({
 
   vote: protectedProcedure
     .input(PollVoteInput)
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Check if poll is still active
-      const poll = await db
-        .select()
+      const poll = await ctx.db.select()
         .from(polls)
         .where(eq(polls.id, input.pollId));
 
@@ -597,8 +548,7 @@ const pollRouter = router({
       }
 
       // Check if user already voted
-      const existing = await db
-        .select()
+      const existing = await ctx.db.select()
         .from(pollVotes)
         .where(
           and(
@@ -612,8 +562,7 @@ const pollRouter = router({
       }
 
       // Record vote
-      const vote = await db
-        .insert(pollVotes)
+      const vote = await ctx.db.insert(pollVotes)
         .values({
           pollId: input.pollId,
           userId: ctx.user.id,
@@ -626,8 +575,7 @@ const pollRouter = router({
       voteCounts[input.optionIndex.toString()] =
         (voteCounts[input.optionIndex.toString()] || 0) + 1;
 
-      await db
-        .update(polls)
+      await ctx.db.update(polls)
         .set({
           voteCounts,
           totalVotes: poll[0].totalVotes + 1,
@@ -640,12 +588,9 @@ const pollRouter = router({
 
   getActive: publicProcedure
     .input(z.object({ liveSessionId: z.number().positive() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select()
+      return ctx.db.select()
         .from(polls)
         .where(
           and(
@@ -659,12 +604,9 @@ const pollRouter = router({
 
   close: adminProcedure
     .input(z.object({ pollId: z.number().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const result = await db
-        .update(polls)
+      const result = await ctx.db.update(polls)
         .set({ status: "closed", closedAt: new Date(), updatedAt: new Date() })
         .where(eq(polls.id, input.pollId))
         .returning();
@@ -685,9 +627,7 @@ const leaderboardRouter = router({
         limit: z.number().min(1).max(50).default(20),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       let timeFilter = null;
       if (input.period === "24h") {
@@ -696,8 +636,7 @@ const leaderboardRouter = router({
         timeFilter = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       }
 
-      let query = db
-        .select({
+      let query = ctx.db.select({
           userId: donations.userId,
           userName: users.displayName,
           avatar: users.avatarUrl,
@@ -727,12 +666,9 @@ const leaderboardRouter = router({
         limit: z.number().min(1).max(50).default(20),
       })
     )
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select({
+      return ctx.db.select({
           userId: chatMessages.userId,
           userName: users.displayName,
           avatar: users.avatarUrl,
@@ -753,13 +689,10 @@ const leaderboardRouter = router({
 
   sync: adminProcedure
     .input(z.object({ liveSessionId: z.number().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Get all contributors
-      const donors = await db
-        .select({
+      const donors = await ctx.db.select({
           userId: donations.userId,
           total: sql`CAST(SUM(amount) AS NUMERIC)`,
         })
@@ -772,8 +705,7 @@ const leaderboardRouter = router({
         )
         .groupBy(donations.userId);
 
-      const chatters = await db
-        .select({
+      const chatters = await ctx.db.select({
           userId: chatMessages.userId,
           count: sql`COUNT(*)`,
         })
@@ -786,8 +718,7 @@ const leaderboardRouter = router({
         )
         .groupBy(chatMessages.userId);
 
-      const reactioners = await db
-        .select({
+      const reactioners = await ctx.db.select({
           userId: reactions.userId,
           count: sql`COUNT(*)`,
         })
@@ -806,8 +737,7 @@ const leaderboardRouter = router({
         const chatterData = chatters.find((c) => c.userId === userId);
         const reactionerData = reactioners.find((r) => r.userId === userId);
 
-        await db
-          .insert(leaderboards)
+        await ctx.db.insert(leaderboards)
           .values({
             liveSessionId: input.liveSessionId,
             userId,
@@ -828,12 +758,9 @@ const leaderboardRouter = router({
 const statsRouter = router({
   get: publicProcedure
     .input(z.object({ streamerId: z.number().positive() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const stats = await db
-        .select()
+      const stats = await ctx.db.select()
         .from(streamerStats)
         .where(eq(streamerStats.streamerUserId, input.streamerId));
 
@@ -866,9 +793,7 @@ const statsRouter = router({
         }),
       })
     )
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
       // Calculate level from experience
       let level = 1;
@@ -876,8 +801,7 @@ const statsRouter = router({
         level = Math.floor(input.updates.experience / 1000) + 1;
       }
 
-      const result = await db
-        .insert(streamerStats)
+      const result = await ctx.db.insert(streamerStats)
         .values({
           streamerUserId: input.streamerId,
           ...input.updates,
@@ -903,12 +827,9 @@ const statsRouter = router({
 const notificationRouter = router({
   getUnread: protectedProcedure
     .input(z.object({ liveSessionId: z.number().positive() }))
-    .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .select()
+      return ctx.db.select()
         .from(notifications)
         .where(
           and(
@@ -926,12 +847,9 @@ const notificationRouter = router({
 
   markRead: protectedProcedure
     .input(z.object({ notificationId: z.number().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .update(notifications)
+      return ctx.db.update(notifications)
         .set({ isRead: true })
         .where(eq(notifications.id, input.notificationId))
         .returning();
@@ -944,12 +862,9 @@ const notificationRouter = router({
 const socialRouter = router({
   getLinks: publicProcedure
     .input(z.object({ userId: z.number().positive() }))
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .query(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const links = await db
-        .select()
+      const links = await ctx.db.select()
         .from(socialLinks)
         .where(eq(socialLinks.userId, input.userId));
 
@@ -967,12 +882,9 @@ const socialRouter = router({
         twitchUrl: z.string().url().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      return db
-        .insert(socialLinks)
+      return ctx.db.insert(socialLinks)
         .values({
           userId: ctx.user.id,
           ...input,
@@ -995,12 +907,9 @@ const socialRouter = router({
         message: z.string().max(500).optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
+    .mutation(async ({ input, ctx }) => {      if (!ctx.db) throw new Error("Database not available");
 
-      const raid = await db
-        .insert(raids)
+      const raid = await ctx.db.insert(raids)
         .values({
           fromStreamerId: ctx.user.id,
           toStreamerId: input.toStreamerId,
@@ -1010,7 +919,7 @@ const socialRouter = router({
         .returning();
 
       // Notify raid target
-      await db.insert(notifications).values({
+      await ctx.db.insert(notifications).values({
         liveSessionId: 0, // Will be set by app
         userId: input.toStreamerId,
         notificationType: "raid",

@@ -119,7 +119,7 @@ export async function verifyAdminPassword(
 /**
  * Create session token (Admin/User)
  */
-export async function createSessionToken(
+export async function createSessionToken(db?: Awaited<ReturnType<typeof getDb>>, 
   userId: number,
   email: string,
   role: "admin" | "user" = "admin"
@@ -145,7 +145,7 @@ export const createAdminSessionToken = (userId: number, email: string) => create
 /**
  * Authenticate admin from request (check session token)
  */
-export async function authenticateSession(
+export async function authenticateSession(db?: Awaited<ReturnType<typeof getDb>>, 
   req: Request
 ): Promise<{ success: boolean; user?: any; error?: string }> {
   try {

@@ -6,7 +6,6 @@
  * Reactions Handler - Real-time reaction tracking with combo streaks
  */
 
-import { getDb } from "../db";
 import { reactions, leaderboards } from "../../drizzle/engagement-schema";
 import { eq, and, desc, gt } from "drizzle-orm";
 
@@ -154,7 +153,7 @@ async function checkComboStreak(
  * Handle incoming reaction
  */
 export async function handleReaction(
-  data: ReactionData,
+  db?: Awaited<ReturnType<typeof getDb>>, data: ReactionData,
   userId: number,
   liveSessionId: number
 ): Promise<{
@@ -280,7 +279,7 @@ async function updateLeaderboardReactionCount(
  * Get reaction counts for a session
  */
 export async function getReactionCounts(
-  liveSessionId: number
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number
 ): Promise<Record<string, number>> {
   try {
     const db = await getDb();
@@ -310,7 +309,7 @@ export async function getReactionCounts(
  * Get top reactions for a session
  */
 export async function getTopReactions(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   limit: number = 5
 ): Promise<
   Array<{ type: string; count: number; percentage: number; topUsers: any[] }>

@@ -6,7 +6,6 @@
 
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
 import { conversations, directMessages } from "../../drizzle/engagement-schema";
 import { eq, or, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -22,8 +21,7 @@ export const messagesRouter = router({
   sendMessage: protectedProcedure
     .input(messageSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -33,7 +31,7 @@ export const messagesRouter = router({
       }
 
       // Find or create conversation
-      const [existing] = await db
+      const [existing] = await ctx.db
         .select()
         .from(conversations)
         .where(
@@ -55,7 +53,7 @@ export const messagesRouter = router({
       if (existing) {
         conversationId = existing.id;
         // Update last message time
-        await db
+        await ctx.db
           .update(conversations)
           .set({ lastMessageAt: new Date() })
           .where(eq(conversations.id, conversationId));
@@ -74,7 +72,7 @@ export const messagesRouter = router({
       }
 
       // Insert message
-      const [message] = await db
+      const [message] = await ctx.db
         .insert(directMessages)
         .values({
           conversationId,
@@ -95,8 +93,7 @@ export const messagesRouter = router({
       offset: z.number().default(0),
     }))
     .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -129,8 +126,7 @@ export const messagesRouter = router({
       conversationId: z.number(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -169,14 +165,13 @@ export const messagesRouter = router({
       messageId: z.number(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       // Verify ownership
-      const [message] = await db
+      const [message] = await ctx.db
         .select()
         .from(directMessages)
         .where(eq(directMessages.id, input.messageId))
@@ -202,8 +197,7 @@ export const messagesRouter = router({
       offset: z.number().default(0),
     }))
     .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -230,8 +224,7 @@ export const messagesRouter = router({
       conversationId: z.number(),
     }))
     .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -269,8 +262,7 @@ export const messagesRouter = router({
       otherUserId: z.number(),
     }))
     .query(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });

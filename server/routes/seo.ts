@@ -38,9 +38,14 @@ const BASE_URL = process.env.BASE_URL || "https://djdannyhecticb.com";
 
 /**
  * Generate XML Sitemap
+ *
+ * DEPENDENCY INJECTION: Accepts db instance as parameter instead of calling
+ * getDb() directly. This enables easier testing and decouples from global state.
  */
-async function generateSitemap(): Promise<string> {
-  const db = await getDb();
+async function generateSitemap(db?: Awaited<ReturnType<typeof getDb>>): Promise<string> {
+  if (!db) {
+    db = await getDb();
+  }
   const urls: Array<{ loc: string; lastmod?: string; changefreq?: string; priority?: number }> = [];
 
   // Static pages
@@ -242,9 +247,14 @@ export function generatePodcastStructuredData(podcast: {
 
 /**
  * Generate RSS Feed
+ *
+ * DEPENDENCY INJECTION: Accepts db instance as parameter instead of calling
+ * getDb() directly. This enables easier testing and decouples from global state.
  */
-async function generateRSSFeed(): Promise<string> {
-  const db = await getDb();
+async function generateRSSFeed(db?: Awaited<ReturnType<typeof getDb>>): Promise<string> {
+  if (!db) {
+    db = await getDb();
+  }
   let items = "";
 
   if (db) {

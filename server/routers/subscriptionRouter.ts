@@ -11,8 +11,8 @@
  */
 
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { getDb } from "../db";
 import {
   subscriptionPlans,
   userSubscriptions,
@@ -66,17 +66,15 @@ export const subscriptionRouter = router({
   /**
    * Get all subscription plans
    */
-  getPlans: publicProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getPlans: publicProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return Object.entries(DEFAULT_PLANS).map(([plan, data]) => ({
           plan,
           ...data,
         }));
       }
 
-      const plans = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true));
+      const plans = await ctx.db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true));
 
       return plans.length > 0
         ? plans
@@ -98,15 +96,12 @@ export const subscriptionRouter = router({
    */
   getPlan: publicProcedure
     .input(z.object({ plan: z.string() }))
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .query(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           return (DEFAULT_PLANS as any)[input.plan];
         }
 
-        const plan = await db
-          .select()
+        const plan = await ctx.db.select()
           .from(subscriptionPlans)
           .where(eq(subscriptionPlans.plan, input.plan as any))
           .limit(1);
@@ -126,14 +121,11 @@ export const subscriptionRouter = router({
    * Get current user subscription
    */
   getCurrentSubscription: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const db = await getDb();
-      if (!db) {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const subscription = await db
-        .select()
+      const subscription = await ctx.db.select()
         .from(userSubscriptions)
         .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
         .orderBy(desc(userSubscriptions.createdAt))
@@ -156,14 +148,11 @@ export const subscriptionRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           return { hasAccess: false, requiredTier: null };
         }
 
-        const subscription = await db
-          .select()
+        const subscription = await ctx.db.select()
           .from(userSubscriptions)
           .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
           .orderBy(desc(userSubscriptions.createdAt))
@@ -173,8 +162,7 @@ export const subscriptionRouter = router({
           return { hasAccess: false, requiredTier: null };
         }
 
-        const features = await db
-          .select()
+        const features = await ctx.db.select()
           .from(tierFeatures)
           .where(eq(tierFeatures.feature, input.feature as any));
 
@@ -205,15 +193,12 @@ export const subscriptionRouter = router({
         throw new Error("Stripe not configured");
       }
 
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
         // Get plan details
-        const plans = await db
-          .select()
+        const plans = await ctx.db.select()
           .from(subscriptionPlans)
           .where(eq(subscriptionPlans.plan, input.plan as any))
           .limit(1);
@@ -227,8 +212,7 @@ export const subscriptionRouter = router({
 
         // Create or get customer
         let customerId: string;
-        const existingSub = await db
-          .select()
+        const existingSub = await ctx.db.select()
           .from(userSubscriptions)
           .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
           .limit(1);
@@ -282,9 +266,7 @@ export const subscriptionRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
@@ -304,8 +286,7 @@ export const subscriptionRouter = router({
           nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
         }
 
-        const subscription = await db
-          .insert(userSubscriptions)
+        const subscription = await ctx.db.insert(userSubscriptions)
           .values({
             userId: ctx.user?.id || 0,
             plan: input.plan as any,
@@ -320,8 +301,7 @@ export const subscriptionRouter = router({
           .returning();
 
         // Record payment
-        const plans = await db
-          .select()
+        const plans = await ctx.db.select()
           .from(subscriptionPlans)
           .where(eq(subscriptionPlans.plan, input.plan as any))
           .limit(1);
@@ -331,7 +311,7 @@ export const subscriptionRouter = router({
             ? plans[0]?.yearlyPrice || "0"
             : plans[0]?.monthlyPrice || "0";
 
-        await db.insert(subscriptionPayments).values({
+        await ctx.db.insert(subscriptionPayments).values({
           subscriptionId: subscription[0].id,
           userId: ctx.user?.id || 0,
           stripePaymentIntentId: paymentIntent.id,
@@ -363,14 +343,11 @@ export const subscriptionRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const currentSub = await db
-          .select()
+        const currentSub = await ctx.db.select()
           .from(userSubscriptions)
           .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
           .orderBy(desc(userSubscriptions.createdAt))
@@ -383,8 +360,7 @@ export const subscriptionRouter = router({
         const oldPlan = currentSub[0].plan;
 
         // Update subscription
-        await db
-          .update(userSubscriptions)
+        await ctx.db.update(userSubscriptions)
           .set({
             plan: input.newPlan as any,
             updatedAt: new Date(),
@@ -393,7 +369,7 @@ export const subscriptionRouter = router({
 
         // Track churn if downgrading
         if (["premium", "vip", "subscriber"].includes(oldPlan) && input.newPlan === "free") {
-          await db.insert(userChurn).values({
+          await ctx.db.insert(userChurn).values({
             userId: ctx.user?.id || 0,
             previousPlan: oldPlan as any,
             newPlan: "free",
@@ -421,14 +397,11 @@ export const subscriptionRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const subscription = await db
-          .select()
+        const subscription = await ctx.db.select()
           .from(userSubscriptions)
           .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
           .orderBy(desc(userSubscriptions.createdAt))
@@ -448,8 +421,7 @@ export const subscriptionRouter = router({
         }
 
         // Update subscription status
-        await db
-          .update(userSubscriptions)
+        await ctx.db.update(userSubscriptions)
           .set({
             status: "cancelled",
             cancelledAt: new Date(),
@@ -459,7 +431,7 @@ export const subscriptionRouter = router({
           .where(eq(userSubscriptions.id, subscription[0].id));
 
         // Track churn
-        await db.insert(userChurn).values({
+        await ctx.db.insert(userChurn).values({
           userId: ctx.user?.id || 0,
           previousPlan: subscription[0].plan,
           newPlan: "free",
@@ -480,14 +452,11 @@ export const subscriptionRouter = router({
    * Get subscription management page data
    */
   getManagementData: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const db = await getDb();
-      if (!db) {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const subscription = await db
-        .select()
+      const subscription = await ctx.db.select()
         .from(userSubscriptions)
         .where(eq(userSubscriptions.userId, ctx.user?.id || 0))
         .orderBy(desc(userSubscriptions.createdAt))
@@ -497,8 +466,7 @@ export const subscriptionRouter = router({
         return null;
       }
 
-      const payments = await db
-        .select()
+      const payments = await ctx.db.select()
         .from(subscriptionPayments)
         .where(eq(subscriptionPayments.subscriptionId, subscription[0].id))
         .orderBy(desc(subscriptionPayments.createdAt))
@@ -527,15 +495,12 @@ export const subscriptionRouter = router({
         features: z.array(z.string()),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) {
+    .mutation(async ({ input, ctx }) => {
+      try {        if (!ctx.db) {
           throw new Error("Database not available");
         }
 
-        const result = await db
-          .insert(subscriptionPlans)
+        const result = await ctx.db.insert(subscriptionPlans)
           .values({
             plan: input.plan as any,
             name: input.name,
@@ -555,19 +520,16 @@ export const subscriptionRouter = router({
   /**
    * Admin: Get subscription stats
    */
-  getStats: adminProcedure.query(async () => {
-    try {
-      const db = await getDb();
-      if (!db) {
+  getStats: adminProcedure.query(async ({ ctx }) => {
+    try {      if (!ctx.db) {
         return null;
       }
 
-      const allSubs = await db.select().from(userSubscriptions);
+      const allSubs = await ctx.db.select().from(userSubscriptions);
       const activeCount = allSubs.filter((s) => s.status === "active").length;
       const cancelledCount = allSubs.filter((s) => s.status === "cancelled").length;
 
-      const revenueData = await db
-        .select()
+      const revenueData = await ctx.db.select()
         .from(subscriptionPayments)
         .where(eq(subscriptionPayments.status, "succeeded"));
 

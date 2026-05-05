@@ -8,7 +8,6 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { getDb } from "../db";
 import { chatMessages, liveSessions } from "../../drizzle/engagement-schema";
 import { chatSummaries, InsertChatSummary } from "../../drizzle/ai-features-schema";
 import { eq, and, gte, lte, desc, lt } from "drizzle-orm";
@@ -38,7 +37,7 @@ interface SummarizationResult {
  * Fetch chat messages from the last 30 minutes
  */
 async function fetchRecentChatMessages(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   fromTime: Date
 ) {
   const db = await getDb();
@@ -141,7 +140,7 @@ Respond in JSON format:
  * Create a chat summary every 30 minutes during a live stream
  */
 export async function generateChatSummary(
-  liveSessionId: number,
+  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
   startTime?: Date
 ): Promise<InsertChatSummary | null> {
   const db = await getDb();
@@ -198,7 +197,7 @@ export async function generateChatSummary(
 /**
  * Get all summaries for a live session
  */
-export async function getSessionSummaries(liveSessionId: number) {
+export async function getSessionSummaries(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -212,7 +211,7 @@ export async function getSessionSummaries(liveSessionId: number) {
 /**
  * Generate post-stream report
  */
-export async function generateStreamReport(liveSessionId: number) {
+export async function generateStreamReport(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
