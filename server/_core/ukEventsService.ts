@@ -167,14 +167,22 @@ function mapTicketmasterEvent(event: TicketmasterEvent): InsertUKEvent | null {
             subcategory,
             venue: venue?.name || 'TBA',
             city: venue?.city?.name || 'London',
-            latitude: venue?.location?.latitude ? venue.location.latitude : undefined,
-            longitude: venue?.location?.longitude ? venue.location.longitude : undefined,
+            latitude: venue?.location?.latitude
+                ? String(venue.location.latitude)
+                : undefined,
+            longitude: venue?.location?.longitude
+                ? String(venue.location.longitude)
+                : undefined,
             eventDate,
             doorsTime: doorsTime || undefined,
             imageUrl: bestImage?.url || undefined,
             ticketUrl: event.url || undefined,
-            priceMin: priceRange?.min ? priceRange.min.toString() : undefined,
-            priceMax: priceRange?.max ? priceRange.max.toString() : undefined,
+            priceMin: priceRange?.min
+                ? String(priceRange.min)
+                : undefined,
+            priceMax: priceRange?.max
+                ? String(priceRange.max)
+                : undefined,
             currency: priceRange?.currency || 'GBP',
             ticketStatus,
             artists: artists.length > 0 ? JSON.stringify(artists) : undefined,
@@ -245,9 +253,14 @@ async function fetchTicketmasterEvents(options: {
 
         const data = await response.json();
 
-        // Log pagination info
+        // Log pagination info and sample first event structure for debugging
         if (data.page) {
             console.log(`[UKEvents] Page ${data.page.number + 1}/${data.page.totalPages}, Total: ${data.page.totalElements} events`);
+        }
+
+        // Log first event structure for schema validation debugging
+        if (data._embedded?.events?.[0]) {
+            console.log('[UKEvents] Sample event structure:', JSON.stringify(data._embedded.events[0], null, 2));
         }
 
         return data;

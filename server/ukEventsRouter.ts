@@ -13,6 +13,58 @@ import { eq, and, gt, desc, asc, sql, like, or } from 'drizzle-orm';
 import * as ukEventsService from './_core/ukEventsService';
 
 /**
+ * Output schema for UK Events
+ * Ensures numeric fields are properly typed for the client
+ */
+const ukEventOutputSchema = z.object({
+    id: z.number(),
+    externalId: z.string(),
+    source: z.string(),
+    title: z.string(),
+    description: z.string().nullable(),
+    category: z.string().nullable(),
+    subcategory: z.string().nullable(),
+    eventDate: z.date().or(z.string()),
+    doorsTime: z.date().or(z.string()).nullable(),
+    venue: z.string(),
+    city: z.string(),
+    latitude: z.string().nullable(),
+    longitude: z.string().nullable(),
+    imageUrl: z.string().nullable(),
+    ticketUrl: z.string().nullable(),
+    ticketStatus: z.string().nullable(),
+    priceMin: z.string().nullable(),
+    priceMax: z.string().nullable(),
+    currency: z.string(),
+    artists: z.string().nullable(),
+    ageRestriction: z.string().nullable(),
+    isFeatured: z.boolean(),
+    isSynced: z.boolean(),
+    lastSyncedAt: z.date().or(z.string()).nullable(),
+    createdAt: z.date().or(z.string()),
+    updatedAt: z.date().or(z.string()),
+});
+
+type UKEventOutput = z.infer<typeof ukEventOutputSchema>;
+
+/**
+ * Transform database event to output format
+ * Ensures all fields are properly typed and serializable
+ */
+function transformUKEvent(event: any): UKEventOutput {
+    return {
+        ...event,
+        // Ensure numeric fields are properly formatted strings
+        latitude: event.latitude ? String(event.latitude) : null,
+        longitude: event.longitude ? String(event.longitude) : null,
+        priceMin: event.priceMin ? String(event.priceMin) : null,
+        priceMax: event.priceMax ? String(event.priceMax) : null,
+        // Keep artists as-is; it's already a JSON string in the database
+        artists: event.artists ? (typeof event.artists === 'string' ? event.artists : JSON.stringify(event.artists)) : null,
+    };
+}
+
+/**
  * NOTE: ukEvents, userEventSubmissions, promoterProfiles, and eventRecommendations tables
  * have been removed from schema. Functionality has been stubbed out.
  * InsertUserEventSubmission, InsertPromoterProfile, and InsertEventRecommendation types removed.
@@ -31,8 +83,9 @@ export const ukEventsRouter = router({
             limit: z.number().min(1).max(100).default(20),
             offset: z.number().min(0).default(0),
         }).optional())
+        .output(z.array(ukEventOutputSchema))
         .query(async ({ input }) => {
-            return await ukEventsService.getUKEvents({
+            const result = await ukEventsService.getUKEvents({
                 category: input?.category,
                 city: input?.city,
                 genre: input?.genre,
@@ -40,6 +93,7 @@ export const ukEventsRouter = router({
                 limit: input?.limit || 20,
                 offset: input?.offset || 0,
             });
+            return result.map(transformUKEvent);
         }),
 
     /**
@@ -47,8 +101,10 @@ export const ukEventsRouter = router({
      */
     featured: publicProcedure
         .input(z.object({ limit: z.number().min(1).max(12).default(6) }).optional())
+        .output(z.array(ukEventOutputSchema))
         .query(async ({ input }) => {
-            return await ukEventsService.getFeaturedUKEvents(input?.limit || 6);
+            const result = await ukEventsService.getFeaturedUKEvents(input?.limit || 6);
+            return result.map(transformUKEvent);
         }),
 
     /**
@@ -56,8 +112,10 @@ export const ukEventsRouter = router({
      */
     byId: publicProcedure
         .input(z.object({ id: z.number() }))
+        .output(ukEventOutputSchema.nullable())
         .query(async ({ input }) => {
-            return await ukEventsService.getUKEventById(input.id);
+            const result = await ukEventsService.getUKEventById(input.id);
+            return result ? transformUKEvent(result) : null;
         }),
 
     /**
@@ -70,12 +128,14 @@ export const ukEventsRouter = router({
             city: z.string().optional(),
             limit: z.number().min(1).max(50).default(20),
         }))
+        .output(z.array(ukEventOutputSchema))
         .query(async ({ input }) => {
-            return await ukEventsService.searchUKEvents(input.query, {
+            const result = await ukEventsService.searchUKEvents(input.query, {
                 category: input.category,
                 city: input.city,
                 limit: input.limit,
             });
+            return result.map(transformUKEvent);
         }),
 
     /**
