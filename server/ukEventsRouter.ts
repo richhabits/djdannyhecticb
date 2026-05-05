@@ -52,7 +52,10 @@ type UKEventOutput = z.infer<typeof ukEventOutputSchema>;
  * Ensures all fields are properly typed and serializable
  */
 function transformUKEvent(event: any): UKEventOutput {
-    return {
+    // TEMPORARY: Log raw event structure to debug Zod validation failures
+    console.error('🔍 RAW EVENT FROM DB:', JSON.stringify(event, null, 2));
+
+    const transformed = {
         ...event,
         // Ensure numeric fields are properly formatted strings
         latitude: event.latitude ? String(event.latitude) : null,
@@ -62,6 +65,11 @@ function transformUKEvent(event: any): UKEventOutput {
         // Keep artists as-is; it's already a JSON string in the database
         artists: event.artists ? (typeof event.artists === 'string' ? event.artists : JSON.stringify(event.artists)) : null,
     };
+
+    // Log the transformed output
+    console.error('✅ TRANSFORMED EVENT:', JSON.stringify(transformed, null, 2));
+
+    return transformed;
 }
 
 /**
