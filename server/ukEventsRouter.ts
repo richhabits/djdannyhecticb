@@ -88,7 +88,6 @@ export const ukEventsRouter = router({
             const result = await ukEventsService.getUKEvents({
                 category: input?.category,
                 city: input?.city,
-                genre: input?.genre,
                 featured: input?.featured,
                 limit: input?.limit || 20,
                 offset: input?.offset || 0,
