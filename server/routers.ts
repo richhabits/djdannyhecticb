@@ -9,6 +9,47 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { ukEventsRouter } from "./ukEventsRouter";
 import * as ukEventsService from "./_core/ukEventsService";
+
+// Import the event output schema and transform function
+const ukEventOutputSchema = z.object({
+    id: z.number(),
+    externalId: z.string(),
+    source: z.string(),
+    title: z.string(),
+    description: z.string().nullable(),
+    category: z.string().nullable(),
+    subcategory: z.string().nullable(),
+    eventDate: z.date().or(z.string()),
+    doorsTime: z.date().or(z.string()).nullable(),
+    venue: z.string(),
+    city: z.string(),
+    latitude: z.string().nullable(),
+    longitude: z.string().nullable(),
+    imageUrl: z.string().nullable(),
+    ticketUrl: z.string().nullable(),
+    ticketStatus: z.string().nullable(),
+    priceMin: z.string().nullable(),
+    priceMax: z.string().nullable(),
+    currency: z.string(),
+    artists: z.string().nullable(),
+    ageRestriction: z.string().nullable(),
+    isFeatured: z.boolean(),
+    isSynced: z.boolean(),
+    lastSyncedAt: z.date().or(z.string()).nullable(),
+    createdAt: z.date().or(z.string()),
+    updatedAt: z.date().or(z.string()),
+});
+
+function transformUKEvent(event: any) {
+    return {
+        ...event,
+        latitude: event.latitude ? String(event.latitude) : null,
+        longitude: event.longitude ? String(event.longitude) : null,
+        priceMin: event.priceMin ? String(event.priceMin) : null,
+        priceMax: event.priceMax ? String(event.priceMax) : null,
+        artists: event.artists ? (typeof event.artists === 'string' ? event.artists : JSON.stringify(event.artists)) : null,
+    };
+}
 import { soundcloudRouter } from "./routers/soundcloudRouter";
 import { spotifyRouter } from "./routers/spotifyRouter";
 import { blogRouter } from "./routers/blogRouter";
@@ -69,11 +110,13 @@ export const appRouter = router({
         limit: z.number().min(1).max(100).default(10),
         offset: z.number().min(0).default(0),
       }).optional())
+      .output(z.array(ukEventOutputSchema))
       .query(async ({ input }) => {
-        return await ukEventsService.getUKEvents({
+        const result = await ukEventsService.getUKEvents({
           limit: input?.limit || 10,
           offset: input?.offset || 0,
         });
+        return result.map(transformUKEvent);
       }),
 
     all: publicProcedure
@@ -81,23 +124,29 @@ export const appRouter = router({
         limit: z.number().min(1).max(100).default(50),
         offset: z.number().min(0).default(0),
       }).optional())
+      .output(z.array(ukEventOutputSchema))
       .query(async ({ input }) => {
-        return await ukEventsService.getUKEvents({
+        const result = await ukEventsService.getUKEvents({
           limit: input?.limit || 50,
           offset: input?.offset || 0,
         });
+        return result.map(transformUKEvent);
       }),
 
     featured: publicProcedure
       .input(z.object({ limit: z.number().min(1).max(12).default(6) }).optional())
+      .output(z.array(ukEventOutputSchema))
       .query(async ({ input }) => {
-        return await ukEventsService.getFeaturedUKEvents(input?.limit || 6);
+        const result = await ukEventsService.getFeaturedUKEvents(input?.limit || 6);
+        return result.map(transformUKEvent);
       }),
 
     byId: publicProcedure
       .input(z.object({ id: z.number() }))
+      .output(ukEventOutputSchema.nullable())
       .query(async ({ input }) => {
-        return await ukEventsService.getUKEventById(input.id);
+        const result = await ukEventsService.getUKEventById(input.id);
+        return result ? transformUKEvent(result) : null;
       }),
 
     search: publicProcedure
@@ -105,10 +154,12 @@ export const appRouter = router({
         query: z.string().min(1).max(100),
         limit: z.number().min(1).max(50).default(20),
       }))
+      .output(z.array(ukEventOutputSchema))
       .query(async ({ input }) => {
-        return await ukEventsService.searchUKEvents(input.query, {
+        const result = await ukEventsService.searchUKEvents(input.query, {
           limit: input.limit,
         });
+        return result.map(transformUKEvent);
       }),
   }),
 
