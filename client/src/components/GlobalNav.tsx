@@ -27,7 +27,7 @@ export function GlobalNav() {
     };
   }, [mobileMenuOpen]);
 
-  const desktopMenuItems = [
+  const menuItems = [
     { href: "/mixes", label: "MIXES" },
     { href: "/live-studio", label: "LIVE" },
     { href: "/events", label: "EVENTS" },
@@ -36,12 +36,7 @@ export function GlobalNav() {
     { href: "/contact", label: "CONTACT" },
   ];
 
-  const tabletMenuItems = [
-    { href: "/mixes", label: "MIXES" },
-    { href: "/live-studio", label: "LIVE" },
-    { href: "/events", label: "EVENTS" },
-    { href: "/bookings", label: "BOOK" },
-  ];
+  const shopItem = { href: "/shop", label: "SHOP" };
 
   const MenuItem = ({
     href,
@@ -92,9 +87,9 @@ export function GlobalNav() {
             </span>
           </Link>
 
-          {/* Center: Desktop Menu (lg+) - Hidden on tablet and mobile */}
+          {/* Center: Desktop Menu (lg+) - All 6 items */}
           <div className="hidden lg:flex items-center gap-1 flex-wrap justify-center">
-            {desktopMenuItems.map((item) => (
+            {menuItems.map((item) => (
               <MenuItem
                 key={item.href}
                 href={item.href}
@@ -104,9 +99,9 @@ export function GlobalNav() {
             ))}
           </div>
 
-          {/* Center: Tablet Menu (md-lg) - 4 compact menu items */}
+          {/* Center: Tablet Menu (md-lg) - 6 items in 2 rows */}
           <div className="hidden md:flex lg:hidden items-center gap-1 flex-wrap justify-center flex-1">
-            {tabletMenuItems.map((item) => (
+            {menuItems.map((item) => (
               <MenuItem
                 key={item.href}
                 href={item.href}
@@ -155,7 +150,7 @@ export function GlobalNav() {
               <ShoppingCart className="w-5 h-5" aria-hidden="true" />
               {count > 0 && (
                 <span
-                  className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 bg-accent text-black text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-black"
+                  className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 bg-accent text-black text-xs font-bold w-6 h-6 flex items-center justify-center border-2 border-black"
                   aria-hidden="true"
                 >
                   {count}
@@ -167,7 +162,7 @@ export function GlobalNav() {
             {isAuthenticated ? (
               <Link
                 href="/dashboard"
-                className="hidden sm:block tape-strip bg-white text-black border-black text-xs px-2 sm:px-2.5 py-1 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="hidden sm:flex items-center justify-center tape-strip bg-white text-black border-black text-xs px-3 sm:px-3.5 py-2 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
                 aria-label="Dashboard"
               >
                 DASH
@@ -175,7 +170,7 @@ export function GlobalNav() {
             ) : (
               <a
                 href={getLoginUrl()}
-                className="hidden sm:block tape-strip bg-accent text-white border-white text-xs px-2 sm:px-2.5 py-1 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="hidden sm:flex items-center justify-center tape-strip bg-accent text-white border-white text-xs px-3 sm:px-3.5 py-2 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
                 aria-label="Login"
               >
                 LOGIN
@@ -205,7 +200,7 @@ export function GlobalNav() {
         <div
           id="mobile-menu"
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 top-14 sm:top-16 md:top-16 lg:top-16 bg-black/98 z-40 overflow-y-auto pirate-scanlines"
+          className="fixed inset-0 top-16 sm:top-20 md:top-20 lg:top-20 bg-black/98 z-40 overflow-y-auto pirate-scanlines"
           role="dialog"
           aria-label="Mobile navigation menu"
           aria-modal="true"
@@ -218,7 +213,7 @@ export function GlobalNav() {
                 NAVIGATE
               </h2>
               <nav className="flex flex-col gap-2 pl-3">
-                {desktopMenuItems.map((item) => (
+                {menuItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -233,15 +228,15 @@ export function GlobalNav() {
                   </Link>
                 ))}
                 <Link
-                  href="/shop"
+                  href={shopItem.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`text-base sm:text-lg font-bold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white uppercase ${
-                    location === "/shop"
+                    location === shopItem.href
                       ? "text-accent"
                       : "text-white hover:text-accent hover:pl-1"
                   }`}
                 >
-                  SHOP
+                  {shopItem.label}
                 </Link>
               </nav>
             </section>

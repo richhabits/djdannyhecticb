@@ -100,7 +100,7 @@ const [formData, setFormData] = useState({
   }
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-accent pirate-scanlines pt-20 sm:pt-24 md:pt-28 pb-20 px-4 sm:px-6 md:px-8">
+    <div className="min-h-screen bg-black text-white selection:bg-accent pirate-scanlines pt-0 pb-20 px-4 sm:px-6 md:px-8">
       <div className="max-w-7xl mx-auto flex flex-col gap-8 sm:gap-12 md:gap-16">
 
         {/* HERO SECTION */}

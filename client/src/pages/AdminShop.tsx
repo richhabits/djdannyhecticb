@@ -104,7 +104,7 @@ export default function AdminShop() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-black text-white pt-0 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <section className="mb-12">

@@ -1,90 +1,91 @@
-import { Phone, Instagram, Mail } from "lucide-react";
+import { Mail, Phone, Instagram } from "lucide-react";
 import { Link } from "wouter";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-black text-white border-t border-white mt-12 sm:mt-16">
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-8">
-          {/* Brand Info */}
-          <div>
-            <h3 className="font-black text-xl mb-4 tape-strip inline-block bg-accent text-black px-3 py-1">
-              DJ DANNY HECTIC B
+    <footer className="bg-black text-white border-t-4 border-white">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 md:gap-16">
+          {/* Brand Column */}
+          <div className="space-y-4">
+            <div className="tape-strip bg-white text-black border-black inline-block px-3 py-2 text-sm font-bold">
+              HECTIC EMPIRE
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-bold uppercase tracking-wide text-white/80">
+                Professional Audio Distribution
+              </p>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Clubs • Festivals • Radio • Private Events
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation Column */}
+          <div className="space-y-4">
+            <h3 className="tape-strip bg-white text-black border-black inline-block px-3 py-2 text-sm font-bold">
+              NAVIGATE
             </h3>
-            <p className="text-gray-300 text-sm mt-4">
-              Hectic Radio | Archive | Bookings
-            </p>
+            <nav className="flex flex-col gap-3">
+              <Link href="/mixes" className="text-sm font-bold uppercase hover:text-accent transition-colors">
+                Mixes
+              </Link>
+              <Link href="/events" className="text-sm font-bold uppercase hover:text-accent transition-colors">
+                Events
+              </Link>
+              <Link href="/bookings" className="text-sm font-bold uppercase hover:text-accent transition-colors">
+                Bookings
+              </Link>
+              <Link href="/shop" className="text-sm font-bold uppercase hover:text-accent transition-colors">
+                Shop
+              </Link>
+            </nav>
           </div>
 
-          {/* Navigation Links */}
-          <div>
-            <h4 className="font-bold mb-4 text-accent">NAVIGATION</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/mixes" className="text-gray-300 hover:text-white">
-                  Archive & Mixes
-                </Link>
-              </li>
-              <li>
-                <Link href="/bookings" className="text-gray-300 hover:text-white">
-                  Bookings
-                </Link>
-              </li>
-              <li>
-                <Link href="/events" className="text-gray-300 hover:text-white">
-                  Events
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop" className="text-gray-300 hover:text-white">
-                  Shop
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-300 hover:text-white">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h4 className="font-bold mb-4 text-accent">CONTACT</h4>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-accent" />
-                <a href="tel:+447957432842" className="text-gray-300 hover:text-white">
-                  07957 432842
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Instagram className="w-4 h-4 text-accent" />
-                <a
-                  href="https://instagram.com/djdannyhecticb"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300 hover:text-white"
-                >
-                  @djdannyhecticb
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-accent" />
-                <a href="mailto:contact@djdannyhectic.com" className="text-gray-300 hover:text-white">
-                  contact@djdannyhectic.com
-                </a>
-              </div>
+          {/* Contact Column */}
+          <div className="space-y-4">
+            <h3 className="tape-strip bg-white text-black border-black inline-block px-3 py-2 text-sm font-bold">
+              CONTACT
+            </h3>
+            <div className="space-y-3">
+              <a
+                href="tel:+447957432842"
+                className="flex items-center gap-3 text-sm font-bold uppercase hover:text-accent transition-colors group"
+              >
+                <Phone className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                <span>+44 7957 432842</span>
+              </a>
+              <a
+                href="mailto:contact@djdannyhectic.com"
+                className="flex items-center gap-3 text-sm font-bold uppercase hover:text-accent transition-colors group"
+              >
+                <Mail className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                <span>Contact</span>
+              </a>
+              <a
+                href="https://instagram.com/djdannyhecticb"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-sm font-bold uppercase hover:text-accent transition-colors group"
+              >
+                <Instagram className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                <span>@djdannyhecticb</span>
+              </a>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-400">
-          <p>&copy; {currentYear} DJ Danny Hectic B. All rights reserved.</p>
-          <p className="mt-2">Hectic Radio | Powered by Hectic Empire</p>
+      {/* Bottom Bar */}
+      <div className="border-t-2 border-white/20 px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase text-white/60">
+            <p>© {currentYear} DJ DANNY HECTIC B</p>
+            <p>Hectic Radio | Hectic Empire</p>
+          </div>
         </div>
       </div>
     </footer>

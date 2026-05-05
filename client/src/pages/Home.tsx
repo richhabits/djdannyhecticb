@@ -57,7 +57,7 @@ export default function Home() {
         }}
       />
 
-      <div className="min-h-screen bg-background text-foreground pt-14">
+      <div className="min-h-screen bg-background text-foreground pt-0">
 
         {/* HERO: Full Screen Video + Raw Text */}
         <section className="relative h-[calc(100vh-3.5rem)] w-full overflow-hidden flex flex-col justify-between border-b border-foreground">

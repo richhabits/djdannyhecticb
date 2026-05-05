@@ -72,7 +72,7 @@ export default function Mixes() {
         url="/mixes"
       />
 
-      <div className="min-h-screen bg-black text-white selection:bg-accent pirate-scanlines pt-32 pb-20 px-6">
+      <div className="min-h-screen bg-black text-white selection:bg-accent pirate-scanlines pt-0 pb-20 px-6">
         <div className="max-w-7xl mx-auto flex flex-col gap-16">
 
           {/* BRUTAL HEADER */}

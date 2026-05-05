@@ -4,7 +4,7 @@ import { BackButton } from "@/components/BackButton";
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-accent pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-black text-white selection:bg-accent pt-0 pb-20 px-6">
       <div className="max-w-6xl mx-auto flex flex-col gap-16">
 
         {/* Back Button */}

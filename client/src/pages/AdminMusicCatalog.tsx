@@ -43,7 +43,7 @@ export default function AdminMusicCatalog() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-20">
+    <div className="min-h-screen bg-black text-white pt-0 pb-20">
       <div className="max-w-6xl mx-auto px-6">
         <h1 className="text-6xl font-black uppercase mb-12">Music Catalog Manager</h1>
 

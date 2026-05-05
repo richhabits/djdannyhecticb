@@ -12,7 +12,7 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20 sm:pt-24 md:pt-28 pb-20 px-4 sm:px-6 md:px-8">
+    <div className="min-h-screen bg-black text-white pt-0 pb-20 px-4 sm:px-6 md:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <BackButton />

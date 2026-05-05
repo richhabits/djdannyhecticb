@@ -26,7 +26,7 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-black text-white pt-32">
+      <div className="min-h-screen bg-black text-white pt-0">
         <div className="max-w-6xl mx-auto px-6">
           <BackButton />
           <div className="text-center mt-12">
