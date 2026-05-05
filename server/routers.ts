@@ -9,6 +9,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { ukEventsRouter } from "./ukEventsRouter";
 import * as ukEventsService from "./_core/ukEventsService";
+import { z } from "zod";
 
 // Import the event output schema and transform function
 const ukEventOutputSchema = z.object({
@@ -72,7 +73,6 @@ import { sponsorshipRouter } from "./routers/sponsorshipRouter";
 import { premiumRouter } from "./routers/premiumRouter";
 import { revenueRouter } from "./routers/revenueRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
-import { z } from "zod";
 import * as db from "./db";
 import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
