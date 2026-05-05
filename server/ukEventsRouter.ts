@@ -50,24 +50,32 @@ type UKEventOutput = z.infer<typeof ukEventOutputSchema>;
 /**
  * Transform database event to output format
  * Ensures all fields are properly typed and serializable
+ *
+ * NOTE: Drizzle ORM returns NUMERIC PostgreSQL columns as Decimal objects.
+ * We must call .toString() on these Decimal instances to convert to strings.
  */
 function transformUKEvent(event: any): UKEventOutput {
-    // TEMPORARY: Log raw event structure to debug Zod validation failures
-    console.error('🔍 RAW EVENT FROM DB:', JSON.stringify(event, null, 2));
+    // Helper to convert Decimal or numeric values to strings
+    const toDecimalString = (value: any): string | null => {
+        if (!value) return null;
+        // Handle Decimal objects (have a toString method)
+        if (typeof value.toString === 'function' && value.constructor.name === 'Decimal') {
+            return value.toString();
+        }
+        // Fallback for regular numbers/strings
+        return String(value);
+    };
 
     const transformed = {
         ...event,
-        // Ensure numeric fields are properly formatted strings
-        latitude: event.latitude ? String(event.latitude) : null,
-        longitude: event.longitude ? String(event.longitude) : null,
-        priceMin: event.priceMin ? String(event.priceMin) : null,
-        priceMax: event.priceMax ? String(event.priceMax) : null,
+        // Convert NUMERIC fields (which come as Decimal objects) to strings
+        latitude: toDecimalString(event.latitude),
+        longitude: toDecimalString(event.longitude),
+        priceMin: toDecimalString(event.priceMin),
+        priceMax: toDecimalString(event.priceMax),
         // Keep artists as-is; it's already a JSON string in the database
         artists: event.artists ? (typeof event.artists === 'string' ? event.artists : JSON.stringify(event.artists)) : null,
     };
-
-    // Log the transformed output
-    console.error('✅ TRANSFORMED EVENT:', JSON.stringify(transformed, null, 2));
 
     return transformed;
 }
