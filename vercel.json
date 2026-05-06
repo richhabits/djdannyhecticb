@@ -5,24 +5,6 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "rewrites": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/robots"
-    },
-    {
-      "source": "/feed.xml",
-      "destination": "/api/feed"
-    },
-    {
-      "source": "/((?!js|css|chunks|assets|public|fonts|\\.well-known|[^/]*\\.[^/]*).*)$",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -48,65 +30,6 @@
           "value": "strict-origin-when-cross-origin"
         }
       ]
-    },
-    {
-      "source": "/js/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/css/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/api/:path*",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/jarvis-insights",
-      "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/cron/lead-followup",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/booking-reminders",
-      "schedule": "0 10 * * *"
     }
   ]
 }
