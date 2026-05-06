@@ -217,8 +217,7 @@
    REDUCED COLOR MODE (For color blindness accommodations)
    ============================================================================ */
 
-[data-theme="dark"][data-color-scheme="reduced"],
-@media (prefers-reduced-data: reduce) {
+[data-theme="dark"][data-color-scheme="reduced"] {
   :root {
     /* Reduce saturation of accent colors */
     --color-accent-primary: #E6A5A5;    /* Desaturated red */

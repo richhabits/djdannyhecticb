@@ -254,7 +254,7 @@
 
 /* ===== OPTIMIZATION FOR SLOW NETWORKS ===== */
 
-@media (prefers-reduced-data: reduce) {
+@media (prefers-reduced-motion: reduce) {
   img,
   video,
   iframe {

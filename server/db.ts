@@ -3646,3 +3646,33 @@ export async function getAIDannyChatHistory(sessionId: number, limit?: number) {
   // TODO: Implement get AI Danny chat history
   return [];
 }
+
+export async function getEventPhase7(eventId: string | number) {
+  // TODO: Implement get event phase 7
+  return null;
+}
+
+export async function updateEventPhase7(eventId: string | number, updates: any) {
+  // TODO: Implement update event phase 7
+  return null;
+}
+
+export async function createPartnerRequest(input: any) {
+  // TODO: Implement create partner request
+  return null;
+}
+
+export async function listPartnerRequests(input: any) {
+  // TODO: Implement list partner requests
+  return [];
+}
+
+export async function updatePartnerRequest(id: string | number, updates: any) {
+  // TODO: Implement update partner request
+  return null;
+}
+
+export async function createPartner(input: any) {
+  // TODO: Implement create partner
+  return null;
+}
