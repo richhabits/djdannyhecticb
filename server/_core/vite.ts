@@ -21,9 +21,12 @@ import { nanoid } from "nanoid";
 import path from "path";
 
 export async function setupVite(app: Express, server: Server) {
-  // Using new Function to prevent esbuild from analyzing/bundling the import
-  const { createServer: createViteServer } = await new Function('return import("vite")')();
-  const viteConfig = (await new Function('return import("../../vite.config")')()).default;
+  // Security: Replace Function() constructor with standard dynamic import
+  // Prevents code injection attacks while maintaining dynamic loading
+  const viteModule = await import("vite");
+  const { createServer: createViteServer } = viteModule;
+  const viteConfigModule = await import("../../vite.config");
+  const viteConfig = viteConfigModule.default;
 
   const serverOptions = {
     middlewareMode: true,

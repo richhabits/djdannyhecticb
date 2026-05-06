@@ -76,12 +76,11 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
+  // Security: Replace dangerouslySetInnerHTML with safe CSS generation
+  // Build CSS content as text first, then use <style> tag safely
+  const cssContent = Object.entries(THEMES)
+    .map(
+      ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
@@ -93,10 +92,15 @@ ${colorConfig
   .join("\n")}
 }
 `
-          )
-          .join("\n"),
-      }}
-    />
+    )
+    .join("\n");
+
+  // Create a style element with text content instead of innerHTML
+  // This prevents injection attacks while maintaining the same functionality
+  return (
+    <style>
+      {cssContent}
+    </style>
   );
 };
 

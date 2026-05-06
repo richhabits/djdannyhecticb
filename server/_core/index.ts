@@ -69,6 +69,41 @@ import { initializeRedis } from "./cache/redis-client";
 import { httpCacheMiddleware } from "./cache/http-cache-middleware";
 import { performanceMonitoringMiddleware } from "./monitoring/core-web-vitals";
 
+/**
+ * Security: Validate CORS origins using URL constructor
+ * Ensures only valid URLs are allowed as CORS origins
+ */
+function validateCorsOrigins(origins: string[]): string[] {
+  const validOrigins: string[] = [];
+
+  for (const origin of origins) {
+    try {
+      new URL(origin);
+      validOrigins.push(origin);
+    } catch (error) {
+      console.warn(`[Security] Invalid CORS origin (malformed URL): ${origin}`);
+    }
+  }
+
+  return validOrigins;
+}
+
+/**
+ * Security: Audit logging helper
+ * Logs security-relevant events for monitoring and compliance
+ */
+function auditLog(action: string, details: { userId?: number | string; ipAddress?: string; result?: string; error?: string }) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    action,
+    ...details
+  };
+
+  // In production, this should be sent to a centralized logging system
+  console.log(`[AUDIT] ${action}:`, logEntry);
+}
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
@@ -117,18 +152,32 @@ async function startServer() {
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com", "https://*.stripe.com"],
+        // Security: Removed 'unsafe-eval' and 'unsafe-inline' from script-src
+        // Using strict CSP with trusted domains only (Stripe for payments)
+        "script-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com"],
         "connect-src": ["'self'", "https:", "https://*.stripe.com"],
         "frame-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com", "https://www.youtube.com", "https://player.twitch.tv", "https://www.tiktok.com", "https://www.instagram.com"],
         "img-src": ["'self'", "data:", "https:"],
-        "media-src": ["'self'", "https:", "http:", "blob:"],
+        // Security: Removed 'http:' from media-src - only allow secure HTTPS
+        "media-src": ["'self'", "https:", "blob:"],
       },
     },
     crossOriginEmbedderPolicy: false,
   }));
 
+  // Security: Validate CORS origins before applying middleware
+  const validCorsOrigins = validateCorsOrigins(ENV.corsOrigins);
+
+  if (isProduction && validCorsOrigins.length === 0) {
+    throw new Error("[Security] CRITICAL: No valid CORS origins configured for production");
+  }
+
+  if (validCorsOrigins.length > 0) {
+    console.log("[Security] Allowed CORS origins:", validCorsOrigins);
+  }
+
   app.use(cors({
-    origin: ENV.corsOrigins,
+    origin: validCorsOrigins.length > 0 ? validCorsOrigins : ENV.corsOrigins,
     credentials: true,
   }));
 
@@ -144,8 +193,9 @@ async function startServer() {
   // Cookie parser for session management
   app.use(cookieParser());
 
-  // Aggressive memory optimization for production
-  const bodyLimit = process.env.NODE_ENV === "production" ? "300kb" : "10mb";
+  // Security: Use consistent body size limits across dev and prod
+  // Prevents potential issues with asymmetric configuration
+  const bodyLimit = "100kb";
   app.use(express.json({ limit: bodyLimit }));
   app.use(express.urlencoded({ limit: bodyLimit, extended: true }));
 
@@ -177,9 +227,11 @@ async function startServer() {
       "camera=(), microphone=(), geolocation=(), interest-cohort=()"
     );
 
+    // Security: Removed 'unsafe-inline' and 'unsafe-eval' from CSP headers
+    // Using strict CSP with only secure sources
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://*.stripe.com; frame-src 'self' https://js.stripe.com https://*.stripe.com; media-src 'self' https: http: blob:;"
+      "default-src 'self'; script-src 'self' https://js.stripe.com https://*.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://*.stripe.com; frame-src 'self' https://js.stripe.com https://*.stripe.com; media-src 'self' https: blob:;"
     );
     next();
   });

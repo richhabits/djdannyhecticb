@@ -28,6 +28,48 @@ export type TrpcContext = {
   db: ReturnType<typeof getDb> extends Promise<infer T> ? T : never;
 };
 
+/**
+ * Security: Validate IP address format (IPv4 or IPv6)
+ */
+function isValidIpAddress(ip: string): boolean {
+  // IPv4 pattern
+  const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+  // IPv6 pattern (simplified)
+  const ipv6Pattern = /^([\da-f]{0,4}:){2,7}[\da-f]{0,4}$/i;
+
+  return ipv4Pattern.test(ip) || ipv6Pattern.test(ip);
+}
+
+/**
+ * Security: Extract IP address with spoofing protection
+ * Only trust x-forwarded-for if behind a reverse proxy (check TRUST_PROXY env var)
+ */
+function getClientIpAddress(req: CreateExpressContextOptions["req"]): string {
+  const trustProxy = process.env.TRUST_PROXY === "true";
+
+  if (trustProxy) {
+    // When behind reverse proxy, check x-forwarded-for (first IP in chain)
+    const xForwardedFor = (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim();
+    if (xForwardedFor && isValidIpAddress(xForwardedFor)) {
+      return xForwardedFor;
+    }
+
+    // Fallback to x-real-ip
+    const xRealIp = req.headers["x-real-ip"] as string;
+    if (xRealIp && isValidIpAddress(xRealIp)) {
+      return xRealIp;
+    }
+  }
+
+  // Direct connection - use socket remote address
+  const socketIp = req.socket?.remoteAddress;
+  if (socketIp && isValidIpAddress(socketIp)) {
+    return socketIp;
+  }
+
+  return "unknown";
+}
+
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
@@ -48,12 +90,8 @@ export async function createContext(
     }
   }
 
-  // Get IP address from request
-  const ipAddress =
-    (opts.req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
-    (opts.req.headers["x-real-ip"] as string) ||
-    opts.req.socket?.remoteAddress ||
-    "unknown";
+  // Security: Get IP address with spoofing protection
+  const ipAddress = getClientIpAddress(opts.req);
 
   // Inject database instance into context (dependency injection pattern)
   const db = await getDb();

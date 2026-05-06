@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+// Security: Import rehype-sanitize to prevent XSS attacks from markdown content
+import rehypeSanitize from "rehype-sanitize";
 
 export function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
@@ -101,6 +103,9 @@ export function BlogPost() {
         <div className="prose prose-invert max-w-none">
           <div className="text-slate-200 leading-relaxed space-y-4">
             <ReactMarkdown
+              // Security: Enable rehypeSanitize to prevent XSS from user-provided markdown
+              // This removes dangerous HTML tags and scripts from markdown content
+              rehypePlugins={[rehypeSanitize]}
               components={{
                 h1: ({ children }) => (
                   <h1 className="text-3xl font-bold text-white mt-8 mb-4">{children}</h1>

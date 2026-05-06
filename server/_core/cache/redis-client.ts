@@ -56,9 +56,11 @@ export async function initializeRedis(config: Partial<RedisConfig> = {}): Promis
 
   // Error handling
   client.on('error', (err) => {
+    // Security: Log only error message, never log password or sensitive data
     logger.error('Redis client error', {
       error: err.message,
-      stack: err.stack,
+      // Don't log the full error object as it may contain sensitive connection details
+      // stack: err.stack, // Also omit stack traces that might expose config
     });
   });
 

@@ -1,5 +1,11 @@
 import { rateLimit } from "express-rate-limit";
 
+// Security: Rate limiting configuration
+// For distributed deployments, configure Redis store via rate-limit-redis:
+// import RedisStore from "rate-limit-redis";
+// const store = new RedisStore({ client: redisClient, prefix: "rl:" });
+// Then pass: { store } to rateLimit options
+
 // Generic public rate limit (120 requests per minute)
 export const publicRateLimit = rateLimit({
     windowMs: 60 * 1000,
@@ -7,6 +13,8 @@ export const publicRateLimit = rateLimit({
     standardHeaders: "draft-7",
     legacyHeaders: false,
     message: { error: "Too many requests, please try again later." },
+    // For production distributed deployments, add:
+    // store: redisStore
 });
 
 // Strict auth rate limit (10 attempts per minute)

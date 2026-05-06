@@ -5,6 +5,7 @@
  */
 
 import { Router, Request, Response } from "express";
+import crypto from "crypto";
 
 /**
  * Vapi Webhook Handler
@@ -16,8 +17,51 @@ import { Router, Request, Response } from "express";
 
 export const vapiRouter = Router();
 
+/**
+ * Security: Verify Vapi webhook signature
+ * Validates X-Vapi-Signature header against HMAC of request body
+ */
+function verifyVapiSignature(signature: string | undefined, body: any): boolean {
+  // Get webhook secret from environment
+  const webhookSecret = process.env.VAPI_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    // If secret is not configured, log warning but allow (for dev/staging)
+    if (process.env.NODE_ENV === "production") {
+      console.warn("[Vapi] VAPI_WEBHOOK_SECRET not configured - webhook signature verification disabled");
+      return false;
+    }
+    return true;
+  }
+
+  if (!signature) {
+    console.warn("[Vapi] Missing X-Vapi-Signature header");
+    return false;
+  }
+
+  // Compute HMAC-SHA256 of request body
+  const bodyString = typeof body === "string" ? body : JSON.stringify(body);
+  const computedSignature = crypto
+    .createHmac("sha256", webhookSecret)
+    .update(bodyString)
+    .digest("hex");
+
+  // Use timing-safe comparison to prevent timing attacks
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(computedSignature)
+  );
+}
+
 vapiRouter.post("/vapi", async (req: Request, res: Response) => {
   try {
+    // Security: Verify webhook signature
+    const signature = req.headers["x-vapi-signature"] as string | undefined;
+    if (!verifyVapiSignature(signature, req.body)) {
+      console.warn("[Vapi] Webhook signature verification failed");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const body = req.body;
     const eventType = body.type;
 

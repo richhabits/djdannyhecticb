@@ -206,8 +206,10 @@ export async function createAdminUser(
   }
 
   try {
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Security: Hash password with cost factor 12 (>= 10 minimum)
+    // Higher cost factor = slower hashing = better protection against brute force
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Check if user already exists
     const existingCredential = await db

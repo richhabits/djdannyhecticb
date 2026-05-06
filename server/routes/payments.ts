@@ -51,16 +51,19 @@ router.post(
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("Webhook signature verification failed:", message);
-      return res.status(400).send(`Webhook Error: ${message}`);
+      // Security: Return generic error message, don't expose details
+      return res.status(400).send("Webhook signature verification failed");
     }
 
     try {
       await handleStripeWebhook(event);
       res.json({ received: true });
     } catch (error: unknown) {
+      // Security: Don't expose implementation details in error responses
       const message = error instanceof Error ? error.message : "Unknown error";
       console.error("Error handling webhook:", message);
-      res.status(500).json({ error: message });
+      // Log detailed error internally, return generic message to client
+      res.status(500).json({ error: "Webhook processing failed" });
     }
   }
 );
@@ -93,7 +96,8 @@ router.post("/webhook/paypal", express.json(), async (req, res) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error handling PayPal webhook:", message);
-    res.status(500).json({ error: message });
+    // Security: Return generic error message instead of exposing details
+    res.status(500).json({ error: "Webhook processing failed" });
   }
 });
 

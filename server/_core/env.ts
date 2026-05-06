@@ -10,6 +10,29 @@
 const isProduction = process.env.NODE_ENV === "production";
 
 /**
+ * Validate JWT secret meets security requirements
+ * Production requirement: 64+ chars with uppercase and numbers
+ */
+function validateJwtSecret(secret: string): { valid: boolean; reason?: string } {
+  if (!secret) {
+    return { valid: false, reason: "JWT_SECRET is not set" };
+  }
+
+  if (secret.length < 64) {
+    return { valid: false, reason: `JWT_SECRET must be at least 64 characters (current: ${secret.length})` };
+  }
+
+  const hasUppercase = /[A-Z]/.test(secret);
+  const hasNumbers = /[0-9]/.test(secret);
+
+  if (!hasUppercase || !hasNumbers) {
+    return { valid: false, reason: "JWT_SECRET must contain uppercase letters and numbers" };
+  }
+
+  return { valid: true };
+}
+
+/**
  * Validate critical environment variables in production
  */
 function validateEnv() {
@@ -20,13 +43,22 @@ function validateEnv() {
 
   if (missing.length > 0) {
     console.error(`[ENV] CRITICAL: Missing required environment variables: ${missing.join(", ")}`);
-    // Don't crash - allow graceful degradation, but log loudly
+    process.exit(1);
   }
 
-  // Warn about weak JWT secret
+  // Security: Enforce strong JWT secret in production
   const jwtSecret = process.env.JWT_SECRET;
-  if (jwtSecret && jwtSecret.length < 32) {
-    console.warn("[ENV] WARNING: JWT_SECRET should be at least 32 characters for security");
+  if (jwtSecret) {
+    const validation = validateJwtSecret(jwtSecret);
+    if (!validation.valid) {
+      console.error(`[ENV] CRITICAL: ${validation.reason}`);
+      console.error("[ENV] JWT_SECRET Requirements (Production):");
+      console.error("  - Minimum 64 characters");
+      console.error("  - Must contain uppercase letters");
+      console.error("  - Must contain numbers");
+      console.error("  - Generate with: openssl rand -base64 48 | tr -d '\\n'");
+      process.exit(1);
+    }
   }
 
   // Warn about missing optional services

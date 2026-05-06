@@ -105,6 +105,7 @@
     "react-hook-form": "^7.64.0",
     "react-markdown": "^9.0.0",
     "react-player": "^3.4.0",
+    "rehype-sanitize": "^6.0.0",
     "react-resizable-panels": "^3.0.6",
     "recharts": "^2.15.2",
     "redis": "^5.12.1",
