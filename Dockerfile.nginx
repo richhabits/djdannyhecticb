@@ -1,5 +1,0 @@
-FROM nginx:alpine
-
-# HTTP-only configuration (no SSL overhead, faster loads)
-COPY nginx-simple.conf /etc/nginx/nginx.conf
-
