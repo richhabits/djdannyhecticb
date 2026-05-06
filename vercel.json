@@ -19,7 +19,7 @@
       "destination": "/api/feed"
     },
     {
-      "source": "/:path*",
+      "source": "/(?!css|js|chunks|public|assets|fonts|images|svg|favicon|manifest|logo|danny|hectic|contact|hectic-|logo-|\.)(.*)",
       "destination": "/index.html"
     }
   ],
