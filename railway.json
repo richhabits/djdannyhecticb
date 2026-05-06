@@ -1,10 +1,14 @@
 {
   "build": {
-    "builder": "nixpacks"
+    "builder": "nixpacks",
+    "buildCommand": "pnpm install && pnpm build"
   },
   "deploy": {
     "numReplicas": 1,
     "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 5
+    "restartPolicyMaxRetries": 5,
+    "environment": {
+      "NODE_ENV": "production"
+    }
   }
 }
