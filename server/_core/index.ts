@@ -158,11 +158,6 @@ async function startServer() {
     app.use(performanceMonitoringMiddleware());
   }
 
-
-  // Global Rate Limiting (DDoS Protection)
-  const { publicRateLimit } = await import("./middleware/rateLimit");
-  app.use(publicRateLimit);
-
   // Security headers (consolidated)
   const isProduction = process.env.NODE_ENV === "production";
   app.use((req, res, next) => {
