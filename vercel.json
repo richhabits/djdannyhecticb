@@ -19,7 +19,7 @@
       "destination": "/api/feed"
     }
   ],
-  "cleanUrls": true,
+  "fallback": "/index.html",
   "headers": [
     {
       "source": "/(.*)",
