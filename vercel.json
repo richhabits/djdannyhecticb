@@ -19,14 +19,8 @@
       "destination": "/api/feed"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/$1"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(?!js/|css/|chunks/|assets/|public/|fonts/|\.well-known)",
-      "dest": "/index.html"
+      "source": "/((?!js|css|chunks|assets|public|fonts|\\.well-known|[^/]*\\.[^/]*).*)$",
+      "destination": "/index.html"
     }
   ],
   "headers": [
