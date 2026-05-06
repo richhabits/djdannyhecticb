@@ -17,9 +17,18 @@
     {
       "source": "/feed.xml",
       "destination": "/api/feed"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/$1"
     }
   ],
-  "fallback": "/index.html",
+  "routes": [
+    {
+      "src": "/(?!js/|css/|chunks/|assets/|public/|fonts/|\.well-known)",
+      "dest": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -47,7 +56,16 @@
       ]
     },
     {
-      "source": "/assets/:path*",
+      "source": "/js/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/css/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -98,4 +116,3 @@
     }
   ]
 }
-
