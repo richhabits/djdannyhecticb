@@ -3702,3 +3702,27 @@ export async function createPostTemplate(input: Record<string, unknown>) {
 export async function listPostTemplates(platform?: string, templateType?: string) {
   return [];
 }
+
+export function renderPostTemplate(templateText: string, input: Record<string, unknown>) {
+  return templateText;
+}
+
+export async function createPromotion(input: Record<string, unknown>) {
+  throw new Error("Promotions not yet implemented");
+}
+
+export async function listPromotions(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function updatePromotion(id: number, updates: Record<string, unknown>) {
+  throw new Error("Promotions not yet implemented");
+}
+
+export async function getInnerCircleStatus(profileId: number) {
+  return null;
+}
+
+export async function createOrUpdateInnerCircle(input: Record<string, unknown>) {
+  throw new Error("Inner circle not yet implemented");
+}
