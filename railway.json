@@ -4,6 +4,7 @@
     "buildCommand": "pnpm install && pnpm build"
   },
   "deploy": {
+    "startCommand": "node dist/index.mjs",
     "numReplicas": 1,
     "restartPolicyType": "on_failure",
     "restartPolicyMaxRetries": 5,
