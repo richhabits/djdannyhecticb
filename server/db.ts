@@ -3750,3 +3750,51 @@ export async function createOrUpdateUserConsent(input: Record<string, unknown>) 
 export async function getUserConsent(userId: number) {
   return null;
 }
+
+export async function getConsentStats() {
+  return { total: 0, granted: 0, denied: 0 };
+}
+
+export async function getOrCreateWallet(userId: number) {
+  return { id: 0, userId, balance: 0, createdAt: new Date() };
+}
+
+export async function getCoinTransactions(userId: number) {
+  return [];
+}
+
+export async function getWalletByUserId(userId: number) {
+  return null;
+}
+
+export async function listRewards(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function createReward(input: Record<string, unknown>) {
+  throw new Error("Rewards not yet implemented");
+}
+
+export async function updateReward(id: number, updates: Record<string, unknown>) {
+  throw new Error("Rewards not yet implemented");
+}
+
+export async function createRedemption(input: Record<string, unknown>) {
+  throw new Error("Redemptions not yet implemented");
+}
+
+export async function listRedemptions(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function updateRedemptionStatus(id: number, status: string) {
+  throw new Error("Redemptions not yet implemented");
+}
+
+export async function createReferralCode(input: Record<string, unknown>) {
+  throw new Error("Referrals not yet implemented");
+}
+
+export async function applyReferralCode(input: Record<string, unknown>) {
+  throw new Error("Referrals not yet implemented");
+}
