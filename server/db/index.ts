@@ -40,3 +40,27 @@ export {
 
 // AI mixes
 export { createAIMix, listAIMixes } from "./mixes";
+
+export async function getReferralStats(userId: number) {
+  return { totalReferrals: 0, earnings: 0, activeReferrals: 0 };
+}
+
+export async function listReferralCodes(userId?: number) {
+  return [];
+}
+
+export async function getShowEpisodeBySlug(slug: string) {
+  return null;
+}
+
+export async function updateShowEpisode(id: number, updates: Record<string, unknown>) {
+  throw new Error("Show episodes not yet implemented");
+}
+
+export async function listWallets(limit?: number) {
+  return [];
+}
+
+export async function setPrimaryShowPhase9(showId: number) {
+  throw new Error("Show phases not yet implemented");
+}
