@@ -39,7 +39,7 @@ export async function initializeRedis(config: Partial<RedisConfig> = {}): Promis
     return redisClient;
   }
 
-  const clientOptions: ClientOptions = {
+  const clientOptions: ClientOptions = process.env.REDIS_URL ? { url: process.env.REDIS_URL, socket: { reconnectStrategy: (r) => Math.min(r * 100, 3000) } } as any : {
     host: finalConfig.host,
     port: finalConfig.port,
     password: finalConfig.password,
