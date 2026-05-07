@@ -3871,9 +3871,10 @@ export async function query(sql: string, params?: unknown[]) {
   return [];
 }
 
-// Drizzle ORM exports (if not already imported)
-export { schema } from "./schema";
 
-// Placeholder for Drizzle insert/update if needed
+// Placeholder for Drizzle insert/update operations
 export const insert = (table: any) => ({ values: (v: any) => ({ returning: () => null }) });
 export const update = (table: any) => ({ set: (s: any) => ({ where: (w: any) => null }) });
+
+// Schema placeholder - define locally if needed
+export const schema = {};
