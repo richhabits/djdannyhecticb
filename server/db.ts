@@ -3798,3 +3798,75 @@ export async function createReferralCode(input: Record<string, unknown>) {
 export async function applyReferralCode(input: Record<string, unknown>) {
   throw new Error("Referrals not yet implemented");
 }
+
+export async function getReferralStats(userId: number) {
+  return { totalReferrals: 0, earnings: 0, activeReferrals: 0 };
+}
+
+export async function listReferralCodes(userId?: number) {
+  return [];
+}
+
+export async function getShowEpisodeBySlug(slug: string) {
+  return null;
+}
+
+export async function updateShowEpisode(id: number, updates: Record<string, unknown>) {
+  throw new Error("Show episodes not yet implemented");
+}
+
+export async function listWallets(limit?: number) {
+  return [];
+}
+
+export async function setPrimaryShowPhase9(showId: number) {
+  throw new Error("Show phases not yet implemented");
+}
+
+export async function listSocialIntegrations(userId?: number) {
+  return [];
+}
+
+export async function createSocialIntegration(input: Record<string, unknown>) {
+  throw new Error("Social integrations not yet implemented");
+}
+
+export async function updateSocialIntegration(id: number, updates: Record<string, unknown>) {
+  throw new Error("Social integrations not yet implemented");
+}
+
+export async function setPrimarySocial(userId: number, platform: string) {
+  throw new Error("Social integrations not yet implemented");
+}
+
+export async function listContentQueue(userId?: number, limit?: number) {
+  return [];
+}
+
+export async function createContentItem(input: Record<string, unknown>) {
+  throw new Error("Content queue not yet implemented");
+}
+
+export async function updateContentItemStatus(id: number, status: string) {
+  throw new Error("Content queue not yet implemented");
+}
+
+export async function getShowEpisode(id: number) {
+  return null;
+}
+
+export async function listWebhooks(userId?: number) {
+  return [];
+}
+
+export async function createWebhook(input: Record<string, unknown>) {
+  throw new Error("Webhooks not yet implemented");
+}
+
+export async function updateWebhook(id: number, updates: Record<string, unknown>) {
+  throw new Error("Webhooks not yet implemented");
+}
+
+export async function query(sql: string, params?: unknown[]) {
+  return [];
+}
