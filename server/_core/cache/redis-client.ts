@@ -32,23 +32,27 @@ const DEFAULT_CONFIG: RedisConfig = {
 
 let redisClient: RedisClient | null = null;
 
-export async function initializeRedis(config: Partial<RedisConfig> = {}): Promise<RedisClient> {
+export async function initializeRedis(config: Partial<RedisConfig> = {}): Promise<RedisClient | null> {
+  // Skip initialization if REDIS_URL is not set
+  if (!process.env.REDIS_URL) {
+    logger.info('Redis disabled: REDIS_URL not set');
+    return null;
+  }
+
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
   if (redisClient?.isOpen) {
     return redisClient;
   }
 
-  const clientOptions: ClientOptions = process.env.REDIS_URL ? { url: process.env.REDIS_URL, socket: { reconnectStrategy: (r) => Math.min(r * 100, 3000) } } as any : {
-    host: finalConfig.host,
-    port: finalConfig.port,
-    password: finalConfig.password,
-    db: finalConfig.database,
+  const clientOptions: ClientOptions = {
+    url: process.env.REDIS_URL,
     socket: {
       reconnectStrategy: (retries) => {
         const delay = Math.min(retries * 100, 3000);
         return delay;
       },
+      connectTimeout: 5000, // 5 second timeout for initial connection
     },
   };
 
@@ -56,19 +60,13 @@ export async function initializeRedis(config: Partial<RedisConfig> = {}): Promis
 
   // Error handling
   client.on('error', (err) => {
-    // Security: Log only error message, never log password or sensitive data
     logger.error('Redis client error', {
       error: err.message,
-      // Don't log the full error object as it may contain sensitive connection details
-      // stack: err.stack, // Also omit stack traces that might expose config
     });
   });
 
   client.on('connect', () => {
-    logger.info('Redis connected', {
-      host: finalConfig.host,
-      port: finalConfig.port,
-    });
+    logger.info('Redis connected');
   });
 
   client.on('ready', () => {
@@ -79,18 +77,28 @@ export async function initializeRedis(config: Partial<RedisConfig> = {}): Promis
     logger.warn('Redis reconnecting');
   });
 
-  // Connect
-  await client.connect();
-  redisClient = client;
-
-  return client;
+  // Connect with timeout - don't block server startup
+  try {
+    await Promise.race([
+      client.connect(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Redis connection timeout')), 10000)
+      ),
+    ]);
+    redisClient = client;
+    return client;
+  } catch (error) {
+    logger.warn('Redis connection failed, continuing without cache', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Don't set redisClient, return null to indicate Redis is unavailable
+    return null;
+  }
 }
 
-export function getRedisClient(): RedisClient {
+export function getRedisClient(): RedisClient | null {
   if (!redisClient?.isOpen) {
-    throw new Error(
-      'Redis client not initialized. Call initializeRedis() before using getRedisClient()'
-    );
+    return null;
   }
   return redisClient;
 }

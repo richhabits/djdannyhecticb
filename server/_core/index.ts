@@ -128,13 +128,20 @@ async function startServer() {
   const server = createServer(app);
 
   // Initialize Redis for caching (non-blocking with graceful fallback)
-  if (process.env.NODE_ENV !== "development" || process.env.REDIS_HOST) {
+  // Only initialize if REDIS_URL is set
+  if (process.env.REDIS_URL) {
     try {
-      await initializeRedis();
-      console.log('[CACHE] Redis initialized successfully');
+      const redisClient = await initializeRedis();
+      if (redisClient) {
+        console.log('[CACHE] Redis initialized successfully');
+      }
     } catch (error) {
-      console.warn('[CACHE] Redis initialization failed - caching disabled', error);
+      console.warn('[CACHE] Redis initialization failed - caching disabled', {
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
+  } else {
+    console.log('[CACHE] Redis disabled (REDIS_URL not set)');
   }
 
   // Setup WebSocket for stream events
