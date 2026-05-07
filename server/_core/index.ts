@@ -167,7 +167,6 @@ async function startServer() {
 
   const isProduction = process.env.NODE_ENV === "production";
 
-  const isProduction = process.env.NODE_ENV === "production";
 
   // Security: Validate CORS origins before applying middleware
   const validCorsOrigins = validateCorsOrigins(ENV.corsOrigins);
