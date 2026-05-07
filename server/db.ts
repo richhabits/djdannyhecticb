@@ -3870,3 +3870,10 @@ export async function updateWebhook(id: number, updates: Record<string, unknown>
 export async function query(sql: string, params?: unknown[]) {
   return [];
 }
+
+// Drizzle ORM exports (if not already imported)
+export { schema } from "./schema";
+
+// Placeholder for Drizzle insert/update if needed
+export const insert = (table: any) => ({ values: (v: any) => ({ returning: () => null }) });
+export const update = (table: any) => ({ set: (s: any) => ({ where: (w: any) => null }) });
