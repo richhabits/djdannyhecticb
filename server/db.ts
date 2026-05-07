@@ -3676,3 +3676,29 @@ export async function createPartner(input: any) {
   // TODO: Implement create partner
   return null;
 }
+
+// Stub implementations for planned features (partners, social profiles, post templates)
+// These tables are not yet in the DB schema - returning safe empty responses
+export async function listPartners(activeOnly?: boolean) {
+  return [];
+}
+
+export async function createSocialProfile(input: Record<string, unknown>) {
+  throw new Error("Social profiles not yet implemented");
+}
+
+export async function listSocialProfiles(brandId?: number, activeOnly?: boolean) {
+  return [];
+}
+
+export async function updateSocialProfile(id: number, updates: Record<string, unknown>) {
+  throw new Error("Social profiles not yet implemented");
+}
+
+export async function createPostTemplate(input: Record<string, unknown>) {
+  throw new Error("Post templates not yet implemented");
+}
+
+export async function listPostTemplates(platform?: string, templateType?: string) {
+  return [];
+}
