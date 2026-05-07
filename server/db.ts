@@ -3726,3 +3726,27 @@ export async function getInnerCircleStatus(profileId: number) {
 export async function createOrUpdateInnerCircle(input: Record<string, unknown>) {
   throw new Error("Inner circle not yet implemented");
 }
+
+export async function listInnerCircleMembers(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function listAIScriptJobs(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function listAIVoiceJobs(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function listAIVideoJobs(input?: Record<string, unknown>) {
+  return [];
+}
+
+export async function createOrUpdateUserConsent(input: Record<string, unknown>) {
+  throw new Error("User consent not yet implemented");
+}
+
+export async function getUserConsent(userId: number) {
+  return null;
+}
