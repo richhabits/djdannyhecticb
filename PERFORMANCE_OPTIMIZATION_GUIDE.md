@@ -33,7 +33,7 @@
 └──────────────────┬──────────────────────────────┘
                    │ (Cache-Control headers)
 ┌──────────────────▼──────────────────────────────┐
-│           CDN Cache Layer (Vercel)               │
+│        CDN Cache Layer (Cloudflare/Railway)      │
 │    (HTTP caching, immutable assets, ISR)        │
 └──────────────────┬──────────────────────────────┘
                    │ (Origin requests)
@@ -236,14 +236,14 @@ services:
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
 ```
 
-#### Production Deployment (Vercel + AWS ElastiCache)
+#### Production Deployment (Railway + Managed Redis)
 ```bash
-# Set up AWS ElastiCache Redis cluster
-aws elasticache create-cache-cluster \
-  --cache-cluster-id dj-danny-cache \
-  --engine redis \
-  --cache-node-type cache.r6g.xlarge \
-  --num-cache-nodes 1
+# Railway with integrated Redis plugin
+# Configure via Railway dashboard or CLI:
+railway run pnpm build && pnpm start
+
+# Alternatively use upstash or similar managed Redis
+# Set REDIS_URL environment variable in Railway dashboard
 ```
 
 ---
@@ -359,32 +359,22 @@ module.exports = {
 
 ## ⚡ Phase 4: CDN & Caching Headers
 
-### 4.1 Vercel Edge Caching
-**Location:** `vercel.json` or `vercel.ts`
+### 4.1 Railway Cache Control & Cloudflare Integration
+**Location:** Express server middleware or Railway headers
 
+For Railway with Cloudflare CDN:
 ```typescript
-export default {
-  headers: [
-    {
-      source: '/api/(.*)',
-      headers: [
-        { key: 'cache-control', value: 'public, max-age=3600' },
-        { key: 'cdn-cache-control', value: 'max-age=3600' },
-      ],
-    },
-    {
-      source: '/static/(.*)',
-      headers: [
-        { key: 'cache-control', value: 'public, max-age=31536000, immutable' },
-      ],
-    },
-    {
-      source: '/(.*)',
-      headers: [
-        { key: 'cache-control', value: 'public, max-age=0, must-revalidate' },
-      ],
-    },
-  ],
+// server/_core/index.ts - Already configured in middleware
+app.use((req, res, next) => {
+  if (req.path.startsWith('/static/')) {
+    res.setHeader('cache-control', 'public, max-age=31536000, immutable');
+  } else if (req.path.startsWith('/api/')) {
+    res.setHeader('cache-control', 'public, max-age=3600');
+  } else {
+    res.setHeader('cache-control', 'public, max-age=0, must-revalidate');
+  }
+  next();
+});
 };
 ```
 
@@ -583,10 +573,10 @@ class DjDannyUser(HttpUser):
 ### Infrastructure Changes
 | Component | Monthly Cost | Change | Notes |
 |-----------|---|---|---|
-| AWS RDS (DB) | $200 | -$50 (25%) | Indexes reduce compute |
-| AWS ElastiCache | +$100 | New | Redis cluster (1GB) |
-| Vercel CDN | ~$100 | -$50 (50%) | Reduced origin requests |
-| **Total** | **$350** | **+$0** | Neutral cost structure |
+| Railway Database | Variable | Minimal | Indexed queries reduce load |
+| Railway Redis Plugin or Upstash | ~$20-50 | New | Managed Redis for caching |
+| Cloudflare CDN | Free-$20 | Optional | Free tier or Pro plan |
+| **Total** | **Varies** | **Low** | Railway pay-as-you-go pricing |
 
 **ROI:** Improved user experience + reduced customer churn
 

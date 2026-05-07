@@ -69,32 +69,32 @@ DATABASE_URL=postgresql://localhost:5432/dev_djdannyhecticb
 
 ### For Production Deployment
 
-#### ✓ APPROVED: Vercel Environment Variables
+#### ✓ APPROVED: Railway Environment Variables
 
-**Where**: https://vercel.com/dashboard → djdannyhecticb → Settings → Environment Variables
+**Where**: https://railway.app → djdannyhecticb project → Variables
 
 **Features**:
 - Automatically redacted in logs
-- Separate production/preview/development values
 - Encrypted at rest
 - Audit trail of changes
-- Easy rollback
-- Integrated with CI/CD
+- Easy updates and rollbacks
+- Auto-deploy on changes
 
 **Setup Steps**:
-1. Go to Vercel dashboard
+1. Go to Railway dashboard (https://railway.app)
 2. Select djdannyhecticb project
-3. Navigate to **Settings** → **Environment Variables**
-4. Add variables for each environment:
-   - **Production** (applies to `*.vercel.app` domain)
-   - **Preview** (applies to preview deployments)
-   - **Development** (applies to local dev)
+3. Navigate to **Variables** tab
+4. Click "New Variable"
+5. Add variables:
+   - Key: Variable name (e.g., `GOOGLE_CLIENT_SECRET`)
+   - Value: Secret value
+   - Railway automatically applies to all deployments
 
 **Rules**:
 - Always use meaningful names (e.g., `GOOGLE_CLIENT_SECRET`, not `SECRET`)
-- Add descriptive comment for each variable
-- Enable "Encrypt" flag (automatic)
-- Verify values after adding
+- Use Railway's built-in database connections (Railway creates these for you)
+- Never commit `.env` files with real secrets
+- Verify values are correct after adding
 - Never paste multiple secrets in one field
 
 ### For Team Collaboration
@@ -296,7 +296,7 @@ localStorage.setItem('apiKey', 'AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8');
 
 **Rotation Steps**:
 1. Generate new Client ID/Secret in service console
-2. Update in .env and Vercel
+2. Update in Railway Variables
 3. Verify login works
 4. Revoke old credentials
 5. Monitor for failed logins
@@ -348,7 +348,7 @@ YOUTUBE_DATA_API_KEY=AIzaSyBGSh5G9y... (restricted to YouTube API only)
 **Rotation Steps**:
 1. Change password in database admin panel
 2. Update in .env
-3. Update in Vercel
+3. Update in Railway Variables
 4. Test connection immediately
 5. Monitor for connection errors
 
@@ -379,8 +379,8 @@ JWT_SECRET=new-64-character-hex-string
 
 **Handling**:
 1. Generate new secret in service dashboard
-2. Update in .env/Vercel
-3. Redeploy
+2. Update in .env and Railway Variables
+3. Railway auto-deploys
 4. Verify webhooks processing correctly
 5. Revoke old secret
 
@@ -442,14 +442,14 @@ ROTATION SCHEDULE: 2026-08-03 (quarterly)
 LOCATION IN APP: GOOGLE_CLIENT_SECRET env var
 DEPENDENCIES: Auth middleware, login form, OAuth redirect handler
 REVOCATION LINK: https://console.cloud.google.com/
-NOTES: Part of Vercel environment variables, also in .env.local
+NOTES: Part of Railway environment variables, also in .env.local
 INCIDENT LOG: None
 STATUS: Active
 ```
 
 ---
 
-## VERCEL ENVIRONMENT VARIABLES - BEST PRACTICES
+## RAILWAY ENVIRONMENT VARIABLES - BEST PRACTICES
 
 ### Setting Up Variables for All Environments
 
@@ -489,20 +489,20 @@ vercel env push  # Uploads .env to Vercel (dangerous - don't do this with real s
 
 ### Web UI Setup
 
-1. Go to https://vercel.com/dashboard
+1. Go to https://railway.app
 2. Select djdannyhecticb project
-3. Navigate to **Settings** → **Environment Variables**
-4. Click **Add New**
+3. Navigate to **Variables** tab
+4. Click **New Variable**
 5. Enter Key: `GOOGLE_CLIENT_ID`
 6. Enter Value: your actual client ID
-7. Select environments: Production ☑, Preview ☑, Development ☐
-8. Click **Save**
+7. Click **Add**
+8. Railway auto-deploys with the new variable
 
 **Tips**:
-- Add comment explaining what the secret is
 - Use consistent naming (SNAKE_CASE_CAPITALS)
-- Never leave "Development" checked for production secrets
+- Railway applies variables to all active deployments
 - Verify in app that it loaded correctly
+- Check Railway logs to confirm deployment
 
 ---
 

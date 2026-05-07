@@ -31,11 +31,11 @@ grep "\.env" .gitignore
 # Should show .env entries
 
 # 5. Check Vercel CLI is installed
-vercel --version
+# Railway CLI version
 # Should show version number
 
 # 6. Verify authentication to Vercel
-vercel whoami
+# Railway CLI status
 # Should show your Vercel account
 ```
 
@@ -50,7 +50,7 @@ Verify you can access all services that need secret rotation:
 # 3. Check you have "Editor" or "Owner" role
 
 # Vercel
-# 1. Visit https://vercel.com/dashboard
+# 1. Visit https://railway.app
 # 2. Verify djdannyhecticb project visible
 # 3. Check you have edit access
 
@@ -81,7 +81,7 @@ Verify you can access all services that need secret rotation:
 # Who to call if critical issue: _______________
 
 # 4. Set up monitoring dashboard
-# Open in browser: https://vercel.com/dashboard/djdannyhecticb
+# Open in browser: https://railway.app/djdannyhecticb
 ```
 
 ---
@@ -99,7 +99,7 @@ Verify you can access all services that need secret rotation:
 # Safari: Develop → Clear Website Data
 
 # Step 2: Visit application
-# Go to: https://djdannyhecticb.vercel.app
+# Go to: https://djdannyhecticb.com
 
 # Step 3: Click "Login with Google"
 
@@ -199,7 +199,7 @@ curl -s "https://app.ticketmaster.com/discovery/v2/events.json?apikey=YOUR_KEY&c
 
 ```bash
 # Check Vercel logs for errors
-vercel logs production --lines 200
+# Check Railway logs in dashboard --lines 200
 
 # Look for these patterns (should NOT appear):
 # - "invalid key"
@@ -222,7 +222,7 @@ vercel logs production --lines 200
 # Run for 2-3 minutes
 
 for i in {1..50}; do
-  curl -s https://djdannyhecticb.vercel.app/api/health \
+  curl -s https://djdannyhecticb.com/api/health \
     -H "Authorization: Bearer YOUR_JWT_TOKEN" \
     -w "Status: %{http_code}\n"
 done | sort | uniq -c
@@ -250,7 +250,7 @@ done | sort | uniq -c
 vercel env list | grep GOOGLE
 
 # Check logs
-vercel logs production --lines 50 | grep -i "oauth\|google\|error"
+# Check Railway logs in dashboard --lines 50 | grep -i "oauth\|google\|error"
 
 # Check Google Cloud Console
 # 1. Go to https://console.cloud.google.com/
@@ -262,7 +262,7 @@ vercel logs production --lines 50 | grep -i "oauth\|google\|error"
 
 ```bash
 # Option 1: Verify secrets were saved to Vercel
-vercel env add GOOGLE_CLIENT_ID
+# Add to Railway Variables: GOOGLE_CLIENT_ID
 # (re-enter your value to confirm)
 
 # Option 2: Re-check credentials in Google Cloud
@@ -271,7 +271,7 @@ vercel env add GOOGLE_CLIENT_ID
 # - Paste into Vercel
 
 # Option 3: Deploy with force refresh
-vercel --prod --force
+# Railway auto-deploys
 
 # Option 4: Wait 2-3 minutes for propagation
 # Vercel caches env vars
@@ -284,7 +284,7 @@ vercel --prod --force
 cp ~/.rotation-backup-$(date +%Y%m%d)/.env.backup .env
 
 # Redeploy with old secrets
-vercel --prod --force
+# Railway auto-deploys
 
 # Verify login works again
 # Then investigate root cause slowly
@@ -318,7 +318,7 @@ psql "postgresql://postgres:PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase.co:5432/po
 # → Database server down (Supabase issue)
 
 # Check Vercel logs
-vercel logs production --lines 100 | grep -i "database\|postgres\|connection"
+# Check Railway logs in dashboard --lines 100 | grep -i "database\|postgres\|connection"
 ```
 
 **Quick Fix**:
@@ -331,7 +331,7 @@ vercel logs production --lines 100 | grep -i "database\|postgres\|connection"
 # 4. Build new DATABASE_URL
 
 # Step 2: Update Vercel
-vercel env add DATABASE_URL
+# Add to Railway Variables: DATABASE_URL
 # Paste: postgresql://postgres:CORRECT_PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase.co:5432/postgres
 
 # Step 3: Wait for redeploy and test
@@ -369,7 +369,7 @@ vercel env add DATABASE_URL
 vercel env list | grep JWT_SECRET
 
 # Check in logs for JWT errors
-vercel logs production --lines 200 | grep -i "jwt\|token"
+# Check Railway logs in dashboard --lines 200 | grep -i "jwt\|token"
 
 # Inspect JWT token in application
 # 1. Open DevTools → Application → Cookies
@@ -383,7 +383,7 @@ vercel logs production --lines 200 | grep -i "jwt\|token"
 
 ```bash
 # Option 1: Verify JWT_SECRET in Vercel matches
-vercel env add JWT_SECRET
+# Add to Railway Variables: JWT_SECRET
 # Re-enter current value to confirm it was saved
 
 # Option 2: Check token expiration
@@ -393,7 +393,7 @@ vercel env add JWT_SECRET
 # - New token should be generated with new secret
 
 # Option 3: Restart all sessions
-vercel --prod --force
+# Railway auto-deploys
 # Forces new build, invalidates all tokens
 # Users will need to login again
 ```
@@ -432,7 +432,7 @@ curl -s "https://app.ticketmaster.com/discovery/v2/events.json?apikey=YOUR_KEY&s
   | jq '.fault'
 
 # Check Vercel logs for which API failed
-vercel logs production --lines 100 | grep -i "youtube\|twitch\|ticketmaster"
+# Check Railway logs in dashboard --lines 100 | grep -i "youtube\|twitch\|ticketmaster"
 ```
 
 **Quick Fix**:
@@ -442,7 +442,7 @@ vercel logs production --lines 100 | grep -i "youtube\|twitch\|ticketmaster"
 
 # 1. Regenerate new key in service console
 # 2. Test key works: curl (see test above)
-# 3. Update in Vercel: vercel env add YOUTUBE_DATA_API_KEY
+# 3. Update in Vercel: # Add to Railway Variables: YOUTUBE_DATA_API_KEY
 # 4. Redeploy: vercel --prod
 # 5. Test feature in application
 ```
@@ -453,16 +453,16 @@ vercel logs production --lines 100 | grep -i "youtube\|twitch\|ticketmaster"
 - "Deployment failed" in Vercel
 - Application won't load
 - 503 Service Unavailable
-- Cannot access https://djdannyhecticb.vercel.app
+- Cannot access https://djdannyhecticb.com
 
 **Diagnosis** (2 minutes):
 
 ```bash
 # Check deployment status
-vercel ls | head -5
+# Railway project list | head -5
 
 # View failed deployment logs
-vercel logs production --lines 500
+# Check Railway logs in dashboard --lines 500
 
 # Common causes:
 # - Environment variable missing/malformed
@@ -475,7 +475,7 @@ vercel logs production --lines 500
 
 ```bash
 # Roll back to previous deployment
-vercel rollback
+# Railway deployment history
 
 # Or manually redeploy old version
 git checkout HEAD~1
@@ -488,11 +488,11 @@ vercel --prod
 
 ```bash
 # Once reverted, verify:
-curl -s https://djdannyhecticb.vercel.app | head -20
+curl -s https://djdannyhecticb.com | head -20
 # Should see HTML, not error
 
 # Check status
-vercel status
+# Check Railway status
 # Should show green ✓
 ```
 
@@ -506,7 +506,7 @@ Set up continuous monitoring with these tools:
 
 ```bash
 # Monitor Vercel logs in real-time
-vercel logs production --follow
+# Check Railway logs in dashboard --follow
 
 # Watch for:
 # - ERROR entries (red)
@@ -519,7 +519,7 @@ vercel logs production --follow
 
 ```bash
 # Vercel Analytics
-# 1. Go to https://vercel.com/dashboard
+# 1. Go to https://railway.app
 # 2. Select djdannyhecticb
 # 3. Analytics tab
 # 4. Watch for:
@@ -626,7 +626,7 @@ curl -s "https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=tru
 # Simulate concurrent users with new secrets
 # Using Apache Bench (ab) tool
 
-ab -c 10 -n 100 https://djdannyhecticb.vercel.app/api/health
+ab -c 10 -n 100 https://djdannyhecticb.com/api/health
 
 # Expected:
 # - Requests per second: > 100
@@ -648,11 +648,11 @@ cp ~/.rotation-backup-$(date +%Y%m%d)/.env.backup .env
 
 # Step 3: Update Vercel with old credentials
 # Manually update each env var back to previous value
-vercel env add GOOGLE_CLIENT_ID
+# Add to Railway Variables: GOOGLE_CLIENT_ID
 # Paste old value
 
 # Step 4: Redeploy immediately
-vercel --prod --force
+# Railway auto-deploys
 
 # Step 5: Verify application works
 # Test login, API calls, database access
@@ -671,16 +671,16 @@ vercel --prod --force
 
 ```bash
 # Immediate action: Revert to previous Vercel deployment
-vercel rollback
+# Railway deployment history
 
 # Verify website is back online
-curl -s https://djdannyhecticb.vercel.app | head -5
+curl -s https://djdannyhecticb.com | head -5
 
 # Notify team
 # "Critical issue with rotation - reverted. Investigating..."
 
 # Investigate root cause before retry
-# - Check logs: vercel logs production --lines 500
+# - Check logs: # Check Railway logs in dashboard --lines 500
 # - Verify environment variables
 # - Confirm credentials are correct
 # - Test in staging first
@@ -778,14 +778,14 @@ rm ~/.rotation-backup-$(date +%Y%m%d).tar.gz.gpg
 1. Check Google Cloud OAuth settings
 2. Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Vercel
 3. Redeploy: `vercel --prod`
-4. If not fixed in 5 min: `vercel rollback`
+4. If not fixed in 5 min: `# Railway deployment history`
 
 ### If Database Broken:
 1. Test password directly with psql
 2. Check DATABASE_URL in Vercel (exact format)
 3. Reset password in Supabase if needed
 4. Redeploy: `vercel --prod`
-5. If not fixed in 5 min: `vercel rollback`
+5. If not fixed in 5 min: `# Railway deployment history`
 
 ### If API Keys Broken:
 1. Test key directly with curl
@@ -793,11 +793,11 @@ rm ~/.rotation-backup-$(date +%Y%m%d).tar.gz.gpg
 3. Regenerate key if expired
 4. Update in Vercel
 5. Redeploy: `vercel --prod`
-6. If not fixed in 5 min: `vercel rollback`
+6. If not fixed in 5 min: `# Railway deployment history`
 
 ### If Complete Deployment Broken:
-1. Immediately: `vercel rollback`
-2. Verify site is up: `curl https://djdannyhecticb.vercel.app`
+1. Immediately: `# Railway deployment history`
+2. Verify site is up: `curl https://djdannyhecticb.com`
 3. Notify team
 4. Investigate root cause in logs
 5. Fix and retry when confident

@@ -49,14 +49,12 @@
 ### Deploy Backend
 - [ ] Commit all changes to git
 - [ ] Push to main branch
-- [ ] Deploy to staging/preview environment:
-  ```bash
-  vercel deploy
-  ```
-- [ ] Note the preview URL (e.g., https://my-app-preview.vercel.app)
+- [ ] Railway auto-deploys from GitHub pushes
+- [ ] Check Railway dashboard for deployment status
+- [ ] Get the preview URL from Railway (e.g., https://djdannyhecticb.up.railway.app)
 - [ ] Test endpoint is accessible:
   ```bash
-  curl https://my-app-preview.vercel.app/api/payments/webhook/paypal
+  curl https://djdannyhecticb.up.railway.app/api/payments/webhook/paypal
   # Should return JSON error about missing headers (expected)
   ```
 
@@ -79,16 +77,13 @@
 
 ### Configure Environment Variables
 - [ ] Add `PAYPAL_WEBHOOK_ID` to `.env`
-- [ ] Add to Vercel preview environment:
-  ```bash
-  vercel env add PAYPAL_WEBHOOK_ID
-  # Paste the webhook ID from step above
-  ```
-- [ ] Verify in Vercel dashboard → Settings → Environment Variables
-- [ ] Redeploy:
-  ```bash
-  vercel deploy
-  ```
+- [ ] Add to Railway environment variables:
+  - Go to Railway dashboard → project → Variables
+  - Click "New Variable"
+  - Key: `PAYPAL_WEBHOOK_ID`
+  - Value: paste the webhook ID from step above
+- [ ] Verify in Railway dashboard → Variables
+- [ ] Railway auto-deploys with new variables
 
 ### Smoke Test Webhook
 - [ ] Go to **Apps & Credentials** → **Webhooks** → Your webhook
@@ -153,14 +148,13 @@
   - Generate and save credentials
 
 ### Deploy to Production
-- [ ] Deploy to production domain:
-  ```bash
-  vercel deploy --prod
-  ```
-- [ ] Note production URL: `https://your-production-domain.com`
+- [ ] Push to main branch
+- [ ] Railway auto-deploys to production
+- [ ] Check Railway dashboard for deployment status
+- [ ] Production URL: `https://djdannyhecticb.com` (custom domain) or Railway's default
 - [ ] Verify endpoint is accessible:
   ```bash
-  curl https://your-production-domain.com/api/payments/webhook/paypal
+  curl https://djdannyhecticb.com/api/payments/webhook/paypal
   ```
 
 ### Register Production Webhook
@@ -175,33 +169,25 @@
 - [ ] Store securely
 
 ### Production Environment Variables
-- [ ] Update `PAYPAL_CLIENT_ID` to live Client ID
-- [ ] Update `PAYPAL_CLIENT_SECRET` to live Secret
-- [ ] Update `PAYPAL_MODE=live`
-- [ ] Add production `PAYPAL_WEBHOOK_ID`
-- [ ] Verify in Vercel → **Settings** → **Environment Variables**
-- [ ] Redeploy to production:
-  ```bash
-  vercel deploy --prod
-  ```
+- [ ] Update `PAYPAL_CLIENT_ID` to live Client ID in Railway
+- [ ] Update `PAYPAL_CLIENT_SECRET` to live Secret in Railway
+- [ ] Update `PAYPAL_MODE=live` in Railway
+- [ ] Add production `PAYPAL_WEBHOOK_ID` in Railway
+- [ ] Go to Railway dashboard → Variables → Update values
+- [ ] Railway auto-deploys with new variables
 
 ### Initial Production Testing
 - [ ] Send test webhook using PayPal simulator
 - [ ] Verify response is 200 ✅
 - [ ] Check production database for update
-- [ ] Monitor logs for errors:
-  ```bash
-  vercel logs --prod --tail
-  ```
+- [ ] Monitor logs for errors in Railway dashboard
 - [ ] Wait 5 minutes, check no errors appear
 
 ### Real Payment Testing
 - [ ] Create a real $0.01 test payment
 - [ ] Complete payment through PayPal checkout
-- [ ] Monitor logs for webhook event:
-  ```bash
-  vercel logs --prod --tail | grep PAYMENT.CAPTURE
-  ```
+- [ ] Monitor logs in Railway dashboard for webhook event
+  - Filter for: `PAYMENT.CAPTURE`
 - [ ] Within 2 seconds, verify database updated
 - [ ] Check purchase status = "completed"
 - [ ] Check audit log has full details
