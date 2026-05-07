@@ -169,5 +169,8 @@
       "@tailwindcss/oxide",
       "esbuild"
     ]
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
