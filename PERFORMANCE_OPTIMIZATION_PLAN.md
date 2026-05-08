@@ -6,7 +6,7 @@
 - **Bundle Size**: 578.4 KB (target: 200 KB gzipped)
 - **Dist Size**: 53 MB (contains heavy syntax highlighting)
 - **Frontend LOC**: 54,603 lines
-- **Status**: Live on Vercel, code splitting partially configured
+- **Status**: Live on Railway, code splitting partially configured
 
 ## Issues Identified
 1. **Largest assets**: index-DK5oDj-Q.js (2.1 MB), syntax highlighters (712 KB-3 MB each)
@@ -124,7 +124,7 @@ Tasks:
 Tasks:
 - [ ] Implement multi-layer caching:
   - Browser cache (Cache-Control headers)
-  - CDN cache (Vercel Edge Cache)
+  - CDN cache (Railway/Cloudflare)
   - Database query cache (Redis or in-memory)
   - API response cache (30s TTL for leaderboards)
 - [ ] Add cache invalidation logic for real-time features

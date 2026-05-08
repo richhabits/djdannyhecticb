@@ -14,7 +14,7 @@ This document tracks the Sentry error tracking implementation for djdannyhecticb
 
 - [x] Installed `@sentry/react@8.55.2`
 - [x] Installed `@sentry/node@8.55.2`
-- [x] Updated `@vercel/node` to `^5.7.0` (was incompatible with old version)
+- [x] Updated `# (Railway uses standard Node.js)` to `^5.7.0` (was incompatible with old version)
 - [x] Verified latest versions installed
 
 ### ✅ Client-Side Configuration
@@ -90,17 +90,17 @@ This document tracks the Sentry error tracking implementation for djdannyhecticb
 
 ### ✅ Environment Configuration
 
-- [x] Updated `/vercel.json`
+- [x] Updated `/Railway configuration`
   - Added Sentry CLI source map upload to build command
   - Includes release version in build
 
-- [x] Updated `/.env.vercel.example`
+- [x] Updated `/.env.railway.example`
   - Added all required Sentry environment variables
   - Documented each variable
   - Marked as sensitive/production-only
 
 - [x] Updated `/package.json`
-  - Fixed `@vercel/node` version compatibility
+  - Fixed `# (Railway uses standard Node.js)` version compatibility
   - Added Sentry packages to dependencies
 
 ### ✅ Documentation
@@ -165,8 +165,8 @@ VITE_SENTRY_DSN=...
    - `/server/routes/test-error.ts` - NEW: Test error endpoints
 
 3. **Config**:
-   - `/vercel.json` - Add source map upload to build
-   - `/.env.vercel.example` - Add Sentry variables
+   - `/Railway configuration` - Add source map upload to build
+   - `/.env.railway.example` - Add Sentry variables
    - `/package.json` - Update dependencies
 
 4. **Docs**:

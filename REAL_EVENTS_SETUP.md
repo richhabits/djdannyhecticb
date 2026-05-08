@@ -21,16 +21,16 @@ Donations via Stripe automatically trigger live alerts:
 ```bash
 # Get your Stripe price IDs from https://dashboard.stripe.com/prices
 
-vercel env add STRIPE_PRICE_BRONZE production
+Add to Railway Variables: STRIPE_PRICE_BRONZE production
 # Paste: price_1SmIYR2HkyKRVyFU1bwXXdgZ...
 
-vercel env add STRIPE_PRICE_SILVER production
+Add to Railway Variables: STRIPE_PRICE_SILVER production
 # Paste: price_1SmIYR2HkyKRVyFU1...
 
-vercel env add STRIPE_PRICE_GOLD production
+Add to Railway Variables: STRIPE_PRICE_GOLD production
 # Paste: price_1SmIYR2HkyKRVyFU1...
 
-vercel env add STRIPE_PRICE_PLATINUM production
+Add to Railway Variables: STRIPE_PRICE_PLATINUM production
 # Paste: price_1SmIYR2HkyKRVyFU1...
 ```
 
@@ -49,10 +49,10 @@ Shows upcoming concerts, shows, events in live page sidebar.
 3. Create an application
 4. Copy your **Consumer Key**
 
-### Add to Vercel:
+### Add to Railway:
 
 ```bash
-vercel env add TICKETMASTER_API_KEY production
+Add to Railway Variables: TICKETMASTER_API_KEY production
 # Paste your Consumer Key
 ```
 
@@ -79,10 +79,10 @@ Tracks subscriber count, broadcasts follows to live viewers.
 4. Create an **API Key** credential
 5. Copy the key
 
-### Add to Vercel:
+### Add to Railway:
 
 ```bash
-vercel env add YOUTUBE_API_KEY production
+Add to Railway Variables: YOUTUBE_API_KEY production
 # Paste your API Key
 ```
 
@@ -183,7 +183,7 @@ curl -X POST https://djdannyhecticb.com/api/stream/event/subscribe \
 - [ ] Test Stripe webhook: Send test charge in Stripe Dashboard
 - [ ] Test Ticketmaster: Visit live page, check sidebar for events
 - [ ] Test YouTube: Manually trigger follow alert with curl
-- [ ] Monitor logs in Vercel dashboard
+- [ ] Monitor logs in Railway dashboard
 
 ---
 
@@ -191,7 +191,7 @@ curl -X POST https://djdannyhecticb.com/api/stream/event/subscribe \
 
 ### View logs:
 ```bash
-vercel logs djdannyhecticb
+railway logs (use dashboard)djdannyhecticb
 ```
 
 ### Events broadcast to console:

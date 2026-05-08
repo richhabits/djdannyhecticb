@@ -35,7 +35,7 @@ PAYPAL_CLIENT_SECRET=your_secret
 PAYPAL_MODE=sandbox
 
 # 3. Deploy
-vercel deploy --prod
+Railway auto-deploys
 
 # 4. Register webhook in PayPal dashboard
 # URL: https://your-domain.com/api/payments/webhook/paypal
@@ -153,7 +153,7 @@ FROM purchases;
 **Webhook not working?**
 - Check `PAYPAL_WEBHOOK_ID` is set: `echo $PAYPAL_WEBHOOK_ID`
 - Verify endpoint is accessible: `curl https://your-domain/api/payments/webhook/paypal`
-- Check logs: `vercel logs --tail`
+- Check logs: `railway logs (use dashboard)`
 
 **Payment not updating?**
 - Ensure custom_id format is `"purchase_123"`

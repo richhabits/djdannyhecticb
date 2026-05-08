@@ -13,7 +13,7 @@ Sentry error tracking has been successfully integrated into djdannyhecticb for c
 ```
 @sentry/react@8.55.2       - Client-side error tracking
 @sentry/node@8.55.2        - Server-side error tracking
-@vercel/node@5.7.15        - Updated for compatibility
+# (Railway uses standard Node.js)@5.7.15        - Updated for compatibility
 ```
 
 ### 2. Client-Side Integration
@@ -54,8 +54,8 @@ Sentry error tracking has been successfully integrated into djdannyhecticb for c
 ### 4. Configuration & Environment
 
 **Updated Files**:
-- `/vercel.json` - Source map upload in build command
-- `/.env.vercel.example` - All Sentry env vars documented
+- `/Railway configuration` - Source map upload in build command
+- `/.env.railway.example` - All Sentry env vars documented
 - `/package.json` - Dependencies and versions
 
 **Environment Variables** (set in Vercel):
@@ -246,8 +246,8 @@ curl https://your-domain.com/api/test-error
 - `/client/src/main.tsx` - Added Sentry init
 - `/client/src/components/ErrorBoundary.tsx` - Enhanced with Sentry reporting
 - `/server/_core/index.ts` - Added Sentry middleware & error integration
-- `/vercel.json` - Added source map upload
-- `/.env.vercel.example` - Added env vars
+- `/Railway configuration` - Added source map upload
+- `/.env.railway.example` - Added env vars
 - `/package.json` - Updated dependencies
 
 ## Usage Examples

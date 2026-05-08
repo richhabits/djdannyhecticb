@@ -116,9 +116,9 @@ This comprehensive checklist ensures djdannyhecticb infrastructure meets product
 - [ ] Debug mode disabled (`NODE_DEBUG` not set)
 - [ ] Source maps NOT included in production build
 - [ ] Build logs do not contain secrets (review Vercel logs)
-- [ ] Only necessary files deployed (use .vercelignore)
+- [ ] Only necessary files deployed (Railway auto-ignores)
 - [ ] Health check endpoint configured and responding
-- [ ] Performance monitoring configured (Vercel Analytics)
+- [ ] Performance monitoring configured (Railway Analytics)
 
 ### Build Security
 

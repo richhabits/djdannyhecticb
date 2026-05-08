@@ -507,19 +507,19 @@ Documentation:
 
 **Immediate** (Within 5 minutes):
 1. Stop rotation procedures
-2. Check error logs: `vercel logs production --lines 200`
+2. Check error logs: `railway logs | head - 200`
 3. Determine root cause
 4. Decide: Fix or rollback
 
 **If Fixing** (Within 15 minutes):
 1. Identify specific problem
 2. Apply fix
-3. Redeploy: `vercel --prod`
+3. Redeploy: `Railway auto-deploys`
 4. Verify fix works
 5. Continue rotation
 
 **If Rolling Back** (Within 5 minutes):
-1. Restore previous deployment: `vercel rollback`
+1. Restore previous deployment: `Railway deployment history`
 2. Verify system is back online
 3. Notify team
 4. Investigate root cause

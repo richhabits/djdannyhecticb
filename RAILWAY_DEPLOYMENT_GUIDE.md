@@ -95,7 +95,7 @@ TICKETMASTER_API_KEY=HoaPBhMHhjI2Lszbd5fv1Zp05OG5HIrY
 #### CORS & Domain
 
 ```
-CORS_ORIGINS=https://djdannyhecticb.vercel.app,https://djdannyhectic.com
+CORS_ORIGINS=https://djdannyhecticb.com,https://djdannyhectic.com
 ```
 
 #### Redis Caching (Optional but recommended for production)

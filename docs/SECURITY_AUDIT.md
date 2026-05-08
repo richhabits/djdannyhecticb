@@ -107,10 +107,10 @@ A comprehensive security audit has identified **8 exposed API keys and secrets**
 3. Name it: `djdannyhecticb-oauth-2026-05-03-rotated`
 4. **Authorized JavaScript origins**:
    - `http://localhost:3000` (dev)
-   - `https://djdannyhecticb.vercel.app` (prod)
+   - `https://djdannyhecticb.com` (prod)
 5. **Authorized redirect URIs**:
    - `http://localhost:3000/api/auth/google/callback` (dev)
-   - `https://djdannyhecticb.vercel.app/api/auth/google/callback` (prod)
+   - `https://djdannyhecticb.com/api/auth/google/callback` (prod)
 6. Click **Create**
 7. Copy the new **Client ID** and **Client Secret**
 
@@ -126,9 +126,9 @@ VITE_GOOGLE_CLIENT_ID=<NEW_CLIENT_ID_HERE>
 **Production** (Vercel):
 ```bash
 # Use Vercel CLI or Dashboard
-vercel env add GOOGLE_CLIENT_ID
-vercel env add GOOGLE_CLIENT_SECRET
-vercel env add VITE_GOOGLE_CLIENT_ID
+Add to Railway Variables: GOOGLE_CLIENT_ID
+Add to Railway Variables: GOOGLE_CLIENT_SECRET
+Add to Railway Variables: VITE_GOOGLE_CLIENT_ID
 ```
 
 #### 1.4 Verify
@@ -171,7 +171,7 @@ GOOGLE_AI_API_KEY=<NEW_API_KEY_HERE>
 
 **Vercel**:
 ```bash
-vercel env add GOOGLE_AI_API_KEY
+Add to Railway Variables: GOOGLE_AI_API_KEY
 ```
 
 #### 2.4 Verify
@@ -204,7 +204,7 @@ DATABASE_URL=postgresql://postgres:<NEW_PASSWORD>@db.mzfpsfnmeacbknpcpibj.supaba
 
 **Vercel**:
 ```bash
-vercel env add DATABASE_URL
+Add to Railway Variables: DATABASE_URL
 ```
 
 #### 3.3 Test Database Connection
@@ -238,7 +238,7 @@ JWT_SECRET=<64_CHARACTER_HEX_STRING>
 
 **Vercel**:
 ```bash
-vercel env add JWT_SECRET
+Add to Railway Variables: JWT_SECRET
 ```
 
 #### 4.3 Handle Existing Sessions
@@ -274,7 +274,7 @@ YOUTUBE_DATA_API_KEY=<NEW_API_KEY>
 
 **Vercel**:
 ```bash
-vercel env add YOUTUBE_DATA_API_KEY
+Add to Railway Variables: YOUTUBE_DATA_API_KEY
 ```
 
 ---
@@ -294,7 +294,7 @@ vercel env add YOUTUBE_DATA_API_KEY
 
 #### 6.2 Generate New Credentials
 1. Click **+ Create Application** or use existing one
-2. Set OAuth Redirect URL: `https://djdannyhecticb.vercel.app/api/auth/twitch/callback`
+2. Set OAuth Redirect URL: `https://djdannyhecticb.com/api/auth/twitch/callback`
 3. Copy new **Client ID**
 4. Click **Generate a new secret**
 5. Copy new **Client Secret**
@@ -309,8 +309,8 @@ TWITCH_CLIENT_SECRET=<NEW_SECRET>
 
 **Vercel**:
 ```bash
-vercel env add TWITCH_CLIENT_ID
-vercel env add TWITCH_CLIENT_SECRET
+Add to Railway Variables: TWITCH_CLIENT_ID
+Add to Railway Variables: TWITCH_CLIENT_SECRET
 ```
 
 ---
@@ -341,7 +341,7 @@ TICKETMASTER_API_KEY=<NEW_API_KEY>
 
 **Vercel**:
 ```bash
-vercel env add TICKETMASTER_API_KEY
+Add to Railway Variables: TICKETMASTER_API_KEY
 ```
 
 ---
@@ -421,7 +421,7 @@ const decrypted = SecretsManager.decrypt(encrypted);
 ```
 
 #### 2b. Move Sensitive Keys to Supabase Vault
-Store in Supabase instead of Vercel:
+Store in Supabase instead of Railway:
 ```sql
 CREATE TABLE secrets_vault (
   id BIGSERIAL PRIMARY KEY,
@@ -479,7 +479,7 @@ git check-ignore -v .env
 ### Verify Environment Variables
 ```bash
 # Check Vercel
-vercel env list
+Check Railway Variables in dashboard
 
 # Check local
 cat .env | grep -E "GOOGLE|DATABASE|JWT" | head -10
@@ -536,7 +536,7 @@ cat .env | grep -E "GOOGLE|DATABASE|JWT" | head -10
 - [OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
 - [Google Cloud: Manage API Keys](https://cloud.google.com/docs/authentication/api-keys)
 - [Supabase: Security Best Practices](https://supabase.com/docs/guides/self-hosting/security)
-- [Vercel: Environment Variables](https://vercel.com/docs/projects/environment-variables)
+- [Railway: Environment Variables](https://railway.app/docs/projects/environment-variables)
 
 ---
 

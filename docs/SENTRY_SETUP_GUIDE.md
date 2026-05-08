@@ -40,7 +40,7 @@ You now have two DSNs:
 
 1. Go to [sentry.io/settings/account/api/auth-tokens/](https://sentry.io/settings/account/api/auth-tokens/)
 2. Click "Create New Token"
-3. Give it a name: `djdannyhecticb-vercel`
+3. Give it a name: `djdannyhecticb-railway`
 4. Select scopes:
    - ✓ `project:read`
    - ✓ `project:releases`
@@ -50,7 +50,7 @@ You now have two DSNs:
 
 ## Step 3: Add to Vercel
 
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+1. Go to [Railway Dashboard](https://railway.app)
 2. Select your `djdannyhecticb` project
 3. Go to Settings → Environment Variables
 4. Add these variables (mark as "Production" and "Sensitive"):

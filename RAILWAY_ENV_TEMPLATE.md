@@ -79,7 +79,7 @@ EMAIL_API_KEY=re_YOUR_ACTUAL_RESEND_API_KEY_HERE
 
 ### CORS Origins (Allow Frontend)
 ```
-CORS_ORIGINS=https://djdannyhecticb.vercel.app,https://djdannyhectic.com
+CORS_ORIGINS=https://djdannyhecticb.com,https://djdannyhectic.com
 ```
 *Add Vercel URL and any production domains here*
 
@@ -214,7 +214,7 @@ EMAIL_SERVICE_PROVIDER=sendgrid
 EMAIL_API_KEY=SG.CHANGE_ME
 EMAIL_FROM_ADDRESS=noreply@djdannyhectic.com
 NOTIFICATIONS_EMAIL=alerts@djdannyhectic.com
-CORS_ORIGINS=https://djdannyhecticb.vercel.app,https://djdannyhectic.com
+CORS_ORIGINS=https://djdannyhecticb.com,https://djdannyhectic.com
 YOUTUBE_DATA_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
 YOUTUBE_CHANNEL_ID=UC72QyiDSnHnJAGXT0xyuCWA
 TWITCH_CLIENT_ID=6j2q6mwwjtxn2l1sfnux1hp6yxgumt
@@ -317,7 +317,7 @@ DATABASE_URL=postgresql://neondb_owner:npg_z5oIdPSA2Oxk@ep-divine-leaf-abpjfgjl-
 JWT_SECRET=test-secret-minimum-32-characters-long-1234567890
 GOOGLE_CLIENT_ID=223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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
-CORS_ORIGINS=https://djdannyhecticb.vercel.app
+CORS_ORIGINS=https://djdannyhecticb.com
 ```
 
 This allows:

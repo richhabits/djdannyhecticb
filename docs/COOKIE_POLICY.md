@@ -110,7 +110,7 @@ A cookie is a small text file stored on your device (computer, phone, tablet) wh
 | `_ga` | Google Analytics | Google | 2 years | User ID, session tracking |
 | `_gat` | Google Analytics throttling | Google | 10 minutes | Throttling flag |
 | `_gid` | Google Analytics session ID | Google | 24 hours | Session ID |
-| `vercel_analytics` | Vercel Analytics | Vercel | 24 months | Aggregate usage data |
+| `railway_analytics` | Railway Analytics | Railway | 24 months | Aggregate usage data |
 | `analytics_token` | Custom analytics | DJ Danny Hectic B | 1 year | Event tracking ID |
 
 ### 3. Preference / Functionality Cookies
@@ -213,7 +213,7 @@ A cookie is a small text file stored on your device (computer, phone, tablet) wh
 | `_ga` | Google Analytics | Client ID | 2 years | Opt-in |
 | `_gat` | Google Analytics throttling | Throttling flag | 10 minutes | Opt-in |
 | `_gid` | Google Analytics session | Session ID | 24 hours | Opt-in |
-| `vercel_analytics` | Web performance | Anonymous event data | 24 months | Opt-in |
+| `railway_analytics` | Web performance | Anonymous event data | 24 months | Opt-in |
 | `analytics_token` | Custom analytics | Tracking token | 1 year | Opt-in |
 | `theme_preference` | Dark/light mode | "light" \| "dark" | 1 year | Implicit |
 | `language_preference` | Language selection | Language code | 1 year | Implicit |
@@ -270,13 +270,13 @@ A cookie is a small text file stored on your device (computer, phone, tablet) wh
 
 ---
 
-### Vercel Analytics
+### Railway Analytics
 
 **Operator**: Vercel Inc.  
 **Purpose**: Web performance and usage analytics
 
 **Cookies Set**:
-- `vercel_analytics`: Event tracking token
+- `railway_analytics`: Event tracking token
 
 **Data Shared**:
 - Page performance metrics (Core Web Vitals)
@@ -285,7 +285,7 @@ A cookie is a small text file stored on your device (computer, phone, tablet) wh
 - Feature usage
 - Aggregated traffic analysis
 
-**Privacy**: [Vercel Analytics Privacy](https://vercel.com/legal/privacy-policy)
+**Privacy**: [Railway Analytics Privacy](https://railway.app/legal/privacy-policy)
 
 **Data Processing**: Vercel acts as data processor on our behalf
 

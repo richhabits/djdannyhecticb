@@ -458,11 +458,11 @@ STATUS: Active
 GOOGLE_CLIENT_ID=test-local-id
 GOOGLE_CLIENT_SECRET=test-local-secret
 
-# Staging/Preview (Vercel preview)
+# Staging/Preview (Railway preview)
 GOOGLE_CLIENT_ID=test-staging-id  
 GOOGLE_CLIENT_SECRET=test-staging-secret
 
-# Production (Vercel production)
+# Production (Railway production)
 GOOGLE_CLIENT_ID=production-id
 GOOGLE_CLIENT_SECRET=production-secret
 ```
@@ -471,20 +471,20 @@ GOOGLE_CLIENT_SECRET=production-secret
 
 ```bash
 # List all environment variables
-vercel env list
+# Railway Variables (see dashboard)
 
 # Add new variable (interactive)
-vercel env add GOOGLE_CLIENT_ID
+# Add to Railway Variables: GOOGLE_CLIENT_ID
 # Prompts for value, then asks which environments to apply to
 
 # Remove variable
-vercel env remove GOOGLE_CLIENT_ID
+# Remove from Railway Variables
 
 # Pull variables locally
-vercel env pull  # Creates .env.local with all prod vars (for reference)
+# Railway variables (see dashboard)  # Creates .env.local with all prod vars (for reference)
 
 # Push variables
-vercel env push  # Uploads .env to Vercel (dangerous - don't do this with real secrets!)
+# Railway variables sync automatically  # Uploads .env to Vercel (dangerous - don't do this with real secrets!)
 ```
 
 ### Web UI Setup
@@ -764,13 +764,13 @@ LESSONS LEARNED:
 **ADDITIONAL SKILLS**:
 1. Setting up .env.local for development
 2. Using environment variables in code
-3. Deploying with Vercel environment variables
+3. Deploying with Railway environment variables
 4. Rotating secrets when needed
 5. Responding to compromises
 
 **Tools**:
 - `.env` file for local development
-- Vercel CLI for managing variables
+- Railway dashboard for managing variables
 - Password manager for secure sharing
 - Git pre-commit hooks to prevent commits
 
@@ -861,7 +861,7 @@ Every 3 months, verify:
 □ No secrets in git history
 □ .gitignore properly configured
 □ MFA enabled on all service accounts
-□ Vercel environment variables match .env.example format
+□ Railway variables match .env.example format
 □ No unused/old secrets active
 □ Password manager access reviewed
 □ Rotation schedule updated for next quarter
@@ -899,14 +899,14 @@ Keep documented:
 
 | Secret | Service | Sensitivity | Rotation | Storage |
 |--------|---------|-------------|----------|---------|
-| Google Client ID | Google OAuth | Public | N/A | Vercel Env |
-| Google Client Secret | Google OAuth | Private | Monthly | Vercel Env |
-| API Key (read-only) | Various APIs | Medium | 6 months | Vercel Env |
-| API Key (write) | Various APIs | High | 3 months | Vercel Env |
-| Database Password | PostgreSQL | Critical | 6 months | Vercel Env |
-| JWT Secret | App Auth | Critical | 6 months | Vercel Env |
-| Webhook Secret | Various | High | 6 months | Vercel Env |
-| OAuth Token | External APIs | Private | Varies | Vercel Env |
+| Google Client ID | Google OAuth | Public | N/A | Railway |
+| Google Client Secret | Google OAuth | Private | Monthly | Railway |
+| API Key (read-only) | Various APIs | Medium | 6 months | Railway |
+| API Key (write) | Various APIs | High | 3 months | Railway |
+| Database Password | PostgreSQL | Critical | 6 months | Railway |
+| JWT Secret | App Auth | Critical | 6 months | Railway |
+| Webhook Secret | Various | High | 6 months | Railway |
+| OAuth Token | External APIs | Private | Varies | Railway |
 
 ---
 
@@ -914,7 +914,7 @@ Keep documented:
 
 ### DO ✓
 
-- [x] Store secrets in Vercel Environment Variables for production
+- [x] Store secrets in Railwayironment Variables for production
 - [x] Use .env.local for local development only
 - [x] Rotate secrets quarterly minimum
 - [x] Rotate immediately if exposed

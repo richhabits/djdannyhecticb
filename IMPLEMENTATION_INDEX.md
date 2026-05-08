@@ -81,7 +81,7 @@ PAYPAL_WEBHOOK_ID
 1. Check troubleshooting in `/docs/PAYPAL_INTEGRATION.md`
 2. Run: `npm run test:paypal-webhook -- --purchase-id 123`
 3. Check database: `SELECT * FROM purchases WHERE id = 123`
-4. Review logs: `vercel logs --tail`
+4. Review logs: `railway logs (use dashboard)`
 
 ### "I want to understand the flow"
 1. Read section: "Webhook Processing Flow" in `/PAYPAL_README.md`

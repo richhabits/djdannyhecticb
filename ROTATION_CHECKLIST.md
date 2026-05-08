@@ -135,8 +135,8 @@ Set up monitoring for:
 4. Add Authorized Redirect URIs:
    ```
    http://localhost:3000/api/auth/google/callback
-   https://djdannyhecticb.vercel.app/api/auth/google/callback
-   https://djdannyhecticb-*.vercel.app/api/auth/google/callback
+   https://djdannyhecticb.com/api/auth/google/callback
+   https://djdannyhecticb.up.railway.app/api/auth/google/callback
    https://djdannyhecticb.com/api/auth/google/callback
    ```
 5. Click **CREATE**
@@ -177,15 +177,15 @@ GOOGLE_CLIENT_SECRET=YOUR_NEW_CLIENT_SECRET
 
 ```bash
 # Update production environment in Vercel
-vercel env add GOOGLE_CLIENT_ID
+Add to Railway Variables: GOOGLE_CLIENT_ID
 # Paste: YOUR_NEW_CLIENT_ID
 
-vercel env add GOOGLE_CLIENT_SECRET
+Add to Railway Variables: GOOGLE_CLIENT_SECRET
 # Paste: YOUR_NEW_CLIENT_SECRET
 ```
 
 OR via Vercel Web UI:
-1. Go to https://vercel.com/dashboard
+1. Go to https://railway.app
 2. Select djdannyhecticb project
 3. Settings → Environment Variables
 4. Update `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
@@ -195,12 +195,12 @@ OR via Vercel Web UI:
 ```bash
 # Deploy to Vercel
 cd /Users/romeovalentine/djdannyhecticb
-vercel --prod
+Railway auto-deploys
 ```
 
 ### Step 2.6: Test Google OAuth Login
 
-1. Visit https://djdannyhecticb.vercel.app
+1. Visit https://djdannyhecticb.com
 2. Click "Login with Google"
 3. Verify successful authentication flow
 4. **DOCUMENT**: "Google OAuth - ROTATED ✓"
@@ -248,7 +248,7 @@ YOUTUBE_DATA_API_KEY=YOUR_NEW_KEY
 ### Step 3.3: Update Vercel Environment Variables
 
 ```bash
-vercel env add YOUTUBE_DATA_API_KEY
+Add to Railway Variables: YOUTUBE_DATA_API_KEY
 # Paste: YOUR_NEW_KEY
 ```
 
@@ -311,7 +311,7 @@ TWITCH_CLIENT_SECRET=YOUR_NEW_SECRET               # Update this
 ### Step 4.3: Update Vercel Environment Variables
 
 ```bash
-vercel env add TWITCH_CLIENT_SECRET
+Add to Railway Variables: TWITCH_CLIENT_SECRET
 # Paste: YOUR_NEW_SECRET
 ```
 
@@ -390,7 +390,7 @@ DATABASE_URL=postgresql://postgres:NEW_PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase
 ### Step 5.5: Update Vercel Environment Variables
 
 ```bash
-vercel env add DATABASE_URL
+Add to Railway Variables: DATABASE_URL
 # Paste: postgresql://postgres:NEW_PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase.co:5432/postgres
 ```
 
@@ -445,7 +445,7 @@ JWT_SECRET=YOUR_NEW_SECRET
 ### Step 6.3: Update Vercel Environment Variables
 
 ```bash
-vercel env add JWT_SECRET
+Add to Railway Variables: JWT_SECRET
 # Paste: YOUR_NEW_SECRET
 ```
 
@@ -458,13 +458,13 @@ If users have active sessions:
 
 ```bash
 cd /Users/romeovalentine/djdannyhecticb
-vercel --prod
+Railway auto-deploys
 ```
 
 ### Step 6.6: Verify Authentication Still Works
 
 1. Clear browser cookies/cache
-2. Visit https://djdannyhecticb.vercel.app
+2. Visit https://djdannyhecticb.com
 3. Complete login flow
 4. Verify JWT tokens are issued correctly
 5. Check user session persists across page refreshes
@@ -499,7 +499,7 @@ vercel --prod
 5. **Application restrictions**: HTTP referrers
 6. Add:
    ```
-   https://djdannyhecticb.vercel.app/*
+   https://djdannyhecticb.com/*
    https://djdannyhecticb.com/*
    ```
 7. **API restrictions**: Google AI API (Generative Language API)
@@ -521,7 +521,7 @@ GOOGLE_AI_API_KEY=YOUR_NEW_KEY
 ### Step 7.4: Update Vercel
 
 ```bash
-vercel env add GOOGLE_AI_API_KEY
+Add to Railway Variables: GOOGLE_AI_API_KEY
 # Paste: YOUR_NEW_KEY
 ```
 
@@ -570,7 +570,7 @@ TICKETMASTER_API_KEY=YOUR_NEW_KEY
 ### Step 8.3: Update Vercel
 
 ```bash
-vercel env add TICKETMASTER_API_KEY
+Add to Railway Variables: TICKETMASTER_API_KEY
 # Paste: YOUR_NEW_KEY
 ```
 
@@ -629,10 +629,10 @@ If empty or blank, **SKIP this phase** (not configured).
 ### Step 9.4: Update Vercel Environment
 
 ```bash
-vercel env add STRIPE_SECRET_KEY
+Add to Railway Variables: STRIPE_SECRET_KEY
 # Paste new key (only if new key issued)
 
-vercel env add STRIPE_PUBLISHABLE_KEY
+Add to Railway Variables: STRIPE_PUBLISHABLE_KEY
 # Paste new key
 ```
 
@@ -704,7 +704,7 @@ chmod +x /tmp/verify_rotation.sh
 
 ```bash
 # Check Vercel deployment logs
-vercel logs production --lines 100
+railway logs | head - 100
 
 # Look for errors like:
 # - "authentication failed"
@@ -808,7 +808,7 @@ For each service, enable MFA if available:
 - **Twitch**: https://www.twitch.tv/settings/security → Two-Factor Authentication
 - **Stripe**: https://dashboard.stripe.com/ → Account settings → Security
 - **Supabase**: https://app.supabase.com/ → Settings → Authentication
-- **Vercel**: https://vercel.com/account/security → Enable 2FA
+- **Vercel**: https://railway.app/account/security → Enable 2FA
 
 ### Step 11.5: Secure Backup Files
 
@@ -868,7 +868,7 @@ cp ~/.rotation-backup-$(date +%Y%m%d)/.env.backup /Users/romeovalentine/djdannyh
 
 # 2. Redeploy with old secrets
 cd /Users/romeovalentine/djdannyhecticb
-vercel --prod
+Railway auto-deploys
 
 # 3. Document incident
 echo "ROTATION FAILED - REVERTED TO OLD SECRETS" >> ~/.rotation-backup-$(date +%Y%m%d)/ROTATION_LOG.txt
@@ -886,7 +886,7 @@ echo "Reverted at: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ~/.rotation-backup-$(date 
 
 ```bash
 # Check Vercel logs
-vercel logs production --lines 200 | grep -i "error\|fail\|invalid\|unauthorized"
+railway logs | head - 200 | grep -i "error\|fail\|invalid\|unauthorized"
 
 # Look for specific error:
 # - "Invalid OAuth credentials" → Re-check Google Cloud Console
@@ -924,7 +924,7 @@ psql postgresql://postgres:NEW_PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase.co:5432
 # 1. Check: APIs & Services → Credentials
 # 2. Click OAuth Client ID
 # 3. Verify Authorized Redirect URIs include:
-#    - https://djdannyhecticb.vercel.app/api/auth/google/callback
+#    - https://djdannyhecticb.com/api/auth/google/callback
 
 # Common issues:
 # - Protocol mismatch (http vs https)
@@ -1042,7 +1042,7 @@ Before marking rotation as complete:
 |-------|--------|
 | Google OAuth not working | Check Google Cloud Console → Credentials → OAuth settings |
 | Database won't connect | Verify password has no special chars that need escaping, test with psql |
-| Vercel deployment fails | Check build logs: `vercel logs production` |
+| Vercel deployment fails | Check build logs: `railway logs (use dashboard)production` |
 | API keys not recognized | Ensure no leading/trailing spaces in .env |
 | Session issues | Clear browser cache and cookies, verify JWT_SECRET matches |
 | Payment processing broken | Check Stripe dashboard for API key restrictions |
@@ -1050,7 +1050,7 @@ Before marking rotation as complete:
 ### Escalation Contacts
 
 - **Google Cloud Support**: https://support.google.com/cloud
-- **Vercel Support**: https://vercel.com/support
+- **Vercel Support**: https://railway.app/support
 - **Supabase Support**: https://supabase.com/docs/support
 - **Stripe Support**: https://support.stripe.com/
 - **Twitch Developers**: https://dev.twitch.tv/support

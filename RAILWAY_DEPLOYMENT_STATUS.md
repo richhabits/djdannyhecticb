@@ -94,7 +94,7 @@ Communication:
 ✓ EMAIL_FROM_ADDRESS=noreply@djdannyhectic.com
 
 Frontend:
-✓ CORS_ORIGINS=https://djdannyhecticb.vercel.app
+✓ CORS_ORIGINS=https://djdannyhecticb.com
 ```
 
 Location: Railway Dashboard → Select Project → **Variables** tab
@@ -184,7 +184,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[...]           # Required for webhooks
 PAYPAL_CLIENT_ID=[...]                       # PayPal checkout
 PAYPAL_CLIENT_SECRET=[...]                   # PayPal checkout
 EMAIL_API_KEY=SG.[...]                       # Email notifications
-CORS_ORIGINS=https://djdannyhecticb.vercel.app
+CORS_ORIGINS=https://djdannyhecticb.com
 ```
 
 ### Optional (Features degraded if missing)
@@ -262,7 +262,7 @@ curl https://[url]/api/payments/stripe/charges
 ### CORS Errors
 **Cause**: Frontend origin not allowed
 **Solution**:
-1. Add `CORS_ORIGINS=https://djdannyhecticb.vercel.app`
+1. Add `CORS_ORIGINS=https://djdannyhecticb.com`
 2. Restart deployment
 
 ### 502 Bad Gateway
@@ -318,7 +318,7 @@ You'll know deployment succeeded when:
 | `RAILWAY_DEPLOYMENT_GUIDE.md` | Detailed troubleshooting & setup |
 | `railway.json` | Railway configuration (auto-detected) |
 | `package.json` | Build scripts & dependencies |
-| `vercel.json` | Frontend deployment (separate) |
+| `Railway configuration` | Frontend deployment (separate) |
 
 ---
 

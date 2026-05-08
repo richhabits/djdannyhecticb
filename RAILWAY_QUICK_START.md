@@ -27,7 +27,7 @@ PAYPAL_CLIENT_ID=[your-id]
 PAYPAL_CLIENT_SECRET=[your-secret]
 PAYPAL_MODE=live
 EMAIL_API_KEY=SG.[your-key]
-CORS_ORIGINS=https://djdannyhecticb.vercel.app
+CORS_ORIGINS=https://djdannyhecticb.com
 ```
 
 ### 4. Wait for Build

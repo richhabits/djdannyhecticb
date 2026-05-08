@@ -29,9 +29,9 @@ PAYPAL_MODE=sandbox  # or "live"
 
 ```bash
 # Vercel
-vercel deploy --prod
+Railway auto-deploys
 
-# Note your public URL: https://your-app.vercel.app
+# Note your public URL: https://your-app.railway.app
 ```
 
 ### 4. Register Webhook (1 min)
@@ -39,7 +39,7 @@ vercel deploy --prod
 PayPal Developer Dashboard:
 1. **Apps & Credentials** → **Webhooks**
 2. Click **Add Webhook**
-3. **URL**: `https://your-app.vercel.app/api/payments/webhook/paypal`
+3. **URL**: `https://your-app.railway.app/api/payments/webhook/paypal`
 4. **Events**: Select these 4:
    - ✅ PAYMENT.CAPTURE.COMPLETED
    - ✅ PAYMENT.CAPTURE.DENIED
@@ -55,9 +55,9 @@ PayPal Developer Dashboard:
 PAYPAL_WEBHOOK_ID=webhook_id_from_step_4
 
 # Vercel
-vercel env add PAYPAL_WEBHOOK_ID
+Add to Railway Variables: PAYPAL_WEBHOOK_ID
 # paste webhook ID when prompted
-vercel deploy --prod
+Railway auto-deploys
 ```
 
 ## ✅ Done! Test It
@@ -130,7 +130,7 @@ npm run test:paypal-webhook -- --purchase-id 123
 **Webhook not working?**
 - Check `PAYPAL_WEBHOOK_ID` is set: `echo $PAYPAL_WEBHOOK_ID`
 - Check URL is accessible: `curl https://your-domain/api/payments/webhook/paypal`
-- Check server logs for errors: `vercel logs --tail`
+- Check server logs for errors: `railway logs (use dashboard)`
 
 **Payment not updating?**
 - Verify purchase exists in database
@@ -140,7 +140,7 @@ npm run test:paypal-webhook -- --purchase-id 123
 **Signature verification failing?**
 - Copy exact Webhook ID from dashboard
 - Ensure using correct PayPal mode (sandbox vs live)
-- Check database logs: `vercel logs --tail`
+- Check database logs: `railway logs (use dashboard)`
 
 ## 📞 Support
 

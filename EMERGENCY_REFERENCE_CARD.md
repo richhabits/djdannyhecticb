@@ -22,7 +22,7 @@
 
 ### Test 1: Google OAuth Login
 ```bash
-# Go to: https://djdannyhecticb.vercel.app
+# Go to: https://djdannyhecticb.com
 # Click "Login with Google"
 # Expected: Login works ✓ or shows error ✗
 ```
@@ -35,7 +35,7 @@ psql "postgresql://postgres:PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase.co:5432/po
 
 ### Test 3: Logs Check
 ```bash
-vercel logs production --lines 50
+railway logs | head - 50
 # Expected: NO errors containing "invalid", "unauthorized", "failed"
 ```
 
@@ -44,30 +44,30 @@ vercel logs production --lines 50
 ## IF SOMETHING BREAKS
 
 ### OAuth Not Working
-1. Check: `vercel env list | grep GOOGLE`
+1. Check: `Check Railway Variables in dashboard | grep GOOGLE`
 2. Check: Google Cloud Console → Credentials → OAuth settings
-3. Fix: `vercel env add GOOGLE_CLIENT_ID` (re-enter value)
-4. Redeploy: `vercel --prod`
-5. Still broken? `vercel rollback`
+3. Fix: `Add to Railway Variables: GOOGLE_CLIENT_ID` (re-enter value)
+4. Redeploy: `Railway auto-deploys`
+5. Still broken? `Railway deployment history`
 
 ### Database Not Working
-1. Check: `vercel env list | grep DATABASE_URL`
+1. Check: `Check Railway Variables in dashboard | grep DATABASE_URL`
 2. Test: `psql postgresql://...` (try connecting directly)
 3. Check: Supabase → Database → Reset password if needed
-4. Fix: `vercel env add DATABASE_URL` (re-enter correct URL)
-5. Redeploy: `vercel --prod`
-6. Still broken? `vercel rollback`
+4. Fix: `Add to Railway Variables: DATABASE_URL` (re-enter correct URL)
+5. Redeploy: `Railway auto-deploys`
+6. Still broken? `Railway deployment history`
 
 ### API Keys Not Working
 1. Check: Service dashboard (YouTube, Twitch, Ticketmaster)
 2. Verify: Key hasn't expired or been revoked
 3. Test: `curl https://api.service.com?key=YOUR_KEY`
-4. Fix: `vercel env add APIKEY_NAME` (re-enter new key)
-5. Redeploy: `vercel --prod`
+4. Fix: `Add to Railway Variables: APIKEY_NAME` (re-enter new key)
+5. Redeploy: `Railway auto-deploys`
 
 ### Complete System Down
-1. **EMERGENCY**: `vercel rollback` (revert to previous deploy)
-2. Verify: `curl https://djdannyhecticb.vercel.app` returns HTML
+1. **EMERGENCY**: `Railway deployment history` (revert to previous deploy)
+2. Verify: `curl https://djdannyhecticb.com` returns HTML
 3. Notify: Team that system is back online (on old secrets)
 4. Investigate: What went wrong
 5. Retry: When confident in the fix
@@ -79,7 +79,7 @@ vercel logs production --lines 50
 | Service | Issue | Action |
 |---------|-------|--------|
 | Google Cloud | OAuth broken | https://console.cloud.google.com/credentials |
-| Vercel | Deployment broken | `vercel logs production --lines 200` |
+| Vercel | Deployment broken | `railway logs | head - 200` |
 | Supabase | DB connection | https://app.supabase.com → Database |
 | Stripe | Payment broken | https://dashboard.stripe.com/apikeys |
 
@@ -89,19 +89,19 @@ vercel logs production --lines 50
 
 ```bash
 # Check environment variables in Vercel
-vercel env list
+Check Railway Variables in dashboard
 
 # Update an environment variable
-vercel env add SECRET_NAME
+Add to Railway Variables: SECRET_NAME
 
 # View logs (watch for errors)
-vercel logs production --lines 200
+railway logs | head - 200
 
 # Redeploy
-vercel --prod
+Railway auto-deploys
 
 # Emergency rollback
-vercel rollback
+Railway deployment history
 
 # Test database
 psql "postgresql://postgres:PASSWORD@host:5432/postgres" -c "SELECT 1;"
@@ -159,7 +159,7 @@ System not working?
 │  └─ No → Check authentication
 │
 └─ Is entire system down?
-   ├─ Yes → RUN: vercel rollback (EMERGENCY!)
+   ├─ Yes → RUN: Railway deployment history (EMERGENCY!)
    └─ No → Investigate specific failure
 ```
 
@@ -169,7 +169,7 @@ System not working?
 
 **When a secret stops working:**
 
-1. ☐ Verify it was saved to Vercel: `vercel env list | grep SECRET_NAME`
+1. ☐ Verify it was saved to Railway: `Check Railway Variables in dashboard | grep SECRET_NAME`
 2. ☐ Verify the exact value matches what you entered
 3. ☐ Check for typos or extra spaces
 4. ☐ Test the secret directly (curl/psql)

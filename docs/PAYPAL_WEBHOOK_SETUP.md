@@ -60,10 +60,10 @@ Deploy your backend:
 **Option A: Vercel (Recommended for Next.js/Node)**
 
 ```bash
-vercel deploy --prod
+Railway auto-deploys
 ```
 
-Note your deployment URL: `https://your-app.vercel.app`
+Note your deployment URL: `https://your-app.railway.app`
 
 **Option B: AWS Lambda / Heroku / Custom Server**
 
@@ -108,12 +108,12 @@ Add the webhook ID to your environment:
 PAYPAL_WEBHOOK_ID=your_webhook_id_from_step_3
 ```
 
-**For Vercel:**
+**For Railway:**
 
 ```bash
-vercel env add PAYPAL_WEBHOOK_ID
+Add to Railway Variables: PAYPAL_WEBHOOK_ID
 # Paste your webhook ID when prompted
-vercel deploy --prod
+Railway auto-deploys
 ```
 
 ### Step 5: Test the Webhook
@@ -133,7 +133,7 @@ Watch your server logs while testing:
 
 ```bash
 # Vercel
-vercel logs --tail
+railway logs (use dashboard)
 
 # Local development
 npm run dev  # Look for "Processing PayPal webhook event"
@@ -182,7 +182,7 @@ ORDER BY createdAt DESC LIMIT 5;
 3. Check server logs:
    ```bash
    # Vercel
-   vercel logs --tail
+   railway logs (use dashboard)
    
    # Local
    npm run dev

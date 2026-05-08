@@ -247,7 +247,7 @@ done | sort | uniq -c
 
 ```bash
 # Check Vercel environment variables
-vercel env list | grep GOOGLE
+Check Railway Variables in dashboard | grep GOOGLE
 
 # Check logs
 # Check Railway logs in dashboard --lines 50 | grep -i "oauth\|google\|error"
@@ -366,7 +366,7 @@ psql "postgresql://postgres:PASSWORD@db.mzfpsfnmeacbknpcpibj.supabase.co:5432/po
 
 ```bash
 # Check JWT_SECRET in Vercel
-vercel env list | grep JWT_SECRET
+Check Railway Variables in dashboard | grep JWT_SECRET
 
 # Check in logs for JWT errors
 # Check Railway logs in dashboard --lines 200 | grep -i "jwt\|token"
@@ -442,8 +442,8 @@ curl -s "https://app.ticketmaster.com/discovery/v2/events.json?apikey=YOUR_KEY&s
 
 # 1. Regenerate new key in service console
 # 2. Test key works: curl (see test above)
-# 3. Update in Vercel: # Add to Railway Variables: YOUTUBE_DATA_API_KEY
-# 4. Redeploy: vercel --prod
+# 3. Update in Railway: # Add to Railway Variables: YOUTUBE_DATA_API_KEY
+# 4. Redeploy: Railway auto-deploys
 # 5. Test feature in application
 ```
 
@@ -479,7 +479,7 @@ curl -s "https://app.ticketmaster.com/discovery/v2/events.json?apikey=YOUR_KEY&s
 
 # Or manually redeploy old version
 git checkout HEAD~1
-vercel --prod
+Railway auto-deploys
 
 # Then investigate what went wrong in new version
 ```
@@ -518,7 +518,7 @@ Set up continuous monitoring with these tools:
 ### Dashboard Monitoring (First Day)
 
 ```bash
-# Vercel Analytics
+# Railway Analytics
 # 1. Go to https://railway.app
 # 2. Select djdannyhecticb
 # 3. Analytics tab
@@ -759,7 +759,7 @@ rm ~/.rotation-backup-$(date +%Y%m%d).tar.gz.gpg
 | Service | Support Link | Emergency? | Contact |
 |---------|--------------|-----------|---------|
 | Google Cloud | support.google.com/cloud | Yes | Available 24/7 |
-| Vercel | vercel.com/support | Yes | Available 24/7 |
+| Vercel | railway.app/support | Yes | Available 24/7 |
 | Supabase | supabase.com/support | Yes | Available 24/7 |
 | Stripe | support.stripe.com | Yes | Available 24/7 |
 | Twitch | dev.twitch.tv/support | No | Business hours |
@@ -777,14 +777,14 @@ rm ~/.rotation-backup-$(date +%Y%m%d).tar.gz.gpg
 ### If Login Broken: 
 1. Check Google Cloud OAuth settings
 2. Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Vercel
-3. Redeploy: `vercel --prod`
+3. Redeploy: `Railway auto-deploys`
 4. If not fixed in 5 min: `# Railway deployment history`
 
 ### If Database Broken:
 1. Test password directly with psql
 2. Check DATABASE_URL in Vercel (exact format)
 3. Reset password in Supabase if needed
-4. Redeploy: `vercel --prod`
+4. Redeploy: `Railway auto-deploys`
 5. If not fixed in 5 min: `# Railway deployment history`
 
 ### If API Keys Broken:
@@ -792,7 +792,7 @@ rm ~/.rotation-backup-$(date +%Y%m%d).tar.gz.gpg
 2. Check service dashboard (YouTube, Twitch, etc.)
 3. Regenerate key if expired
 4. Update in Vercel
-5. Redeploy: `vercel --prod`
+5. Redeploy: `Railway auto-deploys`
 6. If not fixed in 5 min: `# Railway deployment history`
 
 ### If Complete Deployment Broken:

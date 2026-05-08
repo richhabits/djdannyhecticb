@@ -27,7 +27,7 @@ This document establishes a comprehensive secrets management and rotation policy
 NEW_SECRET=$(openssl rand -hex 32)
 
 # Step 2: Update Vercel (create NEW variable first, do NOT delete old yet)
-vercel env add JWT_SECRET_NEW $NEW_SECRET --prod
+Add to Railway Variables: JWT_SECRET_NEW $NEW_SECRET --prod
 
 # Step 3: Deploy test build with fallback logic
 # Code should check both old and new secrets during transition period
@@ -38,7 +38,7 @@ vercel env add JWT_SECRET_NEW $NEW_SECRET --prod
 # Step 5: Wait 24 hours for any remaining old tokens to expire
 
 # Step 6: Delete old secret
-vercel env remove JWT_SECRET --prod
+Remove from Railway Variables JWT_SECRET --prod
 ```
 
 #### 2. **DATABASE_URL**
@@ -61,13 +61,13 @@ ALTER USER "djdannyhectic_user" WITH PASSWORD 'NEW_PASSWORD_HERE';
 
 # Step 3: Update Vercel environment with new connection string
 NEW_URL="postgresql://djdannyhectic_user:NEW_PASSWORD@host:5432/djdannyhectic"
-vercel env add DATABASE_URL_NEW $NEW_URL --prod
+Add to Railway Variables: DATABASE_URL_NEW $NEW_URL --prod
 
 # Step 4: Deploy and verify connection works
-vercel deploy --prod
+Railway auto-deploys
 
 # Step 5: Remove old environment variable
-vercel env remove DATABASE_URL --prod
+Remove from Railway Variables DATABASE_URL --prod
 
 # Step 6: Update git history (if accidentally committed)
 git-filter-branch --force --index-filter 'git rm --cached .env*' HEAD
@@ -95,10 +95,10 @@ git-filter-branch --force --index-filter 'git rm --cached .env*' HEAD
 STRIPE_SECRET_KEY=sk_test_xxxx npm run test:stripe
 
 # Step 4: Update Vercel
-vercel env add STRIPE_SECRET_KEY sk_live_xxxxx --prod
+Add to Railway Variables: STRIPE_SECRET_KEY sk_live_xxxxx --prod
 
 # Step 5: Deploy to production
-vercel deploy --prod
+Railway auto-deploys
 
 # Step 6: Monitor Stripe logs for 1 hour
 
@@ -112,7 +112,7 @@ vercel deploy --prod
 # 1. Stripe Dashboard → Webhooks → Select endpoint
 # 2. Click "Reveal" to show current signing secret
 # 3. Create new endpoint with same URL (dual-run for 24h)
-# 4. Update vercel env with new secret
+# 4. Update Railway variable with new secret
 # 5. Monitor for webhook failures
 # 6. Delete old endpoint after validation
 ```
@@ -135,7 +135,7 @@ vercel deploy --prod
 #   - HTTP restrictions: domain.com only
 
 # Step 3: Update Vercel
-vercel env add GOOGLE_PLACES_API_KEY <new_key> --prod
+Add to Railway Variables: GOOGLE_PLACES_API_KEY <new_key> --prod
 
 # Step 4: Deploy and test
 # Step 5: Delete old key after 24h monitoring
@@ -158,8 +158,8 @@ gcloud compute project-info describe --project=PROJECT_ID \
 # Step 1: PayPal Dashboard → Apps & Credentials
 # Step 2: Generate new credentials for live app
 # Step 3: Update Vercel (both ID and SECRET)
-vercel env add PAYPAL_CLIENT_ID pm_live_xxx --prod
-vercel env add PAYPAL_CLIENT_SECRET pm_live_secret_xxx --prod
+Add to Railway Variables: PAYPAL_CLIENT_ID pm_live_xxx --prod
+Add to Railway Variables: PAYPAL_CLIENT_SECRET pm_live_secret_xxx --prod
 
 # Step 4: Deploy and run transaction tests
 npm run test:paypal
@@ -185,7 +185,7 @@ npm run test:paypal
 # Step 1: Resend Dashboard → API Keys → Create
 # Step 2: Copy new key
 # Step 3: Update Vercel
-vercel env add EMAIL_API_KEY re_live_xxx --prod
+Add to Railway Variables: EMAIL_API_KEY re_live_xxx --prod
 
 # Step 4: Monitor email logs for delivery failures
 # Step 5: Delete old key
@@ -250,8 +250,8 @@ vercel env add EMAIL_API_KEY re_live_xxx --prod
 
 1. **Mark as Sensitive**: All secrets should be marked "Sensitive (encrypted at rest)"
    ```bash
-   vercel env ls --prod  # View current secrets
-   vercel env add SECRET_NAME value --prod  # New secret
+   Check Railway Variables in dashboard --prod  # View current secrets
+   Add to Railway Variables: SECRET_NAME value --prod  # New secret
    ```
 
 2. **Scope Restrictions**: Limit scope to specific environments
@@ -261,7 +261,7 @@ vercel env add EMAIL_API_KEY re_live_xxx --prod
 
 3. **Audit Logging**: Vercel logs all environment variable changes
    ```bash
-   # View changes via Vercel Dashboard
+   # View changes via Railway Dashboard
    # Settings → Environment Variables → View activity log
    ```
 
@@ -413,7 +413,7 @@ This rotation plan meets requirements from:
 
 - [OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
 - [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/)
-- [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables)
+- [Vercel Environment Variables](https://railway.app/docs/projects/environment-variables)
 - [Stripe API Key Best Practices](https://stripe.com/docs/keys)
 - [GitHub Secret Scanning](https://docs.github.com/en/code-security/secret-scanning)
 

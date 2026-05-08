@@ -243,7 +243,7 @@ See **SECURITY_VERIFICATION.md** for detailed procedures:
 
 If all else fails:
 ```bash
-vercel rollback
+Railway deployment history
 ```
 
 This reverts to the previous deployment with old (exposed) secrets.
@@ -452,7 +452,7 @@ Next 30 days:
 ### Vercel Configuration
 
 ```
-https://vercel.com/dashboard/djdannyhecticb
+https://railway.app/djdannyhecticb
 → Settings → Environment Variables
   (Where new secrets will be stored)
 ```
@@ -461,7 +461,7 @@ https://vercel.com/dashboard/djdannyhecticb
 
 ```
 Google Cloud Console:    https://console.cloud.google.com/
-Vercel Dashboard:        https://vercel.com/dashboard
+Railway Dashboard:        https://railway.app
 Supabase:               https://app.supabase.com
 Twitch Console:         https://dev.twitch.tv/console
 Ticketmaster Dev:       https://developer.ticketmaster.com/

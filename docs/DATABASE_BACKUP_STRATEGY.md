@@ -164,7 +164,7 @@ GROUP BY schemaname;
 # Recovery procedure
 # Contact your database provider to restore from timestamp
 # Example for managed services:
-vercel env pull  # Get current config
+Railway variables (see dashboard)  # Get current config
 pg_restore --clean --if-exists backup-file.sql
 psql -c "REINDEX DATABASE djdannyhecticb"
 ```

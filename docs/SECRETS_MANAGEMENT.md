@@ -45,8 +45,8 @@ DATABASE_URL=your-local-database-url
 
 ```bash
 # Set staging secrets
-vercel env add GOOGLE_CLIENT_ID --environments preview
-vercel env add GOOGLE_CLIENT_SECRET --environments preview
+Add to Railway Variables: GOOGLE_CLIENT_ID --environments preview
+Add to Railway Variables: GOOGLE_CLIENT_SECRET --environments preview
 ```
 
 ### Production
@@ -57,8 +57,8 @@ vercel env add GOOGLE_CLIENT_SECRET --environments preview
 
 ```bash
 # Set production secrets
-vercel env add GOOGLE_CLIENT_ID --environments production
-vercel env add GOOGLE_CLIENT_SECRET --environments production
+Add to Railway Variables: GOOGLE_CLIENT_ID --environments production
+Add to Railway Variables: GOOGLE_CLIENT_SECRET --environments production
 ```
 
 ---
@@ -139,26 +139,26 @@ vercel env add GOOGLE_CLIENT_SECRET --environments production
 2. **Add to Vercel**
    ```bash
    # Production
-   vercel env add MY_NEW_API_KEY --environments production
+   Add to Railway Variables: MY_NEW_API_KEY --environments production
    # Paste value when prompted
    
    # Staging (optional)
-   vercel env add MY_NEW_API_KEY --environments preview
+   Add to Railway Variables: MY_NEW_API_KEY --environments preview
    ```
 
 3. **Verify in deployments**
    ```bash
-   # Check Vercel dashboard
-   vercel env list
+   # Check Railway dashboard
+   Check Railway Variables in dashboard
    
    # Or via CLI
-   vercel env pull
+   Railway variables (see dashboard)
    cat .env
    ```
 
 4. **Deploy and test**
    ```bash
-   vercel --prod
+   Railway auto-deploys
    ```
 
 5. **Document in audit log**
@@ -166,7 +166,7 @@ vercel env add GOOGLE_CLIENT_SECRET --environments production
    Date: 2026-05-03
    Secret: MY_NEW_API_KEY
    Action: Rotated
-   Vercel: ✅ Updated
+   Railway: ✅ Updated
    Deployed: ✅ v1.2.3
    Tested: ✅ Feature works
    ```
@@ -216,24 +216,24 @@ git commit -m "chore: prepare for secret rotation"
 #### Step 4: Update Production (Vercel)
 ```bash
 # Update each secret
-vercel env rm GOOGLE_CLIENT_SECRET --environments production
-vercel env add GOOGLE_CLIENT_SECRET --environments production
+Remove from Railway Variables: GOOGLE_CLIENT_SECRET
+Add to Railway Variables: GOOGLE_CLIENT_SECRET --environments production
 # Paste NEW secret when prompted
 
 # Verify all updated
-vercel env list --environments production
+Check Railway Variables in dashboard --environments production
 ```
 
 #### Step 5: Deploy & Monitor
 ```bash
 # Trigger deployment
-vercel --prod
+Railway auto-deploys
 
 # Monitor for errors
-curl https://djdannyhecticb.vercel.app/api/health
+curl https://djdannyhecticb.com/api/health
 
 # Check logs
-vercel logs --follow
+railway logs (use dashboard)--follow
 ```
 
 #### Step 6: Revoke Old Credentials
@@ -251,7 +251,7 @@ npm run dev
 # Test at: https://git-branch-name.djdannyhecticb.vercel.app
 
 # Production
-# Test at: https://djdannyhecticb.vercel.app
+# Test at: https://djdannyhecticb.com
 ```
 
 #### Step 8: Document
@@ -362,9 +362,9 @@ fi
 # Check Vercel
 echo ""
 echo "Vercel (production):"
-vercel env list --environments production | grep -q "GOOGLE_CLIENT_ID" && echo "  ✅ GOOGLE_CLIENT_ID" || echo "  ❌ GOOGLE_CLIENT_ID missing"
-vercel env list --environments production | grep -q "DATABASE_URL" && echo "  ✅ DATABASE_URL" || echo "  ❌ DATABASE_URL missing"
-vercel env list --environments production | grep -q "JWT_SECRET" && echo "  ✅ JWT_SECRET" || echo "  ❌ JWT_SECRET missing"
+Check Railway Variables in dashboard --environments production | grep -q "GOOGLE_CLIENT_ID" && echo "  ✅ GOOGLE_CLIENT_ID" || echo "  ❌ GOOGLE_CLIENT_ID missing"
+Check Railway Variables in dashboard --environments production | grep -q "DATABASE_URL" && echo "  ✅ DATABASE_URL" || echo "  ❌ DATABASE_URL missing"
+Check Railway Variables in dashboard --environments production | grep -q "JWT_SECRET" && echo "  ✅ JWT_SECRET" || echo "  ❌ JWT_SECRET missing"
 ```
 
 ---
@@ -444,7 +444,7 @@ node -e "console.log('sk_test_' + require('crypto').randomBytes(16).toString('he
 
 ### Audit Trail
 - Every secret access logged by service provider
-- Vercel: View access logs in dashboard
+- Railway: View access logs in dashboard
 - Database: Query audit tables
 - Review monthly in security meetings
 

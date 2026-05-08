@@ -544,10 +544,10 @@ class DjDannyUser(HttpUser):
 - [ ] Convert images to WebP format
 - [ ] Implement srcset for responsive images
 - [ ] Enable lazy loading on off-screen images
-- [ ] Set up Cloudinary/Vercel image optimization
+- [ ] Set up Cloudinary image optimization
 
 ### Phase 5: CDN & Headers (Week 3)
-- [ ] Configure cache-control headers in vercel.ts
+- [ ] Configure cache-control headers in Express middleware
 - [ ] Enable ISR for static pages
 - [ ] Verify CDN cache hit rates
 - [ ] Monitor cache effectiveness

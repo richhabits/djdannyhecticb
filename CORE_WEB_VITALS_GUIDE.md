@@ -168,13 +168,13 @@ function SearchComponent() {
 
 ### Already Implemented
 - ✅ Vercel Edge Network (CDN)
-- ✅ Cache headers configured (see vercel.json)
+- ✅ Cache headers configured (see Railway configuration)
 - ✅ CSS minification
 - ✅ JavaScript minification
 - ✅ Gzip compression
 
 ### Monitoring
-Monitor TTFB in Vercel dashboard:
+Monitor TTFB in Railway dashboard:
 1. Go to Vercel project settings
 2. Check Analytics tab
 3. Look for TTFB metric
@@ -285,5 +285,5 @@ getLCP(vitals.getLCP);
 
 - [Web Vitals Guide](https://web.dev/vitals/)
 - [Lighthouse Docs](https://developers.google.com/web/tools/lighthouse)
-- [Vercel Performance Guide](https://vercel.com/docs/concepts/analytics/performance)
+- [Vercel Performance Guide](https://railway.app/docs/concepts/analytics/performance)
 - [React Performance](https://react.dev/reference/react/useMemo)

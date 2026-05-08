@@ -79,7 +79,7 @@ Targets: 10x performance, 10k concurrent users"
 git push origin main
 
 # 3. Vercel will auto-deploy
-# Monitor at: https://vercel.com/dashboard/project/djdannyhecticb
+# Monitor at: https://railway.app/project/djdannyhecticb
 ```
 
 ### Step 2: Apply Database Migration (5 minutes)
@@ -128,7 +128,7 @@ k6 run load-test/k6-scenario.js --vus 1000 --duration 10m
 ### Step 5: Monitor Metrics (Ongoing)
 ```bash
 # Watch Core Web Vitals in Vercel
-# https://vercel.com/dashboard/project/djdannyhecticb/analytics
+# https://railway.app/project/djdannyhecticb/analytics
 
 # Check API response times
 curl https://djdannyhecticb.com/api/health
@@ -330,7 +330,7 @@ After deployment, update:
 **A**: Cache TTLs are conservative (5 min default). Critical operations bypass cache.
 
 ### Q: How do I monitor after deployment?
-**A**: Check Vercel dashboard, Sentry, and `/monitoring/stats` endpoint.
+**A**: Check Railway dashboard, Sentry, and `/monitoring/stats` endpoint.
 
 ### Q: Can I rollback if something breaks?
 **A**: Yes. Rollback database migration separately if needed.

@@ -6,10 +6,10 @@
 
 ## Current CSP Configuration
 
-**File**: `/vercel.json`  
+**File**: `/Railway configuration`  
 **Status**: ⚠️ Missing CSP header (currently only has HSTS, X-Frame-Options, X-XSS-Protection, etc.)
 
-### Current Headers (vercel.json)
+### Current Headers (Railway configuration)
 ```json
 {
   "headers": [
@@ -56,7 +56,7 @@ Deploy CSP in report-only mode to identify violations without breaking functiona
   "headers": [
     {
       "key": "Content-Security-Policy-Report-Only",
-      "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.djdannyhecticb.com https://vercel.com; report-uri https://example.com/csp-report"
+      "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.djdannyhecticb.com https://railway.app; report-uri https://example.com/csp-report"
     }
   ]
 }
@@ -97,7 +97,7 @@ Deploy CSP in report-only mode to identify violations without breaking functiona
 Content-Security-Policy: 
   default-src 'self';
   script-src 'self' 
-    https://cdn.vercel.live 
+    https://cloudflare.com 
     https://cdn.jsdelivr.net
     https://stripe.com 
     https://js.stripe.com
@@ -116,8 +116,8 @@ Content-Security-Policy:
     https:;
   connect-src 'self' 
     https://api.djdannyhecticb.com
-    https://vercel.com
-    https://vitals.vercel-analytics.com
+    https://railway.app
+    https://vitals.railway-analytics.com
     https://api.stripe.com
     https://api.paypal.com
     wss:;
@@ -135,7 +135,7 @@ Content-Security-Policy:
 
 ### Phase 3: Implementation Steps
 
-#### Step 1: Update vercel.json
+#### Step 1: Update Railway configuration
 
 ```json
 {
@@ -146,7 +146,7 @@ Content-Security-Policy:
         // ... existing security headers ...
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://cdn.vercel.live https://cdn.jsdelivr.net https://stripe.com https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self' https://api.djdannyhecticb.com https://vercel.com https://vitals.vercel-analytics.com https://api.stripe.com https://api.paypal.com wss:; frame-src 'self' https://stripe.com https://js.stripe.com https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.paypal.com; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content"
+          "value": "default-src 'self'; script-src 'self' https://cloudflare.com https://cdn.jsdelivr.net https://stripe.com https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self' https://api.djdannyhecticb.com https://railway.app https://vitals.railway-analytics.com https://api.stripe.com https://api.paypal.com wss:; frame-src 'self' https://stripe.com https://js.stripe.com https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.paypal.com; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content"
         }
       ]
     },
@@ -159,7 +159,7 @@ Content-Security-Policy:
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://cdn.vercel.live https://cdn.jsdelivr.net https://stripe.com https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self' https://api.djdannyhecticb.com https://vercel.com https://vitals.vercel-analytics.com https://api.stripe.com https://api.paypal.com wss:; frame-src 'self' https://stripe.com https://js.stripe.com https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.paypal.com; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content"
+          "value": "default-src 'self'; script-src 'self' https://cloudflare.com https://cdn.jsdelivr.net https://stripe.com https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com; style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self' https://api.djdannyhecticb.com https://railway.app https://vitals.railway-analytics.com https://api.stripe.com https://api.paypal.com wss:; frame-src 'self' https://stripe.com https://js.stripe.com https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.paypal.com; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content"
         }
       ]
     }

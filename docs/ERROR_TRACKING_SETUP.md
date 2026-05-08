@@ -95,7 +95,7 @@ Sentry.init({
   allowUrls: [
     /https?:\/\/djdannyhecticb\.com/,
     /https?:\/\/www\.djdannyhecticb\.com/,
-    /https?:\/\/vercel\.app/,
+    /https?:\/\/railway\.app/,
   ],
 });
 
@@ -295,7 +295,7 @@ Sentry.setUser({
 ```typescript
 // Set release after Sentry.init()
 Sentry.setTag("version", "1.0.0");
-Sentry.setTag("deployment", "vercel-prod-001");
+Sentry.setTag("deployment", "railway-prod-001");
 
 // Or during init
 Sentry.init({
@@ -524,9 +524,9 @@ pnpm add -D @sentry/cli
 # Permissions: release:write, sourcemaps:write
 
 # Add to Vercel
-vercel env add SENTRY_AUTH_TOKEN "sntrys_..." --prod
-vercel env add SENTRY_ORG "your-org-name" --prod
-vercel env add SENTRY_PROJECT "djdannyhecticb" --prod
+Add to Railway Variables: SENTRY_AUTH_TOKEN "sntrys_..." --prod
+Add to Railway Variables: SENTRY_ORG "your-org-name" --prod
+Add to Railway Variables: SENTRY_PROJECT "djdannyhecticb" --prod
 ```
 
 ---

@@ -554,7 +554,7 @@ TIMING:
 5. **Third-Party Processors**: Stripe, email service, analytics
 6. **Search Indexes**: Elasticsearch or similar
 7. **Logs**: Access logs, audit trails
-8. **Analytics Systems**: Google Analytics, Vercel Analytics
+8. **Analytics Systems**: Google Analytics, Railway Analytics
 
 **Create Comprehensive List**:
 - Each data location
@@ -676,7 +676,7 @@ AWS S3 Deletion:
 - Response: Immediate
 
 #### Vercel (Hosting/Analytics Data)
-- Email: support@vercel.com
+- Email: support@railway.app
 - Request: Delete usage logs, analytics for user ID
 - Response Expected: Within 2-3 business days
 
@@ -1174,7 +1174,7 @@ THIRD-PARTY NOTIFICATION:
 - Stripe: Notified 2026-05-16 09:00:00 UTC - Status: Acknowledged
 - SendGrid: Notified 2026-05-16 09:05:00 UTC - Status: Completed
 - Google Analytics: Anonymized 2026-05-16 10:00:00 UTC - Status: Completed
-- Vercel: Notified 2026-05-16 10:30:00 UTC - Status: Pending confirmation
+- Railway: Notified 2026-05-16 10:30:00 UTC - Status: Pending confirmation
 
 USER CONFIRMATION:
 - Confirmation Email Sent: 2026-05-16 16:00:00 UTC

@@ -123,8 +123,8 @@ Fans can buy tickets directly from live page
 2. Sign up (free)
 3. Create application
 4. Copy Consumer Key
-5. Run: `echo "YOUR_KEY" | vercel env add TICKETMASTER_API_KEY production`
-6. Deploy: `vercel deploy --prod`
+5. Run: `echo "YOUR_KEY" | Add to Railway Variables: TICKETMASTER_API_KEY production`
+6. Deploy: `Railway auto-deploys`
 
 **Example:**
 ```bash
@@ -155,16 +155,16 @@ Response:
 Map Stripe prices to tier badges. Get price IDs from: https://dashboard.stripe.com/prices
 
 ```bash
-vercel env add STRIPE_PRICE_BRONZE production
+Add to Railway Variables: STRIPE_PRICE_BRONZE production
 # price_1SmIYR2HkyKRVyFU1...
 
-vercel env add STRIPE_PRICE_SILVER production
+Add to Railway Variables: STRIPE_PRICE_SILVER production
 # price_1SmIYR2HkyKRVyFU1...
 
-vercel env add STRIPE_PRICE_GOLD production
+Add to Railway Variables: STRIPE_PRICE_GOLD production
 # price_1SmIYR2HkyKRVyFU1...
 
-vercel env add STRIPE_PRICE_PLATINUM production
+Add to Railway Variables: STRIPE_PRICE_PLATINUM production
 # price_1SmIYR2HkyKRVyFU1...
 ```
 
@@ -181,10 +181,10 @@ vercel env add STRIPE_PRICE_PLATINUM production
 ### View Logs
 ```bash
 # Real-time logs from Vercel
-vercel logs djdannyhecticb
+railway logs (use dashboard)djdannyhecticb
 
 # Filter for events
-vercel logs djdannyhecticb | grep -E "(donation|raid|subscribe|follow)"
+railway logs (use dashboard)djdannyhecticb | grep -E "(donation|raid|subscribe|follow)"
 ```
 
 ### Expected Log Output
@@ -205,15 +205,15 @@ vercel logs djdannyhecticb | grep -E "(donation|raid|subscribe|follow)"
 
 ### Events Not Appearing?
 1. Check WebSocket is connected: Open DevTools → Network → WS
-2. Verify endpoint is hitting: `vercel logs djdannyhecticb`
+2. Verify endpoint is hitting: `railway logs (use dashboard)djdannyhecticb`
 3. Test manually: Use curl commands above
-4. Check Vercel secrets: `vercel env ls`
+4. Check Vercel secrets: `Check Railway Variables in dashboard`
 
 ### Stripe Webhook Failing?
 1. Check signing secret matches: `STRIPE_WEBHOOK_SECRET`
 2. Verify endpoint in Stripe Dashboard: https://dashboard.stripe.com/webhooks
 3. Send test event from Stripe Dashboard
-4. Check logs: `vercel logs djdannyhecticb | grep stripe`
+4. Check logs: `railway logs (use dashboard)djdannyhecticb | grep stripe`
 
 ### YouTube API Rate Limited?
 - Free tier: 10,000 requests/day
@@ -221,9 +221,9 @@ vercel logs djdannyhecticb | grep -E "(donation|raid|subscribe|follow)"
 - Current usage: Check Google Cloud Console
 
 ### Ticketmaster Not Showing Events?
-- Verify API key is set: `vercel env ls | grep TICKETMASTER`
+- Verify API key is set: `Check Railway Variables in dashboard | grep TICKETMASTER`
 - Check rate limit (5,000/day free): https://developer.ticketmaster.com/docs
-- Check logs for API errors: `vercel logs djdannyhecticb`
+- Check logs for API errors: `railway logs (use dashboard)djdannyhecticb`
 
 ---
 
@@ -371,4 +371,4 @@ ALERTS (Overlay):
 
 **🎉 Everything is production-ready and tested!**
 
-For support: Check logs with `vercel logs djdannyhecticb` or refer to REAL_EVENTS_SETUP.md
+For support: Check logs with `railway logs (use dashboard)djdannyhecticb` or refer to REAL_EVENTS_SETUP.md

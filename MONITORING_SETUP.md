@@ -64,9 +64,9 @@ app.use(Sentry.Handlers.errorHandler());
 
 ---
 
-## 2. Vercel Analytics (Native, Built-in)
+## 2. Railway Analytics (Native, Built-in)
 
-### Enable in Vercel Dashboard
+### Enable in Railway Dashboard
 1. Go to Project Settings
 2. Select "Analytics" tab
 3. Enable "Web Analytics"
@@ -259,7 +259,7 @@ cp results.json load-test/results-$(date +%Y%m%d-%H%M%S).json
 
 ## 9. Dashboard Setup
 
-### Vercel Dashboard
+### Railway Dashboard
 - Deployments
 - Web Vitals
 - Response times by route
@@ -351,7 +351,7 @@ router.get('/monitoring/stats', (req, res) => {
 ## Resources
 
 - [Sentry Docs](https://docs.sentry.io)
-- [Vercel Analytics](https://vercel.com/docs/concepts/analytics)
+- [Railway Analytics](https://railway.app/docs/concepts/analytics)
 - [Web Vitals](https://web.dev/vitals/)
 - [Better Stack Docs](https://betterstack.com/docs)
 - [k6 Load Testing](https://k6.io/docs/)

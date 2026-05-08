@@ -93,7 +93,7 @@
 - [ ] Verify response shows ✅ **200** status
 - [ ] Check server logs:
   ```bash
-  vercel logs --tail | grep PayPal
+  railway logs (use dashboard) | grep PayPal
   ```
 - [ ] Should see: "Processing PayPal webhook event: PAYMENT.CAPTURE.COMPLETED"
 
