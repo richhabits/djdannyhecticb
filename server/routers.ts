@@ -59,7 +59,7 @@ import { contactRouter } from "./routers/contactRouter";
 import { merchRouter } from "@/domains/commerce/merchRouter";
 import { liveRouter } from "@/domains/broadcast/liveRouter";
 import { moderationRouter } from "./routers/moderationRouter";
-import { analyticsRouter } from "./routers/analyticsRouter";
+import { analyticsRouter } from "@/domains/analytics/analyticsRouter";
 import { donationsRouter } from "./routers/donationsRouter";
 import { supportRouter } from "./routers/supportRouter";
 import { profileRouter } from "@/domains/users/profileRouter";

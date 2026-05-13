@@ -286,7 +286,7 @@ async function startServer() {
   registerUploadRoutes(app);
 
   // Analytics Tracking (self-hosted)
-  const { registerAnalyticsRoutes } = await import("./analytics");
+  const { registerAnalyticsRoutes } = await import("@/domains/analytics/analytics");
   registerAnalyticsRoutes(app);
 
   // Webhook Routes (Telnyx, Vapi)
