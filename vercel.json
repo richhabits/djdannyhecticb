@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build",
+  "startCommand": "NODE_ENV=production node dist/index.mjs",
+  "outputDirectory": "dist",
+  "framework": "other",
+  "nodejs": "20.x"
+}
