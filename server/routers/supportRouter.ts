@@ -8,7 +8,7 @@
 
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { createSupportPaymentIntent } from "../lib/payments";
+import { createSupportPaymentIntent } from "@/domains/commerce/payments";
 import { ENV } from "../_core/env";
 
 export const supportRouter = router({

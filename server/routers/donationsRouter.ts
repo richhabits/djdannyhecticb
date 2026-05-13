@@ -9,7 +9,7 @@
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createSupportPaymentIntent } from "../lib/payments";
+import { createSupportPaymentIntent } from "@/domains/commerce/payments";
 import { ENV } from "../_core/env";
 import { donations, userBadges } from "../../drizzle/engagement-schema";
 import { eq } from "drizzle-orm";

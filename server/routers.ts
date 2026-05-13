@@ -56,7 +56,7 @@ import { spotifyRouter } from "./routers/spotifyRouter";
 import { blogRouter } from "./routers/blogRouter";
 import { faqRouter } from "./routers/faqRouter";
 import { contactRouter } from "./routers/contactRouter";
-import { merchRouter } from "./routers/merchRouter";
+import { merchRouter } from "@/domains/commerce/merchRouter";
 import { liveRouter } from "@/domains/broadcast/liveRouter";
 import { moderationRouter } from "./routers/moderationRouter";
 import { analyticsRouter } from "./routers/analyticsRouter";
@@ -71,7 +71,7 @@ import { subscriptionRouter } from "@/domains/users/subscriptionRouter";
 import { affiliateRouter } from "@/domains/users/affiliateRouter";
 import { sponsorshipRouter } from "./routers/sponsorshipRouter";
 import { premiumRouter } from "./routers/premiumRouter";
-import { revenueRouter } from "./routers/revenueRouter";
+import { revenueRouter } from "@/domains/commerce/revenueRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { chatWithDanny } from "./lib/gemini";
@@ -1063,7 +1063,7 @@ export const appRouter = router({
         const priceStr = product.price.replace(/[£$€,]/g, "");
         const amount = Math.round(parseFloat(priceStr) * 100); // Convert to pence/cents
 
-        const { createStripePaymentIntent } = await import("./lib/payments");
+        const { createStripePaymentIntent } = await import("@/domains/commerce/payments");
         const result = await createStripePaymentIntent({
           productId: input.productId,
           amount,
@@ -1098,7 +1098,7 @@ export const appRouter = router({
         const priceStr = product.price.replace(/[£$€,]/g, "");
         const amount = Math.round(parseFloat(priceStr) * 100);
 
-        const { createPayPalOrder } = await import("./lib/payments");
+        const { createPayPalOrder } = await import("@/domains/commerce/payments");
         const result = await createPayPalOrder({
           productId: input.productId,
           amount,

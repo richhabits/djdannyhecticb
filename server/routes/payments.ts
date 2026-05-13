@@ -18,7 +18,7 @@ import express from "express";
 import Stripe from "stripe";
 import { ENV } from "../_core/env";
 import * as db from "../db";
-import { handleStripeWebhook } from "../lib/payments";
+import { handleStripeWebhook } from "@/domains/commerce/payments";
 
 const router = express.Router();
 
