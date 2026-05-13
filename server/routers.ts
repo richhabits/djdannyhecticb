@@ -58,7 +58,7 @@ import { faqRouter } from "./routers/faqRouter";
 import { contactRouter } from "./routers/contactRouter";
 import { merchRouter } from "@/domains/commerce/merchRouter";
 import { liveRouter } from "@/domains/broadcast/liveRouter";
-import { moderationRouter } from "./routers/moderationRouter";
+import { moderationRouter } from "@/domains/moderation/moderationRouter";
 import { analyticsRouter } from "@/domains/analytics/analyticsRouter";
 import { donationsRouter } from "./routers/donationsRouter";
 import { supportRouter } from "./routers/supportRouter";

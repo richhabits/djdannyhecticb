@@ -6,7 +6,7 @@
  * Moderation Router - Chat moderation, bans, mutes, warnings
  */
 
-import { router, adminProcedure } from "../_core/trpc";
+import { router, adminProcedure } from "../../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -16,7 +16,7 @@ import {
 } from "../../drizzle/engagement-schema";
 import { users } from "../../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { auditLog } from "../_core/audit";
+import { auditLog } from "../../_core/audit";
 
 export const moderationRouter = router({
   // Delete a message
