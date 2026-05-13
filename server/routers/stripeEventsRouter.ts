@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
-import { broadcastStreamEvent } from "./streamEventsRouter";
+import { broadcastStreamEvent } from "@/domains/broadcast/streamEventsRouter";
 
 const router = Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");

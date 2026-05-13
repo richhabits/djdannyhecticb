@@ -57,7 +57,7 @@ import { blogRouter } from "./routers/blogRouter";
 import { faqRouter } from "./routers/faqRouter";
 import { contactRouter } from "./routers/contactRouter";
 import { merchRouter } from "./routers/merchRouter";
-import { liveRouter } from "./routers/liveRouter";
+import { liveRouter } from "@/domains/broadcast/liveRouter";
 import { moderationRouter } from "./routers/moderationRouter";
 import { analyticsRouter } from "./routers/analyticsRouter";
 import { donationsRouter } from "./routers/donationsRouter";
@@ -603,7 +603,7 @@ export const appRouter = router({
         if (!stream) {
           throw new Error("Stream not found");
         }
-        const { getStreamStatus } = await import("./_core/streamStatus");
+        const { getStreamStatus } = await import("@/domains/broadcast/streamStatus");
         return getStreamStatus(stream);
       }),
   }),

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { google } from "googleapis";
-import { broadcastStreamEvent } from "./streamEventsRouter";
+import { broadcastStreamEvent } from "@/domains/broadcast/streamEventsRouter";
 
 const router = Router();
 
