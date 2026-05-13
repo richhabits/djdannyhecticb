@@ -51,26 +51,26 @@ function transformUKEvent(event: any) {
         artists: event.artists ? (typeof event.artists === 'string' ? event.artists : JSON.stringify(event.artists)) : null,
     };
 }
-import { soundcloudRouter } from "./routers/soundcloudRouter";
+import { soundcloudRouter } from "@/domains/ingestion/soundcloudRouter";
 import { spotifyRouter } from "@/domains/ingestion/spotifyRouter";
-import { blogRouter } from "./routers/blogRouter";
-import { faqRouter } from "./routers/faqRouter";
-import { contactRouter } from "./routers/contactRouter";
+import { blogRouter } from "@/domains/content/blogRouter";
+import { faqRouter } from "@/domains/infrastructure/faqRouter";
+import { contactRouter } from "@/domains/infrastructure/contactRouter";
 import { merchRouter } from "@/domains/commerce/merchRouter";
 import { liveRouter } from "@/domains/broadcast/liveRouter";
 import { moderationRouter } from "@/domains/moderation/moderationRouter";
 import { analyticsRouter } from "@/domains/analytics/analyticsRouter";
-import { donationsRouter } from "./routers/donationsRouter";
-import { supportRouter } from "./routers/supportRouter";
+import { donationsRouter } from "@/domains/commerce/donationsRouter";
+import { supportRouter } from "@/domains/infrastructure/supportRouter";
 import { profileRouter } from "@/domains/users/profileRouter";
-import { messagesRouter } from "./routers/messagesRouter";
-import { commentsRouter } from "./routers/commentsRouter";
-import { communityRouter } from "./routers/communityRouter";
+import { messagesRouter } from "@/domains/users/messagesRouter";
+import { commentsRouter } from "@/domains/users/commentsRouter";
+import { communityRouter } from "@/domains/users/communityRouter";
 // Revenue streams
 import { subscriptionRouter } from "@/domains/users/subscriptionRouter";
 import { affiliateRouter } from "@/domains/users/affiliateRouter";
-import { sponsorshipRouter } from "./routers/sponsorshipRouter";
-import { premiumRouter } from "./routers/premiumRouter";
+import { sponsorshipRouter } from "@/domains/commerce/sponsorshipRouter";
+import { premiumRouter } from "@/domains/commerce/premiumRouter";
 import { revenueRouter } from "@/domains/commerce/revenueRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import * as db from "./db";
