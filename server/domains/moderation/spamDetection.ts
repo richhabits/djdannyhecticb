@@ -7,8 +7,8 @@
  * Real-time detection: copy-paste spam, suspicious links, caps spam, referral spam
  */
 
-import { chatMessages } from "../../drizzle/engagement-schema";
-import { spamFlags, InsertSpamFlag } from "../../drizzle/ai-features-schema";
+import { chatMessages } from "@/drizzle/engagement-schema";
+import { spamFlags, InsertSpamFlag } from "@/drizzle/ai-features-schema";
 import { eq, and, gte, desc } from "drizzle-orm";
 
 interface SpamCheckResult {

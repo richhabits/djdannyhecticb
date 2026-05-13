@@ -4,11 +4,11 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { router, publicProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, adminProcedure } from "@/server/_core/trpc";
 import { z } from "zod";
-import * as db from "../db";
-import { sendContactConfirmation, sendContactNotification } from "../_core/email";
-import { ENV } from "../_core/env";
+import * as db from "@/server/db";
+import { sendContactConfirmation, sendContactNotification } from "@/server/_core/email";
+import { ENV } from "@/server/_core/env";
 
 // Rate limiting: simple in-memory store with 5 requests per IP per hour
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();

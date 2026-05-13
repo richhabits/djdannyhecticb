@@ -6,7 +6,7 @@
  * Podcast Router - Episode management and multi-platform distribution
  */
 
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, desc, and, gte, isNull } from "drizzle-orm";
@@ -17,7 +17,7 @@ import {
   InsertPodcastEpisode,
   InsertPodcastDistribution,
   InsertPodcastStat,
-} from "../../drizzle/content-schema";
+} from "@/drizzle/content-schema";
 import { nanoid } from "nanoid";
 
 // ==========================================

@@ -6,12 +6,12 @@
  * Clips Router - VOD clip extraction, management, and sharing
  */
 
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, desc, and, isNull, gte, lte, sql, count } from "drizzle-orm";
-import { clips, clipComments, clipLikes, clipViews } from "../../drizzle/content-schema";
-import { users } from "../../drizzle/schema";
+import { clips, clipComments, clipLikes, clipViews } from "@/drizzle/content-schema";
+import { users } from "@/drizzle/schema";
 import { nanoid } from "nanoid";
 
 // ==========================================

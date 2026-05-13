@@ -6,8 +6,9 @@
  * Reactions Handler - Real-time reaction tracking with combo streaks
  */
 
-import { reactions, leaderboards } from "../../drizzle/engagement-schema";
+import { reactions, leaderboards } from "@/drizzle/engagement-schema";
 import { eq, and, desc, gt } from "drizzle-orm";
+import { getDb } from "@/server/db";
 
 interface ReactionData {
   reactionType: "fire" | "love" | "hype" | "laugh" | "sad" | "angry" | "thinking";

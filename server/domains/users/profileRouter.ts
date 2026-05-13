@@ -4,9 +4,9 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "@/server/_core/trpc";
 import { z } from "zod";
-import { userProfiles, follows, reputationScores, reputationBadges, donations, chatMessages, clipComments } from "../../drizzle/engagement-schema";
+import { userProfiles, follows, reputationScores, reputationBadges, donations, chatMessages, clipComments } from "@/drizzle/engagement-schema";
 import { eq, desc, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

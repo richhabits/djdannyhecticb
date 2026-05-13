@@ -8,14 +8,14 @@
  */
 
 import { Router, Request, Response } from "express";
-import { getDb } from "../db";
+import { getDb } from "@/server/db";
 import {
   spamFlags,
   InsertSpamFlag,
   moderationFlags,
   InsertModerationFlag,
-} from "../../drizzle/ai-features-schema";
-import { chatMessages } from "../../drizzle/engagement-schema";
+} from "@/drizzle/ai-features-schema";
+import { chatMessages } from "@/drizzle/engagement-schema";
 import { eq, desc, and, inArray } from "drizzle-orm";
 
 const router = Router();

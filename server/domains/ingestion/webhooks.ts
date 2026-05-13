@@ -5,8 +5,8 @@
  */
 
 import { Express } from "express";
-import { vapiRouter } from "./vapi";
-import { telnyxRouter } from "./telnyx";
+import { vapiRouter } from "@/server/routes/vapi";
+import { telnyxRouter } from "@/server/routes/telnyx";
 
 export function registerWebhookRoutes(app: Express) {
   app.use("/api/webhooks", vapiRouter);

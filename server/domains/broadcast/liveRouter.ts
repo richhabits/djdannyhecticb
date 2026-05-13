@@ -6,7 +6,7 @@
  * Live Streaming Engagement Features - tRPC Router
  */
 
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -26,11 +26,11 @@ import {
   userBadgeTypeEnum,
   reactionTypeEnum,
   notificationTypeEnum,
-} from "../../drizzle/engagement-schema";
-import { users } from "../../drizzle/schema";
+} from "@/drizzle/engagement-schema";
+import { users } from "@/drizzle/schema";
 import { eq, desc, and, or, sql, gt, lt, gte, isNull } from "drizzle-orm";
 import Stripe from "stripe";
-import { ENV } from "../_core/env";
+import { ENV } from "@/server/_core/env";
 
 // Initialize Stripe
 const stripe = new Stripe(ENV.stripeSecretKey || "");

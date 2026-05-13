@@ -10,9 +10,9 @@
 import {
   recommendations,
   InsertRecommendation,
-} from "../../drizzle/ai-features-schema";
+} from "@/drizzle/ai-features-schema";
 import { eq, gt, desc, and, not, isNull } from "drizzle-orm";
-import { videos, users } from "../../drizzle/schema";
+import { videos, users } from "@/drizzle/schema";
 
 interface RecommendationScore {
   contentId: number;

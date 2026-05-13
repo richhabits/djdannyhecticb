@@ -46,13 +46,13 @@ import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
 import { registerRateCardRoutes } from "../routes/ratecard";
 import { registerUploadRoutes } from "../routes/upload";
-import { registerWebhookRoutes } from "@/domains/ingestion/webhooks";
+import { registerWebhookRoutes } from "@/server/domains/ingestion/webhooks";
 import { registerCronRoutes } from "../routes/cron";
-import streamEventsRouter, { setupStreamWebSocket } from "@/domains/broadcast/streamEventsRouter";
-import { setupLiveWebSocket } from "@/domains/broadcast/liveWebSocket";
-import stripeEventsRouter from "@/domains/commerce/stripeEventsRouter";
-import youtubeEventsRouter from "@/domains/ingestion/youtubeEventsRouter";
-import ticketmasterRouter from "@/domains/commerce/ticketmasterRouter";
+import streamEventsRouter, { setupStreamWebSocket } from "@/server/domains/broadcast/streamEventsRouter";
+import { setupLiveWebSocket } from "@/server/domains/broadcast/liveWebSocket";
+import stripeEventsRouter from "@/server/domains/commerce/stripeEventsRouter";
+import youtubeEventsRouter from "@/server/domains/ingestion/youtubeEventsRouter";
+import ticketmasterRouter from "@/server/domains/commerce/ticketmasterRouter";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { ENV } from "./env";
@@ -286,7 +286,7 @@ async function startServer() {
   registerUploadRoutes(app);
 
   // Analytics Tracking (self-hosted)
-  const { registerAnalyticsRoutes } = await import("@/domains/analytics/analytics");
+  const { registerAnalyticsRoutes } = await import("@/server/domains/analytics/analytics");
   registerAnalyticsRoutes(app);
 
   // Webhook Routes (Telnyx, Vapi)

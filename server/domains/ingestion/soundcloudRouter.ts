@@ -1,7 +1,7 @@
-import { router, publicProcedure, adminProcedure } from "../_core/trpc";
-import { fetchSoundCloudTracks, normalizeSoundCloudArtworkUrl } from "../_core/soundcloudService";
-import { ENV } from "../_core/env";
-import * as db from "../db";
+import { router, publicProcedure, adminProcedure } from "@/server/_core/trpc";
+import { fetchSoundCloudTracks, normalizeSoundCloudArtworkUrl } from "@/server/_core/soundcloudService";
+import { ENV } from "@/server/_core/env";
+import * as db from "@/server/db";
 
 export const soundcloudRouter = router({
   tracks: publicProcedure.query(async () => {

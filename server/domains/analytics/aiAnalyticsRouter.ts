@@ -8,13 +8,13 @@
  */
 
 import { Router, Request, Response } from "express";
-import { getDb } from "../db";
+import { getDb } from "@/server/db";
 import {
   churnPredictions,
   contentAnalytics,
   InsertChurnPrediction,
   InsertContentAnalytics,
-} from "../../drizzle/ai-features-schema";
+} from "@/drizzle/ai-features-schema";
 import { eq, desc, gt } from "drizzle-orm";
 
 const router = Router();

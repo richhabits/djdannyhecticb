@@ -8,8 +8,8 @@
  */
 
 import { Router, Request, Response } from "express";
-import { getDb } from "../db";
-import { getClaudeClient } from "../_core/ai-client";
+import { getDb } from "@/server/db";
+import { getClaudeClient } from "@/server/_core/ai-client";
 import {
   chatSummaries,
   InsertChatSummary,
@@ -17,8 +17,8 @@ import {
   InsertAutoClip,
   streamTranscripts,
   streamTags,
-} from "../../drizzle/ai-features-schema";
-import { liveSessions } from "../../drizzle/schema";
+} from "@/drizzle/ai-features-schema";
+import { liveSessions } from "@/drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { MessageParam } from "@anthropic-ai/sdk/resources/messages.mjs";
 

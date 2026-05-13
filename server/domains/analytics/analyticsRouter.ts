@@ -6,7 +6,7 @@
  * Analytics Router - Stream, chat, and donation analytics
  */
 
-import { router, adminProcedure } from "../_core/trpc";
+import { router, adminProcedure } from "@/server/_core/trpc";
 import { z } from "zod";
 import {
   chatMessages,
@@ -14,8 +14,8 @@ import {
   liveSessions,
   reactions,
   streamerStats,
-} from "../../drizzle/engagement-schema";
-import { users } from "../../drizzle/schema";
+} from "@/drizzle/engagement-schema";
+import { users } from "@/drizzle/schema";
 import { eq, and, gte, lte, desc, sql, count, sum, avg } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

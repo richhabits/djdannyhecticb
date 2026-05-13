@@ -8,7 +8,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { moderationFlags, InsertModerationFlag } from "../../drizzle/ai-features-schema";
+import { moderationFlags, InsertModerationFlag } from "@/drizzle/ai-features-schema";
 import { eq, desc } from "drizzle-orm";
 import { ENV } from "../../_core/env";
 

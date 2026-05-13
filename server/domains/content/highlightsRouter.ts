@@ -6,7 +6,7 @@
  * Highlights Router - Auto-generated highlight reels from streaming metrics
  */
 
-import { router, publicProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
@@ -16,8 +16,8 @@ import {
   Highlight,
   InsertHighlight,
   InsertHighlightMoment,
-} from "../../drizzle/content-schema";
-import { clips } from "../../drizzle/content-schema";
+} from "@/drizzle/content-schema";
+import { clips } from "@/drizzle/content-schema";
 import { nanoid } from "nanoid";
 
 // ==========================================

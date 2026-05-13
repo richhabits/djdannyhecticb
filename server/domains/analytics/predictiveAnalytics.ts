@@ -13,10 +13,10 @@ import {
   contentAnalytics,
   InsertChurnPrediction,
   InsertContentAnalytics,
-} from "../../drizzle/ai-features-schema";
-import { donations, reactions, chatMessages } from "../../drizzle/engagement-schema";
+} from "@/drizzle/ai-features-schema";
+import { donations, reactions, chatMessages } from "@/drizzle/engagement-schema";
 import { eq, desc, gte, lte, and } from "drizzle-orm";
-import { ENV } from "../_core/env";
+import { ENV } from "@/server/_core/env";
 
 const client = new Anthropic({
   apiKey: ENV.claudeApiKey,

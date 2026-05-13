@@ -4,9 +4,9 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { router, publicProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, adminProcedure } from "@/server/_core/trpc";
 import { z } from "zod";
-import * as db from "../db";
+import * as db from "@/server/db";
 import {
   fetchPrintfullProducts,
   createDesignFile,
@@ -15,7 +15,7 @@ import {
   type CreateOrderInput,
   type EstimateItem,
   estimateOrder,
-} from "../_core/printfullService";
+} from "@/server/_core/printfullService";
 
 export const merchRouter = router({
   // Sync Printfull catalog into our database

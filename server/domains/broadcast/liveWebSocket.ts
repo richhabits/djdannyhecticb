@@ -8,11 +8,11 @@
  */
 
 import WebSocket, { WebSocketServer } from "ws";
-import { getDb } from "../db";
-import { chatMessages, notifications } from "../../drizzle/engagement-schema";
+import { getDb } from "@/server/db";
+import { chatMessages, notifications } from "@/drizzle/engagement-schema";
 import { eq, and } from "drizzle-orm";
-import { handleChatMessage, isUserRateLimited as isChatRateLimited, initializeChatLimiter } from "../features/liveChat";
-import { handleReaction, isUserReactionLimited as isReactionRateLimited, initializeReactionLimiter } from "../features/reactions";
+import { handleChatMessage, isUserRateLimited as isChatRateLimited, initializeChatLimiter } from "./liveChat";
+import { handleReaction, isUserReactionLimited as isReactionRateLimited, initializeReactionLimiter } from "./reactions";
 
 interface LiveSession {
   liveSessionId: number;

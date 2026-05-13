@@ -10,7 +10,7 @@
  * - Auto-renewal & cancellation
  */
 
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -19,10 +19,10 @@ import {
   subscriptionPayments,
   tierFeatures,
   userChurn,
-} from "../../drizzle/revenue-schema";
+} from "@/drizzle/revenue-schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import Stripe from "stripe";
-import { ENV } from "../_core/env";
+import { ENV } from "@/server/_core/env";
 
 const stripe = new Stripe(ENV.stripeSecretKey || "");
 

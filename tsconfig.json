@@ -19,6 +19,7 @@
       "@/*": ["./client/src/*"],
       "@/client/*": ["./client/src/*"],
       "@/server/*": ["./server/*"],
+      "@/drizzle/*": ["./drizzle/*"],
       "@/shared/*": ["./shared/*"],
       "@shared/*": ["./shared/*"]
     }

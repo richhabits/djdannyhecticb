@@ -4,9 +4,9 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { router, protectedProcedure } from "../_core/trpc";
+import { router, protectedProcedure } from "@/server/_core/trpc";
 import { z } from "zod";
-import { conversations, directMessages } from "../../drizzle/engagement-schema";
+import { conversations, directMessages } from "@/drizzle/engagement-schema";
 import { eq, or, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

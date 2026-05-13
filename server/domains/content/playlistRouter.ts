@@ -6,7 +6,7 @@
  * Playlist Router - Clip collections and curation
  */
 
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, desc, and, count, isNull } from "drizzle-orm";
@@ -18,8 +18,8 @@ import {
   InsertPlaylist,
   InsertPlaylistItem,
   InsertPlaylistFollower,
-} from "../../drizzle/content-schema";
-import { users } from "../../drizzle/schema";
+} from "@/drizzle/content-schema";
+import { users } from "@/drizzle/schema";
 import { nanoid } from "nanoid";
 
 // ==========================================

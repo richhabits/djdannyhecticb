@@ -6,8 +6,9 @@
  * Live Chat Handler - Real-time message processing with rate limiting
  */
 
-import { chatMessages, leaderboards } from "../../drizzle/engagement-schema";
+import { chatMessages, leaderboards } from "@/drizzle/engagement-schema";
 import { eq, and } from "drizzle-orm";
+import { getDb } from "@/server/db";
 
 interface ChatMessageData {
   message: string;

@@ -15,8 +15,8 @@
  */
 
 import Stripe from "stripe";
-import { ENV } from "../_core/env";
-import * as db from "../db";
+import { ENV } from "@/server/_core/env";
+import * as db from "@/server/db";
 
 let stripeInstance: Stripe | null = null;
 
@@ -65,7 +65,7 @@ export async function createStripePaymentIntent(params: CreatePaymentIntentParam
   });
 
   // Create Stripe Payment Intent
-  const { stripeBreaker } = await import("../_core/circuitBreaker");
+  const { stripeBreaker } = await import("../../_core/circuitBreaker");
   const paymentIntent = await stripeBreaker.execute(async () => {
     return await stripe.paymentIntents.create({
       amount: params.amount,
@@ -122,7 +122,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       // Handle booking deposits
       const bookingId = parseInt(paymentIntent.metadata.bookingId || "0");
       if (bookingId && paymentIntent.metadata.type === "booking_deposit") {
-        const { revenueOps } = await import("../_core/revenueOps");
+        const { revenueOps } = await import("./revenueOps");
         await revenueOps.confirmDeposit(bookingId, paymentIntent.id);
       }
       break;
@@ -170,7 +170,7 @@ export async function createBookingDepositIntent(params: { bookingId: number, am
   const booking = await db.getEventBooking(params.bookingId);
   if (!booking) throw new Error("Booking not found");
 
-  const { stripeBreaker } = await import("../_core/circuitBreaker");
+  const { stripeBreaker } = await import("../../_core/circuitBreaker");
   const paymentIntent = await stripeBreaker.execute(async () => {
     return await stripe.paymentIntents.create({
       amount: params.amount,
@@ -220,7 +220,7 @@ export async function createSupportPaymentIntent(params: CreateSupportPaymentInt
   });
 
   // Create Stripe Payment Intent
-  const { stripeBreaker } = await import("../_core/circuitBreaker");
+  const { stripeBreaker } = await import("../../_core/circuitBreaker");
   const paymentIntent = await stripeBreaker.execute(async () => {
     return await stripe.paymentIntents.create({
       amount: params.amount,

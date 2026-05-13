@@ -8,11 +8,11 @@
  */
 
 import { Router, Request, Response } from "express";
-import { getDb } from "../db";
+import { getDb } from "@/server/db";
 import {
   recommendations,
   InsertRecommendation,
-} from "../../drizzle/ai-features-schema";
+} from "@/drizzle/ai-features-schema";
 import { eq, desc, and, ne, gt, inArray, sql } from "drizzle-orm";
 
 const router = Router();

@@ -3,9 +3,9 @@
  * Copyright (c) 2024 DJ Danny Hectic B / Hectic Radio
  */
 
-import { chatWithDanny } from "../lib/gemini";
+import { chatWithDanny } from "@/server/lib/gemini";
 import { observability } from "./observability";
-import * as db from "../db";
+import * as db from "@/server/db";
 
 export interface RawIntelSource {
     id: string;

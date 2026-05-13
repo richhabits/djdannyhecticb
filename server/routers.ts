@@ -51,27 +51,27 @@ function transformUKEvent(event: any) {
         artists: event.artists ? (typeof event.artists === 'string' ? event.artists : JSON.stringify(event.artists)) : null,
     };
 }
-import { soundcloudRouter } from "@/domains/ingestion/soundcloudRouter";
-import { spotifyRouter } from "@/domains/ingestion/spotifyRouter";
-import { blogRouter } from "@/domains/content/blogRouter";
-import { faqRouter } from "@/domains/infrastructure/faqRouter";
-import { contactRouter } from "@/domains/infrastructure/contactRouter";
-import { merchRouter } from "@/domains/commerce/merchRouter";
-import { liveRouter } from "@/domains/broadcast/liveRouter";
-import { moderationRouter } from "@/domains/moderation/moderationRouter";
-import { analyticsRouter } from "@/domains/analytics/analyticsRouter";
-import { donationsRouter } from "@/domains/commerce/donationsRouter";
-import { supportRouter } from "@/domains/infrastructure/supportRouter";
-import { profileRouter } from "@/domains/users/profileRouter";
-import { messagesRouter } from "@/domains/users/messagesRouter";
-import { commentsRouter } from "@/domains/users/commentsRouter";
-import { communityRouter } from "@/domains/users/communityRouter";
+import { soundcloudRouter } from "@/server/domains/ingestion/soundcloudRouter";
+import { spotifyRouter } from "@/server/domains/ingestion/spotifyRouter";
+import { blogRouter } from "@/server/domains/content/blogRouter";
+import { faqRouter } from "@/server/domains/infrastructure/faqRouter";
+import { contactRouter } from "@/server/domains/infrastructure/contactRouter";
+import { merchRouter } from "@/server/domains/commerce/merchRouter";
+import { liveRouter } from "@/server/domains/broadcast/liveRouter";
+import { moderationRouter } from "@/server/domains/moderation/moderationRouter";
+import { analyticsRouter } from "@/server/domains/analytics/analyticsRouter";
+import { donationsRouter } from "@/server/domains/commerce/donationsRouter";
+import { supportRouter } from "@/server/domains/infrastructure/supportRouter";
+import { profileRouter } from "@/server/domains/users/profileRouter";
+import { messagesRouter } from "@/server/domains/users/messagesRouter";
+import { commentsRouter } from "@/server/domains/users/commentsRouter";
+import { communityRouter } from "@/server/domains/users/communityRouter";
 // Revenue streams
-import { subscriptionRouter } from "@/domains/users/subscriptionRouter";
-import { affiliateRouter } from "@/domains/users/affiliateRouter";
-import { sponsorshipRouter } from "@/domains/commerce/sponsorshipRouter";
-import { premiumRouter } from "@/domains/commerce/premiumRouter";
-import { revenueRouter } from "@/domains/commerce/revenueRouter";
+import { subscriptionRouter } from "@/server/domains/users/subscriptionRouter";
+import { affiliateRouter } from "@/server/domains/users/affiliateRouter";
+import { sponsorshipRouter } from "@/server/domains/commerce/sponsorshipRouter";
+import { premiumRouter } from "@/server/domains/commerce/premiumRouter";
+import { revenueRouter } from "@/server/domains/commerce/revenueRouter";
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { chatWithDanny } from "./lib/gemini";

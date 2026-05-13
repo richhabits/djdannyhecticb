@@ -13,8 +13,8 @@ import {
   chatMessages,
   userBadges,
   liveSessions,
-} from "../../drizzle/engagement-schema";
-import { users } from "../../drizzle/schema";
+} from "@/drizzle/engagement-schema";
+import { users } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { auditLog } from "../../_core/audit";
 

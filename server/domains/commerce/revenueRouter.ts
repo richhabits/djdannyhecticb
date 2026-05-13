@@ -10,7 +10,7 @@
  * - Payout management
  */
 
-import { adminProcedure, router } from "../_core/trpc";
+import { adminProcedure, router } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -22,7 +22,7 @@ import {
   userChurn,
   taxRecords,
   userPayouts,
-} from "../../drizzle/revenue-schema";
+} from "@/drizzle/revenue-schema";
 import { eq, gte, lte, and, desc, sql } from "drizzle-orm";
 
 /**

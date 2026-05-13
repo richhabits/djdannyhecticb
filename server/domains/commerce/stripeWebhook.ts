@@ -7,8 +7,8 @@
  */
 
 import Stripe from "stripe";
-import { getDb } from "../db";
-import { donations, notifications } from "../../drizzle/engagement-schema";
+import { getDb } from "@/server/db";
+import { donations, notifications } from "@/drizzle/engagement-schema";
 import { eq } from "drizzle-orm";
 import { ENV } from "./env";
 

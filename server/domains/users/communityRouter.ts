@@ -6,7 +6,7 @@
  * Community Safety, Moderation, and Reputation Management
  */
 
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "@/server/_core/trpc";
 import { z } from "zod";
 import {
   reports,
@@ -17,7 +17,7 @@ import {
   donations,
   chatMessages,
   clipComments,
-} from "../../drizzle/engagement-schema";
+} from "@/drizzle/engagement-schema";
 import { eq, and, desc, gt, lt } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

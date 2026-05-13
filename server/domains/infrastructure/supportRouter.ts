@@ -6,10 +6,10 @@
  * Support & Donations Router
  */
 
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, router } from "@/server/_core/trpc";
 import { z } from "zod";
-import { createSupportPaymentIntent } from "@/domains/commerce/payments";
-import { ENV } from "../_core/env";
+import { createSupportPaymentIntent } from "@/server/domains/commerce/payments";
+import { ENV } from "@/server/_core/env";
 
 export const supportRouter = router({
   /**

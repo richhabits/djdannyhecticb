@@ -5,8 +5,8 @@
  */
 
 import { z } from "zod";
-import { publicProcedure, adminProcedure, router } from "../_core/trpc";
-import * as db from "../db";
+import { publicProcedure, adminProcedure, router } from "@/server/_core/trpc";
+import * as db from "@/server/db";
 
 export const blogRouter = router({
   /**

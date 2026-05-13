@@ -1,8 +1,8 @@
-import { router, publicProcedure, adminProcedure } from "../_core/trpc";
-import { fetchSpotifyArtistReleases, getSpotifyAlbumEmbedUrl } from "../_core/spotifyService";
-import { ENV } from "../_core/env";
+import { router, publicProcedure, adminProcedure } from "@/server/_core/trpc";
+import { fetchSpotifyArtistReleases, getSpotifyAlbumEmbedUrl } from "@/server/_core/spotifyService";
+import { ENV } from "@/server/_core/env";
 import { z } from "zod";
-import * as db from "../db";
+import * as db from "@/server/db";
 
 export interface SpotifyReleaseForImport {
   id: string;

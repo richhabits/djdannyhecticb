@@ -11,9 +11,9 @@
 import { z } from "zod";
 import crypto from "crypto";
 import { Request, Response, Express } from "express";
-import { getDb } from "../db";
-import { analyticsEvents } from "../../drizzle/schema";
-import { trackLimiter } from "./middleware/rateLimit";
+import { getDb } from "@/server/db";
+import { analyticsEvents } from "@/drizzle/schema";
+import { trackLimiter } from "@/server/_core/middleware/rateLimit";
 
 // Validation schema for tracking events
 const trackEventSchema = z.object({

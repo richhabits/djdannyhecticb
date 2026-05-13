@@ -9,7 +9,7 @@
  * - Payout system with Stripe Connect
  */
 
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "@/server/_core/trpc";
 import { z } from "zod";
 import {
   affiliates,
@@ -18,10 +18,10 @@ import {
   affiliateConversions,
   affiliateEarnings,
   affiliatePayouts,
-} from "../../drizzle/revenue-schema";
+} from "@/drizzle/revenue-schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import Stripe from "stripe";
-import { ENV } from "../_core/env";
+import { ENV } from "@/server/_core/env";
 import crypto from "crypto";
 import { TRPCError } from "@trpc/server";
 

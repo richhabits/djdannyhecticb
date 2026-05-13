@@ -9,7 +9,7 @@
  * - Digital product store
  */
 
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -18,10 +18,10 @@ import {
   digitalProducts,
   digitalPurchases,
   userSubscriptions,
-} from "../../drizzle/revenue-schema";
+} from "@/drizzle/revenue-schema";
 import { eq, desc } from "drizzle-orm";
 import Stripe from "stripe";
-import { ENV } from "../_core/env";
+import { ENV } from "@/server/_core/env";
 import crypto from "crypto";
 
 const stripe = new Stripe(ENV.stripeSecretKey || "");

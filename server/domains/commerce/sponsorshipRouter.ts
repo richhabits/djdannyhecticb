@@ -9,10 +9,10 @@
  * - ROI reporting
  */
 
-import { publicProcedure, adminProcedure, router } from "../_core/trpc";
+import { publicProcedure, adminProcedure, router } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { sponsorships, sponsorshipMetrics } from "../../drizzle/revenue-schema";
+import { sponsorships, sponsorshipMetrics } from "@/drizzle/revenue-schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 
 /**

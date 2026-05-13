@@ -10,7 +10,7 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { ENV } from "../../_core/env";
-import { getDb } from "../../db";
+import { getDb } from "@/server/db";
 import { adminCredentials, users } from "../../../drizzle/schema";
 import { eq, and, gt } from "drizzle-orm";
 import type { Request, Response } from "express";

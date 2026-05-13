@@ -6,7 +6,7 @@
  * Simulcast Router - Multi-platform streaming orchestration
  */
 
-import { router, adminProcedure } from "../_core/trpc";
+import { router, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, desc, and } from "drizzle-orm";
@@ -17,7 +17,7 @@ import {
   InsertSimulcast,
   InsertSimulcastStream,
   InsertSimulcastStat,
-} from "../../drizzle/content-schema";
+} from "@/drizzle/content-schema";
 import { nanoid } from "nanoid";
 
 // ==========================================
