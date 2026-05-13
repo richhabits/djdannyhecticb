@@ -52,7 +52,7 @@ function transformUKEvent(event: any) {
     };
 }
 import { soundcloudRouter } from "./routers/soundcloudRouter";
-import { spotifyRouter } from "./routers/spotifyRouter";
+import { spotifyRouter } from "@/domains/ingestion/spotifyRouter";
 import { blogRouter } from "./routers/blogRouter";
 import { faqRouter } from "./routers/faqRouter";
 import { contactRouter } from "./routers/contactRouter";
