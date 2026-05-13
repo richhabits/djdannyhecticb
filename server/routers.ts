@@ -62,13 +62,13 @@ import { moderationRouter } from "./routers/moderationRouter";
 import { analyticsRouter } from "./routers/analyticsRouter";
 import { donationsRouter } from "./routers/donationsRouter";
 import { supportRouter } from "./routers/supportRouter";
-import { profileRouter } from "./routers/profileRouter";
+import { profileRouter } from "@/domains/users/profileRouter";
 import { messagesRouter } from "./routers/messagesRouter";
 import { commentsRouter } from "./routers/commentsRouter";
 import { communityRouter } from "./routers/communityRouter";
 // Revenue streams
-import { subscriptionRouter } from "./routers/subscriptionRouter";
-import { affiliateRouter } from "./routers/affiliateRouter";
+import { subscriptionRouter } from "@/domains/users/subscriptionRouter";
+import { affiliateRouter } from "@/domains/users/affiliateRouter";
 import { sponsorshipRouter } from "./routers/sponsorshipRouter";
 import { premiumRouter } from "./routers/premiumRouter";
 import { revenueRouter } from "./routers/revenueRouter";
