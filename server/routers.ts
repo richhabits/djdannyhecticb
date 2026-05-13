@@ -863,7 +863,7 @@ export const appRouter = router({
           return createdAt >= targetDate && createdAt < nextDay;
         });
 
-        const { generateShowSummary } = await import("./_core/aiShowSummary");
+        const { generateShowSummary } = await import("@/domains/content/aiShowSummary");
         const summary = await generateShowSummary({
           date: input.showDate,
           tracks: tracks.map((t) => ({

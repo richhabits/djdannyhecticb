@@ -4,7 +4,7 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { RATE_CARD, RateCategory } from "./rateCardContent";
+import { RATE_CARD, RateCategory } from "@/domains/content/rateCardContent";
 
 /**
  * Simple PDF generator using minimal HTML structure converted to PDF format
