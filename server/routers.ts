@@ -5,7 +5,7 @@
  */
 
 import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
+import { getSessionCookieOptions } from "./domains/auth/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { ukEventsRouter } from "./ukEventsRouter";
 import * as ukEventsService from "./_core/ukEventsService";
@@ -192,7 +192,7 @@ export const appRouter = router({
         const user = await db.createUserWithPassword(input);
 
         // Auto-login
-        const { createSessionToken } = await import("./_core/adminAuth");
+        const { createSessionToken } = await import("./domains/auth/adminAuth");
 
         const token = await createSessionToken(user.id, user.email || input.email, "user");
         const cookieOptions = getSessionCookieOptions(ctx.req);

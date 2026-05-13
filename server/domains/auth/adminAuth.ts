@@ -9,9 +9,9 @@
 
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { ENV } from "./env";
-import { getDb } from "../db";
-import { adminCredentials, users } from "../../drizzle/schema";
+import { ENV } from "../../_core/env";
+import { getDb } from "../../db";
+import { adminCredentials, users } from "../../../drizzle/schema";
 import { eq, and, gt } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";

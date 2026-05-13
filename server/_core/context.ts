@@ -17,7 +17,7 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
-import { authenticateSession } from "./adminAuth";
+import { authenticateSession } from "../domains/auth/adminAuth";
 import { getDb } from "../db";
 
 export type TrpcContext = {

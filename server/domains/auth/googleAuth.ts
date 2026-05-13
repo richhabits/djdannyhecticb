@@ -1,10 +1,10 @@
 import { OAuth2Client } from "google-auth-library";
 import type { Express, Request, Response } from "express";
-import * as db from "../db";
+import * as db from "../../db";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./cookies";
 import { SignJWT } from "jose";
-import { ENV } from "./env";
+import { ENV } from "../../_core/env";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
