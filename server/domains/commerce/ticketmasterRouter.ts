@@ -26,7 +26,7 @@ interface TicketmasterEvent {
 
 const TICKETMASTER_API_KEY = process.env.TICKETMASTER_API_KEY || "";
 
-async function fetchTicketmasterEvents(keyword: string = "dj danny"): Promise<TicketmasterEvent[]> {
+async function fetchTicketmasterEvents(keyword: string = "music"): Promise<TicketmasterEvent[]> {
   if (!TICKETMASTER_API_KEY) {
     console.warn("Ticketmaster API key not configured");
     return [];
@@ -36,8 +36,9 @@ async function fetchTicketmasterEvents(keyword: string = "dj danny"): Promise<Ti
     const url = new URL("https://app.ticketmaster.com/discovery/v2/events.json");
     url.searchParams.set("keyword", keyword);
     url.searchParams.set("apikey", TICKETMASTER_API_KEY);
-    url.searchParams.set("size", "10");
+    url.searchParams.set("size", "50");
     url.searchParams.set("sort", "date,asc");
+    url.searchParams.set("countryCode", "US");
 
     const response = await fetch(url.toString());
     if (!response.ok) {
