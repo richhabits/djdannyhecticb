@@ -63,8 +63,9 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function fetchTicketmasterEvents(keyword: string = "music"): Promise<TicketmasterEvent[]> {
+  console.log("[TM] Key configured:", !!TICKETMASTER_CONSUMER_KEY, "Secret configured:", !!TICKETMASTER_CONSUMER_SECRET);
   if (!TICKETMASTER_CONSUMER_KEY || !TICKETMASTER_CONSUMER_SECRET) {
-    console.warn("Ticketmaster credentials not configured");
+    console.warn("[TM] Credentials not configured - KEY:", process.env.TICKETMASTER_CONSUMER_KEY ? "SET" : "MISSING", "SECRET:", process.env.TICKETMASTER_CONSUMER_SECRET ? "SET" : "MISSING");
     return [];
   }
 
