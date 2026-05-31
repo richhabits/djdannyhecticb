@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pythonjsonlogger import jsonlogger
+from contextlib import asynccontextmanager
 
 # --- Structured Logging Setup ---
 log_handler = logging.StreamHandler(sys.stdout)
@@ -24,8 +25,23 @@ root_logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
 logger = logging.getLogger("broadcast-engine")
 
+# --- Lifecycle Hooks ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Broadcast Engine API initializing...")
+    task = asyncio.create_task(connect_liquidsoap_harbor())
+    yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
 # --- App Initialization ---
-app = FastAPI(title="DJ Danny Hectic B - Broadcast Engine API")
+app = FastAPI(
+    title="DJ Danny Hectic B - Broadcast Engine API",
+    lifespan=lifespan
+)
 
 # Configure strict CORS for Vite development and production
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
@@ -159,12 +175,6 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.error("WebSocket error", extra={"error": str(e)})
         if websocket in active_connections:
             active_connections.remove(websocket)
-
-# --- Lifecycle Hooks ---
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Broadcast Engine API initializing...")
-    asyncio.create_task(connect_liquidsoap_harbor())
 
 @app.get("/")
 def read_root():
