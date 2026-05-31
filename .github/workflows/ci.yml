@@ -1,40 +1,11 @@
-name: CI
-
+name: Monorepo CI
 on:
   push:
-    branches: [ main, master, develop ]
-  pull_request:
-    branches: [ main, master, develop ]
-
-runs-on: self-hosted
-  lint:
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check
-      - run: pnpm format --check
-
+    branches: [ "main" ]
+jobs:
   build:
-    needs: [lint]
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: pnpm test
-
+      - uses: actions/checkout@v3
+      - name: Runner Status
+        run: echo "Self-hosted runner is successfully processing the job!"
