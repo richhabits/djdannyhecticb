@@ -147,10 +147,49 @@ You should see:
 - This is now fixed! Analytics script is conditionally loaded and won't break dev mode
 - Set `VITE_ANALYTICS_ENDPOINT` and `VITE_ANALYTICS_WEBSITE_ID` in `.env` only for production
 
+## Architecture Overview
+
+```mermaid
+graph TD
+    subgraph "Frontend Layer"
+        React[React Dashboard]
+        Hooks[resilient useWebSocket Hook]
+        UI[Glassmorphism UI Components]
+    end
+
+    subgraph "Service Layer"
+        FastAPI[FastAPI Broadcast Engine]
+        WS[/ws/metrics WebSocket]
+        JSON[JSON Structured Logging]
+    end
+
+    subgraph "Streaming Layer"
+        LS[Liquidsoap Harbor]
+        Icecast[Icecast/Shoutcast Server]
+    end
+
+    React --> Hooks
+    Hooks <==> WS
+    FastAPI -- "asyncio connection" --> LS
+    LS --> Icecast
+    WS -- "broadcast metrics" --> React
+    UI --> React
+```
+
+## API Documentation
+
+The Broadcast Engine API (FastAPI) automatically generates interactive documentation:
+
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
 ## Project Structure
 
 ```
 djdannyhecticb/
+├── backend/             # Broadcast Engine API (FastAPI)
+│   ├── app/            # FastAPI Application code
+│   └── tests/          # Pytest suite
 ├── client/              # Frontend React app (Vite)
 │   ├── src/
 │   │   ├── _core/      # Core hooks and utilities
