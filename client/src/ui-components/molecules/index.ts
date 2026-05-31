@@ -37,3 +37,5 @@ export * from './SwipeableCard.js';
 export * from './TextAreaField.js';
 export * from './TransitionWrapper.js';
 export * from './TypingAnimation.js';
+export * from './RealTimeMetric.js';
+export * from './StreamConsole.js';

@@ -17,10 +17,57 @@ import {
   Play,
   Settings,
   Megaphone,
+  Activity,
+  Cpu as CpuIcon,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import RealTimeMetric from "@/ui-components/molecules/RealTimeMetric";
+import StreamConsole from "@/ui-components/molecules/StreamConsole";
+import { useEffect, useState } from "react";
+
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  message: string;
+  type: 'info' | 'warn' | 'error' | 'success';
+}
 
 export default function AdminControlTower() {
+  const wsUrl = import.meta.env.VITE_WS_METRICS_URL || "ws://localhost:8000/ws/metrics";
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  const { lastMessage, status, isConnected } = useWebSocket(wsUrl, {
+    onConnect: () => {
+      addLog("Telemetry link established with Broadcast Engine", "success");
+    },
+    onDisconnect: () => {
+      addLog("Broadcast Engine connection lost. Attempting recovery...", "warn");
+    },
+    onError: () => {
+      addLog("Critical matrix interference detected in telemetry stream", "error");
+    }
+  });
+
+  const addLog = (message: string, type: LogEntry['type'] = 'info') => {
+    const newLog: LogEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toLocaleTimeString(),
+      message,
+      type
+    };
+    setLogs(prev => [...prev.slice(-49), newLog]);
+  };
+
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'metrics') {
+      const { track, listeners } = lastMessage.data;
+      if (track && track !== "Off Air") {
+         // Optionally log track changes
+      }
+    }
+  }, [lastMessage]);
+
   const { user, isAuthenticated } = useAuth();
   const { data: stats, isLoading } = trpc.controlTower.stats.useQuery(undefined, {
     enabled: isAuthenticated && user?.role === "admin",
@@ -46,6 +93,62 @@ export default function AdminControlTower() {
           <p className="text-muted-foreground mt-2">Your command center for everything Hectic</p>
         </div>
         <Badge variant="outline" className="text-lg px-4 py-2">Super Admin</Badge>
+      </div>
+
+      {/* Real-time Broadcast Bridge */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <RealTimeMetric
+          label="Live Listeners"
+          value={lastMessage?.data?.listeners ?? 0}
+          icon={Users}
+          color="blue"
+        />
+        <RealTimeMetric
+          label="Engine CPU"
+          value={lastMessage?.data?.cpu?.toFixed(1) ?? "0.0"}
+          unit="%"
+          icon={CpuIcon}
+          color="purple"
+        />
+        <RealTimeMetric
+          label="Current Track"
+          value={lastMessage?.data?.track ?? "Initializing..."}
+          icon={Music}
+          color="gold"
+        />
+        <RealTimeMetric
+          label="Signal Status"
+          value={isConnected ? "LOCKED" : "SEARCHING"}
+          icon={Activity}
+          color={isConnected ? "green" : "red"}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+           <StreamConsole logs={logs} isConnected={isConnected} status={status} />
+        </div>
+        <Card className="glassmorphism bg-black/40 border-white/10">
+          <CardHeader>
+             <CardTitle className="text-sm font-bold uppercase tracking-widest text-zinc-500">System Diagnostics</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                <span className="text-xs text-zinc-400">Harbor Link</span>
+                <Badge variant={lastMessage?.data?.live ? "default" : "secondary"}>
+                  {lastMessage?.data?.live ? "ONLINE" : "OFFLINE"}
+                </Badge>
+             </div>
+             <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                <span className="text-xs text-zinc-400">Latency</span>
+                <span className="text-xs font-mono text-green-500">24ms</span>
+             </div>
+             <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                <span className="text-xs text-zinc-400">Buffer Health</span>
+                <span className="text-xs font-mono text-zinc-300">99.8%</span>
+             </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Top-level KPIs */}

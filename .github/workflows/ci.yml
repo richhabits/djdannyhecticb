@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main, master, develop ]
 
-runs-on: self-hosted
+jobs:
   lint:
     runs-on: self-hosted
     steps:
@@ -37,4 +37,3 @@ runs-on: self-hosted
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm test
-
