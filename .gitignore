@@ -115,3 +115,5 @@ WORK_MAP.md
 SEO_DEPLOYMENT_SUMMARY.md
 VERCEL_DEPLOYMENT.md
 todo.md
+__pycache__/
+*.pyc

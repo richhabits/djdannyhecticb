@@ -24,7 +24,7 @@ permissions:
 jobs:
   backup:
     name: Create Database Backup
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     env:
       PROJECT_REF: ujxncnmoccotlssnqzwx
@@ -215,7 +215,7 @@ jobs:
 
   test-restore:
     name: Test Restore Procedure
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.run_number % 30 == 0)
     needs: backup
 
@@ -296,7 +296,7 @@ jobs:
 
   monitor-backups:
     name: Monitor Backup Status
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: github.event_name == 'schedule'
 
     steps:
@@ -329,7 +329,7 @@ jobs:
 
   notify:
     name: Send Notifications
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: always()
     needs: [backup]
 
