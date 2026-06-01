@@ -3557,9 +3557,22 @@ export async function updateAIVoiceJob(jobId: string | number, updates: any) {
   return null;
 }
 
-export async function createUserWithPassword(input: any) {
-  // TODO: Implement user creation with password
-  return null;
+export async function createUserWithPassword(input: { email: string; password: string; name?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const passwordHash = await bcrypt.hash(input.password, 10);
+  const openId = `user_${crypto.randomBytes(16).toString("hex")}`;
+
+  const result = await db.insert(users).values({
+    email: input.email,
+    name: input.name,
+    passwordHash,
+    openId,
+    loginMethod: "password",
+  }).returning();
+
+  return result[0];
 }
 
 export async function getAllMixes() {

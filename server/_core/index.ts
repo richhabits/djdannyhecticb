@@ -58,6 +58,7 @@ import { createContext } from "./context";
 import { ENV } from "./env";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { loggerMiddleware } from "./middleware/logger";
+import { initSentryServer } from "./sentry";
 import {
   publicRateLimit,
   authRateLimit,
@@ -126,6 +127,10 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Initialize Sentry first (Must be the first middleware)
+  const sentry = initSentryServer();
+  app.use(sentry.requestHandler);
 
   // Initialize Redis for caching (non-blocking with graceful fallback)
   // Only initialize if REDIS_URL is set
@@ -328,6 +333,10 @@ async function startServer() {
     })
   );
 
+  // Sentry Error Handler (Must be after all controllers, before other error handlers)
+  app.use(sentry.errorHandler);
+
+  // Global Error Handler (Must be after all other routes)
   // Global Error Handler (Must be after all other routes)
   const { globalErrorHandler } = await import("./errors");
   app.use(globalErrorHandler);

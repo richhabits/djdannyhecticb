@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { google } from "googleapis";
 import { broadcastStreamEvent } from "@/server/domains/broadcast/streamEventsRouter";
+import { asyncHandler } from "@/server/_core/errors";
 
 const router = Router();
 
@@ -35,27 +36,22 @@ async function fetchYouTubeFollows(channelId: string) {
   }
 }
 
-router.get("/channel/:channelId/subscribers", async (req, res) => {
-  try {
-    const { channelId } = req.params;
+router.get("/channel/:channelId/subscribers", asyncHandler(async (req: any, res: any) => {
+  const { channelId } = req.params;
 
-    const response = await youtube.channels.list({
-      part: ["statistics"],
-      id: [channelId],
-    });
+  const response = await youtube.channels.list({
+    part: ["statistics"],
+    id: [channelId],
+  });
 
-    const stats = response.data.items?.[0]?.statistics;
+  const stats = response.data.items?.[0]?.statistics;
 
-    res.json({
-      subscriberCount: stats?.subscriberCount,
-      viewCount: stats?.viewCount,
-      videoCount: stats?.videoCount,
-    });
-  } catch (error) {
-    console.error("Failed to get channel stats:", error);
-    res.status(500).json({ error: "Failed to fetch channel stats" });
-  }
-});
+  res.json({
+    subscriberCount: stats?.subscriberCount,
+    viewCount: stats?.viewCount,
+    videoCount: stats?.videoCount,
+  });
+}));
 
 router.post("/event/follow", (req, res) => {
   const { username } = req.body;
