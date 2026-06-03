@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { asyncHandler } from "@/server/_core/errors";
 
 const router = Router();
 
@@ -55,60 +56,50 @@ async function fetchTicketmasterEvents(keyword: string = "music"): Promise<Ticke
   }
 }
 
-router.get("/events", async (req, res) => {
-  try {
-    const events = await fetchTicketmasterEvents();
+router.get("/events", asyncHandler(async (req: any, res: any) => {
+  const events = await fetchTicketmasterEvents();
 
-    const formattedEvents = events.map((event: TicketmasterEvent) => ({
-      id: event.id,
-      name: event.name,
-      type: event.type,
-      date: event.dates.start.localDate,
-      time: event.dates.start.localTime,
-      venue: event._embedded.venues[0]?.name || "TBA",
-      city: event._embedded.venues[0]?.city.name || "TBA",
-      state: event._embedded.venues[0]?.state?.stateCode || "",
-      url: event.url,
-      image: event.images[0]?.url,
-      minPrice: event.priceRanges?.[0]?.min,
-      maxPrice: event.priceRanges?.[0]?.max,
-      currency: event.priceRanges?.[0]?.currency,
-    }));
+  const formattedEvents = events.map((event: TicketmasterEvent) => ({
+    id: event.id,
+    name: event.name,
+    type: event.type,
+    date: event.dates.start.localDate,
+    time: event.dates.start.localTime,
+    venue: event._embedded.venues[0]?.name || "TBA",
+    city: event._embedded.venues[0]?.city.name || "TBA",
+    state: event._embedded.venues[0]?.state?.stateCode || "",
+    url: event.url,
+    image: event.images[0]?.url,
+    minPrice: event.priceRanges?.[0]?.min,
+    maxPrice: event.priceRanges?.[0]?.max,
+    currency: event.priceRanges?.[0]?.currency,
+  }));
 
-    res.json(formattedEvents);
-  } catch (error) {
-    console.error("Failed to get events:", error);
-    res.status(500).json({ error: "Failed to fetch events" });
-  }
-});
+  res.json(formattedEvents);
+}));
 
-router.get("/events/upcoming", async (req, res) => {
-  try {
-    const events = await fetchTicketmasterEvents();
+router.get("/events/upcoming", asyncHandler(async (req: any, res: any) => {
+  const events = await fetchTicketmasterEvents();
 
-    const upcoming = events
-      .filter((event: TicketmasterEvent) => {
-        const eventDate = new Date(event.dates.start.localDate);
-        return eventDate > new Date();
-      })
-      .slice(0, 5);
+  const upcoming = events
+    .filter((event: TicketmasterEvent) => {
+      const eventDate = new Date(event.dates.start.localDate);
+      return eventDate > new Date();
+    })
+    .slice(0, 5);
 
-    const formattedEvents = upcoming.map((event: TicketmasterEvent) => ({
-      id: event.id,
-      name: event.name,
-      date: event.dates.start.localDate,
-      time: event.dates.start.localTime,
-      venue: event._embedded.venues[0]?.name || "TBA",
-      city: event._embedded.venues[0]?.city.name || "TBA",
-      url: event.url,
-      image: event.images[0]?.url,
-    }));
+  const formattedEvents = upcoming.map((event: TicketmasterEvent) => ({
+    id: event.id,
+    name: event.name,
+    date: event.dates.start.localDate,
+    time: event.dates.start.localTime,
+    venue: event._embedded.venues[0]?.name || "TBA",
+    city: event._embedded.venues[0]?.city.name || "TBA",
+    url: event.url,
+    image: event.images[0]?.url,
+  }));
 
-    res.json(formattedEvents);
-  } catch (error) {
-    console.error("Failed to get upcoming events:", error);
-    res.status(500).json({ error: "Failed to fetch upcoming events" });
-  }
-});
+  res.json(formattedEvents);
+}));
 
 export default router;

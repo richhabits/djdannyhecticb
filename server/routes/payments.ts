@@ -19,6 +19,7 @@ import Stripe from "stripe";
 import { ENV } from "../_core/env";
 import * as db from "../db";
 import { handleStripeWebhook } from "@/server/domains/commerce/payments";
+import { asyncHandler } from "../_core/errors";
 
 const router = express.Router();
 
@@ -69,37 +70,30 @@ router.post(
 );
 
 // PayPal webhook endpoint
-router.post("/webhook/paypal", express.json(), async (req, res) => {
-  try {
-    const { event_type, resource } = req.body;
+router.post("/webhook/paypal", express.json(), asyncHandler(async (req: express.Request, res: express.Response) => {
+  const { event_type, resource } = req.body;
 
-    if (event_type === "PAYMENT.CAPTURE.COMPLETED") {
-      const customId = resource?.custom_id;
-      if (!customId || !customId.startsWith("purchase_")) {
-        console.warn("PayPal webhook: Invalid or missing custom_id");
-        return res.json({ processed: false });
-      }
-
-      const purchaseId = parseInt(customId.replace("purchase_", ""));
-      const transactionId = resource?.id;
-
-      if (!isNaN(purchaseId) && transactionId) {
-        await db.updatePurchase(purchaseId, {
-          status: "completed",
-          transactionId,
-        });
-        console.log(`PayPal payment completed for purchase ${purchaseId}`);
-      }
+  if (event_type === "PAYMENT.CAPTURE.COMPLETED") {
+    const customId = resource?.custom_id;
+    if (!customId || !customId.startsWith("purchase_")) {
+      console.warn("PayPal webhook: Invalid or missing custom_id");
+      return res.json({ processed: false });
     }
 
-    res.json({ processed: true });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error handling PayPal webhook:", message);
-    // Security: Return generic error message instead of exposing details
-    res.status(500).json({ error: "Webhook processing failed" });
+    const purchaseId = parseInt(customId.replace("purchase_", ""));
+    const transactionId = resource?.id;
+
+    if (!isNaN(purchaseId) && transactionId) {
+      await db.updatePurchase(purchaseId, {
+        status: "completed",
+        transactionId,
+      });
+      console.log(`PayPal payment completed for purchase ${purchaseId}`);
+    }
   }
-});
+
+  res.json({ processed: true });
+}));
 
 export function registerPaymentRoutes(app: express.Application) {
   app.use("/api/payments", router);
