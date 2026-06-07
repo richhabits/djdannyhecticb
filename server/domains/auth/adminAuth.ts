@@ -149,7 +149,9 @@ export async function authenticateSession(db?: Awaited<ReturnType<typeof getDb>>
   req: Request
 ): Promise<{ success: boolean; user?: any; error?: string }> {
   try {
-    if (process.env.OFFLINE_MODE === "1") {
+    // Offline-mode auth bypass is strictly a local-development convenience —
+    // never honor it outside NODE_ENV=development, even if the env var leaks into another environment.
+    if (process.env.OFFLINE_MODE === "1" && process.env.NODE_ENV === "development") {
       return { success: true, user: { id: 999999, email: "dev@local.host", role: "admin", name: "Dev User" } };
     }
 
@@ -190,6 +192,26 @@ export async function authenticateSession(db?: Awaited<ReturnType<typeof getDb>>
     console.error("[Auth] Error authenticating request:", error);
     return { success: false, error: "Invalid session" };
   }
+}
+
+/**
+ * Whether an admin account already exists.
+ * Used to gate the unauthenticated first-run setup endpoint so it can
+ * only ever bootstrap the very first admin (and never reset an existing one).
+ */
+export async function hasAnyAdminUser(): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    // Fail closed: if we can't verify, don't allow setup to proceed.
+    return true;
+  }
+
+  const existing = await db
+    .select({ id: adminCredentials.id })
+    .from(adminCredentials)
+    .limit(1);
+
+  return existing.length > 0;
 }
 
 /**
