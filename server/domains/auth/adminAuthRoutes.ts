@@ -19,6 +19,7 @@ import {
   verifyAdminPassword,
   createAdminSessionToken,
   createAdminUser,
+  hasAnyAdminUser,
 } from "./adminAuth";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./cookies";
@@ -66,16 +67,21 @@ export function registerAdminAuthRoutes(app: express.Application) {
     res.json({ success: true, message: "Logged out successfully" });
   });
 
-  // Admin setup endpoint (create first admin - should be protected in production)
+  // Admin setup endpoint - bootstraps the FIRST admin account only.
+  // Once any admin exists, this always rejects so it can't be used to create
+  // additional admins or overwrite an existing admin's password.
   app.post("/api/admin/setup", async (req: Request, res: Response) => {
     try {
+      if (await hasAnyAdminUser()) {
+        return res.status(403).json({ error: "Setup already completed" });
+      }
+
       const { email, password, name } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password required" });
       }
 
-      // In production, you might want to check for a setup token or disable this after first admin
       const result = await createAdminUser(email, password, name);
 
       if (!result.success) {

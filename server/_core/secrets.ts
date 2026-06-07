@@ -19,9 +19,10 @@ export class SecretsManager {
     private static getMasterKey(): Buffer {
         const key = process.env.INTEGRATIONS_MASTER_KEY;
         if (!key) {
-            // Fallback for development only - in production this MUST be set
-            if (process.env.NODE_ENV === 'production') {
-                throw new Error("CRITICAL: INTEGRATIONS_MASTER_KEY not set in production");
+            // Fallback for local development only - every other environment (production,
+            // staging, etc.) MUST set INTEGRATIONS_MASTER_KEY explicitly.
+            if (process.env.NODE_ENV !== 'development') {
+                throw new Error("CRITICAL: INTEGRATIONS_MASTER_KEY not set");
             }
 
             // Warn once in development
