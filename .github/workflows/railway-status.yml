@@ -6,9 +6,6 @@ name: Railway Status Check
 
 on:
   workflow_dispatch:
-  push:
-    branches: ["claude/codebase-audit-3lIM8"]
-    paths: [".github/workflows/railway-status.yml"]
 
 jobs:
   status:
