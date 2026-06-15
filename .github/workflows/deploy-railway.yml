@@ -1,0 +1,106 @@
+name: Configure Railway Backend
+
+# One-time (and re-runnable) setup for the Railway backend service:
+# - ensures JWT_SECRET / DATABASE_URL / CORS_ORIGINS are configured
+# - redeploys the "web" service
+# - confirms the public domain and checks /api/health
+#
+# Requires repo secrets:
+#   RAILWAY_TOKEN        - Railway project token (already configured)
+#   RAILWAY_DATABASE_URL - Postgres connection string for the backend
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: railway-production
+  cancel-in-progress: false
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      PROJECT_ID: 4d44136f-d1b3-4336-9926-1f2463651991
+      ENVIRONMENT: production
+      SERVICE: web
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@latest
+
+      - name: Verify auth
+        run: railway whoami
+
+      - name: Install postgresql-client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Test database connectivity
+        env:
+          DATABASE_URL: ${{ secrets.RAILWAY_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::RAILWAY_DATABASE_URL secret is not set"
+            exit 1
+          fi
+          if psql "$DATABASE_URL" -c "SELECT 1;" > /dev/null 2>&1; then
+            echo "✓ Database reachable" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "✗ Database connection FAILED - check RAILWAY_DATABASE_URL secret" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Ensure JWT_SECRET is set
+        run: |
+          HAS_JWT=$(railway variable list -s "$SERVICE" -e "$ENVIRONMENT" -p "$PROJECT_ID" --json 2>/dev/null | jq -r 'has("JWT_SECRET")')
+          if [ "$HAS_JWT" != "true" ]; then
+            NEW_SECRET=$(openssl rand -base64 48 | tr -d '\n')
+            echo "::add-mask::$NEW_SECRET"
+            railway variable set "JWT_SECRET=$NEW_SECRET" -s "$SERVICE" -e "$ENVIRONMENT" -p "$PROJECT_ID" --skip-deploys
+            echo "Generated new JWT_SECRET" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "JWT_SECRET already configured" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Set DATABASE_URL
+        env:
+          DATABASE_URL: ${{ secrets.RAILWAY_DATABASE_URL }}
+        run: |
+          echo -n "$DATABASE_URL" | railway variable set DATABASE_URL --stdin -s "$SERVICE" -e "$ENVIRONMENT" -p "$PROJECT_ID" --skip-deploys
+
+      - name: Set CORS and runtime variables
+        run: |
+          railway variable set \
+            NODE_ENV=production \
+            CORS_ORIGINS="https://djdannyhecticb.com,https://www.djdannyhecticb.com,https://djdannyhectic.com" \
+            -s "$SERVICE" -e "$ENVIRONMENT" -p "$PROJECT_ID" --skip-deploys
+
+      - name: Ensure public domain exists
+        id: domain
+        run: |
+          railway domain -s "$SERVICE" -e "$ENVIRONMENT" --project "$PROJECT_ID" --json > domain.json 2>/dev/null || true
+          cat domain.json || true
+          DOMAIN=$(jq -r '.domain // .url // empty' domain.json 2>/dev/null)
+          if [ -z "$DOMAIN" ]; then
+            DOMAIN="web-production-a440b.up.railway.app"
+          fi
+          echo "domain=$DOMAIN" >> "$GITHUB_OUTPUT"
+          echo "Using domain: $DOMAIN" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Redeploy
+        run: railway redeploy -s "$SERVICE" -e "$ENVIRONMENT" -p "$PROJECT_ID" -y
+
+      - name: Wait for health check
+        run: |
+          DOMAIN="${{ steps.domain.outputs.domain }}"
+          echo "Health-checking https://$DOMAIN/api/health"
+          for i in $(seq 1 15); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://$DOMAIN/api/health" || echo "000")
+            if [ "$CODE" = "200" ]; then
+              echo "✓ Backend healthy (https://$DOMAIN/api/health -> 200)" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $CODE, retrying in 20s..."
+            sleep 20
+          done
+          echo "✗ Backend did not become healthy at https://$DOMAIN/api/health" | tee -a "$GITHUB_STEP_SUMMARY"
+          exit 1
