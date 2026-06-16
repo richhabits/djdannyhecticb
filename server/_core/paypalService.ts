@@ -113,8 +113,8 @@ export async function createPayPalOrder(params: {
       brand_name: "DJ Danny Hectic B",
       locale: "en-GB",
       user_action: "PAY_NOW",
-      return_url: `${process.env.VITE_API_URL || "http://localhost:3000"}/checkout/success`,
-      cancel_url: `${process.env.VITE_API_URL || "http://localhost:3000"}/checkout`,
+      return_url: `${process.env.BASE_URL || "https://djdannyhecticb.com"}/checkout/success`,
+      cancel_url: `${process.env.BASE_URL || "https://djdannyhecticb.com"}/checkout`,
     },
   };
 

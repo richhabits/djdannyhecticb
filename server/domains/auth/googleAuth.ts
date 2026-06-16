@@ -29,7 +29,7 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
 const oauth2Client = new OAuth2Client(
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  `${process.env.BASE_URL || "http://localhost:3000"}/api/auth/google/callback`
+  `${process.env.BASE_URL || "https://djdannyhecticb.com"}/api/auth/google/callback`
 );
 
 export function registerGoogleAuthRoutes(app: Express) {
