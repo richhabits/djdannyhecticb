@@ -24,7 +24,7 @@
 
 ```bash
 # Using Supabase CLI
-export DATABASE_URL="postgresql://postgres:Blackgrapeman10@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
+export DATABASE_URL="postgresql://postgres:<REDACTED_DB_PASSWORD>@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
 
 pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
 gzip backup_*.sql
@@ -135,7 +135,7 @@ psql $DATABASE_URL -c "SELECT * FROM live_sessions ORDER BY created_at DESC LIMI
 
 ```bash
 # Required for manual backups
-export DATABASE_URL="postgresql://postgres:Blackgrapeman10@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
+export DATABASE_URL="postgresql://postgres:<REDACTED_DB_PASSWORD>@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
 
 # Optional for AWS S3 uploads
 export AWS_ACCESS_KEY_ID="your-key"

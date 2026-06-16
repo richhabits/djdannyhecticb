@@ -202,8 +202,8 @@ git push origin --force --tags
 
 ```javascript
 // ❌ NEVER DO THIS
-const API_KEY = "AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8"; // Google API Key
-const PASSWORD = "Blackgrapeman10"; // DB password
+const API_KEY = "<REDACTED_GOOGLE_API_KEY>"; // Google API Key
+const PASSWORD = "<REDACTED_DB_PASSWORD>"; // DB password
 
 // ❌ OR THIS
 fetch(`https://api.example.com?key=${GOOGLE_CLIENT_SECRET}`)
@@ -266,7 +266,7 @@ const testSecret = process.env.STRIPE_TEST_KEY;
 **BAD EXAMPLE**:
 ```javascript
 // ❌ NEVER DO THIS
-localStorage.setItem('apiKey', 'AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8');
+localStorage.setItem('apiKey', '<REDACTED_GOOGLE_API_KEY>');
 ```
 
 **Why**:

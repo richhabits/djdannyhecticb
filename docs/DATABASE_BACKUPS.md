@@ -107,7 +107,7 @@ Using psql directly with the database URL:
 
 ```bash
 # Set environment variable with database URL
-export DATABASE_URL="postgresql://postgres:Blackgrapeman10@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
+export DATABASE_URL="postgresql://postgres:<REDACTED_DB_PASSWORD>@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
 
 # Create full database dump
 pg_dump $DATABASE_URL > backup_full_$(date +%Y%m%d_%H%M%S).sql
@@ -184,7 +184,7 @@ exec(command, (error, stdout, stderr) => {
 
 ```bash
 # Set environment variable
-export DATABASE_URL="postgresql://postgres:Blackgrapeman10@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
+export DATABASE_URL="postgresql://postgres:<REDACTED_DB_PASSWORD>@db.ujxncnmoccotlssnqzwx.supabase.co:5432/postgres"
 
 # Restore full database
 psql $DATABASE_URL < backup_full_20260503_120000.sql

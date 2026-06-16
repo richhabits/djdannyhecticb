@@ -98,7 +98,7 @@ A comprehensive security audit has identified **8 exposed API keys and secrets**
 2. Select your project containing OAuth credentials
 3. Navigate to: **Credentials** → **OAuth 2.0 Client IDs**
 4. Find the web client ID currently in use
-5. Click the trash icon to delete: `223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com`
+5. Click the trash icon to delete: `<REDACTED_GOOGLE_CLIENT_ID>`
 6. Click **Delete** to confirm
 
 #### 1.2 Create New OAuth Credentials
@@ -150,7 +150,7 @@ npm run dev
 #### 2.1 Revoke Current API Key
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Navigate to: **APIs & Services** → **Credentials**
-3. Find the API key: `AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8`
+3. Find the API key: `<REDACTED_GOOGLE_API_KEY>`
 4. Click the pencil icon to edit
 5. Click **Delete API Key**
 
@@ -257,7 +257,7 @@ Add to Railway Variables: JWT_SECRET
 #### 5.1 Revoke Current Key
 1. [Google Cloud Console](https://console.cloud.google.com/)
 2. **APIs & Services** → **Credentials**
-3. Find key: `AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8`
+3. Find key: `<REDACTED_GOOGLE_API_KEY>`
 4. Delete it
 
 #### 5.2 Create New Key
@@ -323,7 +323,7 @@ Add to Railway Variables: TWITCH_CLIENT_SECRET
 #### 7.1 Revoke Current Key
 1. Go to [Ticketmaster Developer Portal](https://developer.ticketmaster.com/admin/applications)
 2. Find your app
-3. Click **Delete** on the API key: `JSpS3YlOxqijvAGVzBmELBQLcH535FF`
+3. Click **Delete** on the API key: `<REDACTED_TICKETMASTER_API_KEY>`
 4. Confirm
 
 #### 7.2 Generate New Key
