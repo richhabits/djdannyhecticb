@@ -7,7 +7,6 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,14 +54,8 @@ export function ReactionButtons({
   >(new Set());
 
   // Add reaction mutation
-  const addReactionMutation = useMutation({
-    mutationFn: (reactionType: string) =>
-      trpc.live.reactions.add.mutate({
-        liveSessionId,
-        reactionType: reactionType as any,
-      }),
+  const addReactionMutation = trpc.live.reactions.add.useMutation({
     onSuccess: (data) => {
-      // Track combo milestone locally
       if (data.isComboMilestone) {
         setComboMilestones((prev) => [
           ...prev,
@@ -78,16 +71,10 @@ export function ReactionButtons({
   });
 
   // Get reaction counts
-  const { data: reactionCounts } = useQuery({
-    queryKey: ["live:reactions:counts", liveSessionId],
-    queryFn: () =>
-      trpc.live.reactions.counts.query({
-        liveSessionId,
-        timeWindowSeconds: 10,
-      }),
-    refetchInterval: 500,
-    enabled: showCounts,
-  });
+  const { data: reactionCounts } = trpc.live.reactions.counts.useQuery(
+    { liveSessionId, timeWindowSeconds: 10 },
+    { refetchInterval: 500, enabled: showCounts }
+  );
 
   // Handle reaction click with cooldown
   const handleReaction = (reactionType: string) => {
@@ -112,14 +99,14 @@ export function ReactionButtons({
       });
     }, 500); // 500ms cooldown between reactions
 
-    addReactionMutation.mutate(reactionType);
+    addReactionMutation.mutate({ liveSessionId, reactionType: reactionType as any });
   };
 
   useEffect(() => {
     if (reactionCounts) {
       const counts = new Map<string, number>();
-      reactionCounts.forEach((rc: ReactionCount) => {
-        counts.set(rc.reactionType, rc.count);
+      reactionCounts.forEach((rc) => {
+        counts.set(rc.reactionType, Number(rc.count) || 0);
       });
       setRecentReactions(counts);
     }
