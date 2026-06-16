@@ -4,8 +4,7 @@
 
 import React, { useState } from "react";
 import { trpc } from "../lib/trpc";
-import { useAtom } from "jotai";
-import { userAtom } from "../stores/user";
+import { useAuth } from "../_core/hooks/useAuth";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
@@ -15,7 +14,7 @@ import { AlertCircle, CheckCircle2, Flag, Shield } from "lucide-react";
 import { z } from "zod";
 
 export function CommunityGuidelines() {
-  const [user] = useAtom(userAtom);
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"guidelines" | "report" | "appeal">("guidelines");
   const [reportData, setReportData] = useState({
     reportedUserId: "",
