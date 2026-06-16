@@ -18,7 +18,7 @@ export function buildShareUrl(
   source: string,
   medium: string = "social"
 ): string {
-  const url = new URL(baseUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const url = new URL(baseUrl, typeof window !== "undefined" ? window.location.origin : "https://djdannyhecticb.com");
   url.searchParams.set("utm_source", source);
   url.searchParams.set("utm_medium", medium);
   return url.toString();
