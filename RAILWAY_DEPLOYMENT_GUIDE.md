@@ -48,8 +48,8 @@ Railway will auto-populate some variables from `railway.json`. You must add the 
 NODE_ENV=production
 DATABASE_URL=postgresql://[user]:[password]@[host]:[port]/[database]?sslmode=require
 JWT_SECRET=[generate-strong-secret-min-32-chars]
-GOOGLE_CLIENT_ID=223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<REDACTED — rotate via Google Cloud Console, do not commit>
+GOOGLE_CLIENT_SECRET=<REDACTED — rotate via Google Cloud Console, do not commit>
 ```
 
 #### Payment & Commerce (Required for checkout)
@@ -75,21 +75,21 @@ NOTIFICATIONS_EMAIL=alerts@djdannyhectic.com
 #### Streaming & Content (Optional)
 
 ```
-YOUTUBE_DATA_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
+YOUTUBE_DATA_API_KEY=<REDACTED — rotate via Google Cloud Console, do not commit>
 YOUTUBE_CHANNEL_ID=UC72QyiDSnHnJAGXT0xyuCWA
-TWITCH_CLIENT_ID=6j2q6mwwjtxn2l1sfnux1hp6yxgumt
-TWITCH_CLIENT_SECRET=fiv5vbp5j3eu3izmfl3ox6rvcilcy
+TWITCH_CLIENT_ID=<REDACTED — rotate via Twitch Developer Console, do not commit>
+TWITCH_CLIENT_SECRET=<REDACTED — rotate via Twitch Developer Console, do not commit>
 TWITCH_CHANNEL_NAME=djdannyhecticb
 ```
 
 #### AI & Analytics (Optional)
 
 ```
-GOOGLE_AI_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
+GOOGLE_AI_API_KEY=<REDACTED — rotate via Google AI Studio, do not commit>
 GEMINI_MODEL=gemini-1.5-flash
 GROQ_API_KEY=[key]
 COHERE_API_KEY=[key]
-TICKETMASTER_API_KEY=HoaPBhMHhjI2Lszbd5fv1Zp05OG5HIrY
+TICKETMASTER_API_KEY=<REDACTED — rotate via Ticketmaster Developer Portal, do not commit>
 ```
 
 #### CORS & Domain

@@ -18,7 +18,7 @@ NODE_ENV=production
 
 ### Database (PostgreSQL via Neon)
 ```
-DATABASE_URL=postgresql://neondb_owner:npg_z5oIdPSA2Oxk@ep-divine-leaf-abpjfgjl-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=<REDACTED — rotate via Neon dashboard, do not commit>
 ```
 *Note: Replace with your actual Neon connection string if different*
 
@@ -30,8 +30,8 @@ JWT_SECRET=your-strong-secret-minimum-32-characters-long-change-this-to-random-v
 
 ### Google OAuth
 ```
-GOOGLE_CLIENT_ID=223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<REDACTED — rotate via Google Cloud Console, do not commit>
+GOOGLE_CLIENT_SECRET=<REDACTED — rotate via Google Cloud Console, do not commit>
 ```
 
 ---
@@ -89,15 +89,15 @@ CORS_ORIGINS=https://djdannyhecticb.com,https://djdannyhectic.com
 
 ### YouTube
 ```
-YOUTUBE_DATA_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
+YOUTUBE_DATA_API_KEY=<REDACTED — rotate via Google Cloud Console, do not commit>
 YOUTUBE_CHANNEL_ID=UC72QyiDSnHnJAGXT0xyuCWA
 ```
 **Get from**: Google Cloud Console → APIs & Services → YouTube Data API
 
 ### Twitch
 ```
-TWITCH_CLIENT_ID=6j2q6mwwjtxn2l1sfnux1hp6yxgumt
-TWITCH_CLIENT_SECRET=fiv5vbp5j3eu3izmfl3ox6rvcilcy
+TWITCH_CLIENT_ID=<REDACTED — rotate via Twitch Developer Console, do not commit>
+TWITCH_CLIENT_SECRET=<REDACTED — rotate via Twitch Developer Console, do not commit>
 TWITCH_CHANNEL_NAME=djdannyhecticb
 ```
 **Get from**: Twitch Creator Dashboard → Settings → Connections
@@ -108,7 +108,7 @@ TWITCH_CHANNEL_NAME=djdannyhecticb
 
 ### Google AI (Gemini)
 ```
-GOOGLE_AI_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
+GOOGLE_AI_API_KEY=<REDACTED — rotate via Google AI Studio, do not commit>
 GEMINI_MODEL=gemini-1.5-flash
 ```
 **Get from**: Google AI Studio → API Keys
@@ -129,7 +129,7 @@ COHERE_MODEL=command
 
 ### Ticketmaster (Events)
 ```
-TICKETMASTER_API_KEY=HoaPBhMHhjI2Lszbd5fv1Zp05OG5HIrY
+TICKETMASTER_API_KEY=<REDACTED — rotate via Ticketmaster Developer Portal, do not commit>
 ```
 **Get from**: Ticketmaster Developer Portal → My Applications
 
@@ -200,10 +200,10 @@ PRINTFULL_API_KEY=YOUR_PRINTFULL_API_KEY
 
 ```
 NODE_ENV=production
-DATABASE_URL=postgresql://neondb_owner:npg_z5oIdPSA2Oxk@ep-divine-leaf-abpjfgjl-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=<REDACTED — rotate via Neon dashboard, do not commit>
 JWT_SECRET=CHANGE_ME_TO_RANDOM_32_CHARS_MIN
-GOOGLE_CLIENT_ID=223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<REDACTED — rotate via Google Cloud Console, do not commit>
+GOOGLE_CLIENT_SECRET=<REDACTED — rotate via Google Cloud Console, do not commit>
 STRIPE_SECRET_KEY=sk_live_CHANGE_ME
 STRIPE_PUBLISHABLE_KEY=pk_live_CHANGE_ME
 STRIPE_WEBHOOK_SECRET=whsec_CHANGE_ME
@@ -215,14 +215,14 @@ EMAIL_API_KEY=SG.CHANGE_ME
 EMAIL_FROM_ADDRESS=noreply@djdannyhectic.com
 NOTIFICATIONS_EMAIL=alerts@djdannyhectic.com
 CORS_ORIGINS=https://djdannyhecticb.com,https://djdannyhectic.com
-YOUTUBE_DATA_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
+YOUTUBE_DATA_API_KEY=<REDACTED — rotate via Google Cloud Console, do not commit>
 YOUTUBE_CHANNEL_ID=UC72QyiDSnHnJAGXT0xyuCWA
-TWITCH_CLIENT_ID=6j2q6mwwjtxn2l1sfnux1hp6yxgumt
-TWITCH_CLIENT_SECRET=fiv5vbp5j3eu3izmfl3ox6rvcilcy
+TWITCH_CLIENT_ID=<REDACTED — rotate via Twitch Developer Console, do not commit>
+TWITCH_CLIENT_SECRET=<REDACTED — rotate via Twitch Developer Console, do not commit>
 TWITCH_CHANNEL_NAME=djdannyhecticb
-GOOGLE_AI_API_KEY=AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8
+GOOGLE_AI_API_KEY=<REDACTED — rotate via Google AI Studio, do not commit>
 GEMINI_MODEL=gemini-1.5-flash
-TICKETMASTER_API_KEY=HoaPBhMHhjI2Lszbd5fv1Zp05OG5HIrY
+TICKETMASTER_API_KEY=<REDACTED — rotate via Ticketmaster Developer Portal, do not commit>
 ADMIN_EMAILS=djdannyhecticb@gmail.com
 PHONE_NUMBER=07957 432842
 INSTAGRAM_HANDLE=djdannyhecticb
@@ -313,10 +313,10 @@ If you don't have all secrets yet, minimum required:
 
 ```
 NODE_ENV=production
-DATABASE_URL=postgresql://neondb_owner:npg_z5oIdPSA2Oxk@ep-divine-leaf-abpjfgjl-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=<REDACTED — rotate via Neon dashboard, do not commit>
 JWT_SECRET=test-secret-minimum-32-characters-long-1234567890
-GOOGLE_CLIENT_ID=223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<REDACTED — rotate via Google Cloud Console, do not commit>
+GOOGLE_CLIENT_SECRET=<REDACTED — rotate via Google Cloud Console, do not commit>
 CORS_ORIGINS=https://djdannyhecticb.com
 ```
 
