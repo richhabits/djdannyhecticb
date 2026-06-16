@@ -24,7 +24,10 @@ import { eq, and, desc, asc } from "drizzle-orm";
 import Stripe from "stripe";
 import { ENV } from "@/server/_core/env";
 
-const stripe = new Stripe(ENV.stripeSecretKey || "");
+// Stripe is optional. Its constructor throws on an empty string, so fall back
+// to a non-empty placeholder to let this module import without a key set;
+// actual Stripe calls fail clearly at runtime until STRIPE_SECRET_KEY exists.
+const stripe = new Stripe(ENV.stripeSecretKey || "sk_unconfigured_placeholder");
 
 /**
  * Plan configurations (default if not in DB)
