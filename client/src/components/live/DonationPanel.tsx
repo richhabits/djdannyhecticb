@@ -7,7 +7,6 @@
  */
 
 import React, { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,13 +19,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@radix-ui/react-dialog";
+} from "@/components/ui/dialog";
 import {
   CardElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { Heart, AlertCircle } from "lucide-react";
+import { Heart } from "lucide-react";
 import clsx from "clsx";
 
 const DONATION_TIERS = [
@@ -57,18 +56,7 @@ export function DonationPanel({
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Create donation
-  const createDonationMutation = useMutation({
-    mutationFn: (data: {
-      amount: number;
-      message?: string;
-      anonymous?: boolean;
-    }) =>
-      trpc.live.donations.create.mutate({
-        liveSessionId,
-        amount: data.amount,
-        message: data.message,
-        anonymous: data.anonymous,
-      }),
+  const createDonationMutation = trpc.live.donations.create.useMutation({
     onSuccess: (data) => {
       toast.success("Processing your donation...");
       if (data.clientSecret && stripe) {
@@ -76,17 +64,13 @@ export function DonationPanel({
       }
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to process donation"
-      );
+      toast.error(error.message || "Failed to process donation");
       setIsProcessing(false);
     },
   });
 
   // Confirm donation
-  const confirmDonationMutation = useMutation({
-    mutationFn: (data: { donationId: number; paymentIntentId: string }) =>
-      trpc.live.donations.confirm.mutate(data),
+  const confirmDonationMutation = trpc.live.donations.confirm.useMutation({
     onSuccess: () => {
       toast.success("Thank you for your donation! 🎉");
       setIsOpen(false);
@@ -96,34 +80,22 @@ export function DonationPanel({
       setIsProcessing(false);
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to confirm donation"
-      );
+      toast.error(error.message || "Failed to confirm donation");
       setIsProcessing(false);
     },
   });
 
   // Get session top donors
-  const { data: topDonors } = useQuery({
-    queryKey: ["live:donations:sessionTop", liveSessionId],
-    queryFn: () =>
-      trpc.live.donations.sessionTop.query({
-        liveSessionId,
-        limit: 5,
-      }),
-    refetchInterval: 10000,
-  });
+  const { data: topDonors } = trpc.live.donations.sessionTop.useQuery(
+    { liveSessionId, limit: 5 },
+    { refetchInterval: 10000 }
+  );
 
   // Get user donation history
-  const { data: donationHistory } = useQuery({
-    queryKey: ["live:donations:history"],
-    queryFn: () =>
-      trpc.live.donations.history.query({
-        limit: 10,
-        offset: 0,
-      }),
-    enabled: isOpen,
-  });
+  const { data: donationHistory } = trpc.live.donations.history.useQuery(
+    { limit: 10, offset: 0 },
+    { enabled: isOpen }
+  );
 
   const getAmount = (): number => {
     if (selectedAmount) return selectedAmount;
@@ -186,6 +158,7 @@ export function DonationPanel({
 
     setIsProcessing(true);
     createDonationMutation.mutate({
+      liveSessionId,
       amount,
       message: message || undefined,
       anonymous: isAnonymous,
@@ -208,7 +181,7 @@ export function DonationPanel({
                   #{idx + 1} {donor.userName || "Anonymous"}
                 </span>
                 <span className="text-yellow-100 font-bold">
-                  ${donor.total}
+                  ${String(donor.total)}
                 </span>
               </div>
             ))}

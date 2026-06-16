@@ -7,7 +7,6 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
 import { toast } from "sonner";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
@@ -21,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { MessageCircle, Trash2, Pin, Shield, Heart } from "lucide-react";
+import { MessageCircle, Trash2, Pin } from "lucide-react";
 
 interface ChatMessage {
   id: number;
@@ -39,9 +38,6 @@ interface ChatMessage {
 }
 
 interface BadgeConfig {
-  subscriber: { label: "Subscriber"; color: "bg-purple-500" };
-  moderator: { label: "Mod"; color: "bg-red-500" };
-  founder: { label: "Founder"; color: "bg-gold-500" };
   [key: string]: { label: string; color: string };
 }
 
@@ -71,53 +67,30 @@ export function LiveChat({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch messages
-  const { data: fetchedMessages, isLoading } = useQuery({
-    queryKey: ["live:chat:messages", liveSessionId],
-    queryFn: () =>
-      trpc.live.chat.messages.query({
-        liveSessionId,
-        limit: 50,
-        offset: 0,
-      }),
-    refetchInterval: 2000, // Poll every 2 seconds
-    staleTime: 1000,
-  });
+  const { data: fetchedMessages, isLoading } = trpc.live.chat.messages.useQuery(
+    { liveSessionId, limit: 50, offset: 0 },
+    { refetchInterval: 2000, staleTime: 1000 }
+  );
 
   // Send message mutation
-  const sendMutation = useMutation({
-    mutationFn: (message: string) =>
-      trpc.live.chat.send.mutate({
-        liveSessionId,
-        message,
-        usernameColor: "#" + Math.floor(Math.random() * 16777215).toString(16),
-      }),
+  const sendMutation = trpc.live.chat.send.useMutation({
     onSuccess: () => {
       setInputValue("");
-      // Refetch messages
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to send message"
-      );
+      toast.error(error.message || "Failed to send message");
     },
   });
 
   // Delete message mutation
-  const deleteMutation = useMutation({
-    mutationFn: (messageId: number) =>
-      trpc.live.chat.delete.mutate({
-        messageId,
-        reason: "Moderation",
-      }),
+  const deleteMutation = trpc.live.chat.delete.useMutation({
     onSuccess: () => {
       toast.success("Message deleted");
     },
   });
 
   // Pin message mutation
-  const pinMutation = useMutation({
-    mutationFn: (messageId: number) =>
-      trpc.live.chat.pinMessage.mutate({ messageId }),
+  const pinMutation = trpc.live.chat.pinMessage.useMutation({
     onSuccess: () => {
       toast.success("Message pinned");
     },
@@ -126,7 +99,7 @@ export function LiveChat({
   // Update messages when fetched
   useEffect(() => {
     if (fetchedMessages) {
-      setMessages(fetchedMessages);
+      setMessages(fetchedMessages as ChatMessage[]);
     }
   }, [fetchedMessages]);
 
@@ -148,7 +121,11 @@ export function LiveChat({
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      sendMutation.mutate(inputValue.trim());
+      sendMutation.mutate({
+        liveSessionId,
+        message: inputValue.trim(),
+        usernameColor: "#" + Math.floor(Math.random() * 16777215).toString(16),
+      });
     }
   };
 
@@ -226,14 +203,14 @@ export function LiveChat({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => pinMutation.mutate(msg.id)}
+                  onClick={() => pinMutation.mutate({ messageId: msg.id })}
                   disabled={msg.isPinned}
                 >
                   <Pin className="mr-2 h-4 w-4" />
                   Pin Message
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => deleteMutation.mutate(msg.id)}
+                  onClick={() => deleteMutation.mutate({ messageId: msg.id, reason: "Moderation" })}
                   className="text-red-500"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
