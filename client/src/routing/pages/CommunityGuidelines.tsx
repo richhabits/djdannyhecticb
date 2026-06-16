@@ -3,12 +3,12 @@
  */
 
 import React, { useState } from "react";
-import { trpc } from "../lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { useAuth } from "../../_core/hooks/useAuth";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { Textarea } from "../components/ui/textarea";
-import { Input } from "../components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, Flag, Shield } from "lucide-react";
 import { z } from "zod";

@@ -16,8 +16,8 @@
 
 import { asc, desc, eq, gt, lt, and, or, like, sql, isNull, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo, blogPosts, InsertBlogPost, faqs, InsertFAQ, contactMessages, InsertContactMessage, printfullProducts, InsertPrintfullProduct, merchOrders, InsertMerchOrder, products, refundRequests, InsertRefundRequest, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, liveSessions, InsertLiveSession, cues, InsertCue, platformLiveStatus, InsertPlatformLiveStatus } from "../drizzle/schema";
-import { chatMessages, donations, reactions, polls, pollVotes, leaderboards, notifications, userBadges, streamerStats, customEmotes, raids, socialLinks } from "../drizzle/engagement-schema";
+import { InsertUser, users, aiMixes, InsertAIMix, bookingBlockers, InsertBookingBlocker, bookings, InsertBooking, dannyReacts, InsertDannyReact, dannyStatus, InsertDannyStatus, djBattles, InsertDJBattle, eventBookings, InsertEventBooking, events, InsertEvent, fanBadges, InsertFanBadge, mixes, InsertMix, outboundLeads, InsertOutboundLead, personalizedShoutouts, InsertPersonalizedShoutout, podcasts, InsertPodcast, pricingAuditLogs, InsertPricingAuditLog, pricingRules, InsertPricingRule, shouts, InsertShout, shows, InsertShow, streamingLinks, InsertStreamingLink, streams, InsertStream, tracks, InsertTrack, userProfiles, InsertUserProfile, videos, InsertVideo, blogPosts, InsertBlogPost, faqs, InsertFAQ, contactMessages, InsertContactMessage, printfullProducts, InsertPrintfullProduct, merchOrders, InsertMerchOrder, products, InsertProduct, refundRequests, InsertRefundRequest, showsPhase9, InsertShowPhase9, showEpisodes, InsertShowEpisode, liveSessions, InsertLiveSession, cues, InsertCue, platformLiveStatus, InsertPlatformLiveStatus, listenerLocations, InsertListenerLocation, promoContent, InsertPromoContent, identityQuizzes, InsertIdentityQuiz, superfans, InsertSuperfan, loyaltyTracking, InsertLoyaltyTracking, supporterScores, InsertSupporterScore, supportEvents, InsertSupportEvent, purchases, InsertPurchase, subscriptions, InsertSubscription, brands, InsertBrand, empireSettings, errorLogs, InsertErrorLog, incidentBanners, InsertIncidentBanner, backups, InsertBackup, genZProfiles, InsertGenZProfile, follows, InsertFollow, userPosts, InsertUserPost, postReactions, InsertPostReaction, collectibles, InsertCollectible, userCollectibles, InsertUserCollectible, outboundInteractions, InsertOutboundInteraction, feedPosts, InsertFeedPost } from "../drizzle/schema";
+import { chatMessages, donations, reactions, polls, pollVotes, leaderboards, notifications, InsertNotification, userBadges, streamerStats, customEmotes, raids, socialLinks } from "../drizzle/engagement-schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { ENV } from './_core/env';
@@ -1127,7 +1127,7 @@ export async function createSupportEvent(event: InsertSupportEvent) {
     values.status = event.status;
   }
 
-  const result = await db.insert(supportEvents).values(values).returning();
+  const result = await db.insert(supportEvents).values(values as InsertSupportEvent).returning();
   const insertedId = result[0].id;
   const created = await db.select().from(supportEvents).where(eq(supportEvents.id, insertedId)).limit(1);
   return created[0];
@@ -1201,15 +1201,15 @@ export async function searchProducts(q: string, type?: string, limit: number = 2
   const db = await getDb();
   if (!db) return [];
   const searchTerm = `%${q}%`;
-  const conditions = [
+  const conditions: SQL[] = [
     or(
       like(products.name, searchTerm),
       like(products.description, searchTerm)
-    ),
-    eq(products.isActive, true)
+    ) as SQL,
+    eq(products.isActive, true),
   ];
   if (type) {
-    conditions.push(eq(products.type, type));
+    conditions.push(eq(products.type, type as any));
   }
   return await db.select().from(products).where(and(...conditions)).limit(limit);
 }
@@ -1491,23 +1491,20 @@ export async function deleteBackup(id: number) {
 export async function createNotification(notification: InsertNotification) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(notifications).values({
-    ...notification,
-    payload: typeof notification.payload === "string" ? notification.payload : JSON.stringify(notification.payload || {}),
-  }).returning();
+  const result = await db.insert(notifications).values(notification).returning();
   const insertedId = result[0].id;
   const created = await db.select().from(notifications).where(eq(notifications.id, insertedId)).limit(1);
   return created[0];
 }
 
-export async function listNotifications(fanId?: number, limit: number = 50) {
+export async function listNotifications(userId?: number, limit: number = 50) {
   const db = await getDb();
   if (!db) return [];
-  if (fanId) {
+  if (userId) {
     return await db
       .select()
       .from(notifications)
-      .where(eq(notifications.fanId, fanId))
+      .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
   }
@@ -1517,29 +1514,29 @@ export async function listNotifications(fanId?: number, limit: number = 50) {
 export async function markNotificationRead(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(notifications).set({ status: "read", readAt: new Date() }).where(eq(notifications.id, id));
+  await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id));
 }
 
-export async function markAllNotificationsRead(fanId: number) {
+export async function markAllNotificationsRead(userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db
     .update(notifications)
-    .set({ status: "read", readAt: new Date() })
-    .where(and(eq(notifications.fanId, fanId), eq(notifications.status, "pending")));
+    .set({ isRead: true })
+    .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
 }
 
-export async function getUnreadNotificationCount(fanId?: number) {
+export async function getUnreadNotificationCount(userId?: number) {
   const db = await getDb();
   if (!db) return 0;
-  if (fanId) {
+  if (userId) {
     const result = await db
       .select()
       .from(notifications)
-      .where(and(eq(notifications.fanId, fanId), eq(notifications.status, "pending")));
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
     return result.length;
   }
-  const result = await db.select().from(notifications).where(eq(notifications.status, "pending"));
+  const result = await db.select().from(notifications).where(eq(notifications.isRead, false));
   return result.length;
 }
 
@@ -2556,11 +2553,11 @@ export async function listLiveSessions(showId?: number) {
   if (!db) return [];
 
   try {
-    let query = db.select().from(liveSessions);
-    if (showId) {
-      query = query.where(eq(liveSessions.showId, showId));
-    }
-    const results = await query.orderBy(desc(liveSessions.createdAt));
+    const results = await db
+      .select()
+      .from(liveSessions)
+      .where(showId ? eq(liveSessions.showId, showId) : undefined)
+      .orderBy(desc(liveSessions.createdAt));
     return results;
   } catch (error) {
     console.error("[db] Error in listLiveSessions:", error);
@@ -3172,17 +3169,10 @@ export async function listBlogPosts(limit: number = 10, offset: number = 0, publ
   const db = await getDb();
   if (!db) return { posts: [], total: 0 };
 
-  const conditions = [];
-  if (published !== undefined) {
-    conditions.push(eq(blogPosts.published, published));
-  }
-
-  let query = db.select().from(blogPosts);
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions));
-  }
-
-  const posts = await query
+  const posts = await db
+    .select()
+    .from(blogPosts)
+    .where(published !== undefined ? eq(blogPosts.published, published) : undefined)
     .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
     .limit(limit)
     .offset(offset);
@@ -3271,20 +3261,18 @@ export async function listFAQs(category?: string, active?: boolean) {
   const db = await getDb();
   if (!db) return [];
 
-  const conditions = [];
-  if (category) {
-    conditions.push(eq(faqs.category, category as any));
-  }
-  if (active !== undefined) {
-    conditions.push(eq(faqs.active, active));
-  }
+  const whereClause = and(
+    ...[
+      category ? eq(faqs.category, category as any) : undefined,
+      active !== undefined ? eq(faqs.active, active) : undefined,
+    ].filter(Boolean) as SQL[]
+  );
 
-  let query = db.select().from(faqs);
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions));
-  }
-
-  return await query.orderBy(asc(faqs.displayOrder), desc(faqs.createdAt));
+  return await db
+    .select()
+    .from(faqs)
+    .where(whereClause)
+    .orderBy(asc(faqs.displayOrder), desc(faqs.createdAt));
 }
 
 export async function reorderFAQs(faqIds: number[]) {
@@ -3428,7 +3416,7 @@ export async function updateProductMerchLink(data: {
     })
     .where(eq(products.id, data.productId));
 
-  return result.rowCount > 0;
+  return (result as any).rowCount > 0;
 }
 
 export async function createMerchOrder(data: InsertMerchOrder) {
