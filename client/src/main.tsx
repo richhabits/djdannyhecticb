@@ -81,7 +81,7 @@ const trpcClient = trpc.createClient({
 // Listen for service worker updates
 if (typeof window !== "undefined") {
   window.addEventListener("sw-update-available", () => {
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
       console.log("Service Worker update available");
     }
   });
