@@ -14,8 +14,9 @@ import {
   InsertStreamTranscript,
   InsertStreamTag,
 } from "../../drizzle/ai-features-schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { ENV } from "../_core/env";
+import { getDb } from "../db";
 
 const client = new Anthropic({
   apiKey: ENV.claudeApiKey,
@@ -104,7 +105,7 @@ Return as JSON with these keys:
  * Store transcript
  */
 export async function storeTranscript(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   fullText: string,
   sourceType: string = "whisper",
   language: string = "en",
@@ -133,7 +134,7 @@ export async function storeTranscript(
  * Extract and tag metadata from transcript
  */
 export async function extractAndTagTranscript(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   transcript: string
 ): Promise<InsertStreamTag[]> {
   const db = await getDb();
@@ -220,7 +221,7 @@ export async function extractAndTagTranscript(
 /**
  * Get transcript for a stream
  */
-export async function getStreamTranscript(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
+export async function getStreamTranscript(liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -236,51 +237,46 @@ export async function getStreamTranscript(db?: Awaited<ReturnType<typeof getDb>>
  * Get all tags for a stream
  */
 export async function getStreamTags(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   tagType?: string
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  let query = db
+  return db
     .select()
     .from(streamTags)
-    .where(eq(streamTags.liveSessionId, liveSessionId));
-
-  if (tagType) {
-    query = query.where(eq(streamTags.tagType, tagType));
-  }
-
-  return query.orderBy(desc(streamTags.createdAt));
+    .where(tagType
+      ? and(eq(streamTags.liveSessionId, liveSessionId), eq(streamTags.tagType, tagType))
+      : eq(streamTags.liveSessionId, liveSessionId)
+    )
+    .orderBy(desc(streamTags.createdAt));
 }
 
 /**
  * Search streams by tag
  */
 export async function searchStreamsByTag(
-  db?: Awaited<ReturnType<typeof getDb>>, tagValue: string,
+  tagValue: string,
   tagType?: string
 ): Promise<number[]> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  let query = db
+  const results = await db
     .select({ liveSessionId: streamTags.liveSessionId })
     .from(streamTags)
-    .where(eq(streamTags.tagValue, tagValue));
-
-  if (tagType) {
-    query = query.where(eq(streamTags.tagType, tagType));
-  }
-
-  const results = await query;
+    .where(tagType
+      ? and(eq(streamTags.tagValue, tagValue), eq(streamTags.tagType, tagType))
+      : eq(streamTags.tagValue, tagValue)
+    );
   return results.map((r) => r.liveSessionId);
 }
 
 /**
  * Get all songs played in a stream
  */
-export async function getStreamSongs(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
+export async function getStreamSongs(liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -304,7 +300,7 @@ export async function getStreamSongs(db?: Awaited<ReturnType<typeof getDb>>, liv
 /**
  * Get all artists mentioned in a stream
  */
-export async function getStreamArtists(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
+export async function getStreamArtists(liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -317,7 +313,7 @@ export async function getStreamArtists(db?: Awaited<ReturnType<typeof getDb>>, l
 /**
  * Get stream guests
  */
-export async function getStreamGuests(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
+export async function getStreamGuests(liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

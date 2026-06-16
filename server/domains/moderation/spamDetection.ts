@@ -10,6 +10,7 @@
 import { chatMessages } from "@/drizzle/engagement-schema";
 import { spamFlags, InsertSpamFlag } from "@/drizzle/ai-features-schema";
 import { eq, and, gte, desc } from "drizzle-orm";
+import { getDb } from "../../db";
 
 interface SpamCheckResult {
   isSpam: boolean;
@@ -185,7 +186,7 @@ function checkReferralSpam(message: string): {
  * Main spam detection function
  */
 export async function checkSpam(
-  db?: Awaited<ReturnType<typeof getDb>>, message: string,
+  message: string,
   userId: number,
   liveSessionId: number
 ): Promise<SpamCheckResult> {
@@ -222,7 +223,7 @@ export async function checkSpam(
 
   return {
     isSpam: flaggedChecks.length > 0 && highestConfidence > 0.5,
-    flags: flaggedChecks,
+    flags: flaggedChecks.map((c) => ({ type: "spam", confidence: c.confidence, reason: c.reason })),
     highestConfidence,
   };
 }
@@ -231,7 +232,7 @@ export async function checkSpam(
  * Flag a message as spam in the database
  */
 export async function flagSpamMessage(
-  db?: Awaited<ReturnType<typeof getDb>>, chatMessageId: number,
+  chatMessageId: number,
   liveSessionId: number,
   userId: number,
   flagType: string,
@@ -259,33 +260,27 @@ export async function flagSpamMessage(
  * Get flagged messages for moderator review
  */
 export async function getFlaggedMessages(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   status?: string
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  let query = db.select().from(spamFlags);
-
-  if (status) {
-    query = query.where(
-      and(
-        eq(spamFlags.liveSessionId, liveSessionId),
-        eq(spamFlags.status, status as any)
-      )
-    );
-  } else {
-    query = query.where(eq(spamFlags.liveSessionId, liveSessionId));
-  }
-
-  return query.orderBy(desc(spamFlags.createdAt));
+  return db
+    .select()
+    .from(spamFlags)
+    .where(status
+      ? and(eq(spamFlags.liveSessionId, liveSessionId), eq(spamFlags.status, status as any))
+      : eq(spamFlags.liveSessionId, liveSessionId)
+    )
+    .orderBy(desc(spamFlags.createdAt));
 }
 
 /**
  * Approve a flagged message (mark as clean)
  */
 export async function approveFlaggedMessage(
-  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
+  flagId: number,
   moderatorId: number
 ) {
   const db = await getDb();
@@ -307,7 +302,7 @@ export async function approveFlaggedMessage(
  * Delete a flagged message
  */
 export async function deleteFlaggedMessage(
-  db?: Awaited<ReturnType<typeof getDb>>, flagId: number,
+  flagId: number,
   moderatorId: number,
   chatMessageId: number
 ) {
@@ -339,7 +334,7 @@ export async function deleteFlaggedMessage(
 /**
  * Get spam statistics
  */
-export async function getSpamStats(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
+export async function getSpamStats(liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

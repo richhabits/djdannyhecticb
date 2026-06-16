@@ -13,6 +13,7 @@ import {
 } from "@/drizzle/ai-features-schema";
 import { eq, gt, desc, and, not, isNull } from "drizzle-orm";
 import { videos, users } from "@/drizzle/schema";
+import { getDb } from "../../db";
 
 interface RecommendationScore {
   contentId: number;
@@ -27,7 +28,7 @@ interface RecommendationScore {
  * Recommends similar content to what user has already watched/liked
  */
 async function getContentBasedRecommendations(
-  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
+  userId: number,
   limit: number = 5
 ): Promise<RecommendationScore[]> {
   const db = await getDb();
@@ -77,7 +78,7 @@ async function getCollaborativeRecommendations(
  * What's popular right now
  */
 async function getTrendingRecommendations(
-  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
+  userId: number,
   limit: number = 5
 ): Promise<RecommendationScore[]> {
   const db = await getDb();
@@ -114,7 +115,7 @@ async function getPersonalizedRecommendations(
  * Generate recommendations for a user
  */
 export async function generateRecommendations(
-  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
+  userId: number,
   limit: number = 10
 ): Promise<InsertRecommendation[]> {
   const db = await getDb();
@@ -132,36 +133,36 @@ export async function generateRecommendations(
   // Combine and deduplicate
   const allRecs = [...contentBased, ...collaborative, ...trending, ...personalized];
   const seen = new Set<number>();
-  const recommendations: InsertRecommendation[] = [];
+  const recs: InsertRecommendation[] = [];
 
   for (const rec of allRecs) {
     if (seen.has(rec.contentId)) continue;
-    if (recommendations.length >= limit) break;
+    if (recs.length >= limit) break;
 
     seen.add(rec.contentId);
-    recommendations.push({
+    recs.push({
       userId,
       recommendedContentId: rec.contentId,
       contentType: rec.contentType,
       recommendationType: rec.method,
-      score: rec.score,
+      score: String(rec.score),
       reason: rec.reason,
     });
   }
 
   // Store in database
-  if (recommendations.length > 0) {
-    await db.insert(recommendations).values(recommendations);
+  if (recs.length > 0) {
+    await db.insert(recommendations).values(recs);
   }
 
-  return recommendations;
+  return recs;
 }
 
 /**
  * Get recommendations for a user
  */
 export async function getUserRecommendations(
-  db?: Awaited<ReturnType<typeof getDb>>, userId: number,
+  userId: number,
   limit: number = 10
 ) {
   const db = await getDb();
@@ -178,7 +179,7 @@ export async function getUserRecommendations(
 /**
  * Record that a recommendation was clicked
  */
-export async function recordRecommendationClick(db?: Awaited<ReturnType<typeof getDb>>, recommendationId: number) {
+export async function recordRecommendationClick(recommendationId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -202,7 +203,7 @@ export async function recordRecommendationClick(db?: Awaited<ReturnType<typeof g
 /**
  * Track recommendation impression (view)
  */
-export async function recordRecommendationImpression(db?: Awaited<ReturnType<typeof getDb>>, recommendationId: number) {
+export async function recordRecommendationImpression(recommendationId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -224,17 +225,14 @@ export async function recordRecommendationImpression(db?: Awaited<ReturnType<typ
 /**
  * Get recommendation analytics
  */
-export async function getRecommendationAnalytics(db?: Awaited<ReturnType<typeof getDb>>, userId?: number) {
+export async function getRecommendationAnalytics(userId?: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  let query = db.select().from(recommendations);
-
-  if (userId) {
-    query = query.where(eq(recommendations.userId, userId));
-  }
-
-  const recs = await query;
+  const recs = await db
+    .select()
+    .from(recommendations)
+    .where(userId ? eq(recommendations.userId, userId) : undefined);
 
   const stats = {
     totalRecommendations: recs.length,
@@ -264,7 +262,7 @@ export async function getRecommendationAnalytics(db?: Awaited<ReturnType<typeof 
 /**
  * Recommend users to follow
  */
-export async function getUserRecommendations_Users(db?: Awaited<ReturnType<typeof getDb>>, userId: number) {
+export async function getUserRecommendations_Users(userId: number) {
   const db = await getDb();
   if (!db) return [];
 

@@ -10,8 +10,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { autoClips, InsertAutoClip } from "../../drizzle/ai-features-schema";
 import { donations, reactions, chatMessages } from "../../drizzle/engagement-schema";
-import { eq, gte, lte, desc, count } from "drizzle-orm";
+import { eq, gte, lte, desc, count, and } from "drizzle-orm";
 import { ENV } from "../_core/env";
+import { getDb } from "../db";
 
 const client = new Anthropic({
   apiKey: ENV.claudeApiKey,
@@ -41,7 +42,7 @@ interface ClipGenerationResult {
  * Detect reaction spikes (3x normal rate)
  */
 async function detectReactionSpikes(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   windowMinutes: number = 5
 ): Promise<MomentDetectionResult[]> {
   const db = await getDb();
@@ -76,7 +77,7 @@ async function detectReactionSpikes(
  * Detect donation spikes
  */
 async function detectDonationSpikes(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   windowMinutes: number = 5
 ): Promise<MomentDetectionResult[]> {
   const db = await getDb();
@@ -182,7 +183,7 @@ Add relevant hashtags and timestamps if applicable.`,
  * Create an auto-clip from a detected moment
  */
 export async function createAutoClip(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   moment: MomentDetectionResult,
   startTimeOffset: number = 30, // 30 seconds before
   endTimeOffset: number = 90 // 90 seconds after
@@ -268,28 +269,26 @@ export async function autoGenerateClips(
  * Get auto-generated clips for a session
  */
 export async function getAutoClips(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number,
+  liveSessionId: number,
   published?: boolean
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  let query = db
+  return db
     .select()
     .from(autoClips)
-    .where(eq(autoClips.liveSessionId, liveSessionId));
-
-  if (published !== undefined) {
-    query = query.where(eq(autoClips.published, published));
-  }
-
-  return query.orderBy(desc(autoClips.createdAt));
+    .where(published !== undefined
+      ? and(eq(autoClips.liveSessionId, liveSessionId), eq(autoClips.published, published))
+      : eq(autoClips.liveSessionId, liveSessionId)
+    )
+    .orderBy(desc(autoClips.createdAt));
 }
 
 /**
  * Publish an auto-generated clip
  */
-export async function publishAutoClip(db?: Awaited<ReturnType<typeof getDb>>, clipId: number) {
+export async function publishAutoClip(clipId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -303,7 +302,7 @@ export async function publishAutoClip(db?: Awaited<ReturnType<typeof getDb>>, cl
 /**
  * Get clip performance metrics
  */
-export async function getClipMetrics(db?: Awaited<ReturnType<typeof getDb>>, clipId: number) {
+export async function getClipMetrics(clipId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -329,7 +328,7 @@ export async function getClipMetrics(db?: Awaited<ReturnType<typeof getDb>>, cli
 /**
  * Auto-clip generation statistics
  */
-export async function getAutoClipStats(db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number) {
+export async function getAutoClipStats(liveSessionId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

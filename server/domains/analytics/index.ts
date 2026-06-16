@@ -1,5 +1,5 @@
 // Analytics Domain - Analytics, recommendations, predictive analytics
-export { default as analyticsRouter } from "./analyticsRouter";
-export { default as recommendations } from "./recommendations";
-export { default as predictiveAnalytics } from "./predictiveAnalytics";
+export { analyticsRouter } from "./analyticsRouter";
+export * from "./recommendations";
+export * from "./predictiveAnalytics";
 export { trackEvent, recordMetric, getAnalytics } from "./analytics";
