@@ -603,7 +603,7 @@ export const appRouter = router({
         if (!stream) {
           throw new Error("Stream not found");
         }
-        const { getStreamStatus } = await import("@/domains/broadcast/streamStatus");
+        const { getStreamStatus } = await import("@/server/domains/broadcast/streamStatus");
         return getStreamStatus(stream);
       }),
   }),
@@ -863,7 +863,7 @@ export const appRouter = router({
           return createdAt >= targetDate && createdAt < nextDay;
         });
 
-        const { generateShowSummary } = await import("@/domains/content/aiShowSummary");
+        const { generateShowSummary } = await import("@/server/domains/content/aiShowSummary");
         const summary = await generateShowSummary({
           date: input.showDate,
           tracks: tracks.map((t) => ({
@@ -1063,7 +1063,7 @@ export const appRouter = router({
         const priceStr = product.price.replace(/[£$€,]/g, "");
         const amount = Math.round(parseFloat(priceStr) * 100); // Convert to pence/cents
 
-        const { createStripePaymentIntent } = await import("@/domains/commerce/payments");
+        const { createStripePaymentIntent } = await import("@/server/domains/commerce/payments");
         const result = await createStripePaymentIntent({
           productId: input.productId,
           amount,
@@ -1098,7 +1098,7 @@ export const appRouter = router({
         const priceStr = product.price.replace(/[£$€,]/g, "");
         const amount = Math.round(parseFloat(priceStr) * 100);
 
-        const { createPayPalOrder } = await import("@/domains/commerce/payments");
+        const { createPayPalOrder } = await import("@/server/domains/commerce/payments");
         const result = await createPayPalOrder({
           productId: input.productId,
           amount,

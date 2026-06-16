@@ -14,7 +14,7 @@ permissions:
 jobs:
   check-backup-health:
     name: Check Backup Health
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -230,7 +230,7 @@ jobs:
 
   generate-metrics:
     name: Generate Backup Metrics
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
 
     steps:
@@ -291,7 +291,7 @@ jobs:
 
   maintenance:
     name: Backup Maintenance
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: github.event_name == 'schedule' && github.run_number % 30 == 0
 
     steps:
