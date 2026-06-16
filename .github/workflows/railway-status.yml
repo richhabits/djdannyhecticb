@@ -1,0 +1,41 @@
+name: Railway Status Check
+
+# Read-only diagnostics for the Railway "web" service - account auth,
+# public domain, and which variable keys are already configured.
+# Does not require RAILWAY_DATABASE_URL.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      PROJECT_ID: 4d44136f-d1b3-4336-9926-1f2463651991
+      ENVIRONMENT: production
+      SERVICE: web
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@latest
+
+      - name: Account info
+        run: |
+          echo '### Account' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          railway whoami --json | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Service domain
+        run: |
+          echo '### Domain' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          railway domain -s "$SERVICE" -e "$ENVIRONMENT" --project "$PROJECT_ID" --json | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Configured variable keys
+        run: |
+          echo '### Configured variable keys (no values)' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          railway variable list -s "$SERVICE" -e "$ENVIRONMENT" -p "$PROJECT_ID" --json | jq 'keys' | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

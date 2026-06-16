@@ -25,7 +25,10 @@ import { ENV } from "@/server/_core/env";
 import crypto from "crypto";
 import { TRPCError } from "@trpc/server";
 
-const stripe = new Stripe(ENV.stripeSecretKey || "");
+// Stripe is optional. Its constructor throws on an empty string, so fall back
+// to a non-empty placeholder to let this module import without a key set;
+// actual Stripe calls fail clearly at runtime until STRIPE_SECRET_KEY exists.
+const stripe = new Stripe(ENV.stripeSecretKey || "sk_unconfigured_placeholder");
 
 /**
  * Commission rates for different conversion types
