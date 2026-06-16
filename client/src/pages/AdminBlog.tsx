@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -7,7 +6,6 @@ import { Textarea } from "../components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
-import { Switch } from "../components/ui/switch";
 import { Checkbox } from "../components/ui/checkbox";
 import { Badge } from "../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
@@ -42,67 +40,51 @@ export function AdminBlog() {
   });
   const [tagInput, setTagInput] = useState("");
 
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  const { data: postsData } = useQuery({
-    queryKey: ["blog:list:admin"],
-    queryFn: () =>
-      trpc.blog.list.query({
-        limit: 100,
-        offset: 0,
-      }),
-  });
+  const { data: postsData } = trpc.blog.list.useQuery({ limit: 100, offset: 0 });
 
-  const createMutation = useMutation({
-    mutationFn: () => trpc.blog.create.mutate(formData),
+  const createMutation = trpc.blog.create.useMutation({
     onSuccess: () => {
       toast.success("Blog post created");
-      queryClient.invalidateQueries({ queryKey: ["blog:list:admin"] });
+      utils.blog.list.invalidate();
       resetForm();
       setShowCreateDialog(false);
     },
     onError: () => toast.error("Failed to create blog post"),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: () =>
-      trpc.blog.update.mutate({
-        id: editingId!,
-        ...formData,
-      }),
+  const updateMutation = trpc.blog.update.useMutation({
     onSuccess: () => {
       toast.success("Blog post updated");
-      queryClient.invalidateQueries({ queryKey: ["blog:list:admin"] });
+      utils.blog.list.invalidate();
       resetForm();
       setEditingId(null);
     },
     onError: () => toast.error("Failed to update blog post"),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => trpc.blog.delete.mutate({ id }),
+  const deleteMutation = trpc.blog.delete.useMutation({
     onSuccess: () => {
       toast.success("Blog post deleted");
-      queryClient.invalidateQueries({ queryKey: ["blog:list:admin"] });
+      utils.blog.list.invalidate();
       setDeleteId(null);
     },
     onError: () => toast.error("Failed to delete blog post"),
   });
 
-  const publishMutation = useMutation({
-    mutationFn: (id: number) => trpc.blog.publish.mutate({ id }),
+  const publishMutation = trpc.blog.publish.useMutation({
     onSuccess: () => {
       toast.success("Blog post published");
-      queryClient.invalidateQueries({ queryKey: ["blog:list:admin"] });
+      utils.blog.list.invalidate();
     },
     onError: () => toast.error("Failed to publish blog post"),
   });
 
-  const unpublishMutation = useMutation({
-    mutationFn: (id: number) => trpc.blog.unpublish.mutate({ id }),
+  const unpublishMutation = trpc.blog.unpublish.useMutation({
     onSuccess: () => {
       toast.success("Blog post unpublished");
-      queryClient.invalidateQueries({ queryKey: ["blog:list:admin"] });
+      utils.blog.list.invalidate();
     },
     onError: () => toast.error("Failed to unpublish blog post"),
   });
@@ -232,9 +214,9 @@ export function AdminBlog() {
                           variant="ghost"
                           onClick={() => {
                             if (post.published) {
-                              unpublishMutation.mutate(post.id);
+                              unpublishMutation.mutate({ id: post.id });
                             } else {
-                              publishMutation.mutate(post.id);
+                              publishMutation.mutate({ id: post.id });
                             }
                           }}
                           className="text-amber-400 hover:bg-amber-500/10"
@@ -422,9 +404,9 @@ export function AdminBlog() {
               <Button
                 onClick={() => {
                   if (editingId) {
-                    updateMutation.mutate();
+                    updateMutation.mutate({ id: editingId, ...formData });
                   } else {
-                    createMutation.mutate();
+                    createMutation.mutate(formData);
                   }
                 }}
                 className="bg-purple-600 hover:bg-purple-700"
@@ -456,7 +438,7 @@ export function AdminBlog() {
             <AlertDialogAction
               onClick={() => {
                 if (deleteId) {
-                  deleteMutation.mutate(deleteId);
+                  deleteMutation.mutate({ id: deleteId });
                 }
               }}
               className="bg-red-600 hover:bg-red-700"

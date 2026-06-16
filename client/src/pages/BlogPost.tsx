@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { trpc } from "../lib/trpc";
 import { Button } from "../components/ui/button";
@@ -13,11 +12,10 @@ import rehypeSanitize from "rehype-sanitize";
 export function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
 
-  const { data: post, isLoading } = useQuery({
-    queryKey: ["blog:get", params?.slug],
-    queryFn: () => trpc.blog.get.query({ slug: params?.slug || "" }),
-    enabled: !!params?.slug,
-  });
+  const { data: post, isLoading } = trpc.blog.get.useQuery(
+    { slug: params?.slug || "" },
+    { enabled: !!params?.slug }
+  );
 
   if (!match) return null;
 

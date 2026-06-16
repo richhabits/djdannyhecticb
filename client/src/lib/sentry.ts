@@ -136,7 +136,7 @@ export function getSentryEventId(): string | null {
  */
 export function reportFeedback(title: string, message: string, name?: string, email?: string) {
   Sentry.captureUserFeedback({
-    eventId: Sentry.lastEventId() || "",
+    event_id: Sentry.lastEventId() || "",
     name: name ?? "",
     email: email ?? "",
     comments: `${title}\n\n${message}`,

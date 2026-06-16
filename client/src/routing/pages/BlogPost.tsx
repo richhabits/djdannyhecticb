@@ -1,9 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { trpc } from "../lib/trpc";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -13,11 +12,10 @@ import rehypeSanitize from "rehype-sanitize";
 export function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
 
-  const { data: post, isLoading } = useQuery({
-    queryKey: ["blog:get", params?.slug],
-    queryFn: () => trpc.blog.get.query({ slug: params?.slug || "" }),
-    enabled: !!params?.slug,
-  });
+  const { data: post, isLoading } = trpc.blog.get.useQuery(
+    { slug: params?.slug || "" },
+    { enabled: !!params?.slug }
+  );
 
   if (!match) return null;
 

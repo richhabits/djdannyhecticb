@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, ExternalLink, DollarSign, Click, TrendingUp } from "lucide-react";
+import { Copy, ExternalLink, DollarSign, MousePointerClick, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 interface AffiliateProfile {
@@ -264,7 +264,7 @@ const AffiliateProgram: React.FC = () => {
                 <p className="text-sm text-slate-600">Total Clicks</p>
                 <p className="text-2xl font-bold">{stats?.clicks || 0}</p>
               </div>
-              <Click className="h-8 w-8 text-blue-500" />
+              <MousePointerClick className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
