@@ -3,7 +3,7 @@
  * Manage animation and transition states with callbacks
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface AnimationState {
   isEntering: boolean;
@@ -111,7 +111,7 @@ export function useLoadingAnimation(isLoading: boolean) {
 export function useCountdownAnimation(seconds: number, onComplete?: () => void) {
   const [remaining, setRemaining] = useState(seconds);
 
-  useState(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setRemaining((prev) => {
         if (prev <= 1) {

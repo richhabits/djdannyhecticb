@@ -4,8 +4,7 @@
 
 import React, { useState } from "react";
 import { trpc } from "../lib/trpc";
-import { useAtom } from "jotai";
-import { userAtom } from "../stores/user";
+import { useAuth } from "../_core/hooks/useAuth";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
@@ -20,7 +19,7 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ clipId, commentCount = 0 }: CommentSectionProps) {
-  const [user] = useAtom(userAtom);
+  const { user } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set());

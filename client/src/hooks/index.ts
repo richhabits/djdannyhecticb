@@ -5,7 +5,7 @@
 
 // Accessibility & Mobile
 export { useAccessibilityEnhancements } from './useAccessibilityEnhancements';
-export { useMobile } from './useMobile';
+export { useIsMobile } from './useMobile';
 export { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
 // State Management
