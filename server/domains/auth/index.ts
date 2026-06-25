@@ -11,7 +11,7 @@
  * Includes OAuth, Google Auth, Admin Auth, and cookie management.
  */
 
-export { authenticateSession, createSessionToken, createAdminSessionToken, verifyAdminPassword, hasAnyAdminUser, createAdminUser } from './adminAuth'
+export { authenticateSession, createSessionToken, createAdminSessionToken, verifyAdminPassword, verifyUserPassword, hasAnyAdminUser, createAdminUser } from './adminAuth'
 export { registerGoogleAuthRoutes, getGoogleAuthUrl } from './googleAuth'
 export { registerOAuthRoutes } from './oauth'
 export { getSessionCookieOptions } from './cookies'

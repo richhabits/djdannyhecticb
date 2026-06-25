@@ -3554,7 +3554,7 @@ export async function updateAIVoiceJob(jobId: string | number, updates: any) {
   return null;
 }
 
-export async function createUserWithPassword(input: { email: string; password: string; name?: string }) {
+export async function createUserWithPassword(input: { email: string; password: string; name?: string; role?: "booking_client" | "artist" | "brand" }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -3567,6 +3567,7 @@ export async function createUserWithPassword(input: { email: string; password: s
     passwordHash,
     openId,
     loginMethod: "password",
+    role: input.role ?? "booking_client",
   }).returning();
 
   return result[0];

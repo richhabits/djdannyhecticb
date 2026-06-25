@@ -72,7 +72,8 @@ import { affiliateRouter } from "@/server/domains/users/affiliateRouter";
 import { sponsorshipRouter } from "@/server/domains/commerce/sponsorshipRouter";
 import { premiumRouter } from "@/server/domains/commerce/premiumRouter";
 import { revenueRouter } from "@/server/domains/commerce/revenueRouter";
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
+import { portalRouter } from "@/server/domains/portal/portalRouter";
+import { publicProcedure, protectedProcedure, adminProcedure, router, TRPCError } from "./_core/trpc";
 import * as db from "./db";
 import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
@@ -102,6 +103,7 @@ export const appRouter = router({
   sponsorships: sponsorshipRouter,
   premium: premiumRouter,
   revenue: revenueRouter,
+  portal: portalRouter,
 
   // Alias for frontend compatibility
   events: router({
@@ -177,31 +179,52 @@ export const appRouter = router({
         email: z.string().email().max(320),
         password: z.string().min(8).max(100),
         name: z.string().max(255).optional(),
+        role: z.enum(["booking_client", "artist", "brand"]),
       }))
       .mutation(async ({ input, ctx }) => {
-        // Implement logic to create user
-        const { upsertUser } = await import("./db"); // Avoid circular dependency if possible, or use db import
-        // Since db is imported as * as db, use that.
-        // Actually, we need a function to create user with password. 
-        // Current upsertUser is for OAuth.
-        // We'll trust auth logic handles this, or add createUserWithPassword to db.ts
-        // For now, let's assume simple user creation.
-        // Wait, current system uses strictly OAuth or Admin.
-        // User wants "Users/Clients can sign up".
-        // I will implement a basic User creation in db.ts called keys.
+        const { getDb } = await import("./db");
+        const dbInstance = await getDb();
+        if (dbInstance) {
+          const { users } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          const existingUser = await dbInstance.select().from(users).where(eq(users.email, input.email)).limit(1);
+          if (existingUser[0]) {
+            throw new TRPCError({ code: "CONFLICT", message: "An account with this email already exists" });
+          }
+        }
+
         const user = await db.createUserWithPassword(input);
 
-        // Auto-login
         const { createSessionToken } = await import("./domains/auth/adminAuth");
-
-        const token = await createSessionToken(user.id, user.email || input.email, "user");
+        const token = await createSessionToken(user.id, user.email || input.email, input.role);
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(COOKIE_NAME, token, {
           ...cookieOptions,
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        return { success: true };
+        return { success: true, role: input.role };
+      }),
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email().max(320),
+        password: z.string().min(1).max(100),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { verifyUserPassword, createSessionToken } = await import("./domains/auth/adminAuth");
+        const result = await verifyUserPassword(input.email, input.password);
+        if (!result.success || !result.user) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password" });
+        }
+
+        const token = await createSessionToken(result.user.id, result.user.email || input.email, result.user.role as any);
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, {
+          ...cookieOptions,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        return { success: true, role: result.user.role };
       }),
   }),
 

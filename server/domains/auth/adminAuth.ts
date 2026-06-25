@@ -25,10 +25,12 @@ export interface AdminLoginRequest {
   password: string;
 }
 
+export type SessionRole = "admin" | "user" | "booking_client" | "artist" | "brand";
+
 export interface AdminSessionPayload {
   userId: number;
   email: string;
-  role: "admin";
+  role: SessionRole;
   iat: number;
   exp: number;
 }
@@ -114,6 +116,37 @@ export async function verifyAdminPassword(
 }
 
 /**
+ * Verify password for a portal user (client/artist/brand) stored directly on the `users` table.
+ */
+export async function verifyUserPassword(
+  email: string,
+  password: string
+): Promise<{ success: boolean; user?: typeof users.$inferSelect; error?: string }> {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, error: "Database not available" };
+  }
+
+  const user = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
+    .then((rows) => rows[0]);
+
+  if (!user || !user.passwordHash) {
+    return { success: false, error: "Invalid credentials" };
+  }
+
+  const isValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isValid) {
+    return { success: false, error: "Invalid credentials" };
+  }
+
+  return { success: true, user };
+}
+
+/**
  * Create admin session token
  */
 /**
@@ -122,7 +155,7 @@ export async function verifyAdminPassword(
 export async function createSessionToken(
   userId: number,
   email: string,
-  role: "admin" | "user" = "admin"
+  role: SessionRole = "admin"
 ): Promise<string> {
   const secret = new TextEncoder().encode(ENV.cookieSecret);
   const now = Math.floor(Date.now() / 1000);
