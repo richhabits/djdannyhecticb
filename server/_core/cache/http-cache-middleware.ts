@@ -73,9 +73,8 @@ export function httpCacheMiddleware(options: CacheMiddlewareOptions = {}) {
         const responseToCache = {
           body,
           headers: Object.fromEntries(
-            Array.from(res.getHeaders().entries()).filter(([key]) => {
+            Object.entries(res.getHeaders()).filter(([key]) => {
               const lowerKey = key.toLowerCase();
-              // Skip internal and computed headers
               return !['transfer-encoding', 'connection', 'content-encoding'].includes(lowerKey);
             })
           ),

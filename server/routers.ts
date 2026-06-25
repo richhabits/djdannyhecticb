@@ -299,8 +299,8 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const booking = await db.createEventBooking({
           ...input,
+          eventTime: input.eventTime || "",
           status: "pending",
-          userId: ctx.user?.id,
         });
         return booking;
       }),
@@ -1334,7 +1334,7 @@ export const appRouter = router({
         channel: z.enum(["web_push", "email", "whatsapp", "in_app"]),
         payload: z.record(z.string(), z.any()).optional(),
       }))
-      .mutation(({ input }) => db.createNotification({ ...input, payload: input.payload ? JSON.stringify(input.payload) : undefined })),
+      .mutation(({ input }) => db.createNotification(input as any)),
     list: publicProcedure
       .input(z.object({
         fanId: z.number().optional(),
@@ -1532,7 +1532,7 @@ export const appRouter = router({
           profileId: z.number(),
           achievementId: z.number(),
         }))
-        .mutation(({ input }) => db.unlockAchievement(input)),
+        .mutation(({ input }) => db.unlockAchievement(input.profileId, String(input.achievementId))),
     }),
 
     aiDanny: router({
@@ -2778,35 +2778,27 @@ export const appRouter = router({
         const { aiProvider } = await import("./_core/aiProvider");
 
         // Load conversation
-        let conversation = await db.query.hecticConversations.findFirst({
-          where: (t) => t.sessionId.eq(input.sessionId),
-        });
+        let conversation = await db.findHecticConversation(input.sessionId);
 
         if (!conversation) {
-          // Create new conversation
-          const [newConv] = await db.insert(db.schema.hecticConversations).values({
+          conversation = await db.createHecticConversation({
             sessionId: input.sessionId,
             userId: input.userId,
             channel: "web",
             status: "active",
             extractedData: null,
-          }).returning();
-          conversation = newConv;
+          });
         }
 
         // Load last 10 messages (cost control - context window)
-        const previousMessages = await db.query.hecticMessages.findMany({
-          where: (t) => t.conversationId.eq(conversation.id),
-          orderBy: (t) => t.createdAt,
-          limit: 10,
-        });
+        const previousMessages = await db.getHecticMessages(conversation.id, 10);
 
         // Extract booking data
         const extracted = await extractBookingData(input.message, conversation.extractedData as any);
 
         // Fetch latest shop items (top 5 for token efficiency)
         const shopProducts = await db.listProducts(true);
-        const shopItems = shopProducts.slice(0, 5).map((p) => ({
+        const shopItems = shopProducts.slice(0, 5).map((p: any) => ({
           name: p.name,
           type: p.type,
           price: p.price,
@@ -2817,14 +2809,6 @@ export const appRouter = router({
 
         // Build messages for AI
         const systemPrompt = HECTIC_SYSTEM_PROMPT + context;
-        const messages = [
-          { role: "system", content: systemPrompt },
-          ...previousMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          { role: "user", content: input.message },
-        ];
 
         // Call AI with auto-provider selection (Gemini Flash by default, free tier)
         const response = await aiProvider.chat(input.message, "auto");
@@ -2833,7 +2817,7 @@ export const appRouter = router({
         }
 
         // Persist messages
-        await db.insert(db.schema.hecticMessages).values([
+        await db.addHecticMessages([
           {
             conversationId: conversation.id,
             role: "user",
@@ -2852,8 +2836,7 @@ export const appRouter = router({
         let leadCaptured = conversation.leadCaptured || false;
         if (extracted.email && !conversation.leadCaptured) {
           leadCaptured = true;
-          // Create lead record
-          await db.insert(db.schema.hecticLeads).values({
+          await db.createHecticLead({
             conversationId: conversation.id,
             name: extracted.name,
             email: extracted.email,
@@ -2868,13 +2851,11 @@ export const appRouter = router({
           });
         }
 
-        await db.update(db.schema.hecticConversations)
-          .set({
-            extractedData: extracted,
-            leadCaptured,
-            updatedAt: new Date(),
-          })
-          .where((t) => t.id.eq(conversation.id));
+        await db.updateHecticConversation(conversation.id, {
+          extractedData: extracted,
+          leadCaptured,
+          updatedAt: new Date(),
+        });
 
         const signupPromptCount = conversation.signupPromptCount || 0;
         const showSignupPrompt =
@@ -2882,9 +2863,7 @@ export const appRouter = router({
           signupPromptCount === 0;
 
         if (showSignupPrompt) {
-          await db.update(db.schema.hecticConversations)
-            .set({ signupPromptCount: signupPromptCount + 1 })
-            .where((t) => t.id.eq(conversation.id));
+          await db.updateHecticConversation(conversation.id, { signupPromptCount: signupPromptCount + 1 });
         }
 
         return {
@@ -2899,31 +2878,17 @@ export const appRouter = router({
     history: publicProcedure
       .input(z.object({ sessionId: z.string() }))
       .query(async ({ input }) => {
-        const conversation = await db.query.hecticConversations.findFirst({
-          where: (t) => t.sessionId.eq(input.sessionId),
-        });
-
+        const conversation = await db.findHecticConversation(input.sessionId);
         if (!conversation) return [];
-
-        return db.query.hecticMessages.findMany({
-          where: (t) => t.conversationId.eq(conversation.id),
-          orderBy: (t) => t.createdAt,
-          limit: 30,
-        });
+        return db.getHecticMessages(conversation.id, 30);
       }),
 
     lead: protectedProcedure
       .input(z.object({ sessionId: z.string() }))
       .query(async ({ input }) => {
-        const conversation = await db.query.hecticConversations.findFirst({
-          where: (t) => t.sessionId.eq(input.sessionId),
-        });
-
+        const conversation = await db.findHecticConversation(input.sessionId);
         if (!conversation) return null;
-
-        return db.query.hecticLeads.findFirst({
-          where: (t) => t.conversationId.eq(conversation.id),
-        });
+        return db.findHecticLead(conversation.id);
       }),
   }),
 
@@ -2937,37 +2902,18 @@ export const appRouter = router({
         sessionId: z.string(),
       }))
       .mutation(async ({ input }) => {
+        const { aiProvider } = await import("./_core/aiProvider");
         // Load business data for rich context
-        const recentBookings = await db.query.eventBookings.findMany({
-          limit: 10,
-          orderBy: (t) => t.createdAt,
-        });
-
-        const newLeads = await db.query.hecticLeads.findMany({
-          where: (t) => t.status.eq("new"),
-          limit: 20,
-        });
-
-        const contactedLeads = await db.query.hecticLeads.findMany({
-          where: (t) => t.status.eq("contacted"),
-          limit: 10,
-        });
+        const recentBookings = await db.getRecentEventBookings(10);
+        const newLeads = await db.getHecticLeadsByStatus("new", 20);
+        const contactedLeads = await db.getHecticLeadsByStatus("contacted", 10);
 
         // Analyze data for smarter context
-        const topCities = Array.from(
-          new Map(
-            newLeads
-              .filter((l) => l.location)
-              .map((l) => [l.location, 1])
-              .reduce((acc, [city, count]) => {
-                acc.set(city, (acc.get(city) || 0) + 1);
-                return acc;
-              }, new Map())
-          ).entries()
-        )
-          .sort(([, a], [, b]) => b - a)
-          .map(([city]) => city)
-          .slice(0, 5);
+        const cityMap = new Map<string, number>();
+        for (const l of newLeads) {
+          if (l.location) cityMap.set(l.location, (cityMap.get(l.location) || 0) + 1);
+        }
+        const topCities = Array.from(cityMap.entries()).sort(([, a], [, b]) => b - a).map(([city]) => city).slice(0, 5);
 
         // Build rich context
         const jarvisContext = buildJarvisContext({
@@ -2975,17 +2921,17 @@ export const appRouter = router({
           newLeads: newLeads.length,
           topCities,
           pendingFollowups: contactedLeads.length,
-          eventTypeBreakdown: newLeads.reduce((acc, l) => {
+          eventTypeBreakdown: newLeads.reduce((acc: Record<string, number>, l: any) => {
             if (l.eventType) acc[l.eventType] = (acc[l.eventType] || 0) + 1;
             return acc;
           }, {} as Record<string, number>),
         });
 
         const leadsSnapshot = newLeads
-          .map((l) => `- ${l.name || "Unknown"} (${l.location || "N/A"}) - ${l.eventType || "unknown"} - Budget: ${l.budget || "TBD"}`)
+          .map((l: any) => `- ${l.name || "Unknown"} (${l.location || "N/A"}) - ${l.eventType || "unknown"} - Budget: ${l.budget || "TBD"}`)
           .join("\n");
 
-        // Call Jarvis with full system prompt (use Groq if available for cost savings)
+        // Call Jarvis with full system prompt
         const response = await aiProvider.chat(
           `${JARVIS_SYSTEM_PROMPT}\n\n${jarvisContext}\n\nRECENT LEADS:\n${leadsSnapshot}\n\nADMIN REQUEST:\n${input.message}`,
           process.env.GROQ_API_KEY ? "groq" : "gemini"
@@ -3003,51 +2949,33 @@ export const appRouter = router({
       }),
 
     insights: adminProcedure.query(async () => {
-      return db.query.jarvisInsights.findMany({
-        where: (t) => t.status.eq("active"),
-        limit: 20,
-        orderBy: (t) => t.priority,
-      });
+      return db.getActiveJarvisInsights(20);
     }),
 
     leadsQueue: adminProcedure.query(async () => {
-      return db.query.hecticLeads.findMany({
-        where: (t) =>
-          t.status.in(["new", "contacted"]),
-        limit: 50,
-        orderBy: (t) => t.createdAt,
-      });
+      return db.getAllNewOrContactedLeads();
     }),
 
     generateSuggestions: adminProcedure.mutation(async () => {
-      const leads = await db.query.hecticLeads.findMany({
-        where: (t) =>
-          t.status.eq("new"),
-      });
+      const leads = await db.getHecticLeadsByStatus("new");
 
       if (leads.length === 0) return { suggestions: 0 };
 
-      // Group by location and event type
       const byCity = new Map<string, number>();
-      const byType = new Map<string, number>();
-
-      leads.forEach((lead) => {
+      for (const lead of leads) {
         if (lead.location) byCity.set(lead.location, (byCity.get(lead.location) || 0) + 1);
-        if (lead.eventType) byType.set(lead.eventType, (byType.get(lead.eventType) || 0) + 1);
-      });
+      }
 
-      // Create suggestions (simplified - in production would call venue API)
       const suggestions = Array.from(byCity.entries()).map(([city, count]) => ({
-        type: "venue_suggestion",
+        type: "venue_suggestion" as const,
         title: `${city} Opportunities`,
         content: `${count} new booking inquiries from ${city}. Consider outreach to clubs in this area.`,
         metadata: { city, inquiries: count, source: "hectic_leads" },
-        status: "active",
+        status: "active" as const,
         priority: count * 2,
       }));
 
-      // Insert into jarvisInsights
-      await db.insert(db.schema.jarvisInsights).values(suggestions as any);
+      await db.createJarvisInsights(suggestions as any);
 
       return { suggestions: suggestions.length };
     }),

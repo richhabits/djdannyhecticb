@@ -27,11 +27,13 @@ async function getEmailClient() {
   const provider = ENV.emailServiceProvider;
 
   if (provider === "resend") {
+    // @ts-ignore - resend is an optional dependency
     const { Resend } = await import("resend");
     return new Resend(ENV.emailApiKey);
   }
 
   // Default: SendGrid
+  // @ts-ignore - @sendgrid/mail is an optional dependency
   const sgMail = await import("@sendgrid/mail");
   sgMail.default.setApiKey(ENV.emailApiKey);
   return sgMail.default;

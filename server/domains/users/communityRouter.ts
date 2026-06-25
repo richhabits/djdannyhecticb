@@ -18,7 +18,7 @@ import {
   chatMessages,
   clipComments,
 } from "@/drizzle/engagement-schema";
-import { eq, and, desc, gt, lt } from "drizzle-orm";
+import { eq, and, or, desc, gt, lt, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 const reportSchema = z.object({
@@ -203,11 +203,11 @@ export const communityRouter = router({
         "community_champion",
       ]),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       try {
-        const [badge] = await db
+        const [badge] = await ctx.db
           .insert(reputationBadges)
           .values({
             userId: input.userId,
@@ -227,10 +227,10 @@ export const communityRouter = router({
       limit: z.number().default(20),
       offset: z.number().default(0),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const pending = await db
+      const pending = await ctx.db
         .select()
         .from(reports)
         .where(eq(reports.status, "open"))
@@ -277,7 +277,7 @@ export const communityRouter = router({
       }
 
       // Update report status
-      await db
+      await ctx.db
         .update(reports)
         .set({
           status: "resolved",
@@ -295,17 +295,17 @@ export const communityRouter = router({
     .input(z.object({
       userId: z.number(),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const now = new Date();
-      const [ban] = await db
+      const [ban] = await ctx.db
         .select()
         .from(userBans)
         .where(
           and(
             eq(userBans.userId, input.userId),
-            or(eq(userBans.endDate, null), gt(userBans.endDate, now))
+            or(isNull(userBans.endDate), gt(userBans.endDate, now))
           )
         )
         .limit(1);
@@ -323,7 +323,7 @@ export const communityRouter = router({
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       // Verify ban exists and belongs to user
-      const [ban] = await db
+      const [ban] = await ctx.db
         .select()
         .from(userBans)
         .where(eq(userBans.id, input.banId))
@@ -333,7 +333,7 @@ export const communityRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      await db
+      await ctx.db
         .update(userBans)
         .set({
           appealedAt: new Date(),
@@ -365,7 +365,7 @@ export const communityRouter = router({
 
       const endDate = new Date(Date.now() + input.durationDays * 24 * 60 * 60 * 1000);
 
-      const [highlight] = await db
+      const [highlight] = await ctx.db
         .insert(communityHighlights)
         .values({
           type: input.type,
@@ -390,17 +390,17 @@ export const communityRouter = router({
       type: z.string().optional(),
       limit: z.number().default(10),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       const now = new Date();
-      const highlights = await db
+      const highlights = await ctx.db
         .select()
         .from(communityHighlights)
         .where(
           and(
             input.type ? eq(communityHighlights.type, input.type) : undefined,
-            or(eq(communityHighlights.endDate, null), gt(communityHighlights.endDate, now))
+            or(isNull(communityHighlights.endDate), gt(communityHighlights.endDate, now))
           )
         )
         .orderBy(desc(communityHighlights.createdAt))
@@ -415,13 +415,13 @@ export const communityRouter = router({
       limit: z.number().default(10),
       timeframeDays: z.number().default(7),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get top donors in timeframe
       const since = new Date(Date.now() - input.timeframeDays * 24 * 60 * 60 * 1000);
 
-      const topDonors = await db
+      const topDonors = await ctx.db
         .select()
         .from(donations)
         .where(gt(donations.createdAt, since));
@@ -460,7 +460,3 @@ export const communityRouter = router({
   }),
 });
 
-// Helper function for or queries
-function or(...conditions: any[]) {
-  return conditions.filter(Boolean);
-}

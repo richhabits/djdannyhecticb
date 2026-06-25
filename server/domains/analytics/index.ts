@@ -2,4 +2,4 @@
 export { analyticsRouter } from "./analyticsRouter";
 export * from "./recommendations";
 export * from "./predictiveAnalytics";
-export { trackEvent, recordMetric, getAnalytics } from "./analytics";
+export { storeEvent, hashIP, registerAnalyticsRoutes } from "./analytics";

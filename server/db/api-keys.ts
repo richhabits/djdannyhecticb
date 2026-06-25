@@ -29,10 +29,8 @@ export async function createApiKey(apiKey: InsertApiKey) {
   const result = await db.insert(apiKeys).values({
     ...apiKey,
     scopes: typeof apiKey.scopes === "string" ? apiKey.scopes : JSON.stringify(apiKey.scopes || []),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(apiKeys).where(eq(apiKeys.id, insertedId)).limit(1);
-  return created[0];
+  }).returning();
+  return result[0];
 }
 
 /**

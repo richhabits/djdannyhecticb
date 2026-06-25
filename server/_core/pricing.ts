@@ -102,10 +102,10 @@ export class PricingService {
 
         if (!overrideRules) {
             const depositPercentSetting = await db.getEmpireSetting("booking_deposit_percent");
-            depositPercent = depositPercentSetting ? parseFloat(depositPercentSetting.value) : 25;
+            depositPercent = depositPercentSetting ? parseFloat(depositPercentSetting.value ?? "25") : 25;
 
             const expirySetting = await db.getEmpireSetting("booking_deposit_expiry_hours");
-            expiryHours = expirySetting ? parseInt(expirySetting.value) : 24;
+            expiryHours = expirySetting ? parseInt(expirySetting.value ?? "24") : 24;
         }
 
         const depositAmount = Math.round((total * depositPercent) / 100);

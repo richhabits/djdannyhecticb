@@ -116,4 +116,10 @@ export const ENV = {
   instagramHandle: process.env.INSTAGRAM_HANDLE ?? "djdannyhecticb",
   // Printfull integration
   printfullApiKey: process.env.PRINTFULL_API_KEY ?? "",
+  // YouTube / Twitch live checker
+  youtubeDataApiKey: process.env.YOUTUBE_DATA_API_KEY ?? "",
+  youtubeChannelId: process.env.YOUTUBE_CHANNEL_ID ?? "",
+  twitchClientId: process.env.TWITCH_CLIENT_ID ?? "",
+  twitchClientSecret: process.env.TWITCH_CLIENT_SECRET ?? "",
+  twitchChannelName: process.env.TWITCH_CHANNEL_NAME ?? "",
 };

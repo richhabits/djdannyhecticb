@@ -1,4 +1,5 @@
 
+// @ts-ignore - mysql2 is not installed in this postgres project
 import mysql from 'mysql2/promise';
 
 async function testMysql() {

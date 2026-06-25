@@ -16,7 +16,7 @@ import {
   streamerStats,
 } from "@/drizzle/engagement-schema";
 import { users } from "@/drizzle/schema";
-import { eq, and, gte, lte, desc, sql, count, sum, avg } from "drizzle-orm";
+import { eq, and, gte, lte, desc, sql, count, countDistinct, sum, avg } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const analyticsRouter = router({
@@ -44,7 +44,7 @@ export const analyticsRouter = router({
       const chatStats = await ctx.db
         .select({
           messageCount: count(chatMessages.id),
-          uniqueUsers: count(chatMessages.userId, { distinct: true }),
+          uniqueUsers: countDistinct(chatMessages.userId),
         })
         .from(chatMessages)
         .where(
@@ -138,13 +138,13 @@ export const analyticsRouter = router({
       // For each session, get key metrics
       const sessionMetrics = await Promise.all(
         sessions.map(async (session) => {
-          const chatCount = await ctx.db
+          const chatCount = await ctx.db!
             .select({ count: count(chatMessages.id) })
             .from(chatMessages)
             .where(eq(chatMessages.liveSessionId, session.id))
             .then((rows) => rows[0]?.count || 0);
 
-          const donationTotal = await ctx.db
+          const donationTotal = await ctx.db!
             .select({ total: sum(donations.amount) })
             .from(donations)
             .where(eq(donations.liveSessionId, session.id))
@@ -290,7 +290,7 @@ export const analyticsRouter = router({
       const geoData = await ctx.db
         .select({
           city: users.city,
-          count: count(chatMessages.userId, { distinct: true }),
+          count: countDistinct(chatMessages.userId),
         })
         .from(chatMessages)
         .leftJoin(users, eq(chatMessages.userId, users.id))
@@ -377,7 +377,7 @@ export const analyticsRouter = router({
         .then((rows) => rows[0]?.count || 0);
 
       // Get total donations
-      const totalDonations = await db
+      const totalDonations = await ctx.db
         .select({ total: sum(donations.amount) })
         .from(donations)
         .leftJoin(
@@ -391,8 +391,8 @@ export const analyticsRouter = router({
         );
 
       // Get unique users
-      const uniqueUsers = await db
-        .select({ count: count(chatMessages.userId, { distinct: true }) })
+      const uniqueUsers = await ctx.db
+        .select({ count: countDistinct(chatMessages.userId) })
         .from(chatMessages)
         .leftJoin(
           liveSessions,
