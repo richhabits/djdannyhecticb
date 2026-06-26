@@ -166,18 +166,14 @@ router.get(
       }
 
       // Get personalized recommendations for user
-      let query = db
+      const recs = await db
         .select()
         .from(recommendations)
-        .where(eq(recommendations.userId, parseInt(userId)));
-
-      if (type !== "all") {
-        query = query.where(
-          eq(recommendations.recommendationType, type as string)
-        );
-      }
-
-      const recs = await query
+        .where(
+          type !== "all"
+            ? and(eq(recommendations.userId, parseInt(userId)), eq(recommendations.recommendationType, type as string))
+            : eq(recommendations.userId, parseInt(userId))
+        )
         .orderBy(desc(recommendations.score))
         .limit(parseInt(limit as string));
 
@@ -329,7 +325,7 @@ router.post(
               : algorithm === "trending"
                 ? "trending"
                 : "content_based",
-          score: parseFloat(score),
+          score: score,
           reason: `Based on your ${contentType} preferences`,
           clicked: false,
           impressions: 0,

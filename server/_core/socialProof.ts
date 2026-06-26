@@ -60,7 +60,7 @@ export class SocialProofService {
 
             // 2. Rate Control / Throttling
             const throttleSetting = await db.getEmpireSetting("social_proof_throttle");
-            const throttleMs = throttleSetting ? parseInt(throttleSetting.value) * 1000 : this.DEFAULT_THROTTLE;
+            const throttleMs = throttleSetting ? parseInt(throttleSetting.value ?? "0") * 1000 : this.DEFAULT_THROTTLE;
 
             const now = Date.now();
             if (now - this.lastNotificationTime < throttleMs) {

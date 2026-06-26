@@ -112,6 +112,16 @@ import BookingQuote from "./pages/BookingQuote";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import { CartProvider } from "./contexts/CartContext";
 import { StripeProvider } from "./contexts/StripeProvider";
+import PortalLogin from "./pages/PortalLogin";
+import PortalRegister from "./pages/PortalRegister";
+import PortalDashboard from "./pages/PortalDashboard";
+import PortalBookings from "./pages/PortalBookings";
+import PortalMedia from "./pages/PortalMedia";
+import PortalProfile from "./pages/PortalProfile";
+import PortalPlaylists from "./pages/PortalPlaylists";
+import AdminPortalBookings from "./pages/AdminPortalBookings";
+import AdminPortalUploads from "./pages/AdminPortalUploads";
+import AdminPortalClients from "./pages/AdminPortalClients";
 
 function Router() {
   return (
@@ -214,6 +224,16 @@ function Router() {
       <Route path={"/vip"} component={VIP} />
       <Route path={"/booking-quote/:id"} component={BookingQuote} />
       <Route path={"/admin/showcase"} component={ComponentShowcase} />
+      <Route path={"/portal/login"} component={PortalLogin} />
+      <Route path={"/portal/register"} component={PortalRegister} />
+      <Route path={"/portal"} component={PortalDashboard} />
+      <Route path={"/portal/bookings"} component={PortalBookings} />
+      <Route path={"/portal/media"} component={PortalMedia} />
+      <Route path={"/portal/profile"} component={PortalProfile} />
+      <Route path={"/portal/playlists"} component={PortalPlaylists} />
+      <Route path={"/admin/portal-clients"} component={AdminPortalClients} />
+      <Route path={"/admin/portal-bookings"} component={AdminPortalBookings} />
+      <Route path={"/admin/portal-uploads"} component={AdminPortalUploads} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

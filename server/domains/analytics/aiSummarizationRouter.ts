@@ -169,7 +169,7 @@ function findLargestDonations(
     .map((m) => ({
       time: m.timestamp,
       description: `${m.username} donated $${m.donationAmount}`,
-      engagement: Math.min(m.donationAmount / 10, 100), // Normalize to 0-100
+      engagement: Math.min((m.donationAmount ?? 0) / 10, 100),
     }))
     .sort((a, b) => b.engagement - a.engagement)
     .slice(0, 5);

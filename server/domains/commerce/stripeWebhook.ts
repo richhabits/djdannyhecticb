@@ -10,7 +10,7 @@ import Stripe from "stripe";
 import { getDb } from "@/server/db";
 import { donations, notifications } from "@/drizzle/engagement-schema";
 import { eq } from "drizzle-orm";
-import { ENV } from "./env";
+import { ENV } from "@/server/_core/env";
 
 // Stripe is optional. Its constructor throws on an empty string, so fall back
 // to a non-empty placeholder to let this module import without a key set;
@@ -45,7 +45,7 @@ export async function handleStripeWebhook(
         await handleChargeRefunded(event.data.object as Stripe.Charge, db);
         break;
 
-      case "dispute.created":
+      case "charge.dispute.created":
         await handleDisputeCreated(event.data.object as Stripe.Dispute, db);
         break;
 
@@ -71,7 +71,7 @@ export async function handleStripeWebhook(
  */
 async function handlePaymentSucceeded(
   paymentIntent: Stripe.PaymentIntent,
-  db: ReturnType<typeof getDb>
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>
 ) {
   if (!db) return;
 
@@ -93,7 +93,7 @@ async function handlePaymentSucceeded(
     .update(donations)
     .set({
       status: "completed",
-      stripeChargeId: paymentIntent.charges.data[0]?.id || "",
+      stripeChargeId: (paymentIntent as any).charges?.data?.[0]?.id || "",
       updatedAt: new Date(),
     })
     .where(eq(donations.id, donation.id));
@@ -106,7 +106,7 @@ async function handlePaymentSucceeded(
  */
 async function handlePaymentFailed(
   paymentIntent: Stripe.PaymentIntent,
-  db: ReturnType<typeof getDb>
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>
 ) {
   if (!db) return;
 
@@ -138,7 +138,7 @@ async function handlePaymentFailed(
  */
 async function handleChargeRefunded(
   charge: Stripe.Charge,
-  db: ReturnType<typeof getDb>
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>
 ) {
   if (!db) return;
 
@@ -174,7 +174,7 @@ async function handleChargeRefunded(
  */
 async function handleDisputeCreated(
   dispute: Stripe.Dispute,
-  db: ReturnType<typeof getDb>
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>
 ) {
   if (!db) return;
 

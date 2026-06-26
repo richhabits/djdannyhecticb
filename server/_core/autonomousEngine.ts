@@ -4,7 +4,7 @@
  */
 
 import { observability } from "./observability";
-import { getDb } from "../db";
+import { getDb, createGovernanceLog } from "../db";
 import { exec } from "child_process";
 import { promisify } from "util";
 
@@ -93,7 +93,7 @@ class AutonomousEngine {
         //     .set({ isEnabled: false })
         //     .where(eq(schema.featureFlags.key, "alerts_enabled"));
 
-        await db.createGovernanceLog({
+        await createGovernanceLog({
             actorType: "system",
             action: "AUTO_KILL_SWITCH",
             reason,

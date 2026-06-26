@@ -68,7 +68,7 @@ export const profileRouter = router({
     .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const followingCount = await db
+      const followingCount = await ctx.db
         .select()
         .from(follows)
         .where(eq(follows.followerId, input.userId));
@@ -86,7 +86,7 @@ export const profileRouter = router({
     .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const followers = await db
+      const followers = await ctx.db
         .select()
         .from(follows)
         .where(eq(follows.followingId, input.userId))
@@ -106,7 +106,7 @@ export const profileRouter = router({
     .query(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const following = await db
+      const following = await ctx.db
         .select()
         .from(follows)
         .where(eq(follows.followerId, input.userId))
@@ -123,26 +123,26 @@ export const profileRouter = router({
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get reputation score
-      const [reputation] = await db
+      const [reputation] = await ctx.db
         .select()
         .from(reputationScores)
         .where(eq(reputationScores.userId, input.userId))
         .limit(1);
 
       // Get follower count
-      const followersList = await db
+      const followersList = await ctx.db
         .select()
         .from(follows)
         .where(eq(follows.followingId, input.userId));
 
       // Get badges
-      const badges = await db
+      const badges = await ctx.db
         .select()
         .from(reputationBadges)
         .where(eq(reputationBadges.userId, input.userId));
 
       // Get donations received
-      const donationsList = await db
+      const donationsList = await ctx.db
         .select()
         .from(donations)
         .where(eq(donations.userId, input.userId));
@@ -168,7 +168,7 @@ export const profileRouter = router({
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       // Check if profile exists
-      const [existing] = await db
+      const [existing] = await ctx.db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, userId))
@@ -176,7 +176,7 @@ export const profileRouter = router({
 
       if (existing) {
         // Update existing profile
-        await db
+        await ctx.db
           .update(userProfiles)
           .set({
             ...input,
@@ -185,7 +185,7 @@ export const profileRouter = router({
           .where(eq(userProfiles.userId, userId));
       } else {
         // Create new profile
-        await db.insert(userProfiles).values({
+        await ctx.db.insert(userProfiles).values({
           userId,
           ...input,
           verified: false,
@@ -193,7 +193,7 @@ export const profileRouter = router({
       }
 
       // Return updated profile
-      const [updated] = await db
+      const [updated] = await ctx.db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, userId))
@@ -211,7 +211,7 @@ export const profileRouter = router({
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      const [follow] = await db
+      const [follow] = await ctx.db
         .select()
         .from(follows)
         .where(
@@ -239,7 +239,7 @@ export const profileRouter = router({
       }
 
       try {
-        await db.insert(follows).values({
+        await ctx.db.insert(follows).values({
           followerId: userId,
           followingId: input.targetUserId,
         });
@@ -260,7 +260,7 @@ export const profileRouter = router({
       const userId = ctx.user?.id;
       if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-      await db
+      await ctx.db
         .delete(follows)
         .where(
           and(
@@ -281,7 +281,7 @@ export const profileRouter = router({
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Get top users by reputation score
-      const topUsers = await db
+      const topUsers = await ctx.db
         .select()
         .from(reputationScores)
         .orderBy(desc(reputationScores.score))
@@ -299,14 +299,14 @@ export const profileRouter = router({
     .mutation(async ({ input, ctx }) => {
       if (!ctx.db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const [existing] = await db
+      const [existing] = await ctx.db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, input.userId))
         .limit(1);
 
       if (existing) {
-        await db
+        await ctx.db
           .update(userProfiles)
           .set({
             verified: true,
@@ -315,7 +315,7 @@ export const profileRouter = router({
           })
           .where(eq(userProfiles.userId, input.userId));
       } else {
-        await db.insert(userProfiles).values({
+        await ctx.db.insert(userProfiles).values({
           userId: input.userId,
           verified: true,
           verificationBadge: input.badge,

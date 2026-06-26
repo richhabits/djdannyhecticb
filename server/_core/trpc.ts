@@ -61,3 +61,25 @@ export const adminProcedure = t.procedure.use(
     });
   }),
 );
+
+const PORTAL_ROLES = ['booking_client', 'artist', 'brand'] as const;
+
+/**
+ * Gates client portal routes to booking_client/artist/brand roles (admins always pass through).
+ */
+export const clientProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || !(PORTAL_ROLES.includes(ctx.user.role as typeof PORTAL_ROLES[number]) || ctx.user.role === 'admin')) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Portal access required" });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);

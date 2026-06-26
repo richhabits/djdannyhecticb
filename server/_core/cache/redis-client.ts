@@ -3,7 +3,9 @@
  * Handles connection pooling, error recovery, and monitoring
  */
 
-import { createClient, RedisClient, ClientOptions } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
+type RedisClient = RedisClientType<any, any, any>;
+type ClientOptions = Parameters<typeof createClient>[0];
 import { logger } from '../logging';
 
 export interface RedisConfig {
@@ -48,7 +50,7 @@ export async function initializeRedis(config: Partial<RedisConfig> = {}): Promis
   const clientOptions: ClientOptions = {
     url: process.env.REDIS_URL,
     socket: {
-      reconnectStrategy: (retries) => {
+      reconnectStrategy: (retries: number) => {
         const delay = Math.min(retries * 100, 3000);
         return delay;
       },

@@ -41,32 +41,14 @@ export function initSentryServer() {
     // Performance monitoring (50% sample rate in production)
     tracesSampleRate: environment === "production" ? 0.5 : 1.0,
 
-    // Integrations
-    integrations: [
-      new Sentry.Integrations.Http({ tracing: true }),
-      new Sentry.Integrations.Express({ request: true, serverName: true }),
-      new Sentry.Integrations.OnUncaughtException(),
-      new Sentry.Integrations.OnUnhandledRejection(),
-    ],
-
     // Attach stack traces
     attachStacktrace: true,
 
-    // Source maps
-    ...(environment === "production" && {
-      sourceMaps: {
-        include: ["./dist", "./build"],
-        ignore: ["node_modules", "vendor"],
-      },
-    }),
-
     // Ignore certain errors
     ignoreErrors: [
-      // Network errors that are not actionable
       /network/i,
       /timeout/i,
       /cancelled/i,
-      // Third-party errors
       /google-analytics/i,
       /facebook/i,
       /twitter/i,
@@ -74,8 +56,11 @@ export function initSentryServer() {
   });
 
   return {
-    errorHandler: Sentry.Handlers.errorHandler(),
-    requestHandler: Sentry.Handlers.requestHandler(),
+    errorHandler: (err: any, req: Request, res: Response, next: NextFunction) => {
+      Sentry.captureException(err);
+      next(err);
+    },
+    requestHandler: (req: Request, res: Response, next: NextFunction) => next(),
   };
 }
 
@@ -84,7 +69,10 @@ export function initSentryServer() {
  * Must be used AFTER all other middleware and route handlers
  */
 export function getSentryErrorHandler() {
-  return Sentry.Handlers.errorHandler();
+  return (err: any, req: Request, res: Response, next: NextFunction) => {
+    Sentry.captureException(err);
+    next(err);
+  };
 }
 
 /**
@@ -92,7 +80,7 @@ export function getSentryErrorHandler() {
  * Should be used EARLY in the middleware stack
  */
 export function getSentryRequestHandler() {
-  return Sentry.Handlers.requestHandler();
+  return (_req: Request, _res: Response, next: NextFunction) => next();
 }
 
 /**
@@ -180,10 +168,7 @@ export function setServerContext(name: string, context: Record<string, any>) {
  * Start a transaction for tracking request performance
  */
 export function startTransaction(name: string, op: string = "http.server") {
-  return Sentry.startTransaction({
-    name,
-    op,
-  });
+  return Sentry.startInactiveSpan({ name, op });
 }
 
 /**

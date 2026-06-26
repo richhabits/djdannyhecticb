@@ -13,8 +13,11 @@ import { boolean, integer, pgEnum, pgTable, text, timestamp, varchar, numeric, j
  * ENUMS - Define all enums before tables
  * ============================================
  */
-export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
-export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "completed", "cancelled"]);
+export const userRoleEnum = pgEnum("user_role", ["user", "admin", "booking_client", "artist", "brand"]);
+export const clientBookingStatusEnum = pgEnum("client_booking_status", ["enquiry", "confirmed", "completed", "cancelled"]);
+export const uploadTypeEnum = pgEnum("upload_type", ["track", "playlist", "photo", "video", "layout", "doc"]);
+export const uploadStatusEnum = pgEnum("upload_status", ["pending", "approved", "rejected"]);
+export type UploadType = typeof uploadTypeEnum.enumValues[number];
 export const trackStatusEnum = pgEnum("track_status", ["pending", "queued", "played"]);
 export const streamTypeEnum = pgEnum("stream_type", ["shoutcast", "icecast", "custom"]);
 export const eventTypeEnum = pgEnum("event_type", ["club", "radio", "private", "brand", "other"]);
@@ -127,21 +130,20 @@ export type Mix = typeof mixes.$inferSelect;
 export type InsertMix = typeof mixes.$inferInsert;
 
 /**
- * Bookings table for DJ service bookings
+ * Bookings table for client portal booking enquiries (booking_client/artist/brand roles)
  */
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
   userId: integer("userId").notNull(),
-  eventName: varchar("eventName", { length: 255 }).notNull(),
-  eventDate: timestamp("eventDate").notNull(),
-  eventLocation: varchar("eventLocation", { length: 255 }).notNull(),
   eventType: varchar("eventType", { length: 100 }).notNull(),
-  guestCount: integer("guestCount"),
-  budget: varchar("budget", { length: 100 }),
-  description: text("description"),
-  contactEmail: varchar("contactEmail", { length: 320 }).notNull(),
-  contactPhone: varchar("contactPhone", { length: 20 }),
-  status: bookingStatusEnum("status").default("pending").notNull(),
+  eventDate: timestamp("eventDate").notNull(),
+  venue: varchar("venue", { length: 255 }),
+  location: varchar("location", { length: 255 }).notNull(),
+  duration: varchar("duration", { length: 50 }),
+  budget: numeric("budget", { precision: 10, scale: 2 }),
+  requirements: text("requirements"),
+  status: clientBookingStatusEnum("status").default("enquiry").notNull(),
+  notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -1599,3 +1601,94 @@ export const platformLiveStatus = pgTable("platform_live_status", {
 
 export type PlatformLiveStatus = typeof platformLiveStatus.$inferSelect;
 export type InsertPlatformLiveStatus = typeof platformLiveStatus.$inferInsert;
+
+/**
+ * ============================================
+ * CLIENT PORTAL - profiles, uploads, playlists, storage quota
+ * ============================================
+ */
+
+/**
+ * Extended profile data for portal users (booking_client/artist/brand roles)
+ */
+export const clientProfiles = pgTable("client_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(),
+  displayName: varchar("displayName", { length: 255 }),
+  company: varchar("company", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  bio: text("bio"),
+  avatarUrl: varchar("avatarUrl", { length: 512 }),
+  artistGenre: varchar("artistGenre", { length: 100 }),
+  brandIndustry: varchar("brandIndustry", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type ClientProfile = typeof clientProfiles.$inferSelect;
+export type InsertClientProfile = typeof clientProfiles.$inferInsert;
+
+/**
+ * Uploaded media (tracks, photos, videos, layouts, docs) for portal clients
+ */
+export const uploads = pgTable("uploads", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  type: uploadTypeEnum("type").notNull(),
+  fileUrl: varchar("fileUrl", { length: 1024 }).notNull(),
+  fileName: varchar("fileName", { length: 512 }).notNull(),
+  fileSize: integer("fileSize").notNull(),
+  mimeType: varchar("mimeType", { length: 128 }).notNull(),
+  duration: integer("duration"),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 1024 }),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  rightsConfirmed: boolean("rightsConfirmed").default(false).notNull(),
+  status: uploadStatusEnum("status").default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type Upload = typeof uploads.$inferSelect;
+export type InsertUpload = typeof uploads.$inferInsert;
+
+/**
+ * Client-built playlists of their own uploaded tracks.
+ * Named distinctly from `playlists` in content-schema.ts (public clip playlists) to avoid a table collision.
+ */
+export const clientPlaylists = pgTable("client_playlists", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  coverUrl: varchar("coverUrl", { length: 1024 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type ClientPlaylist = typeof clientPlaylists.$inferSelect;
+export type InsertClientPlaylist = typeof clientPlaylists.$inferInsert;
+
+export const clientPlaylistTracks = pgTable("client_playlist_tracks", {
+  id: serial("id").primaryKey(),
+  playlistId: integer("playlistId").notNull(),
+  uploadId: integer("uploadId").notNull(),
+  position: integer("position").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ClientPlaylistTrack = typeof clientPlaylistTracks.$inferSelect;
+export type InsertClientPlaylistTrack = typeof clientPlaylistTracks.$inferInsert;
+
+/**
+ * Running storage usage total per client, checked against a 5GB cap before issuing upload tokens
+ */
+export const storageUsage = pgTable("storage_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(),
+  bytesUsed: numeric("bytesUsed", { precision: 20, scale: 0 }).default("0").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type StorageUsage = typeof storageUsage.$inferSelect;
+export type InsertStorageUsage = typeof storageUsage.$inferInsert;
