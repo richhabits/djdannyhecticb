@@ -195,7 +195,7 @@ export function GlobalNav() {
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              className="md:hidden tape-strip bg-accent text-white border-white p-3 hover:bg-white hover:text-black transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="md:hidden bg-accent text-white border-2 border-white shadow-[4px_4px_0px_#F97316] p-3 hover:bg-white hover:text-black transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? (
                 <X className="w-5 h-5" aria-hidden="true" />

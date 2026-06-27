@@ -65,17 +65,19 @@ body {
 }
 
 /* Mobile-first tap targets (44x44 minimum) */
-button,
-a,
-[role="button"],
-[role="link"],
-input[type="checkbox"],
-input[type="radio"] {
-  min-height: var(--min-tap-target);
-  min-width: var(--min-tap-target);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@layer base {
+  button,
+  a,
+  [role="button"],
+  [role="link"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: var(--min-tap-target);
+    min-width: var(--min-tap-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* Ensure clickable areas are properly sized */
