@@ -23,6 +23,9 @@ storybook-static/
 .env.production
 .env.development
 .env.test
+.env.prod
+.env.staging
+.env.dev
 
 # IDE and editor files
 .vscode/

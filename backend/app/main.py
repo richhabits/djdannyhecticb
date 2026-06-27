@@ -7,8 +7,9 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pythonjsonlogger import jsonlogger
 
 # --- Structured Logging Setup ---
@@ -26,6 +27,19 @@ logger = logging.getLogger("broadcast-engine")
 
 # --- App Initialization ---
 app = FastAPI(title="DJ Danny Hectic B - Broadcast Engine API")
+
+# --- Global Exception Handler ---
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception occurred", extra={
+        "path": request.url.path,
+        "error": str(exc),
+        "method": request.method
+    })
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal Server Error", "detail": str(exc) if os.getenv("DEBUG") else "An unexpected error occurred"},
+    )
 
 # Configure strict CORS for Vite development and production
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")

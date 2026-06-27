@@ -30,10 +30,8 @@ export async function createAIMix(mix: InsertAIMix) {
     ...mix,
     setlist: typeof mix.setlist === "string" ? mix.setlist : JSON.stringify(mix.setlist),
     genres: typeof mix.genres === "string" ? mix.genres : JSON.stringify(mix.genres),
-  });
-  const insertedId = result[0].insertId;
-  const created = await db.select().from(aiMixes).where(eq(aiMixes.id, insertedId)).limit(1);
-  return created[0];
+  }).returning();
+  return result[0];
 }
 
 /**

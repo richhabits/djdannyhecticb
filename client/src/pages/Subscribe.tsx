@@ -19,7 +19,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Zap } from "lucide-react";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || "");
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 interface SubscriptionPlan {
   plan: string;
@@ -345,16 +346,23 @@ const Subscribe: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              <Elements stripe={stripePromise}>
-                <PaymentForm
-                  plan={plans.find((p) => p.plan === selectedPlan)!}
-                  billingCycle={billingCycle}
-                  onSuccess={() => {
-                    setShowPayment(false);
-                    currentSubQuery.refetch();
-                  }}
-                />
-              </Elements>
+              {!stripePromise ? (
+                <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-center">
+                  <p className="text-yellow-300 font-medium mb-1">Payments Coming Soon</p>
+                  <p className="text-slate-400 text-sm">Online subscriptions are being set up. Check back shortly or contact us directly.</p>
+                </div>
+              ) : (
+                <Elements stripe={stripePromise}>
+                  <PaymentForm
+                    plan={plans.find((p) => p.plan === selectedPlan)!}
+                    billingCycle={billingCycle}
+                    onSuccess={() => {
+                      setShowPayment(false);
+                      currentSubQuery.refetch();
+                    }}
+                  />
+                </Elements>
+              )}
             </CardContent>
           </Card>
         </div>

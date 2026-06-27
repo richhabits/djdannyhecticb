@@ -3,21 +3,20 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { trpc } from "../lib/trpc";
-import { useAtom } from "jotai";
-import { userAtom } from "../stores/user";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import { ScrollArea } from "../components/ui/scroll-area";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "../../_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Loader2, Send, Search, Plus, Check, CheckCheck, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export function Messages() {
-  const [user] = useAtom(userAtom);
+  const { user } = useAuth();
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +72,7 @@ export function Messages() {
   const handleSendMessage = (recipientId?: number) => {
     if (!messageText.trim() || !selectedConversationId) return;
 
-    const targetConv = conversations?.find((c) => c.id === selectedConversationId);
+    const targetConv = conversations?.find((c: any) => c.id === selectedConversationId);
     const recipientUserId = targetConv?.user1Id === user?.id ? targetConv?.user2Id : targetConv?.user1Id;
 
     if (recipientUserId) {
@@ -84,7 +83,7 @@ export function Messages() {
     }
   };
 
-  const filteredConversations = conversations?.filter((conv) =>
+  const filteredConversations = conversations?.filter((conv: any) =>
     conv.lastMessageAt?.toString().toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -116,7 +115,7 @@ export function Messages() {
             </div>
           ) : filteredConversations && filteredConversations.length > 0 ? (
             <div className="space-y-2 p-2">
-              {filteredConversations.map((conv) => {
+              {filteredConversations.map((conv: any) => {
                 const otherUserId = conv.user1Id === user?.id ? conv.user2Id : conv.user1Id;
                 return (
                   <button
@@ -167,7 +166,7 @@ export function Messages() {
               </div>
             ) : messages && messages.length > 0 ? (
               <div className="space-y-4">
-                {messages.map((msg) => (
+                {messages.map((msg: any) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.senderId === user?.id ? "justify-end" : "justify-start"}`}
@@ -214,7 +213,7 @@ export function Messages() {
                 rows={3}
               />
               <Button
-                onClick={handleSendMessage}
+                onClick={() => handleSendMessage()}
                 disabled={!messageText.trim() || sendMessageMutation.isPending}
                 size="icon"
                 className="self-end"

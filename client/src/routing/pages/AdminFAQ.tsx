@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { trpc } from "../lib/trpc";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Checkbox } from "../components/ui/checkbox";
-import { Badge } from "../components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Edit2, Trash2, Plus, GripVertical } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Edit2, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 interface FAQFormData {
@@ -34,49 +33,36 @@ export function AdminFAQ() {
     active: true,
   });
 
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  const { data: faqs } = useQuery({
-    queryKey: ["faq:all"],
-    queryFn: () => trpc.faq.all.query(),
-  });
+  const { data: faqs } = trpc.faq.all.useQuery();
 
   const allFaqs = Object.values(faqs || {}).flat() as any[];
 
-  const createMutation = useMutation({
-    mutationFn: () => trpc.faq.create.mutate(formData),
+  const createMutation = trpc.faq.create.useMutation({
     onSuccess: () => {
       toast.success("FAQ created");
-      queryClient.invalidateQueries({ queryKey: ["faq:all"] });
-      queryClient.invalidateQueries({ queryKey: ["faq:list"] });
+      utils.faq.all.invalidate();
       resetForm();
       setShowCreateDialog(false);
     },
     onError: () => toast.error("Failed to create FAQ"),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: () =>
-      trpc.faq.update.mutate({
-        id: editingId!,
-        ...formData,
-      }),
+  const updateMutation = trpc.faq.update.useMutation({
     onSuccess: () => {
       toast.success("FAQ updated");
-      queryClient.invalidateQueries({ queryKey: ["faq:all"] });
-      queryClient.invalidateQueries({ queryKey: ["faq:list"] });
+      utils.faq.all.invalidate();
       resetForm();
       setEditingId(null);
     },
     onError: () => toast.error("Failed to update FAQ"),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => trpc.faq.delete.mutate({ id }),
+  const deleteMutation = trpc.faq.delete.useMutation({
     onSuccess: () => {
       toast.success("FAQ deleted");
-      queryClient.invalidateQueries({ queryKey: ["faq:all"] });
-      queryClient.invalidateQueries({ queryKey: ["faq:list"] });
+      utils.faq.all.invalidate();
       setDeleteId(null);
     },
     onError: () => toast.error("Failed to delete FAQ"),
@@ -286,9 +272,9 @@ export function AdminFAQ() {
               <Button
                 onClick={() => {
                   if (editingId) {
-                    updateMutation.mutate();
+                    updateMutation.mutate({ id: editingId, ...formData });
                   } else {
-                    createMutation.mutate();
+                    createMutation.mutate(formData);
                   }
                 }}
                 className="bg-purple-600 hover:bg-purple-700"
@@ -319,7 +305,7 @@ export function AdminFAQ() {
             <AlertDialogAction
               onClick={() => {
                 if (deleteId) {
-                  deleteMutation.mutate(deleteId);
+                  deleteMutation.mutate({ id: deleteId });
                 }
               }}
               className="bg-red-600 hover:bg-red-700"

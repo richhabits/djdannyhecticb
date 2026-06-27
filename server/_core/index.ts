@@ -48,6 +48,7 @@ import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
 import { registerRateCardRoutes } from "../routes/ratecard";
 import { registerUploadRoutes } from "../routes/upload";
+import { registerPortalUploadRoutes } from "@/server/domains/portal/uploadHandler";
 import { registerWebhookRoutes } from "@/server/domains/ingestion/webhooks";
 import { registerCronRoutes } from "../routes/cron";
 import streamEventsRouter, { setupStreamWebSocket } from "@/server/domains/broadcast/streamEventsRouter";
@@ -60,6 +61,7 @@ import { createContext } from "./context";
 import { ENV } from "./env";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { loggerMiddleware } from "./middleware/logger";
+import { initSentryServer } from "./sentry";
 import {
   publicRateLimit,
   authRateLimit,
@@ -128,6 +130,10 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Initialize Sentry first (Must be the first middleware)
+  const sentry = initSentryServer();
+  app.use(sentry.requestHandler);
 
   // Initialize Redis for caching (non-blocking with graceful fallback)
   // Only initialize if REDIS_URL is set
@@ -295,6 +301,9 @@ async function startServer() {
   // File Uploads
   registerUploadRoutes(app);
 
+  // Client Portal — Vercel Blob upload pipeline
+  registerPortalUploadRoutes(app);
+
   // Analytics Tracking (self-hosted)
   const { registerAnalyticsRoutes } = await import("@/server/domains/analytics/analytics");
   registerAnalyticsRoutes(app);
@@ -338,6 +347,10 @@ async function startServer() {
     })
   );
 
+  // Sentry Error Handler (Must be after all controllers, before other error handlers)
+  app.use(sentry.errorHandler);
+
+  // Global Error Handler (Must be after all other routes)
   // Global Error Handler (Must be after all other routes)
   const { globalErrorHandler } = await import("./errors");
   app.use(globalErrorHandler);

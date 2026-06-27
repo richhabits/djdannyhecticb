@@ -125,7 +125,7 @@ export async function handlePaymentCaptureCompleted(
   const status = resource.status;
 
   // Extract purchase ID from custom_id
-  const purchaseId = extractPurchaseIdFromCustomId(customId);
+  const purchaseId = extractPurchaseIdFromCustomId(customId ?? "");
 
   if (!purchaseId) {
     console.warn(
@@ -263,7 +263,7 @@ export async function handlePaymentCaptureRefunded(
   const { resource } = event;
   const customId = resource.custom_id;
   const refundId = resource.id;
-  const linkingId = resource.links?.find((l) => l.rel === "up")?.href;
+  const linkingId = resource.links?.find((l: any) => l.rel === "up")?.href;
 
   const purchaseId = extractPurchaseIdFromCustomId(customId);
 
@@ -294,7 +294,7 @@ export async function handlePaymentCaptureRefunded(
       try {
         await db.createRefundRequest({
           purchaseId,
-          reason: "PayPal refund processed",
+          reason: "other" as any,
           status: "approved",
           refundAmount: parseFloat(resource.amount?.value || "0"),
           transactionId: refundId,
@@ -374,7 +374,7 @@ export async function handlePaymentCaptureReversed(
       try {
         await db.createRefundRequest({
           purchaseId,
-          reason: "PayPal reversal/chargeback",
+          reason: "other" as any,
           status: "approved",
           refundAmount: parseFloat(resource.amount?.value || "0"),
           transactionId: reversalId,

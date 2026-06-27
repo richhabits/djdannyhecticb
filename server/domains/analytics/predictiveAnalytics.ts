@@ -17,6 +17,7 @@ import {
 import { donations, reactions, chatMessages } from "@/drizzle/engagement-schema";
 import { eq, desc, gte, lte, and } from "drizzle-orm";
 import { ENV } from "@/server/_core/env";
+import { getDb } from "../../db";
 
 const client = new Anthropic({
   apiKey: ENV.claudeApiKey,
@@ -34,7 +35,7 @@ interface UserEngagementMetrics {
 /**
  * Calculate user engagement metrics
  */
-async function getUserEngagementMetrics(db?: Awaited<ReturnType<typeof getDb>>, userId: number): Promise<UserEngagementMetrics> {
+async function getUserEngagementMetrics(userId: number): Promise<UserEngagementMetrics> {
   const db = await getDb();
   if (!db) return {
     userId,
@@ -99,7 +100,7 @@ async function getUserEngagementMetrics(db?: Awaited<ReturnType<typeof getDb>>, 
 /**
  * Predict churn risk for a user
  */
-export async function predictChurnRisk(db?: Awaited<ReturnType<typeof getDb>>, userId: number): Promise<InsertChurnPrediction> {
+export async function predictChurnRisk(userId: number): Promise<InsertChurnPrediction> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -163,7 +164,7 @@ export async function predictChurnRisk(db?: Awaited<ReturnType<typeof getDb>>, u
 /**
  * Get high-risk churn users
  */
-export async function getChurnRiskUsers(db?: Awaited<ReturnType<typeof getDb>>, threshold: number = 0.7) {
+export async function getChurnRiskUsers(threshold: number = 0.7) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -178,13 +179,13 @@ export async function getChurnRiskUsers(db?: Awaited<ReturnType<typeof getDb>>, 
  * Analyze content performance
  */
 export async function analyzeContentPerformance(
-  db?: Awaited<ReturnType<typeof getDb>>, liveSessionId: number
+  liveSessionId: number
 ): Promise<InsertContentAnalytics> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
   // Get engagement metrics for this stream
-  const [messages, donations, reactions] = await Promise.all([
+  const [messages, donationRows, reactionRows] = await Promise.all([
     db
       .select()
       .from(chatMessages)
@@ -199,13 +200,13 @@ export async function analyzeContentPerformance(
       .where(eq(reactions.liveSessionId, liveSessionId)),
   ]);
 
-  const totalRevenue = donations.reduce((sum, d) => {
+  const totalRevenue = donationRows.reduce((sum: number, d: any) => {
     return sum + parseFloat(d.amount);
   }, 0);
 
   // Calculate engagement score
   const engagementScore =
-    (messages.length * 0.3 + reactions.length * 0.3 + donations.length * 0.4) / 100;
+    (messages.length * 0.3 + reactionRows.length * 0.3 + donationRows.length * 0.4) / 100;
 
   // Simple revenue prediction based on engagement
   const revenuePrediction = engagementScore * 500; // Scale to estimated revenue
@@ -286,7 +287,7 @@ Provide a JSON response:
  * Get revenue forecast
  */
 export async function getRevenueForecast(
-  db?: Awaited<ReturnType<typeof getDb>>, period: "7d" | "30d" | "90d" = "30d"
+  period: "7d" | "30d" | "90d" = "30d"
 ): Promise<{
   period: string;
   forecast: number;
@@ -345,7 +346,7 @@ export async function getPredictiveInsights() {
 /**
  * Get user engagement trend
  */
-export async function getUserEngagementTrend(db?: Awaited<ReturnType<typeof getDb>>, userId: number) {
+export async function getUserEngagementTrend(userId: number) {
   const db = await getDb();
   if (!db) return null;
 
@@ -362,7 +363,7 @@ export async function getUserEngagementTrend(db?: Awaited<ReturnType<typeof getD
       )
     );
 
-  const donations = await db
+  const userDonations = await db
     .select()
     .from(donations)
     .where(
@@ -388,7 +389,7 @@ export async function getUserEngagementTrend(db?: Awaited<ReturnType<typeof getD
   return {
     userId,
     messagesByWeek: weeks,
-    donationsByWeek: [donations.length, 0, 0, 0],
+    donationsByWeek: [userDonations.length, 0, 0, 0],
     overallTrend: trend,
   };
 }

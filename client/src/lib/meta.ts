@@ -16,7 +16,7 @@ export interface MetaTags {
 
 const DEFAULT_IMAGE = "/og-default.png";
 const DEFAULT_SITE_NAME = "Hectic Radio";
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://djdannyhecticb.com";
 
 export function getMetaTags(meta: MetaTags): Array<{ name?: string; property?: string; content: string }> {
   const url = meta.url || BASE_URL;

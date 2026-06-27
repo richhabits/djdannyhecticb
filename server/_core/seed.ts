@@ -32,9 +32,9 @@ async function seed() {
                 name: "Admin User",
                 loginMethod: "password",
                 role: "admin",
-            });
+            }).returning({ id: users.id });
 
-            const userId = userResult.insertId;
+            const userId = userResult.id;
 
             await db.insert(adminCredentials).values({
                 userId,

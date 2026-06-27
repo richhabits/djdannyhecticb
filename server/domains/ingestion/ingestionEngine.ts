@@ -4,7 +4,7 @@
  */
 
 import { chatWithDanny } from "@/server/lib/gemini";
-import { observability } from "./observability";
+import { observability } from "@/server/_core/observability";
 import * as db from "@/server/db";
 
 export interface RawIntelSource {

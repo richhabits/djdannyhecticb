@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { Input } from "../components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
@@ -13,16 +12,12 @@ export function FAQ() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: faqs, isLoading } = useQuery({
-    queryKey: ["faq:list"],
-    queryFn: () => trpc.faq.list.query(),
-  });
+  const { data: faqs, isLoading } = trpc.faq.list.useQuery();
 
-  const { data: searchResults } = useQuery({
-    queryKey: ["faq:search", searchQuery],
-    queryFn: () => trpc.faq.search.query({ query: searchQuery }),
-    enabled: searchQuery.length > 0,
-  });
+  const { data: searchResults } = trpc.faq.search.useQuery(
+    { query: searchQuery },
+    { enabled: searchQuery.length > 0 }
+  );
 
   const displayFaqs = searchQuery ? searchResults : faqs;
   const categories = displayFaqs

@@ -304,7 +304,7 @@ sed -i.bak "s/^TWITCH_CLIENT_SECRET=.*/TWITCH_CLIENT_SECRET=YOUR_NEW_SECRET/" \
 
 Manual edit: `/Users/romeovalentine/djdannyhecticb/.env`
 ```
-TWITCH_CLIENT_ID=6j2q6mwwjtxn2l1sfnux1hp6yxgumt  # Keep same
+TWITCH_CLIENT_ID=<REDACTED_TWITCH_CLIENT_ID>  # Keep same
 TWITCH_CLIENT_SECRET=YOUR_NEW_SECRET               # Update this
 ```
 
@@ -320,7 +320,7 @@ Add to Railway Variables: TWITCH_CLIENT_SECRET
 ```bash
 # Test if new secret works with Twitch API
 curl -s -X POST "https://id.twitch.tv/oauth2/token" \
-  -d "client_id=6j2q6mwwjtxn2l1sfnux1hp6yxgumt" \
+  -d "client_id=<REDACTED_TWITCH_CLIENT_ID>" \
   -d "client_secret=YOUR_NEW_SECRET" \
   -d "grant_type=client_credentials" \
   | jq '.access_token'
@@ -673,11 +673,11 @@ echo "Checking for old secret patterns..."
 
 # These should NOT return results
 grep -i "plit8kpi986o5vhleoadlmfs7bpa92h3" $ENV_FILE && echo "ERROR: Old Google Client ID found!" || echo "✓ Old Google Client ID not found"
-grep -i "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" $ENV_FILE && echo "ERROR: Old Google Secret found!" || echo "✓ Old Google Secret not found"
-grep -i "AIzaSyBGSh5G9yb8h5mOopY2VgQM4ZXe5cCYkq8" $ENV_FILE && echo "ERROR: Old YouTube API Key found!" || echo "✓ Old YouTube API Key not found"
-grep -i "6j2q6mwwjtxn2l1sfnux1hp6yxgumt" $ENV_FILE && echo "ERROR: Old Twitch ID found!" || echo "✓ Old Twitch ID not found"
-grep -i "fiv5vbp5j3eu3izmfl3ox6rvcilcy" $ENV_FILE && echo "ERROR: Old Twitch Secret found!" || echo "✓ Old Twitch Secret not found"
-grep -i "Blackgrapeman10" $ENV_FILE && echo "ERROR: Old DB password found!" || echo "✓ Old DB password not found"
+grep -i "<REDACTED_GOOGLE_CLIENT_SECRET>" $ENV_FILE && echo "ERROR: Old Google Secret found!" || echo "✓ Old Google Secret not found"
+grep -i "<REDACTED_GOOGLE_API_KEY>" $ENV_FILE && echo "ERROR: Old YouTube API Key found!" || echo "✓ Old YouTube API Key not found"
+grep -i "<REDACTED_TWITCH_CLIENT_ID>" $ENV_FILE && echo "ERROR: Old Twitch ID found!" || echo "✓ Old Twitch ID not found"
+grep -i "<REDACTED_TWITCH_CLIENT_SECRET>" $ENV_FILE && echo "ERROR: Old Twitch Secret found!" || echo "✓ Old Twitch Secret not found"
+grep -i "<REDACTED_DB_PASSWORD>" $ENV_FILE && echo "ERROR: Old DB password found!" || echo "✓ Old DB password not found"
 
 echo ""
 echo "=== VERIFICATION COMPLETE ==="
@@ -795,7 +795,7 @@ Ensure `/Users/romeovalentine/djdannyhecticb/.env.example` exists with all keys 
 ls -la /Users/romeovalentine/djdannyhecticb/.env.example
 
 # It should NOT contain:
-grep -i "plit8kpi986o5vhleoadlmfs7bpa92h3\|AIzaSyBGSh5G9yb8\|Blackgrapeman10\|fiv5vbp5j3eu3izmfl3ox6rvcilcy" \
+grep -i "plit8kpi986o5vhleoadlmfs7bpa92h3\|AIzaSyBGSh5G9yb8\|<REDACTED_DB_PASSWORD>\|<REDACTED_TWITCH_CLIENT_SECRET>" \
   /Users/romeovalentine/djdannyhecticb/.env.example
 # Should return NO results
 ```

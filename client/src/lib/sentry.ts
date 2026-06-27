@@ -38,10 +38,6 @@ export function initSentry() {
 
     // Capture 100% of errors
     integrations: [
-      new Sentry.Replay({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
       Sentry.captureConsoleIntegration({
         levels: ["error", "warn"],
       }),
@@ -132,7 +128,7 @@ export function captureMessage(message: string, level: "fatal" | "error" | "warn
  * Get Sentry event ID (for displaying to users)
  */
 export function getSentryEventId(): string | null {
-  return Sentry.lastEventId();
+  return Sentry.lastEventId() ?? null;
 }
 
 /**
@@ -140,9 +136,9 @@ export function getSentryEventId(): string | null {
  */
 export function reportFeedback(title: string, message: string, name?: string, email?: string) {
   Sentry.captureUserFeedback({
-    eventId: Sentry.lastEventId() || "",
-    name,
-    email,
+    event_id: Sentry.lastEventId() || "",
+    name: name ?? "",
+    email: email ?? "",
     comments: `${title}\n\n${message}`,
   });
 }

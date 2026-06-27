@@ -4,5 +4,5 @@
 
 export { moderationRouter } from "./moderationRouter";
 export { aiModerationRouter } from "./aiModerationRouter";
-export { smartModeration } from "./smartModeration";
-export { spamDetection } from "./spamDetection";
+export * from "./smartModeration";
+export * from "./spamDetection";

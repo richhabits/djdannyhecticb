@@ -101,7 +101,10 @@ export const ENV = {
   spotifyClientSecret: process.env.SPOTIFY_CLIENT_SECRET ?? "",
   spotifyArtistId: process.env.SPOTIFY_ARTIST_ID ?? "",
   beatportProfileUrl: process.env.BEATPORT_PROFILE_URL ?? "",
-  corsOrigins: process.env.CORS_ORIGINS?.split(",") ?? ["http://localhost:3000"],
+  corsOrigins: process.env.CORS_ORIGINS?.split(",") ?? ["https://djdannyhecticb.com"],
+  // AI configuration
+  claudeApiKey: process.env.ANTHROPIC_API_KEY ?? "",
+  jwtSecret: process.env.JWT_SECRET ?? "",
   // Email configuration
   emailServiceProvider: process.env.EMAIL_SERVICE_PROVIDER ?? "sendgrid", // resend or sendgrid
   emailApiKey: process.env.EMAIL_API_KEY ?? "",
@@ -113,4 +116,10 @@ export const ENV = {
   instagramHandle: process.env.INSTAGRAM_HANDLE ?? "djdannyhecticb",
   // Printfull integration
   printfullApiKey: process.env.PRINTFULL_API_KEY ?? "",
+  // YouTube / Twitch live checker
+  youtubeDataApiKey: process.env.YOUTUBE_DATA_API_KEY ?? "",
+  youtubeChannelId: process.env.YOUTUBE_CHANNEL_ID ?? "",
+  twitchClientId: process.env.TWITCH_CLIENT_ID ?? "",
+  twitchClientSecret: process.env.TWITCH_CLIENT_SECRET ?? "",
+  twitchChannelName: process.env.TWITCH_CHANNEL_NAME ?? "",
 };

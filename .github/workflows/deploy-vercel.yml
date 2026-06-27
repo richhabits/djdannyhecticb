@@ -1,0 +1,56 @@
+name: Deploy Frontend to Vercel
+
+# The Vercel git integration stopped auto-deploying pushes to `main`, so the
+# production site stayed pinned to a stale build. This workflow makes the
+# deploy explicit and repeatable: every push to `main` (or a manual run)
+# builds the project with the committed vercel.json and promotes it to
+# production. Requires a `VERCEL_TOKEN` repository secret.
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+# Avoid overlapping production deploys racing each other.
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_pkZKY3cOOTBCBUAZ702slPhi
+      VERCEL_PROJECT_ID: prj_KYpQLW6E09bqxHQVIvKel197fXEW
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        # Version is read from package.json's "packageManager" field. Do not also
+        # set a "version" input here — pnpm/action-setup errors on a double spec.
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build (respects vercel.json outputDirectory)
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to production
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

@@ -53,7 +53,7 @@ export function useAlertQueue() {
     });
 
     // Auto-dismiss if duration > 0
-    if (newAlert.duration > 0) {
+    if ((newAlert.duration ?? 0) > 0) {
       const timer = setTimeout(() => {
         dismiss(id);
       }, newAlert.duration);

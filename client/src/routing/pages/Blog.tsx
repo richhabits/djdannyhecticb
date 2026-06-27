@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "../lib/trpc";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { Search } from "lucide-react";
@@ -16,20 +15,15 @@ export function Blog() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const { data: postsData, isLoading: postsLoading } = useQuery({
-    queryKey: ["blog:list", currentPage],
-    queryFn: () =>
-      trpc.blog.list.query({
-        limit: POSTS_PER_PAGE,
-        offset: currentPage * POSTS_PER_PAGE,
-      }),
+  const { data: postsData, isLoading: postsLoading } = trpc.blog.list.useQuery({
+    limit: POSTS_PER_PAGE,
+    offset: currentPage * POSTS_PER_PAGE,
   });
 
-  const { data: searchResults, isLoading: searchLoading } = useQuery({
-    queryKey: ["blog:search", searchQuery],
-    queryFn: () => trpc.blog.search.query({ query: searchQuery }),
-    enabled: searchQuery.length > 0,
-  });
+  const { data: searchResults, isLoading: searchLoading } = trpc.blog.search.useQuery(
+    { query: searchQuery },
+    { enabled: searchQuery.length > 0 }
+  );
 
   const posts = searchQuery ? searchResults || [] : postsData?.posts || [];
   const total = postsData?.total || 0;

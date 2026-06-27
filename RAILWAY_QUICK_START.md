@@ -17,10 +17,10 @@ Railway dashboard → **"Variables"** tab → Add these:
 
 ```
 NODE_ENV=production
-DATABASE_URL=postgresql://neondb_owner:npg_z5oIdPSA2Oxk@ep-divine-leaf-abpjfgjl-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=<REDACTED — rotate via Neon dashboard, do not commit>
 JWT_SECRET=your-strong-secret-minimum-32-characters-long-change-this
-GOOGLE_CLIENT_ID=223520511634-plit8kpi986o5vhleoadlmfs7bpa92h3.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<REDACTED — rotate via Google Cloud Console, do not commit>
+GOOGLE_CLIENT_SECRET=<REDACTED — rotate via Google Cloud Console, do not commit>
 STRIPE_SECRET_KEY=sk_live_[your-key]
 STRIPE_WEBHOOK_SECRET=whsec_[your-key]
 PAYPAL_CLIENT_ID=[your-id]

@@ -25,10 +25,12 @@ export interface AdminLoginRequest {
   password: string;
 }
 
+export type SessionRole = "admin" | "user" | "booking_client" | "artist" | "brand";
+
 export interface AdminSessionPayload {
   userId: number;
   email: string;
-  role: "admin";
+  role: SessionRole;
   iat: number;
   exp: number;
 }
@@ -114,15 +116,46 @@ export async function verifyAdminPassword(
 }
 
 /**
+ * Verify password for a portal user (client/artist/brand) stored directly on the `users` table.
+ */
+export async function verifyUserPassword(
+  email: string,
+  password: string
+): Promise<{ success: boolean; user?: typeof users.$inferSelect; error?: string }> {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, error: "Database not available" };
+  }
+
+  const user = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
+    .then((rows) => rows[0]);
+
+  if (!user || !user.passwordHash) {
+    return { success: false, error: "Invalid credentials" };
+  }
+
+  const isValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isValid) {
+    return { success: false, error: "Invalid credentials" };
+  }
+
+  return { success: true, user };
+}
+
+/**
  * Create admin session token
  */
 /**
  * Create session token (Admin/User)
  */
-export async function createSessionToken(db?: Awaited<ReturnType<typeof getDb>>, 
+export async function createSessionToken(
   userId: number,
   email: string,
-  role: "admin" | "user" = "admin"
+  role: SessionRole = "admin"
 ): Promise<string> {
   const secret = new TextEncoder().encode(ENV.cookieSecret);
   const now = Math.floor(Date.now() / 1000);
@@ -145,11 +178,13 @@ export const createAdminSessionToken = (userId: number, email: string) => create
 /**
  * Authenticate admin from request (check session token)
  */
-export async function authenticateSession(db?: Awaited<ReturnType<typeof getDb>>, 
+export async function authenticateSession(
   req: Request
 ): Promise<{ success: boolean; user?: any; error?: string }> {
   try {
-    if (process.env.OFFLINE_MODE === "1") {
+    // Offline-mode auth bypass is strictly a local-development convenience —
+    // never honor it outside NODE_ENV=development, even if the env var leaks into another environment.
+    if (process.env.OFFLINE_MODE === "1" && process.env.NODE_ENV === "development") {
       return { success: true, user: { id: 999999, email: "dev@local.host", role: "admin", name: "Dev User" } };
     }
 
@@ -190,6 +225,26 @@ export async function authenticateSession(db?: Awaited<ReturnType<typeof getDb>>
     console.error("[Auth] Error authenticating request:", error);
     return { success: false, error: "Invalid session" };
   }
+}
+
+/**
+ * Whether an admin account already exists.
+ * Used to gate the unauthenticated first-run setup endpoint so it can
+ * only ever bootstrap the very first admin (and never reset an existing one).
+ */
+export async function hasAnyAdminUser(): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    // Fail closed: if we can't verify, don't allow setup to proceed.
+    return true;
+  }
+
+  const existing = await db
+    .select({ id: adminCredentials.id })
+    .from(adminCredentials)
+    .limit(1);
+
+  return existing.length > 0;
 }
 
 /**

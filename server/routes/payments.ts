@@ -17,8 +17,13 @@
 import express from "express";
 import Stripe from "stripe";
 import { ENV } from "../_core/env";
-import * as db from "../db";
 import { handleStripeWebhook } from "@/server/domains/commerce/payments";
+import { asyncHandler } from "../_core/errors";
+import {
+  verifyPayPalWebhookSignature,
+  handlePayPalWebhook,
+  getPayPalWebhookId,
+} from "../_core/paypalHandler";
 
 const router = express.Router();
 
@@ -68,38 +73,31 @@ router.post(
   }
 );
 
-// PayPal webhook endpoint
-router.post("/webhook/paypal", express.json(), async (req, res) => {
+// PayPal webhook endpoint (signature-verified before any state change is applied)
+router.post("/webhook/paypal", express.json(), asyncHandler(async (req: express.Request, res: express.Response) => {
+  let webhookId: string;
   try {
-    const { event_type, resource } = req.body;
+    webhookId = getPayPalWebhookId();
+  } catch (error) {
+    console.error("PayPal webhook: PAYPAL_WEBHOOK_ID not configured", error);
+    return res.status(500).json({ error: "PayPal webhook not configured" });
+  }
 
-    if (event_type === "PAYMENT.CAPTURE.COMPLETED") {
-      const customId = resource?.custom_id;
-      if (!customId || !customId.startsWith("purchase_")) {
-        console.warn("PayPal webhook: Invalid or missing custom_id");
-        return res.json({ processed: false });
-      }
+  const isValid = await verifyPayPalWebhookSignature(req, webhookId);
+  if (!isValid) {
+    console.warn("PayPal webhook: signature verification failed");
+    return res.status(400).json({ error: "Invalid webhook signature" });
+  }
 
-      const purchaseId = parseInt(customId.replace("purchase_", ""));
-      const transactionId = resource?.id;
-
-      if (!isNaN(purchaseId) && transactionId) {
-        await db.updatePurchase(purchaseId, {
-          status: "completed",
-          transactionId,
-        });
-        console.log(`PayPal payment completed for purchase ${purchaseId}`);
-      }
-    }
-
-    res.json({ processed: true });
+  try {
+    await handlePayPalWebhook(req.body, req);
+    res.json({ received: true });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error handling PayPal webhook:", message);
-    // Security: Return generic error message instead of exposing details
     res.status(500).json({ error: "Webhook processing failed" });
   }
-});
+}));
 
 export function registerPaymentRoutes(app: express.Application) {
   app.use("/api/payments", router);

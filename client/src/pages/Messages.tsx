@@ -4,8 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
-import { useAtom } from "jotai";
-import { userAtom } from "../stores/user";
+import { useAuth } from "../_core/hooks/useAuth";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
@@ -17,7 +16,7 @@ import { Loader2, Send, Search, Plus, Check, CheckCheck, Clock } from "lucide-re
 import { formatDistanceToNow } from "date-fns";
 
 export function Messages() {
-  const [user] = useAtom(userAtom);
+  const { user } = useAuth();
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");

@@ -7,7 +7,6 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -35,44 +34,30 @@ export function PollWidget({ liveSessionId, onPollClosed }: PollWidgetProps) {
   const [userVoteIndex, setUserVoteIndex] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
-  // Get active poll
-  const { data: activePoll, isLoading } = useQuery({
-    queryKey: ["live:polls:active", liveSessionId],
-    queryFn: () =>
-      trpc.live.polls.getActive.query({
-        liveSessionId,
-      }),
-    refetchInterval: 2000,
-  });
+  // Get active poll (route returns array; take the first active one)
+  const { data: pollsData, isLoading } = trpc.live.polls.getActive.useQuery(
+    { liveSessionId },
+    { refetchInterval: 2000 }
+  );
+  const activePoll = Array.isArray(pollsData) ? pollsData[0] : pollsData;
 
   // Vote mutation
-  const voteMutation = useMutation({
-    mutationFn: (optionIndex: number) =>
-      trpc.live.polls.vote.mutate({
-        pollId: activePoll!.id,
-        optionIndex,
-      }),
+  const voteMutation = trpc.live.polls.vote.useMutation({
     onSuccess: (data) => {
       setUserVoteIndex(data.optionIndex);
       toast.success("Vote recorded!");
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to vote"
-      );
+      toast.error(error.message || "Failed to vote");
     },
   });
 
   // Close poll mutation
-  const closeMutation = useMutation({
-    mutationFn: () =>
-      trpc.live.polls.close.mutate({
-        pollId: activePoll!.id,
-      }),
+  const closeMutation = trpc.live.polls.close.useMutation({
     onSuccess: (closedPoll) => {
       toast.success("Poll closed!");
       if (onPollClosed) {
-        onPollClosed(closedPoll);
+        onPollClosed(closedPoll as Poll);
       }
     },
   });
@@ -89,7 +74,7 @@ export function PollWidget({ liveSessionId, onPollClosed }: PollWidgetProps) {
       setTimeRemaining(remaining);
 
       if (remaining === 0) {
-        closeMutation.mutate();
+        closeMutation.mutate({ pollId: activePoll.id });
       }
     }, 100);
 
@@ -144,7 +129,7 @@ export function PollWidget({ liveSessionId, onPollClosed }: PollWidgetProps) {
       {/* Options */}
       <div className="space-y-2">
         {activePoll.options.map((option, idx) => {
-          const votes = activePoll.voteCounts[idx] || 0;
+          const votes = (activePoll.voteCounts as Record<string, number>)[idx] || 0;
           const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
           const isUserVote = userVoteIndex === idx;
 
@@ -154,17 +139,17 @@ export function PollWidget({ liveSessionId, onPollClosed }: PollWidgetProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                if (!userVoteIndex) {
-                  voteMutation.mutate(idx);
+                if (userVoteIndex === null) {
+                  voteMutation.mutate({ pollId: activePoll.id, optionIndex: idx });
                 }
               }}
-              disabled={!!userVoteIndex || voteMutation.isPending}
+              disabled={userVoteIndex !== null || voteMutation.isPending}
               className={clsx(
                 "w-full p-2 rounded-lg transition-all text-left",
                 isUserVote
                   ? "bg-green-500/20 border border-green-500"
                   : "bg-gray-900/50 border border-gray-700 hover:border-purple-500",
-                !!userVoteIndex && !isUserVote && "opacity-50"
+                userVoteIndex !== null && !isUserVote && "opacity-50"
               )}
             >
               <div className="flex items-center justify-between gap-2">

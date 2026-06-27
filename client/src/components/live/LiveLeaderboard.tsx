@@ -7,7 +7,6 @@
  */
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
 import { motion } from "framer-motion";
 import clsx from "clsx";
@@ -46,27 +45,16 @@ export function LiveLeaderboard({
   const [activeTab, setActiveTab] = useState("donors");
 
   // Get top donors
-  const { data: topDonors, isLoading: donorsLoading } = useQuery({
-    queryKey: ["live:leaderboard:topDonors", liveSessionId, period],
-    queryFn: () =>
-      trpc.live.leaderboard.topDonors.query({
-        liveSessionId,
-        period: period as any,
-        limit: maxRows,
-      }),
-    refetchInterval: 15000,
-  });
+  const { data: topDonors, isLoading: donorsLoading } = trpc.live.leaderboard.topDonors.useQuery(
+    { liveSessionId, period: period as any, limit: maxRows },
+    { refetchInterval: 15000 }
+  );
 
   // Get top chatters
-  const { data: topChatters, isLoading: chattersLoading } = useQuery({
-    queryKey: ["live:leaderboard:topChatters", liveSessionId],
-    queryFn: () =>
-      trpc.live.leaderboard.topChatters.query({
-        liveSessionId,
-        limit: maxRows,
-      }),
-    refetchInterval: 15000,
-  });
+  const { data: topChatters, isLoading: chattersLoading } = trpc.live.leaderboard.topChatters.useQuery(
+    { liveSessionId, limit: maxRows },
+    { refetchInterval: 15000 }
+  );
 
   return (
     <div className="bg-gray-950 border border-gray-800 rounded-lg overflow-hidden">
@@ -149,33 +137,33 @@ export function LiveLeaderboard({
                         {donor.userName || "Anonymous"}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {donor.donationCount} donation
-                        {donor.donationCount !== 1 ? "s" : ""}
+                        {Number(donor.donationCount)} donation
+                        {Number(donor.donationCount) !== 1 ? "s" : ""}
                       </p>
                     </div>
 
                     {/* Amount */}
                     <div className="text-right flex-shrink-0">
                       <p className="font-bold text-lg text-green-400">
-                        ${parseFloat(donor.totalDonated).toFixed(2)}
+                        ${parseFloat(String(donor.totalDonated)).toFixed(2)}
                       </p>
                     </div>
                   </div>
 
                   {/* Donation Milestone Badge */}
-                  {parseFloat(donor.totalDonated) >= 100 && (
+                  {parseFloat(String(donor.totalDonated)) >= 100 && (
                     <div className="mt-2 flex gap-1 ml-11">
-                      {parseFloat(donor.totalDonated) >= 1000 && (
+                      {parseFloat(String(donor.totalDonated)) >= 1000 && (
                         <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded">
                           👑 Founder
                         </span>
                       )}
-                      {parseFloat(donor.totalDonated) >= 500 && (
+                      {parseFloat(String(donor.totalDonated)) >= 500 && (
                         <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">
                           ⭐ VIP
                         </span>
                       )}
-                      {parseFloat(donor.totalDonated) >= 100 && (
+                      {parseFloat(String(donor.totalDonated)) >= 100 && (
                         <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">
                           💎 Supporter
                         </span>
@@ -239,7 +227,7 @@ export function LiveLeaderboard({
                     {/* Message Count */}
                     <div className="text-right flex-shrink-0">
                       <p className="font-bold text-lg text-blue-400">
-                        {chatter.messageCount}
+                        {Number(chatter.messageCount)}
                       </p>
                       <p className="text-xs text-gray-400">messages</p>
                     </div>
