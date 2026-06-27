@@ -4,7 +4,7 @@
  * All rights reserved. Unauthorized copying, distribution, or use prohibited.
  */
 
-import { storageUsage } from "@/drizzle/schema";
+import { storageUsage } from "@/drizzle/portal-schema";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/server/db";
 

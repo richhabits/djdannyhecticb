@@ -8,7 +8,8 @@ import type { Express, Request, Response } from "express";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { authenticateSession } from "@/server/domains/auth";
 import { getDb } from "@/server/db";
-import { uploads, type UploadType } from "@/drizzle/schema";
+import { clientUploads as uploads, uploadTypeEnum } from "@/drizzle/portal-schema";
+type UploadType = typeof uploadTypeEnum.enumValues[number];
 import { hasQuotaFor, adjustStorageUsage, UPLOAD_SIZE_CAPS } from "./storageQuota";
 
 const UPLOAD_TYPES = new Set<UploadType>(["track", "playlist", "photo", "video", "layout", "doc"]);
