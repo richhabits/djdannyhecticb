@@ -46,6 +46,7 @@ export function BookingCalendar({ onSelect, selected }: BookingCalendarProps) {
                     onSelect={(date) => date && onSelect(date)}
                     disabled={(date) => date < new Date() || isUnavailable(date)}
                     className="rounded-md"
+                    classNames={{ root: "w-full" }}
                     modifiers={{
                         booked: (date) => isUnavailable(date),
                     }}

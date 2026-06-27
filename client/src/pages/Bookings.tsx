@@ -123,8 +123,8 @@ const [formData, setFormData] = useState({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12 md:gap-16">
           {/* LEFT: INFO & DATES */}
-          <div className="lg:col-span-1 space-y-6 sm:space-y-8 md:space-y-12">
-            <div className="border-2 border-white bg-black p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 shadow-[8px_8px_0px_rgba(255,255,255,0.1)]">
+          <div className="lg:col-span-1 space-y-6 sm:space-y-8 md:space-y-12 min-w-0">
+            <div className="border-2 border-white bg-black p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 shadow-[8px_8px_0px_rgba(255,255,255,0.1)] overflow-hidden">
               <div className="tape-strip bg-white text-black border-black">LIVE_AVAILABILITY</div>
               <BookingCalendar
                 selected={formData.eventDate ? new Date(formData.eventDate) : undefined}
