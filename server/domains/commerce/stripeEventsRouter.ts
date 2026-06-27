@@ -3,7 +3,13 @@ import Stripe from "stripe";
 import { broadcastStreamEvent } from "@/server/domains/broadcast/streamEventsRouter";
 
 const router = Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+let _stripe: Stripe | null = null;
+const getStripe = () => {
+  if (!_stripe && process.env.STRIPE_SECRET_KEY) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return _stripe;
+};
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
 interface StripeChargeEvent {
@@ -22,6 +28,11 @@ router.post("/webhook", async (req: Request, res: Response) => {
   if (!webhookSecret) {
     console.warn("Stripe webhook secret not configured");
     return res.status(400).json({ error: "Webhook secret not configured" });
+  }
+
+  const stripe = getStripe();
+  if (!stripe) {
+    return res.status(400).json({ error: "Stripe not configured" });
   }
 
   try {

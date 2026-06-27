@@ -13,7 +13,7 @@ import { boolean, integer, pgEnum, pgTable, text, timestamp, varchar, numeric, j
  * ENUMS - Define all enums before tables
  * ============================================
  */
-export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
+export const userRoleEnum = pgEnum("user_role", ["user", "admin", "booking_client", "artist", "brand"]);
 export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "completed", "cancelled"]);
 export const trackStatusEnum = pgEnum("track_status", ["pending", "queued", "played"]);
 export const streamTypeEnum = pgEnum("stream_type", ["shoutcast", "icecast", "custom"]);

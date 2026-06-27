@@ -78,8 +78,10 @@ import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
 import { JARVIS_SYSTEM_PROMPT, buildJarvisContext } from "./_core/jarvisPersona";
 import { HECTIC_SYSTEM_PROMPT, buildHecticContext } from "./_core/hecticPersona";
+import { portalRouter } from "@/server/domains/portal/portalRouter";
 
 export const appRouter = router({
+  portal: portalRouter,
   system: systemRouter,
   ukEvents: ukEventsRouter,
   soundcloud: soundcloudRouter,

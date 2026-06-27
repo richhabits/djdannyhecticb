@@ -10,10 +10,12 @@
 @import './motion-design.css';
 @import './accessibility-aaa.css';
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 html {

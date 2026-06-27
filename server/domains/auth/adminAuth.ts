@@ -140,7 +140,7 @@ export async function createSessionToken(db?: Awaited<ReturnType<typeof getDb>>,
   return token;
 }
 
-export const createAdminSessionToken = (userId: number, email: string) => createSessionToken(userId, email, "admin");
+export const createAdminSessionToken = (userId: number, email: string) => createSessionToken(undefined, userId, email, "admin");
 
 /**
  * Authenticate admin from request (check session token)

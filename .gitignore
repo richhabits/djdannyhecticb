@@ -117,3 +117,4 @@ VERCEL_DEPLOYMENT.md
 todo.md
 __pycache__/
 *.pyc
+.env*
