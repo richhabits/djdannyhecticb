@@ -153,12 +153,12 @@ export default function Mixes() {
                       <Disc className="w-24 h-24 text-white/5 group-hover:text-white/20 transition-all" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                  <div className="absolute inset-0 flex items-center justify-center">
                     <button
                       onClick={() => handlePlayMix(mix)}
-                      className="tape-strip bg-white text-black border-black px-8 py-2 text-lg"
+                      className="tape-strip bg-white text-black border-black px-8 py-2 text-lg shadow-lg hover:bg-accent hover:text-white hover:border-accent transition-all"
                     >
-                      PLAY_SIGNAL
+                      ▶ PLAY
                     </button>
                   </div>
                   <div className="absolute top-4 left-4">
@@ -172,9 +172,20 @@ export default function Mixes() {
                 </div>
 
                 <div className="mt-8 flex gap-2">
-                  <button className="flex-1 tape-strip bg-black text-white border-white text-[10px] hover:bg-accent transition-all">
-                    DOWNLOAD
-                  </button>
+                  {(mix.downloadUrl || mix.audioUrl) ? (
+                    <a
+                      href={mix.downloadUrl || mix.audioUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 tape-strip bg-black text-white border-white text-[10px] hover:bg-accent transition-all text-center py-2"
+                    >
+                      {isYouTube(mix.audioUrl) && !mix.downloadUrl ? 'OPEN ON YOUTUBE' : 'DOWNLOAD'}
+                    </a>
+                  ) : (
+                    <button className="flex-1 tape-strip bg-black text-white/30 border-white/30 text-[10px] cursor-not-allowed" disabled>
+                      DOWNLOAD UNAVAILABLE
+                    </button>
+                  )}
                   <button className="p-3 border-2 border-white flex items-center justify-center hover:bg-white hover:text-black transition-all">
                     <Heart className="w-4 h-4" />
                   </button>
