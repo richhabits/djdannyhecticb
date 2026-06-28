@@ -34,9 +34,10 @@ const [formData, setFormData] = useState({
     eventTime: "",
   });
 
+  const isAdmin = user?.role === "admin";
   const { data: bookings, isLoading, refetch } = trpc.eventBookings.list.useQuery(
     undefined,
-    { enabled: isAuthenticated }
+    { enabled: isAuthenticated && isAdmin }
   );
 
   const createBookingMutation = trpc.eventBookings.create.useMutation({
@@ -142,7 +143,7 @@ const [formData, setFormData] = useState({
               />
             </div>
 
-            {bookings && bookings.length > 0 && (
+            {isAdmin && bookings && bookings.length > 0 && (
               <div className="space-y-6">
                 <div className="tape-strip bg-accent text-white border-white">ACTIVE_SESSIONS</div>
                 <div className="space-y-4">

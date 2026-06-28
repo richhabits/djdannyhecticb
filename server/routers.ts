@@ -307,7 +307,8 @@ export const appRouter = router({
   }),
 
   eventBookings: router({
-    list: protectedProcedure.query(() => db.listEventBookings()),
+    // Admin-only: returns ALL bookings, so it must not be exposed to every logged-in user
+    list: adminProcedure.query(() => db.listEventBookings()),
     create: publicProcedure
       .input(z.object({
         name: z.string().min(1).max(255),
