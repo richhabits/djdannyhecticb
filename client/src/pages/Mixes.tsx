@@ -52,8 +52,7 @@ export default function Mixes() {
 
   const handlePlayMix = (mix: any) => {
     if (isYouTube(mix.audioUrl)) {
-      setPlayingExternal(mix.audioUrl);
-      setSelectedMixes([]);
+      window.open(mix.audioUrl, '_blank', 'noopener,noreferrer');
     } else {
       setPlayingExternal(null);
       setSelectedMixes([{
@@ -104,23 +103,6 @@ export default function Mixes() {
             </div>
           )}
 
-          {/* YOUTUBE PLAYER */}
-          {playingExternal && (
-            <div className="sticky top-20 z-40">
-              <div className="flyer-card border-accent shadow-[4px_4px_0px_#F97316] overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-accent">
-                  <span className="text-xs font-black uppercase tracking-widest text-white">NOW_PLAYING</span>
-                  <button onClick={() => setPlayingExternal(null)} className="text-white text-xs font-black hover:opacity-70">✕ CLOSE</button>
-                </div>
-                <ReactPlayer
-                  url={playingExternal}
-                  controls
-                  width="100%"
-                  height="200px"
-                />
-              </div>
-            </div>
-          )}
 
           {/* FILTERS */}
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
