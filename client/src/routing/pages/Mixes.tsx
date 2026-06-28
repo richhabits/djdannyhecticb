@@ -48,9 +48,11 @@ export default function Mixes() {
     }
   ];
 
+  const isYouTube = (url?: string) => !!url && (url.includes('youtube.com') || url.includes('youtu.be'));
+
   const handlePlayMix = (mix: any) => {
-    if (mix.soundcloudUrl || mix.youtubeUrl) {
-      setPlayingExternal(String(mix.id));
+    if (isYouTube(mix.audioUrl)) {
+      setPlayingExternal(mix.audioUrl);
       setSelectedMixes([]);
     } else {
       setPlayingExternal(null);
@@ -102,9 +104,28 @@ export default function Mixes() {
             </div>
           )}
 
+          {/* YOUTUBE PLAYER */}
+          {playingExternal && (
+            <div className="sticky top-20 z-40">
+              <div className="flyer-card border-accent shadow-[4px_4px_0px_#F97316] overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 bg-accent">
+                  <span className="text-xs font-black uppercase tracking-widest text-white">NOW_PLAYING</span>
+                  <button onClick={() => setPlayingExternal(null)} className="text-white text-xs font-black hover:opacity-70">✕ CLOSE</button>
+                </div>
+                <ReactPlayer
+                  url={playingExternal}
+                  playing
+                  controls
+                  width="100%"
+                  height="200px"
+                />
+              </div>
+            </div>
+          )}
+
           {/* FILTERS */}
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            {["All", "UK Garage", "House", "Grime", "DnB", "Amapiano"].map(g => (
+            {["All", "UK Garage", "House", "Grime", "DnB", "Amapiano", "Afro House"].map(g => (
               <button
                 key={g}
                 onClick={() => setFilterGenre(g)}
