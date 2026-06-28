@@ -63,6 +63,7 @@ export default function Home() {
         <section className="relative h-[calc(100vh-3.5rem)] w-full overflow-hidden flex flex-col justify-between border-b border-foreground">
           <HeroVideo
             videoUrl={import.meta.env.VITE_HERO_VIDEO_URL}
+            fallbackImage="/dj-danny-bio.jpg"
             className="absolute inset-0 grayscale contrast-125"
           />
           <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay */}
