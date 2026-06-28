@@ -91,9 +91,19 @@ const [formData, setFormData] = useState({
         <div className="text-center space-y-8">
           <div className="tape-strip bg-accent text-white border-white text-4xl">ACCESS DENIED</div>
           <p className="text-xl font-bold uppercase">SIGN IN REQUIRED TO BOOK THE FREQUENCY</p>
-          <Link href="/">
-            <button className="tape-strip bg-white text-black border-black px-12 py-4 text-xl">BACK TO SIGNAL</button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/portal/login">
+              <button className="tape-strip bg-accent text-white border-white px-12 py-4 text-xl">SIGN IN</button>
+            </Link>
+            <Link href="/portal/register">
+              <button className="tape-strip bg-white text-black border-black px-12 py-4 text-xl">CREATE ACCOUNT</button>
+            </Link>
+          </div>
+          <div>
+            <Link href="/">
+              <button className="text-sm uppercase tracking-widest text-white/60 hover:text-white underline underline-offset-4">Back to signal</button>
+            </Link>
+          </div>
         </div>
       </div>
     );
