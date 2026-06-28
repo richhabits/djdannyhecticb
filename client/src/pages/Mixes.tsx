@@ -114,7 +114,6 @@ export default function Mixes() {
                 </div>
                 <ReactPlayer
                   url={playingExternal}
-                  playing
                   controls
                   width="100%"
                   height="200px"
