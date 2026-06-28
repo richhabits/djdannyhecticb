@@ -247,19 +247,16 @@ export const appRouter = router({
       .input(z.object({
         title: z.string().min(1).max(255),
         audioUrl: z.string().url(),
-        imageUrl: z.string().url().optional(),
+        coverImageUrl: z.string().url().optional(),
         description: z.string().optional(),
         duration: z.number().optional(),
         genre: z.string().optional(),
-        isExclusive: z.boolean().default(false),
-      })) // Match db.createMix schema
+        isFree: z.boolean().default(true),
+        downloadUrl: z.string().url().optional(),
+      }))
       .mutation(async ({ input, ctx }) => {
-        const { createMix, createAuditLog } = await import("./db");
-        const mix = await createMix({
-          ...input,
-          ...input,
-          genre: input.genre
-        });
+        const { createMix } = await import("./db");
+        const mix = await createMix(input);
         await auditLog(ctx, {
           action: "create_mix",
           entityType: "mix",
@@ -273,11 +270,12 @@ export const appRouter = router({
         id: z.number(),
         title: z.string().min(1).max(255).optional(),
         audioUrl: z.string().url().optional(),
-        imageUrl: z.string().url().optional(),
+        coverImageUrl: z.string().url().optional(),
         description: z.string().optional(),
         duration: z.number().optional(),
         genre: z.string().optional(),
-        isExclusive: z.boolean().optional(),
+        isFree: z.boolean().optional(),
+        downloadUrl: z.string().url().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { id, ...updates } = input;

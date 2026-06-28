@@ -3574,13 +3574,15 @@ export async function createUserWithPassword(input: { email: string; password: s
 }
 
 export async function getAllMixes() {
-  // TODO: Implement get all mixes
-  return [];
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mixes).orderBy(mixes.createdAt);
 }
 
 export async function getFreeMixes() {
-  // TODO: Implement get free mixes
-  return [];
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(mixes.createdAt);
 }
 
 export async function updateAIVideoJob(jobId: string | number, updates: any) {

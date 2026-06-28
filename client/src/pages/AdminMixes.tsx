@@ -53,7 +53,7 @@ export default function AdminMixes() {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const utils = trpc.useUtils();
-  const { data: mixes, isLoading } = trpc.mixes.adminList.useQuery();
+  const { data: mixes, isLoading, error: mixesError } = trpc.mixes.adminList.useQuery();
 
   const createMix = trpc.mixes.adminCreate.useMutation({
     onSuccess: () => {
@@ -205,7 +205,7 @@ export default function AdminMixes() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <DatabaseErrorBanner />
+      {mixesError && <DatabaseErrorBanner />}
       <div className="container py-8 px-4">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
