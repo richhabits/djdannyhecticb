@@ -48,6 +48,7 @@ import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
 import { registerRateCardRoutes } from "../routes/ratecard";
 import { registerUploadRoutes } from "../routes/upload";
+import { registerAdminUploadRoutes } from "../routes/adminUpload";
 import { registerPortalUploadRoutes } from "@/server/domains/portal/uploadHandler";
 import { registerWebhookRoutes } from "@/server/domains/ingestion/webhooks";
 import { registerCronRoutes } from "../routes/cron";
@@ -300,6 +301,7 @@ async function startServer() {
 
   // File Uploads
   registerUploadRoutes(app);
+  registerAdminUploadRoutes(app);
 
   // Client Portal — Vercel Blob upload pipeline
   registerPortalUploadRoutes(app);
