@@ -557,7 +557,7 @@ export const appRouter = router({
   }),
 
   streams: router({
-    active: publicProcedure.query(() => db.getActiveStream()),
+    active: publicProcedure.query(async () => (await db.getActiveStream()) ?? null),
 
     list: adminProcedure.query(() => db.listStreams()),
 
@@ -1296,7 +1296,7 @@ export const appRouter = router({
       .mutation(({ input }) => db.markErrorLogResolved(input.id)),
 
     incidentBanners: router({
-      getActive: publicProcedure.query(() => db.getActiveIncidentBanner()),
+      getActive: publicProcedure.query(async () => (await db.getActiveIncidentBanner()) ?? null),
       create: adminProcedure
         .input(z.object({
           message: z.string().min(1),
