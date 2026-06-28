@@ -173,7 +173,7 @@ export async function createSessionToken(
   return token;
 }
 
-export const createAdminSessionToken = (userId: number, email: string) => createSessionToken(undefined, userId, email, "admin");
+export const createAdminSessionToken = (userId: number, email: string) => createSessionToken(userId, email, "admin");
 
 /**
  * Authenticate admin from request (check session token)
