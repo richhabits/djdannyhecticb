@@ -280,17 +280,19 @@ video {
 }
 
 /* Ensure proper spacing for touch targets (minimum 44x44px) */
-button,
-a[href],
-input[type="button"],
-input[type="submit"],
-input[type="checkbox"],
-input[type="radio"] {
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+@layer base {
+  button,
+  a[href],
+  input[type="button"],
+  input[type="submit"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* Ensure sufficient spacing between interactive elements */

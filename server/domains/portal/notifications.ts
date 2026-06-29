@@ -6,7 +6,8 @@
 
 import { sendEmail } from "@/server/_core/email";
 import { ENV } from "@/server/_core/env";
-import type { Booking, Upload } from "@/drizzle/schema";
+import type { Booking } from "@/drizzle/schema";
+import type { ClientUpload as Upload } from "@/drizzle/portal-schema";
 
 function wrapEmail(title: string, bodyHtml: string): string {
   return `

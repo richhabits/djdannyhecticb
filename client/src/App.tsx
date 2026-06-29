@@ -112,16 +112,18 @@ import BookingQuote from "./pages/BookingQuote";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import { CartProvider } from "./contexts/CartContext";
 import { StripeProvider } from "./contexts/StripeProvider";
+import { PortalAuthProvider } from "./contexts/PortalAuthContext";
+import { PortalGuard } from "./components/PortalGuard";
 import PortalLogin from "./pages/PortalLogin";
-import PortalRegister from "./pages/PortalRegister";
+import PortalSignup from "./pages/PortalSignup";
 import PortalDashboard from "./pages/PortalDashboard";
 import PortalBookings from "./pages/PortalBookings";
 import PortalMedia from "./pages/PortalMedia";
 import PortalProfile from "./pages/PortalProfile";
-import PortalPlaylists from "./pages/PortalPlaylists";
+import AdminPortalClients from "./pages/AdminPortalClients";
+import AdminPortalClient from "./pages/AdminPortalClient";
 import AdminPortalBookings from "./pages/AdminPortalBookings";
 import AdminPortalUploads from "./pages/AdminPortalUploads";
-import AdminPortalClients from "./pages/AdminPortalClients";
 
 function Router() {
   return (
@@ -224,16 +226,34 @@ function Router() {
       <Route path={"/vip"} component={VIP} />
       <Route path={"/booking-quote/:id"} component={BookingQuote} />
       <Route path={"/admin/showcase"} component={ComponentShowcase} />
+
+      {/* Portal Auth (no guard needed) */}
       <Route path={"/portal/login"} component={PortalLogin} />
-      <Route path={"/portal/register"} component={PortalRegister} />
-      <Route path={"/portal"} component={PortalDashboard} />
-      <Route path={"/portal/bookings"} component={PortalBookings} />
-      <Route path={"/portal/media"} component={PortalMedia} />
-      <Route path={"/portal/profile"} component={PortalProfile} />
-      <Route path={"/portal/playlists"} component={PortalPlaylists} />
-      <Route path={"/admin/portal-clients"} component={AdminPortalClients} />
-      <Route path={"/admin/portal-bookings"} component={AdminPortalBookings} />
-      <Route path={"/admin/portal-uploads"} component={AdminPortalUploads} />
+      <Route path={"/portal/signup"} component={PortalSignup} />
+      <Route path={"/portal"}>
+        <Redirect to="/portal/dashboard" />
+      </Route>
+
+      {/* Portal (guarded) */}
+      <Route path={"/portal/dashboard"}>
+        <PortalGuard><PortalDashboard /></PortalGuard>
+      </Route>
+      <Route path={"/portal/bookings"}>
+        <PortalGuard><PortalBookings /></PortalGuard>
+      </Route>
+      <Route path={"/portal/media"}>
+        <PortalGuard><PortalMedia /></PortalGuard>
+      </Route>
+      <Route path={"/portal/profile"}>
+        <PortalGuard><PortalProfile /></PortalGuard>
+      </Route>
+
+      {/* Admin Portal */}
+      <Route path={"/admin/portal"} component={AdminPortalClients} />
+      <Route path={"/admin/portal/client/:id"} component={AdminPortalClient} />
+      <Route path={"/admin/portal/bookings"} component={AdminPortalBookings} />
+      <Route path={"/admin/portal/uploads"} component={AdminPortalUploads} />
+
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -263,6 +283,7 @@ function App() {
     <ErrorBoundary>
       <StripeProvider>
         <CartProvider>
+        <PortalAuthProvider>
           <ThemeProvider
             defaultTheme="dark"
           // switchable
@@ -300,6 +321,7 @@ function App() {
             </>
             </TooltipProvider>
           </ThemeProvider>
+        </PortalAuthProvider>
         </CartProvider>
       </StripeProvider>
     </ErrorBoundary>

@@ -79,8 +79,10 @@ import { chatWithDanny } from "./lib/gemini";
 import { auditLog } from "./_core/audit";
 import { JARVIS_SYSTEM_PROMPT, buildJarvisContext } from "./_core/jarvisPersona";
 import { HECTIC_SYSTEM_PROMPT, buildHecticContext } from "./_core/hecticPersona";
+import { portalRouter } from "@/server/domains/portal/portalRouter";
 
 export const appRouter = router({
+  portal: portalRouter,
   system: systemRouter,
   ukEvents: ukEventsRouter,
   soundcloud: soundcloudRouter,
@@ -250,19 +252,16 @@ export const appRouter = router({
       .input(z.object({
         title: z.string().min(1).max(255),
         audioUrl: z.string().url(),
-        imageUrl: z.string().url().optional(),
+        coverImageUrl: z.string().url().optional(),
         description: z.string().optional(),
         duration: z.number().optional(),
         genre: z.string().optional(),
-        isExclusive: z.boolean().default(false),
-      })) // Match db.createMix schema
+        isFree: z.boolean().default(true),
+        downloadUrl: z.string().url().optional(),
+      }))
       .mutation(async ({ input, ctx }) => {
-        const { createMix, createAuditLog } = await import("./db");
-        const mix = await createMix({
-          ...input,
-          ...input,
-          genre: input.genre
-        });
+        const { createMix } = await import("./db");
+        const mix = await createMix(input);
         await auditLog(ctx, {
           action: "create_mix",
           entityType: "mix",
@@ -276,11 +275,12 @@ export const appRouter = router({
         id: z.number(),
         title: z.string().min(1).max(255).optional(),
         audioUrl: z.string().url().optional(),
-        imageUrl: z.string().url().optional(),
+        coverImageUrl: z.string().url().optional(),
         description: z.string().optional(),
         duration: z.number().optional(),
         genre: z.string().optional(),
-        isExclusive: z.boolean().optional(),
+        isFree: z.boolean().optional(),
+        downloadUrl: z.string().url().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { id, ...updates } = input;
@@ -561,7 +561,7 @@ export const appRouter = router({
   }),
 
   streams: router({
-    active: publicProcedure.query(() => db.getActiveStream()),
+    active: publicProcedure.query(async () => (await db.getActiveStream()) ?? null),
 
     list: adminProcedure.query(() => db.listStreams()),
 
@@ -1301,7 +1301,7 @@ export const appRouter = router({
       .mutation(({ input }) => db.markErrorLogResolved(input.id)),
 
     incidentBanners: router({
-      getActive: publicProcedure.query(() => db.getActiveIncidentBanner()),
+      getActive: publicProcedure.query(async () => (await db.getActiveIncidentBanner()) ?? null),
       create: adminProcedure
         .input(z.object({
           message: z.string().min(1),

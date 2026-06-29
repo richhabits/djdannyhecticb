@@ -42,11 +42,13 @@ import cors from "cors";
 import { registerOAuthRoutes } from "../domains/auth/oauth";
 import { registerGoogleAuthRoutes } from "../domains/auth/googleAuth";
 import { registerAdminAuthRoutes } from "../domains/auth/adminAuthRoutes";
+import { registerPortalAuthRoutes } from "../domains/portal/portalAuthRoutes";
+import { registerPortalUploadRoutes } from "../routes/portalUpload";
 import { registerSEORoutes } from "../routes/seo";
 import { registerPaymentRoutes } from "../routes/payments";
 import { registerRateCardRoutes } from "../routes/ratecard";
 import { registerUploadRoutes } from "../routes/upload";
-import { registerPortalUploadRoutes } from "@/server/domains/portal/uploadHandler";
+import { registerAdminUploadRoutes } from "../routes/adminUpload";
 import { registerWebhookRoutes } from "@/server/domains/ingestion/webhooks";
 import { registerCronRoutes } from "../routes/cron";
 import streamEventsRouter, { setupStreamWebSocket } from "@/server/domains/broadcast/streamEventsRouter";
@@ -161,17 +163,18 @@ async function startServer() {
   app.use(loggerMiddleware);
 
   // Security headers and CORS
+  const isDev = process.env.NODE_ENV !== "production";
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        // Security: Removed 'unsafe-eval' and 'unsafe-inline' from script-src
-        // Using strict CSP with trusted domains only (Stripe for payments)
-        "script-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com"],
-        "connect-src": ["'self'", "https:", "https://*.stripe.com"],
+        // Dev: allow 'unsafe-inline' and 'unsafe-eval' for Vite HMR preamble; prod: strict
+        "script-src": isDev
+          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com", "https://*.stripe.com"]
+          : ["'self'", "https://js.stripe.com", "https://*.stripe.com"],
+        "connect-src": ["'self'", "https:", "wss:", "ws:", "https://*.stripe.com"],
         "frame-src": ["'self'", "https://js.stripe.com", "https://*.stripe.com", "https://www.youtube.com", "https://player.twitch.tv", "https://www.tiktok.com", "https://www.instagram.com"],
         "img-src": ["'self'", "data:", "https:"],
-        // Security: Removed 'http:' from media-src - only allow secure HTTPS
         "media-src": ["'self'", "https:", "blob:"],
       },
     },
@@ -242,11 +245,12 @@ async function startServer() {
       "camera=(), microphone=(), geolocation=(), interest-cohort=()"
     );
 
-    // Security: Removed 'unsafe-inline' and 'unsafe-eval' from CSP headers
-    // Using strict CSP with only secure sources
+    const scriptSrc = isProduction
+      ? "'self' https://js.stripe.com https://*.stripe.com"
+      : "'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com";
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' https://js.stripe.com https://*.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://*.stripe.com; frame-src 'self' https://js.stripe.com https://*.stripe.com; media-src 'self' https: blob:;"
+      `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: ws: https://*.stripe.com; frame-src 'self' https://js.stripe.com https://*.stripe.com; media-src 'self' https: blob:;`
     );
     next();
   });
@@ -266,6 +270,12 @@ async function startServer() {
 
   // Admin authentication routes
   registerAdminAuthRoutes(app);
+
+  // Portal auth routes (register, login, logout, me)
+  registerPortalAuthRoutes(app);
+
+  // Portal Blob upload handler
+  registerPortalUploadRoutes(app);
 
   // Health Checks (Self-Healing Sentinel)
   app.get("/api/health", (req, res) => res.status(200).send("ok"));
@@ -290,8 +300,7 @@ async function startServer() {
 
   // File Uploads
   registerUploadRoutes(app);
-
-  // Client Portal — Vercel Blob upload pipeline
+  registerAdminUploadRoutes(app);
   registerPortalUploadRoutes(app);
 
   // Analytics Tracking (self-hosted)

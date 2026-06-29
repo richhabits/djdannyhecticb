@@ -3351,8 +3351,8 @@ packages:
     resolution: {integrity: sha512-kQF8LGie/Hbdq9/psJxLE7owRTcqMQMhgybU04gCeR7cbQAr5t8OrjefDNColJv1QSSucFt4pLwRiARVmlOnug==}
     engines: {node: '>= 18'}
 
-  '@vercel/oidc@3.7.0':
-    resolution: {integrity: sha512-FWmULATInXyxER8FJjtSEUdoaoeqWv9G9T4y3vraYMJNAx/ox354COtDmhiBb/XaeDjFuiwTY9ss44NRBaGjLQ==}
+  '@vercel/oidc@3.7.1':
+    resolution: {integrity: sha512-RrSsVWbq3KLK5lJobyTPp3tSthNfUp+zWkXno5Wkko0oEW05rA4ngOrnVypP4+L8/Av89uPo2rWFmzL8iwnsmA==}
     engines: {node: '>= 20'}
 
   '@vimeo/player@2.29.0':
@@ -9634,7 +9634,7 @@ snapshots:
 
   '@vercel/blob@2.5.0':
     dependencies:
-      '@vercel/oidc': 3.7.0
+      '@vercel/oidc': 3.7.1
       async-retry: 1.3.3
       is-buffer: 2.0.5
       is-node-process: 1.2.0
@@ -9650,7 +9650,7 @@ snapshots:
     dependencies:
       execa: 5.1.1
 
-  '@vercel/oidc@3.7.0':
+  '@vercel/oidc@3.7.1':
     dependencies:
       '@vercel/cli-config': 0.2.0
       '@vercel/cli-exec': 1.0.0

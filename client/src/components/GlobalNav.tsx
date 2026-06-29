@@ -5,9 +5,11 @@ import { getLoginUrl } from "@/const";
 import { GlobalSearch } from "./GlobalSearch";
 import { Menu, X, Zap, ShoppingCart, Phone, Instagram } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { usePortalAuth } from "@/contexts/PortalAuthContext";
 
 export function GlobalNav() {
   const { isAuthenticated } = useAuth();
+  const { isAuthenticated: isPortalUser } = usePortalAuth();
   const { count } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
@@ -157,6 +159,17 @@ export function GlobalNav() {
               )}
             </Link>
 
+            {/* Portal link for portal users */}
+            {isPortalUser && (
+              <Link
+                href="/portal/dashboard"
+                className="hidden sm:flex items-center justify-center bg-[#f97316] text-black text-xs px-3 sm:px-3.5 py-2 font-bold hover:bg-orange-400 transition-colors duration-150 min-h-[44px]"
+                aria-label="My Portal"
+              >
+                PORTAL
+              </Link>
+            )}
+
             {/* Dashboard or Login - Tablet+ */}
             {isAuthenticated ? (
               <Link
@@ -166,7 +179,7 @@ export function GlobalNav() {
               >
                 DASH
               </Link>
-            ) : (
+            ) : !isPortalUser ? (
               <a
                 href={getLoginUrl()}
                 className="hidden sm:flex items-center justify-center bg-accent text-white text-xs px-3 sm:px-3.5 py-2 font-bold hover:bg-white hover:text-black transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-h-[44px]"
@@ -174,7 +187,7 @@ export function GlobalNav() {
               >
                 LOGIN
               </a>
-            )}
+            ) : null}
 
             {/* Hamburger Menu - Mobile & Tablet (md below) */}
             <button
@@ -182,7 +195,7 @@ export function GlobalNav() {
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              className="md:hidden tape-strip bg-accent text-white border-white p-3 hover:bg-white hover:text-black transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="md:hidden bg-accent text-white border-2 border-white shadow-[4px_4px_0px_#F97316] p-3 hover:bg-white hover:text-black transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               {mobileMenuOpen ? (
                 <X className="w-5 h-5" aria-hidden="true" />

@@ -1,185 +1,117 @@
 import { useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import { format } from "date-fns";
-import { Link } from "wouter";
 import { toast } from "sonner";
 import { Calendar } from "lucide-react";
+import { Link } from "wouter";
 
 const STATUS_COLORS: Record<string, string> = {
-  enquiry: "bg-yellow-600",
-  confirmed: "bg-blue-600",
-  completed: "bg-green-600",
-  cancelled: "bg-red-600",
+  enquiry: "text-yellow-400 border-yellow-400/30 bg-yellow-400/10",
+  confirmed: "text-green-400 border-green-400/30 bg-green-400/10",
+  completed: "text-blue-400 border-blue-400/30 bg-blue-400/10",
+  cancelled: "text-red-400 border-red-400/30 bg-red-400/10",
 };
 
 export default function AdminPortalBookings() {
-  const { user, isAuthenticated } = useAuth();
+  const [statusFilter, setStatusFilter] = useState<"enquiry" | "confirmed" | "completed" | "cancelled" | undefined>(undefined);
+  const [notes, setNotes] = useState<Record<number, string>>({});
   const utils = trpc.useUtils();
-  const { data: bookings, isLoading } = trpc.portal.bookings.listAll.useQuery();
-  const [notesDraft, setNotesDraft] = useState<{ id: number; notes: string } | null>(null);
 
-  const updateStatus = trpc.portal.bookings.updateStatus.useMutation({
-    onSuccess: () => {
-      toast.success("Booking updated");
-      utils.portal.bookings.listAll.invalidate();
-      setNotesDraft(null);
-    },
-    onError: (error) => toast.error(error.message || "Failed to update booking"),
+  const bookingsQ = trpc.portal.adminListBookings.useQuery({ status: statusFilter, limit: 100, offset: 0 });
+  const updateMut = trpc.portal.adminUpdateBooking.useMutation({
+    onSuccess: () => { utils.portal.adminListBookings.invalidate(); toast.success("Updated"); },
+    onError: e => toast.error(e.message),
   });
 
-  if (!isAuthenticated || user?.role !== "admin") {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <h1 className="text-3xl font-bold">Admin Access Required</h1>
-          <Link href="/">
-            <Button className="bg-gradient-to-r from-orange-600 to-amber-600">Go Home</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const bookings = bookingsQ.data ?? [];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="container py-8 px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Calendar className="w-8 h-8" />
-            Portal Bookings
-          </h1>
-          <p className="text-muted-foreground mt-2">Review and manage client booking enquiries</p>
+    <div className="min-h-screen bg-black text-white p-6 pt-20">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-black uppercase tracking-tight">Client Bookings</h1>
+          <div className="h-0.5 w-12 bg-[#f97316] mt-2" />
         </div>
 
-        {isLoading ? (
-          <p className="text-center text-muted-foreground py-12">Loading bookings...</p>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Date & Location</TableHead>
-                    <TableHead>Budget</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings && bookings.length > 0 ? (
-                    bookings.map(({ booking, client }) => (
-                      <TableRow key={booking.id}>
-                        <TableCell>
-                          <div className="font-medium">{client.name || client.email}</div>
-                          <Badge variant="outline" className="capitalize mt-1">{client.role}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{booking.eventType}</div>
-                          {booking.venue && <div className="text-sm text-muted-foreground">{booking.venue}</div>}
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{format(new Date(booking.eventDate), "PP")}</div>
-                          <div className="text-sm text-muted-foreground">{booking.location}</div>
-                        </TableCell>
-                        <TableCell>{booking.budget ? `£${booking.budget}` : "-"}</TableCell>
-                        <TableCell>
-                          <Select
-                            value={booking.status}
-                            onValueChange={(value) => updateStatus.mutate({ id: booking.id, status: value as any, notes: booking.notes ?? undefined })}
-                          >
-                            <SelectTrigger className="w-36">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="enquiry">Enquiry</SelectItem>
-                              <SelectItem value="confirmed">Confirmed</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                              <SelectItem value="cancelled">Cancelled</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setNotesDraft({ id: booking.id, notes: booking.notes ?? "" })}
-                          >
-                            {booking.notes ? "Edit Note" : "Add Note"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No bookings found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+        {/* Status filter */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {([undefined, "enquiry", "confirmed", "completed", "cancelled"] as const).map(s => (
+            <button
+              key={s ?? "all"}
+              onClick={() => setStatusFilter(s)}
+              className={`text-xs font-bold uppercase px-3 py-2 border-2 tracking-widest transition-colors ${
+                statusFilter === s ? "border-[#f97316] text-[#f97316] bg-[#f97316]/10" : "border-white/10 text-white/40 hover:border-white/30"
+              }`}
+            >
+              {s ?? "All"}
+            </button>
+          ))}
+        </div>
 
-        <Dialog open={notesDraft !== null} onOpenChange={(open) => { if (!open) setNotesDraft(null); }}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Note to Client</DialogTitle>
-              <DialogDescription>This will be visible to the client on their booking.</DialogDescription>
-            </DialogHeader>
-            <Textarea
-              value={notesDraft?.notes ?? ""}
-              onChange={(e) => setNotesDraft((d) => d && { ...d, notes: e.target.value })}
-              rows={5}
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setNotesDraft(null)}>Cancel</Button>
-              <Button
-                disabled={updateStatus.isPending}
-                onClick={() => {
-                  const booking = bookings?.find((b) => b.booking.id === notesDraft?.id)?.booking;
-                  if (!notesDraft || !booking) return;
-                  updateStatus.mutate({ id: notesDraft.id, status: booking.status as any, notes: notesDraft.notes });
-                }}
-                className="bg-gradient-to-r from-orange-600 to-amber-600"
-              >
-                Save Note
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {bookingsQ.isLoading ? (
+          <div className="border-2 border-white/10 p-6 text-center text-white/30">Loading...</div>
+        ) : bookings.length === 0 ? (
+          <div className="border-2 border-white/10 p-8 text-center">
+            <Calendar className="w-8 h-8 text-white/20 mx-auto mb-3" />
+            <p className="text-white/40 text-sm">No bookings found.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {bookings.map(b => (
+              <div key={b.id} className="border-2 border-white/10 p-4">
+                <div className="flex flex-wrap items-start gap-3 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-white">{b.eventType}</span>
+                      <span className={`text-xs font-bold uppercase px-2 py-0.5 border ${STATUS_COLORS[b.status] || ""}`}>
+                        {b.status}
+                      </span>
+                    </div>
+                    <div className="text-white/40 text-xs mt-1">
+                      {new Date(b.eventDate).toLocaleDateString("en-GB", { weekday: "short", year: "numeric", month: "short", day: "numeric" })}
+                      {" — "}{b.location}{b.venue ? ` (${b.venue})` : ""}
+                    </div>
+                    <Link href={`/admin/portal/client/${b.clientId}`}>
+                      <span className="text-[#f97316] text-xs hover:underline">
+                        {b.clientName || b.clientEmail} ({b.clientRole?.replace("_", " ")})
+                      </span>
+                    </Link>
+                    {b.requirements && (
+                      <div className="mt-2 text-xs text-white/40 bg-white/5 p-2 border-l-2 border-white/10">
+                        {b.requirements}
+                      </div>
+                    )}
+                    {b.adminNotes && (
+                      <div className="mt-1 text-xs text-[#f97316]/70 italic">Note: {b.adminNotes}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div className="flex flex-wrap gap-2 items-center border-t border-white/5 pt-3">
+                  <input
+                    type="text"
+                    placeholder="Admin note..."
+                    value={notes[b.id] ?? (b.adminNotes || "")}
+                    onChange={e => setNotes(n => ({ ...n, [b.id]: e.target.value }))}
+                    className="bg-black border border-white/10 text-white text-xs px-2 py-1.5 focus:border-[#f97316] focus:outline-none flex-1 min-w-32"
+                  />
+                  {(["enquiry", "confirmed", "completed", "cancelled"] as const).map(s => (
+                    <button
+                      key={s}
+                      disabled={updateMut.isPending || b.status === s}
+                      onClick={() => updateMut.mutate({ id: b.id, status: s, adminNotes: notes[b.id] || b.adminNotes || undefined })}
+                      className={`text-xs font-bold uppercase px-3 py-1.5 border-2 tracking-widest transition-colors disabled:opacity-40 ${
+                        b.status === s ? "border-[#f97316] text-[#f97316] bg-[#f97316]/10" : "border-white/10 text-white/40 hover:border-white/30"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

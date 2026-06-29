@@ -362,35 +362,37 @@ html.no-transition * {
   color: var(--color-text-primary);
 }
 
-/* Buttons adapt to theme */
-button {
-  background-color: var(--color-accent-primary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-primary);
-}
+@layer base {
+  /* Buttons adapt to theme */
+  button {
+    background-color: var(--color-accent-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+  }
 
-button:hover {
-  background-color: var(--color-accent-primary-hover);
-}
+  button:hover {
+    background-color: var(--color-accent-primary-hover);
+  }
 
-button:active {
-  background-color: var(--color-accent-primary-dark);
-}
+  button:active {
+    background-color: var(--color-accent-primary-dark);
+  }
 
-/* Inputs adapt to theme */
-input,
-textarea,
-select {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-primary);
-}
+  /* Inputs adapt to theme */
+  input,
+  textarea,
+  select {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+  }
 
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--color-border-focus);
-  outline: none;
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--color-border-focus);
+    outline: none;
+  }
 }
 
 /* ============================================================================

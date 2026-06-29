@@ -1,13 +1,15 @@
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
 import { broadcastStreamEvent } from "@/server/domains/broadcast/streamEventsRouter";
-import { asyncHandler } from "@/server/_core/errors";
 
 const router = Router();
-// Stripe is optional. Its constructor throws on an empty string, so fall back
-// to a non-empty placeholder to let this module import without a key set;
-// actual Stripe calls fail clearly at runtime until STRIPE_SECRET_KEY exists.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_unconfigured_placeholder");
+let _stripe: Stripe | null = null;
+const getStripe = () => {
+  if (!_stripe && process.env.STRIPE_SECRET_KEY) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return _stripe;
+};
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
 interface StripeChargeEvent {
@@ -20,7 +22,7 @@ interface StripeChargeEvent {
   };
 }
 
-router.post("/webhook", asyncHandler(async (req: Request, res: Response) => {
+router.post("/webhook", async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
 
   if (!webhookSecret) {
@@ -28,68 +30,72 @@ router.post("/webhook", asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Webhook secret not configured" });
   }
 
-  let event: Stripe.Event;
+  const stripe = getStripe();
+  if (!stripe) {
+    return res.status(400).json({ error: "Stripe not configured" });
+  }
+
   try {
-    event = stripe.webhooks.constructEvent(
+    const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
       webhookSecret
-    );
-  } catch (err) {
-    console.error("Stripe webhook signature verification failed:", err);
-    return res.status(400).send(`Webhook Error: ${err}`);
+    ) as Stripe.Event;
+
+    // Handle charge.succeeded events
+    if (event.type === "charge.succeeded") {
+      const charge = event.data.object as StripeChargeEvent;
+
+      const donorName = charge.metadata?.donor_name || `Donor_${charge.id.slice(0, 8)}`;
+      const message = charge.metadata?.message || "";
+      const amountInDollars = charge.amount / 100; // Convert from cents
+
+      console.log(`💰 Donation received: ${donorName} - $${amountInDollars}`);
+
+      // Broadcast to live viewers
+      broadcastStreamEvent({
+        id: `stripe_${charge.id}`,
+        type: "donation",
+        username: donorName,
+        amount: amountInDollars,
+        message,
+        timestamp: new Date(),
+      });
+    }
+
+    // Handle customer.subscription.created events
+    if (event.type === "customer.subscription.created") {
+      const subscription = event.data.object as Stripe.Subscription;
+
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const subscriberName = (customer as any).metadata?.username || (customer as any).email || "Subscriber";
+
+      console.log(`🎁 New subscriber: ${subscriberName}`);
+
+      // Map Stripe price to tier
+      let tier: "bronze" | "silver" | "gold" | "platinum" = "gold";
+      const priceId = subscription.items.data[0]?.price.id;
+
+      if (process.env.STRIPE_PRICE_BRONZE === priceId) tier = "bronze";
+      if (process.env.STRIPE_PRICE_SILVER === priceId) tier = "silver";
+      if (process.env.STRIPE_PRICE_GOLD === priceId) tier = "gold";
+      if (process.env.STRIPE_PRICE_PLATINUM === priceId) tier = "platinum";
+
+      broadcastStreamEvent({
+        id: `stripe_sub_${subscription.id}`,
+        type: "subscribe",
+        username: subscriberName,
+        tier,
+        months: 1,
+        timestamp: new Date(),
+      });
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error("Webhook signature verification failed:", error);
+    res.status(400).send(`Webhook Error: ${error}`);
   }
-
-  // Handle charge.succeeded events
-  if (event.type === "charge.succeeded") {
-    const charge = event.data.object as StripeChargeEvent;
-
-    const donorName = charge.metadata?.donor_name || `Donor_${charge.id.slice(0, 8)}`;
-    const message = charge.metadata?.message || "";
-    const amountInDollars = charge.amount / 100; // Convert from cents
-
-    console.log(`💰 Donation received: ${donorName} - $${amountInDollars}`);
-
-    // Broadcast to live viewers
-    broadcastStreamEvent({
-      id: `stripe_${charge.id}`,
-      type: "donation",
-      username: donorName,
-      amount: amountInDollars,
-      message,
-      timestamp: new Date(),
-    });
-  }
-
-  // Handle customer.subscription.created events
-  if (event.type === "customer.subscription.created") {
-    const subscription = event.data.object as Stripe.Subscription;
-
-    const customer = await stripe.customers.retrieve(subscription.customer as string);
-    const subscriberName = (customer as any).metadata?.username || (customer as any).email || "Subscriber";
-
-    console.log(`🎁 New subscriber: ${subscriberName}`);
-
-    // Map Stripe price to tier
-    let tier: "bronze" | "silver" | "gold" | "platinum" = "gold";
-    const priceId = subscription.items.data[0]?.price.id;
-
-    if (process.env.STRIPE_PRICE_BRONZE === priceId) tier = "bronze";
-    if (process.env.STRIPE_PRICE_SILVER === priceId) tier = "silver";
-    if (process.env.STRIPE_PRICE_GOLD === priceId) tier = "gold";
-    if (process.env.STRIPE_PRICE_PLATINUM === priceId) tier = "platinum";
-
-    broadcastStreamEvent({
-      id: `stripe_sub_${subscription.id}`,
-      type: "subscribe",
-      username: subscriberName,
-      tier,
-      months: 1,
-      timestamp: new Date(),
-    });
-  }
-
-  res.json({ received: true });
-}));
+});
 
 export default router;

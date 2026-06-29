@@ -82,7 +82,7 @@ export async function createContext(
     user = null;
   }
 
-  // If no OAuth user, try admin password authentication
+  // If no OAuth user, try session cookie authentication (admin password or portal users)
   if (!user) {
     const sessionAuth = await authenticateSession(opts.req);
     if (sessionAuth.success && sessionAuth.user) {

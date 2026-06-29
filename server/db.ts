@@ -392,7 +392,7 @@ export async function getActiveStream() {
       .from(streams)
       .where(eq(streams.isActive, true))
       .limit(1);
-    return result[0];
+    return result[0] ?? null;
   } catch (e) {
     console.error("[DB] getActiveStream failed:", e);
     throw e;
@@ -504,17 +504,17 @@ export async function createTrack(track: InsertTrack) {
 
 export async function getNowPlaying() {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const result = await db
       .select()
       .from(tracks)
       .orderBy(desc(tracks.playedAt))
       .limit(1);
-    return result[0];
+    return result[0] ?? null;
   } catch (e) {
     console.warn("[DB] getNowPlaying failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -585,17 +585,17 @@ export async function deleteShow(id: number) {
 
 export async function getDannyStatus() {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const result = await db
       .select()
       .from(dannyStatus)
       .where(eq(dannyStatus.isActive, true))
       .limit(1);
-    return result[0];
+    return result[0] ?? null;
   } catch (e) {
     console.warn("[DB] getDannyStatus failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -715,7 +715,7 @@ export async function getEventBooking(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.select().from(eventBookings).where(eq(eventBookings.id, id)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 // Event Booking Blockers
@@ -780,9 +780,9 @@ export async function createOrUpdateFanBadge(badge: InsertFanBadge) {
 
 export async function getFanBadge(nameOrEmail: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(fanBadges).where(eq(fanBadges.name, nameOrEmail)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function listFanBadges(limit: number = 50) {
@@ -1071,7 +1071,7 @@ export async function createOrUpdateLoyaltyTracking(tracking: InsertLoyaltyTrack
 
 export async function getLoyaltyTracking(nameOrEmail: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   if (nameOrEmail.includes("@")) {
     const byEmail = await db
       .select()
@@ -1178,9 +1178,9 @@ export async function listProducts(activeOnly: boolean = false) {
 
 export async function getProduct(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function updateProduct(id: number, updates: Partial<InsertProduct>) {
@@ -1231,9 +1231,9 @@ export async function listPurchases(limit: number = 100) {
 
 export async function getPurchase(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(purchases).where(eq(purchases.id, id)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function updatePurchase(id: number, updates: Partial<InsertPurchase>) {
@@ -1246,9 +1246,9 @@ export async function updatePurchase(id: number, updates: Partial<InsertPurchase
 
 export async function getPurchaseByPaymentIntentId(paymentIntentId: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(purchases).where(eq(purchases.paymentIntentId, paymentIntentId)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function createSubscription(subscription: InsertSubscription) {
@@ -1301,16 +1301,16 @@ export async function listBrands(activeOnly: boolean = false) {
 
 export async function getDefaultBrand() {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(brands).where(eq(brands.isDefault, true)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function getBrandBySlug(slug: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(brands).where(eq(brands.slug, slug)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function updateBrand(id: number, updates: Partial<InsertBrand>) {
@@ -1341,9 +1341,9 @@ export { createAuditLog, listAuditLogs } from "./db/audit";
 
 export async function getEmpireSetting(key: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(empireSettings).where(eq(empireSettings.key, key)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function setEmpireSetting(key: string, value: string | object, description?: string, updatedBy?: number) {
@@ -1411,7 +1411,7 @@ export async function markErrorLogResolved(id: number) {
 
 export async function getActiveIncidentBanner() {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const now = new Date();
     const result = await db
@@ -1419,10 +1419,10 @@ export async function getActiveIncidentBanner() {
       .from(incidentBanners)
       .where(and(eq(incidentBanners.isActive, true), gt(incidentBanners.endAt || new Date(now.getTime() + 86400000), now)))
       .limit(1);
-    return result[0];
+    return result[0] ?? null;
   } catch (e) {
     console.warn("[DB] getActiveIncidentBanner failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -1473,9 +1473,9 @@ export async function listBackups(limit: number = 50) {
 
 export async function getBackup(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(backups).where(eq(backups.id, id)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function deleteBackup(id: number) {
@@ -1703,16 +1703,16 @@ export async function createOrUpdateGenZProfile(profile: InsertGenZProfile) {
 
 export async function getGenZProfileByUsername(username: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(genZProfiles).where(eq(genZProfiles.username, username)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function getGenZProfileById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(genZProfiles).where(eq(genZProfiles.id, id)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function listGenZProfiles(limit: number = 50) {
@@ -1811,9 +1811,9 @@ export async function listUserPosts(profileId?: number, limit: number = 50) {
 
 export async function getUserPost(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(userPosts).where(eq(userPosts.id, id)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 // Post Reactions
@@ -2130,13 +2130,13 @@ export async function deleteMix(id: number) {
 
 export async function getMixById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const results = await db.select().from(mixes).where(eq(mixes.id, id)).limit(1);
     return results[0];
   } catch (e) {
     console.error("[DB] getMixById failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -2158,13 +2158,13 @@ export async function getAllTracks(limit?: number) {
 
 export async function getTrackById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const results = await db.select().from(tracks).where(eq(tracks.id, id)).limit(1);
     return results[0];
   } catch (e) {
     console.error("[DB] getTrackById failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -2190,13 +2190,13 @@ export async function deleteTrack(id: number) {
 // Podcast management functions
 export async function getPodcastById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const results = await db.select().from(podcasts).where(eq(podcasts.id, id)).limit(1);
     return results[0];
   } catch (e) {
     console.error("[DB] getPodcastById failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -2235,13 +2235,13 @@ export async function deletePodcast(id: number) {
 // Streaming Links management functions
 export async function getStreamingLinkById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   try {
     const results = await db.select().from(streamingLinks).where(eq(streamingLinks.id, id)).limit(1);
     return results[0];
   } catch (e) {
     console.error("[DB] getStreamingLinkById failed:", e);
-    return undefined;
+    return null;
   }
 }
 
@@ -2398,7 +2398,7 @@ export async function createShowPhase9(show: InsertShowPhase9) {
 
   try {
     const result = await db.insert(showsPhase9).values(show).returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in createShowPhase9:", error);
     throw error;
@@ -2452,7 +2452,7 @@ export async function updateShowPhase9(id: number, updates: Partial<InsertShowPh
       })
       .where(eq(showsPhase9.id, id))
       .returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in updateShowPhase9:", error);
     throw error;
@@ -2465,7 +2465,7 @@ export async function createShowEpisode(episode: InsertShowEpisode) {
 
   try {
     const result = await db.insert(showEpisodes).values(episode).returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in createShowEpisode:", error);
     throw error;
@@ -2505,7 +2505,7 @@ export async function scheduleLiveSession(session: any) {
 
   try {
     const result = await db.insert(liveSessions).values(session).returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in scheduleLiveSession:", error);
     throw error;
@@ -2526,7 +2526,7 @@ export async function startLiveSession(sessionId: number) {
       })
       .where(eq(liveSessions.id, sessionId))
       .returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in startLiveSession:", error);
     throw error;
@@ -2547,7 +2547,7 @@ export async function endLiveSession(sessionId: number) {
       })
       .where(eq(liveSessions.id, sessionId))
       .returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in endLiveSession:", error);
     throw error;
@@ -2594,7 +2594,7 @@ export async function createCue(cue: InsertCue) {
 
   try {
     const result = await db.insert(cues).values(cue).returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in createCue:", error);
     throw error;
@@ -2631,7 +2631,7 @@ export async function updateCueStatus(cueId: number, status: "pending" | "done" 
       })
       .where(eq(cues.id, cueId))
       .returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in updateCueStatus:", error);
     throw error;
@@ -2690,14 +2690,14 @@ export async function setPlatformLiveStatus(data: InsertPlatformLiveStatus) {
         })
         .where(eq(platformLiveStatus.platform, data.platform as any))
         .returning();
-      return result[0];
+      return result[0] ?? null;
     } else {
       // Insert new if doesn't exist
       const result = await db.insert(platformLiveStatus).values({
         ...data,
         lastCheckedAt: new Date()
       }).returning();
-      return result[0];
+      return result[0] ?? null;
     }
   } catch (error) {
     console.error("[db] Error in setPlatformLiveStatus:", error);
@@ -2718,7 +2718,7 @@ export async function updatePlatformChannelId(platform: string, channelId: strin
       })
       .where(eq(platformLiveStatus.platform, platform as any))
       .returning();
-    return result[0];
+    return result[0] ?? null;
   } catch (error) {
     console.error("[db] Error in updatePlatformChannelId:", error);
     throw error;
@@ -3570,17 +3570,19 @@ export async function createUserWithPassword(input: { email: string; password: s
     role: input.role ?? "booking_client",
   }).returning();
 
-  return result[0];
+  return result[0] ?? null;
 }
 
 export async function getAllMixes() {
-  // TODO: Implement get all mixes
-  return [];
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mixes).orderBy(mixes.createdAt);
 }
 
 export async function getFreeMixes() {
-  // TODO: Implement get free mixes
-  return [];
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(mixes).where(eq(mixes.isFree, true)).orderBy(mixes.createdAt);
 }
 
 export async function updateAIVideoJob(jobId: string | number, updates: any) {

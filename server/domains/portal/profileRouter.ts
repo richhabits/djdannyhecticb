@@ -7,7 +7,7 @@
 import { router, clientProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { clientProfiles } from "@/drizzle/schema";
+import { clientProfiles } from "@/drizzle/portal-schema";
 import { eq } from "drizzle-orm";
 
 const profileUpdateSchema = z.object({

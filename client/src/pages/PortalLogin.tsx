@@ -1,69 +1,102 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { toast } from "sonner";
-import { Music } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { trpc } from "@/lib/trpc";
+import { usePortalAuth } from "@/contexts/PortalAuthContext";
+import { Zap, Eye, EyeOff } from "lucide-react";
 
 export default function PortalLogin() {
+  const { login } = usePortalAuth();
   const [, navigate] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const utils = trpc.useUtils();
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const login = trpc.auth.login.useMutation({
-    onSuccess: async () => {
-      toast.success("Welcome back!");
-      await utils.auth.me.invalidate();
-      navigate("/portal");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Login failed");
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    login.mutate({ email, password });
-  };
+    setLoading(true);
+    setError(null);
+    const result = await login(email, password);
+    setLoading(false);
+    if (result.success) {
+      navigate("/portal/dashboard");
+    } else {
+      setError(result.error || "Login failed");
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-gradient-to-br from-orange-900/10 via-background to-amber-900/10 -z-10" />
-
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <Link href="/" className="flex items-center justify-center gap-3 mb-8 hover:opacity-80 smooth-transition">
-          <Music className="w-10 h-10 text-accent" />
-          <span className="text-2xl font-bold">DJ Danny Hectic B</span>
-        </Link>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 bg-[#f97316] flex items-center justify-center">
+              <Zap className="w-7 h-7 text-black fill-black" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black text-white uppercase tracking-tight">Client Portal</h1>
+          <p className="text-white/50 text-sm mt-1 uppercase tracking-widest">Sign in to your account</p>
+        </div>
 
-        <Card className="p-8 glass hover-lift">
-          <h2 className="text-2xl font-bold mb-6">Client Portal Sign In</h2>
+        {/* Form */}
+        <div className="border-2 border-white/20 bg-black p-6">
+          {error && (
+            <div className="mb-4 p-3 border-l-4 border-red-500 bg-red-500/10 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
+              <label className="block text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full bg-black border-2 border-white/20 text-white px-3 py-2.5 text-sm focus:border-[#f97316] focus:outline-none transition-colors"
+                placeholder="you@example.com"
+              />
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" />
+              <label className="block text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  className="w-full bg-black border-2 border-white/20 text-white px-3 py-2.5 text-sm focus:border-[#f97316] focus:outline-none transition-colors pr-10"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80"
+                >
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
-            <Button type="submit" disabled={login.isPending} className="w-full bg-gradient-to-r from-orange-600 to-amber-600">
-              {login.isPending ? "Signing in..." : "Sign In"}
-            </Button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#f97316] text-black font-black uppercase tracking-widest py-3 text-sm hover:bg-orange-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-6">
+          <p className="text-center text-white/40 text-sm mt-4">
             Don't have an account?{" "}
-            <Link href="/portal/register" className="text-accent hover:underline">Sign up</Link>
+            <Link href="/portal/signup" className="text-[#f97316] hover:underline font-bold">
+              Register
+            </Link>
           </p>
-        </Card>
+        </div>
       </div>
     </div>
   );

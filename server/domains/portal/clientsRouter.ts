@@ -6,7 +6,8 @@
 
 import { router, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
-import { users, clientProfiles, bookings, uploads } from "@/drizzle/schema";
+import { users, bookings } from "@/drizzle/schema";
+import { clientProfiles, clientUploads as uploads } from "@/drizzle/portal-schema";
 import { inArray, sql } from "drizzle-orm";
 
 const PORTAL_ROLES = ["booking_client", "artist", "brand"] as const;

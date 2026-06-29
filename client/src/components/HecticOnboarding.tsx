@@ -52,18 +52,13 @@ export function HecticOnboarding() {
   }, []);
 
   const handleDismiss = () => {
-    if (dontShowAgain) {
-      localStorage.setItem("hectic-onboarding-dismissed", "true");
-    }
+    localStorage.setItem("hectic-onboarding-dismissed", "true");
     setIsOpen(false);
   };
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      // Dialog is being closed - check if "don't show again" was checked
-      if (dontShowAgain) {
-        localStorage.setItem("hectic-onboarding-dismissed", "true");
-      }
+      localStorage.setItem("hectic-onboarding-dismissed", "true");
     }
     setIsOpen(open);
   };

@@ -7,7 +7,8 @@
 import { router, clientProcedure, adminProcedure } from "@/server/_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { uploads, users } from "@/drizzle/schema";
+import { users } from "@/drizzle/schema";
+import { clientUploads as uploads } from "@/drizzle/portal-schema";
 import { eq, desc, and } from "drizzle-orm";
 import { sendUploadStatusEmail } from "./notifications";
 import { adjustStorageUsage, getStorageUsageBytes, STORAGE_QUOTA_BYTES } from "./storageQuota";

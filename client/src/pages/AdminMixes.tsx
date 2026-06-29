@@ -25,9 +25,10 @@ import {
 import { trpc } from "@/lib/trpc";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { Music, Plus, Edit, Trash2, ExternalLink, Download } from "lucide-react";
+import { Music, Plus, Edit, Trash2, ExternalLink, Download, Upload, Loader2, Image } from "lucide-react";
+import { upload } from "@vercel/blob/client";
 
 export default function AdminMixes() {
   const { user, isAuthenticated } = useAuth();
@@ -44,8 +45,15 @@ export default function AdminMixes() {
     downloadUrl: "",
   });
 
+  const [audioUploading, setAudioUploading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [imageProgress, setImageProgress] = useState(0);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const utils = trpc.useUtils();
-  const { data: mixes, isLoading } = trpc.mixes.adminList.useQuery();
+  const { data: mixes, isLoading, error: mixesError } = trpc.mixes.adminList.useQuery();
 
   const createMix = trpc.mixes.adminCreate.useMutation({
     onSuccess: () => {
@@ -98,6 +106,46 @@ export default function AdminMixes() {
       isFree: true,
       downloadUrl: "",
     });
+  };
+
+  const handleAudioUpload = async (file: File) => {
+    setAudioUploading(true);
+    setAudioProgress(0);
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload",
+        clientPayload: JSON.stringify({ fileType: "audio" }),
+        onUploadProgress: ({ percentage }) => setAudioProgress(Math.round(percentage)),
+      });
+      setFormData((f) => ({ ...f, audioUrl: blob.url }));
+      toast.success("Audio uploaded");
+    } catch (e) {
+      toast.error((e as Error).message || "Audio upload failed");
+    } finally {
+      setAudioUploading(false);
+      setAudioProgress(0);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setImageUploading(true);
+    setImageProgress(0);
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload",
+        clientPayload: JSON.stringify({ fileType: "image" }),
+        onUploadProgress: ({ percentage }) => setImageProgress(Math.round(percentage)),
+      });
+      setFormData((f) => ({ ...f, coverImageUrl: blob.url }));
+      toast.success("Image uploaded");
+    } catch (e) {
+      toast.error((e as Error).message || "Image upload failed");
+    } finally {
+      setImageUploading(false);
+      setImageProgress(0);
+    }
   };
 
   const handleEdit = (mix: any) => {
@@ -157,7 +205,7 @@ export default function AdminMixes() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <DatabaseErrorBanner />
+      {mixesError && <DatabaseErrorBanner />}
       <div className="container py-8 px-4">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -323,24 +371,74 @@ export default function AdminMixes() {
                   rows={3}
                 />
               </div>
+              {/* Hidden file inputs */}
+              <input
+                ref={audioInputRef}
+                type="file"
+                accept="audio/mpeg,audio/wav,audio/mp4,audio/aac,audio/ogg,audio/flac,.mp3,.wav,.m4a,.aac,.ogg,.flac"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAudioUpload(f); e.target.value = ""; }}
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
+              />
+
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="audioUrl">Audio URL *</Label>
-                  <Input
-                    id="audioUrl"
-                    value={formData.audioUrl}
-                    onChange={(e) => setFormData({ ...formData, audioUrl: e.target.value })}
-                    placeholder="https://..."
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="audioUrl">Audio File *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="audioUrl"
+                      value={formData.audioUrl}
+                      onChange={(e) => setFormData({ ...formData, audioUrl: e.target.value })}
+                      placeholder="https://... or upload →"
+                      className="text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1"
+                      disabled={audioUploading}
+                      onClick={() => audioInputRef.current?.click()}
+                    >
+                      {audioUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {audioUploading ? `${audioProgress}%` : "Upload"}
+                    </Button>
+                  </div>
+                  {formData.audioUrl && (
+                    <p className="text-xs text-green-500 truncate">✓ {formData.audioUrl.split("/").pop()}</p>
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="coverImageUrl">Cover Image URL</Label>
-                  <Input
-                    id="coverImageUrl"
-                    value={formData.coverImageUrl}
-                    onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
-                    placeholder="https://..."
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="coverImageUrl">Cover Image</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="coverImageUrl"
+                      value={formData.coverImageUrl}
+                      onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
+                      placeholder="https://... or upload →"
+                      className="text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1"
+                      disabled={imageUploading}
+                      onClick={() => imageInputRef.current?.click()}
+                    >
+                      {imageUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
+                      {imageUploading ? `${imageProgress}%` : "Upload"}
+                    </Button>
+                  </div>
+                  {formData.coverImageUrl && (
+                    <p className="text-xs text-green-500 truncate">✓ {formData.coverImageUrl.split("/").pop()}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
