@@ -5,7 +5,7 @@ export default function Signup() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    navigate("/portal/register");
+    navigate("/portal/signup");
   }, [navigate]);
 
   return null;
