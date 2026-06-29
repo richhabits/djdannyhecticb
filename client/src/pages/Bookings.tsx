@@ -96,7 +96,7 @@ const [formData, setFormData] = useState({
             <Link href="/portal/login">
               <button className="tape-strip bg-accent text-white border-white px-12 py-4 text-xl">SIGN IN</button>
             </Link>
-            <Link href="/portal/register">
+            <Link href="/portal/signup">
               <button className="tape-strip bg-white text-black border-black px-12 py-4 text-xl">CREATE ACCOUNT</button>
             </Link>
           </div>
