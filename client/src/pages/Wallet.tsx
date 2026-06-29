@@ -30,7 +30,7 @@ export default function Wallet() {
           <Card>
             <CardContent className="p-6 text-center">
               <p>Please log in to view your wallet.</p>
-              <Link href="/login">
+              <Link href="/portal/login">
                 <Button className="mt-4">Log In</Button>
               </Link>
             </CardContent>

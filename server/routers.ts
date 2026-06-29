@@ -168,7 +168,12 @@ export const appRouter = router({
   }),
 
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(opts => {
+      if (!opts.ctx.user) return null;
+      // Never expose the password hash (or other secrets) to the client
+      const { passwordHash, ...safeUser } = opts.ctx.user as typeof opts.ctx.user & { passwordHash?: string };
+      return safeUser;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -302,7 +307,8 @@ export const appRouter = router({
   }),
 
   eventBookings: router({
-    list: protectedProcedure.query(() => db.listEventBookings()),
+    // Admin-only: returns ALL bookings, so it must not be exposed to every logged-in user
+    list: adminProcedure.query(() => db.listEventBookings()),
     create: publicProcedure
       .input(z.object({
         name: z.string().min(1).max(255),
@@ -923,11 +929,12 @@ export const appRouter = router({
         dataConsent: z.boolean(),
       }))
       .mutation(({ input }) => {
-        const { dataConsent, ...data } = input;
+        // Pass the full input through — createEventBooking requires dataConsent,
+        // so it must not be stripped here.
         return db.createEventBooking({
-          ...data,
+          ...input,
           // @ts-ignore
-          eventType: data.eventType // Enum mismatch workaround
+          eventType: input.eventType // Enum mismatch workaround
         });
       }),
 

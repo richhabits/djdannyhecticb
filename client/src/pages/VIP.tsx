@@ -36,7 +36,7 @@ export default function VIP() {
                     Sign in to access exclusive content, behind-the-scenes posts, and premium AI Danny features.
                   </p>
                   <div className="flex gap-4 justify-center pt-4">
-                    <Link href="/login">
+                    <Link href="/portal/login">
                       <Button className="gradient-bg">Sign In</Button>
                     </Link>
                     <Link href="/">
