@@ -149,7 +149,7 @@ function EventCard({ event, index }: { event: any; index: number }) {
                 <div className="flex items-center gap-2 text-sm text-white/60">
                     <MapPin className="w-4 h-4 flex-shrink-0 text-accent" />
                     <span className="line-clamp-1">
-                        {event.venueName && `${event.venueName}, `}{event.city}
+                        {event.venue && `${event.venue}, `}{event.city}
                     </span>
                 </div>
 
@@ -158,7 +158,7 @@ function EventCard({ event, index }: { event: any; index: number }) {
                     <Clock className="w-4 h-4 flex-shrink-0" />
                     <span>
                         {format(new Date(event.eventDate), 'EEE d MMM yyyy')}
-                        {event.doorsTime && ` • Doors ${event.doorsTime}`}
+                        {event.doorsTime && ` • Doors ${format(new Date(event.doorsTime), 'h:mm a')}`}
                     </span>
                 </div>
 
@@ -256,14 +256,14 @@ function FeaturedEventHero({ event }: { event: any }) {
                         <div className="flex items-center gap-3 text-lg">
                             <MapPin className="w-5 h-5 text-accent" />
                             <span>
-                                {event.venueName}, {event.city}
+                                {event.venue && `${event.venue}, `}{event.city}
                             </span>
                         </div>
 
                         {event.doorsTime && (
                             <div className="flex items-center gap-3 text-lg">
                                 <Clock className="w-5 h-5 text-accent" />
-                                <span>Doors: {event.doorsTime}</span>
+                                <span>Doors: {format(new Date(event.doorsTime), 'h:mm a')}</span>
                             </div>
                         )}
                     </div>
