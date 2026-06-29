@@ -7,6 +7,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { resolveTicketUrl } from "@/lib/ticketUrl";
 import { Card } from "@/components/ui/card";
 import { Music, ArrowRight, Play, Disc, Calendar } from "lucide-react";
 import { APP_LOGO } from "@/const";
@@ -275,7 +276,7 @@ export default function Home() {
 
                     {isValidTicketUrl && (
                       <a
-                        href={event.ticketUrl!}
+                        href={resolveTicketUrl(event.ticketUrl) || event.ticketUrl!}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => {

@@ -5,6 +5,7 @@
  */
 import { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { resolveTicketUrl } from '@/lib/ticketUrl';
 import { MetaTagsComponent } from '@/components/MetaTags';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -170,7 +171,7 @@ function EventCard({ event, index }: { event: any; index: number }) {
 
                     {event.ticketUrl && event.ticketStatus !== 'sold_out' && event.ticketStatus !== 'cancelled' ? (
                         <a
-                            href={event.ticketUrl}
+                            href={resolveTicketUrl(event.ticketUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="tape-strip bg-accent text-white border-white px-4 py-2 text-sm hover:bg-white hover:text-black transition-all flex items-center gap-2"
@@ -277,7 +278,7 @@ function FeaturedEventHero({ event }: { event: any }) {
                     <div className="flex items-center gap-4 pt-4">
                         {event.ticketUrl && (
                             <a
-                                href={event.ticketUrl}
+                                href={resolveTicketUrl(event.ticketUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="tape-strip bg-accent text-white border-white px-8 py-4 text-xl hover:bg-white hover:text-black transition-all flex items-center gap-3"
